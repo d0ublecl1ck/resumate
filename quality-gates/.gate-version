@@ -1,0 +1,13 @@
+{
+  "catalogVersion": "0.18.5",
+  "stacks": [],
+  "layers": [
+    "generic"
+  ],
+  "files": {
+    "README.md": "9e53813a53d24d12facf340025d7ff02755d4d0534c94c4328b83f3091f29ef0",
+    "package.json": "1ad2c41492bd80918264cc7b0ed9b33e541f2031a0d01b55f04ae2d2e352fe90",
+    "run.js": "304834f9ec84eb4fd584eed9fdd6c277137a1e902ba64fa271b877c9f3aad2c3",
+    "gates/generic-project.js": "b9d8b1b0180a8c4406f9a3098adf1a6154f50b568c2e73671d30f98f749c10e6"
+  }
+}

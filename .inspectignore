@@ -1,0 +1,9 @@
+# archkit inspect ignore
+# Add gitignore-style patterns below to exclude files/directories from official gates.
+# This file is tracked so the whole team shares the same inspection scope.
+#
+# Examples:
+# generated/
+# migrations/
+# fixtures/
+# tools/
