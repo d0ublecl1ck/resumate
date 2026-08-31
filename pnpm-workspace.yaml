@@ -1,0 +1,6 @@
+packages:
+  - ui
+
+allowBuilds:
+  msw: true
+  esbuild: true
