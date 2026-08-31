@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resumate · 静奢求职顾问</title>
+  <style>
+    :root {
+      --cream: #f6f1e7;
+      --cream-2: #efe7d8;
+      --card: #fbf8f1;
+      --wine: #571c27;
+      --wine-deep: #401219;
+      --wine-soft: #7a3a45;
+      --gold: #b99559;
+      --gold-line: #cbb27f;
+      --ink: #2b211c;
+      --muted: #7d6f62;
+      --shadow: 0 24px 60px rgba(64, 18, 25, 0.10);
+      --radius: 4px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--cream);
+      color: var(--ink);
+      font: 16px/1.6 Georgia, "Songti SC", "Noto Serif SC", serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+    .skip {
+      position: absolute; left: -999px; top: 0;
+      background: var(--wine); color: var(--cream);
+      padding: 10px 18px; z-index: 100;
+    }
+    .skip:focus { left: 12px; top: 12px; }
+
+    .shell { max-width: 1180px; margin: 0 auto; padding: 0 32px 96px; }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 26px 0 22px;
+      border-bottom: 1px solid var(--gold-line);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 14px;
+      font-size: 20px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--wine); font-weight: 700;
+    }
+    .brand .seal {
+      width: 34px; height: 34px; border: 1px solid var(--gold);
+      display: grid; place-items: center;
+      color: var(--gold); font-size: 15px; letter-spacing: 0;
+      transform: rotate(45deg);
+    }
+    .brand .seal span { transform: rotate(-45deg); }
+    .nav { display: flex; gap: 34px; font-size: 14px; letter-spacing: 0.12em; color: var(--muted); }
+    .nav a { padding: 8px 2px; border-bottom: 1px solid transparent; }
+    .nav a[aria-current="page"] { color: var(--wine); border-bottom-color: var(--gold); }
+    .nav a:hover { color: var(--wine); }
+    .profile { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--wine); color: var(--cream);
+      display: grid; place-items: center; font-size: 13px; letter-spacing: 0.05em;
+      border: 1px solid var(--gold);
+    }
+
+    /* ---------- hero ---------- */
+    .hero {
+      display: grid; grid-template-columns: 1.15fr 0.85fr;
+      gap: 48px; align-items: end;
+      padding: 88px 0 72px;
+    }
+    .eyebrow {
+      display: flex; align-items: center; gap: 14px;
+      color: var(--gold); font-size: 12px; letter-spacing: 0.34em;
+      text-transform: uppercase; font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .eyebrow::before { content: ""; width: 44px; height: 1px; background: var(--gold); }
+    .hero h1 {
+      font-size: clamp(40px, 5.6vw, 68px);
+      line-height: 1.12; letter-spacing: 0.01em;
+      font-weight: 500; color: var(--wine-deep);
+      margin: 22px 0 24px; max-width: 640px;
+      text-wrap: balance;
+    }
+    .hero h1 em { font-style: italic; color: var(--wine); }
+    .hero p {
+      color: var(--muted); max-width: 520px; font-size: 17px; margin: 0;
+    }
+    .hero-actions { display: flex; gap: 16px; margin-top: 40px; flex-wrap: wrap; }
+    .btn {
+      min-height: 48px; padding: 14px 30px; border-radius: var(--radius);
+      font-size: 15px; letter-spacing: 0.14em;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--wine); color: var(--cream); border: 1px solid var(--wine);
+    }
+    .btn-primary:hover { background: var(--wine-deep); }
+    .btn-ghost {
+      background: transparent; color: var(--wine); border: 1px solid var(--gold-line);
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--wine-deep); }
+
+    .maxim {
+      border-left: 1px solid var(--gold);
+      padding: 8px 0 8px 28px;
+      color: var(--wine-soft);
+      font-style: italic; font-size: 19px; line-height: 1.6;
+    }
+    .maxim small {
+      display: block; margin-top: 14px; font-style: normal;
+      font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* ---------- stats strip ---------- */
+    .strip {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--gold-line);
+      border-bottom: 1px solid var(--gold-line);
+      margin-bottom: 64px;
+    }
+    .strip div {
+      padding: 26px 8px; text-align: center;
+      border-left: 1px solid var(--gold-line);
+    }
+    .strip div:first-child { border-left: 0; }
+    .strip strong {
+      display: block; font-size: 30px; color: var(--wine); font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .strip span {
+      font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* ---------- workspace ---------- */
+    .section-title {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .section-title h2 {
+      font-size: 28px; font-weight: 500; color: var(--wine-deep); margin: 0;
+    }
+    .section-title small {
+      color: var(--muted); font-size: 13px; letter-spacing: 0.18em;
+      text-transform: uppercase; font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .workspace { display: grid; grid-template-columns: 1.5fr 0.9fr; gap: 24px; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--gold-line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      padding: 20px 24px; border-bottom: 1px solid var(--gold-line);
+    }
+    .panel-title { font-size: 17px; color: var(--wine-deep); font-weight: 700; letter-spacing: 0.06em; }
+
+    .tabs { display: flex; gap: 4px; }
+    .tab {
+      border: 1px solid transparent; background: transparent;
+      color: var(--muted); padding: 10px 16px; min-height: 44px;
+      font-size: 13px; letter-spacing: 0.12em; border-radius: var(--radius);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+    .tab:hover { color: var(--wine); }
+    .tab[aria-selected="true"] {
+      color: var(--wine); border-color: var(--gold-line);
+      background: var(--cream-2);
+    }
+
+    .resume-body { padding: 28px 24px 26px; }
+    .resume-top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+    .resume-name { margin: 0 0 6px; font-size: 26px; font-weight: 500; color: var(--ink); }
+    .resume-meta { color: var(--muted); font-size: 13px; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .score { text-align: right; }
+    .score strong {
+      display: block; font-size: 34px; font-weight: 500; color: var(--wine);
+      font-variant-numeric: tabular-nums;
+    }
+    .score span {
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .progress {
+      height: 4px; background: var(--cream-2); margin: 26px 0 24px;
+      position: relative;
+    }
+    .progress i {
+      display: block; height: 100%; width: 82%;
+      background: linear-gradient(90deg, var(--wine) 0%, var(--gold) 100%);
+      transition: width 0.6s ease;
+    }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: var(--muted); margin-top: -16px; margin-bottom: 20px;
+      font-family: ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.1em;
+    }
+    .checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; list-style: none; margin: 0; padding: 0; }
+    .check {
+      border: 1px solid var(--gold-line); border-radius: var(--radius);
+      padding: 13px 14px; display: flex; gap: 12px; align-items: center;
+      font-size: 14px; background: var(--card);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .check svg { flex: none; }
+    .check.done svg { color: var(--wine); }
+    .check.pending { border-style: dashed; color: var(--muted); }
+    .check.pending svg { color: var(--gold); }
+
+    .side { display: grid; gap: 24px; align-content: start; }
+    .activity { padding: 8px 24px 18px; }
+    .activity-row {
+      display: flex; gap: 14px; padding: 15px 0;
+      border-bottom: 1px solid var(--cream-2);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .activity-row:last-child { border-bottom: 0; }
+    .activity-row .tick {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gold); margin-top: 8px; flex: none;
+    }
+    .activity-row p { margin: 0; font-size: 14px; }
+    .activity-row small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
+
+    .counsel {
+      background: var(--wine); color: var(--cream);
+      padding: 28px 26px; border-radius: var(--radius);
+      border: 1px solid var(--wine-deep);
+    }
+    .counsel strong {
+      display: block; font-size: 22px; font-weight: 500; margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .counsel p { color: #d9c3bd; font-size: 14px; margin: 0 0 18px; line-height: 1.7; }
+    .counsel .btn { border-color: var(--gold); color: var(--cream); background: transparent; }
+    .counsel .btn:hover { background: var(--gold); color: var(--wine-deep); }
+
+    footer {
+      margin-top: 88px; padding-top: 26px;
+      border-top: 1px solid var(--gold-line);
+      display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      color: var(--muted); font-size: 12px; letter-spacing: 0.18em;
+      text-transform: uppercase; font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px);
+      background: var(--wine-deep); color: var(--cream);
+      padding: 13px 26px; border-radius: var(--radius);
+      border: 1px solid var(--gold);
+      font-size: 14px; letter-spacing: 0.08em;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 860px) {
+      .shell { padding: 0 20px 72px; }
+      .nav { display: none; }
+      .hero { grid-template-columns: 1fr; gap: 32px; padding: 56px 0 48px; }
+      .strip { grid-template-columns: 1fr 1fr; }
+      .strip div:nth-child(3) { border-left: 0; }
+      .strip div { border-top: 1px solid var(--gold-line); }
+      .strip div:nth-child(-n+2) { border-top: 0; }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .checklist { grid-template-columns: 1fr; }
+      .resume-top { flex-direction: column; }
+      .score { text-align: left; }
+      .panel-head { flex-direction: column; align-items: stretch; }
+      .tabs { justify-content: space-between; }
+      .tab { flex: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">跳到主要内容</a>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Resumate 首页">
+        <span class="seal" aria-hidden="true"><span>R</span></span>
+        Resumate
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="#top" aria-current="page">工作台</a>
+        <a href="#workspace">简历</a>
+        <a href="#workspace">职位追踪</a>
+        <a href="#workspace">面试准备</a>
+      </nav>
+      <div class="profile">
+        <span>林默</span>
+        <span class="avatar" aria-hidden="true">LM</span>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">Private Career Counsel</p>
+          <h1 id="hero-title">下一份工作，<br />值得<em>从容准备</em>。</h1>
+          <p>Resumate 像一位克制的私人顾问：梳理经历、打磨表达、记录每一次投递，让求职成为一件有秩序的事。</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-toast="已回到简历编辑器，从上次中断处继续。">继续打磨简历</button>
+            <button class="btn btn-ghost" type="button" data-toast="已为你创建一份新的求职计划草案。">制定求职计划</button>
+          </div>
+        </div>
+        <blockquote class="maxim">
+          「不必张扬，只需准确。好简历让对的人，在对的时刻看见你。」
+          <small>Resumate Notes · No. 04</small>
+        </blockquote>
+      </section>
+
+      <section class="strip" aria-label="求职进展摘要">
+        <div><strong>82%</strong><span>简历完成度</span></div>
+        <div><strong>12</strong><span>已投递职位</span></div>
+        <div><strong>3</strong><span>进行中面试</span></div>
+        <div><strong>27 天</strong><span>准备周期</span></div>
+      </section>
+
+      <section id="workspace" aria-labelledby="ws-title">
+        <div class="section-title">
+          <h2 id="ws-title">今日工作区</h2>
+          <small>Tuesday · 待办 2 项</small>
+        </div>
+        <div class="workspace">
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">我的简历</span>
+              <div class="tabs" role="tablist" aria-label="简历视图切换">
+                <button class="tab" type="button" role="tab" id="tab-overview" aria-selected="true" aria-controls="panel-resume">概览</button>
+                <button class="tab" type="button" role="tab" id="tab-edit" aria-selected="false" aria-controls="panel-resume">编辑</button>
+                <button class="tab" type="button" role="tab" id="tab-preview" aria-selected="false" aria-controls="panel-resume">预览</button>
+              </div>
+            </div>
+            <div class="resume-body" id="panel-resume" role="tabpanel" aria-live="polite" aria-labelledby="tab-overview">
+              <div class="resume-top">
+                <div>
+                  <h3 class="resume-name">林默 · 高级产品设计师</h3>
+                  <div class="resume-meta" id="resume-meta">上次编辑于 2 小时前 · 面向产品设计岗位</div>
+                </div>
+                <div class="score">
+                  <strong id="score-num">82%</strong>
+                  <span>完成度</span>
+                </div>
+              </div>
+              <div class="progress" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" aria-label="简历完成度 82%">
+                <i id="progress-bar"></i>
+              </div>
+              <div class="progress-label"><span>起步</span><span>可投递</span><span>臻于完善</span></div>
+              <ul class="checklist" id="checklist">
+                <li class="check done">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8.5 6 12l7.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  个人信息
+                </li>
+                <li class="check done">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8.5 6 12l7.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  工作经历
+                </li>
+                <li class="check done">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 8.5 6 12l7.5-8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  项目成果量化
+                </li>
+                <li class="check pending">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2.5 2.5"/></svg>
+                  作品集链接（待补充）
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="side">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">最近动态</span>
+                <button class="btn btn-ghost" type="button" style="min-height:40px;padding:8px 18px;font-size:12px;" data-toast="动态已刷新至最新。" aria-label="刷新最近动态">刷新</button>
+              </div>
+              <div class="activity">
+                <div class="activity-row"><span class="tick" aria-hidden="true"></span><div><p>完成了「项目成果量化」模块</p><small>今天 10:42</small></div></div>
+                <div class="activity-row"><span class="tick" aria-hidden="true"></span><div><p>收藏了 2 个匹配度 90%+ 的职位</p><small>昨天 18:20</small></div></div>
+                <div class="activity-row"><span class="tick" aria-hidden="true"></span><div><p>导出了一版 PDF 简历</p><small>9 月 6 日</small></div></div>
+              </div>
+            </div>
+            <div class="counsel">
+              <strong>今日顾问建议</strong>
+              <p>补上作品集链接，完成度即可抵达 100%。一次专注的修改，胜过十次犹豫。</p>
+              <button class="btn" type="button" data-toast="已定位到「作品集链接」字段。">立即完成</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Resumate · Style 04 Quiet Luxury</span>
+      <span>Prepared, not hurried.</span>
+    </footer>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      var toast = document.querySelector('.toast');
+      var timer = null;
+      document.querySelectorAll('[data-toast]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          toast.textContent = btn.dataset.toast;
+          toast.classList.add('show');
+          clearTimeout(timer);
+          timer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
+        });
+      });
+
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+      var meta = document.getElementById('resume-meta');
+      var panel = document.getElementById('panel-resume');
+      var copy = {
+        'tab-overview': '上次编辑于 2 小时前 · 面向产品设计岗位',
+        'tab-edit': '编辑模式 · 自动保存已开启 · 草稿版本 v14',
+        'tab-preview': '预览模式 · A4 单栏排版 · 适合直接导出 PDF'
+      };
+      function select(tab, focus) {
+        tabs.forEach(function (t) { t.setAttribute('aria-selected', t === tab ? 'true' : 'false'); });
+        panel.setAttribute('aria-labelledby', tab.id);
+        meta.textContent = copy[tab.id] || copy['tab-overview'];
+        if (focus) tab.focus();
+      }
+      tabs.forEach(function (tab, i) {
+        tab.addEventListener('click', function () { select(tab, false); });
+        tab.addEventListener('keydown', function (e) {
+          var next = null;
+          if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+          if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+          if (e.key === 'Home') next = tabs[0];
+          if (e.key === 'End') next = tabs[tabs.length - 1];
+          if (next) { e.preventDefault(); select(next, true); }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

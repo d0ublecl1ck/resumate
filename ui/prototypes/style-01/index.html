@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resumate — 为下一份工作做好准备</title>
+<style>
+  :root{
+    --ink:#0a0a0a;
+    --paper:#ffffff;
+    --grey:#5c5c5c;
+    --line:#0a0a0a;
+    --hairline:#e4e4e4;
+    --neon:#a6ff00;
+    --neon-ink:#0a0a0a;
+    --col-gap:clamp(16px,2.5vw,32px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--neon);color:var(--neon-ink)}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer;background:none;border:none;color:inherit}
+  :focus{outline:none}
+  :focus-visible{outline:3px solid var(--neon);outline-offset:3px}
+
+  .skip-link{
+    position:absolute;left:16px;top:-64px;z-index:100;
+    background:var(--ink);color:#fff;padding:12px 20px;
+    font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:13px;
+    transition:top .15s ease;
+  }
+  .skip-link:focus-visible{top:16px}
+
+  .wrap{max-width:1360px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+
+  /* ---------- Header ---------- */
+  header{border-bottom:2px solid var(--line)}
+  .header-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    min-height:72px;gap:24px;flex-wrap:wrap;padding:12px 0;
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    font-weight:800;font-size:20px;letter-spacing:-.02em;
+  }
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);position:relative;flex:none;
+  }
+  .brand-mark::after{
+    content:"";position:absolute;right:-5px;bottom:-5px;
+    width:12px;height:12px;background:var(--neon);
+  }
+  nav ul{display:flex;list-style:none;gap:clamp(16px,3vw,40px)}
+  nav a{
+    font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:8px 2px;border-bottom:2px solid transparent;display:inline-block;
+  }
+  nav a:hover{border-bottom-color:var(--neon)}
+  nav a[aria-current="page"]{border-bottom-color:var(--ink)}
+  .header-cta{
+    background:var(--ink);color:#fff;padding:12px 22px;
+    font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    border:2px solid var(--ink);transition:background .15s ease,color .15s ease;
+  }
+  .header-cta:hover{background:var(--neon);color:var(--neon-ink);border-color:var(--ink)}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    display:grid;grid-template-columns:repeat(12,1fr);gap:var(--col-gap);
+    padding:clamp(56px,9vw,128px) 0 clamp(48px,7vw,96px);
+    border-bottom:2px solid var(--line);
+  }
+  .hero-left{grid-column:1/9}
+  .hero-right{grid-column:9/13;display:flex;flex-direction:column;justify-content:flex-end;gap:32px}
+  .kicker{
+    display:inline-flex;align-items:center;gap:10px;
+    font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    margin-bottom:28px;
+  }
+  .kicker::before{content:"";width:36px;height:10px;background:var(--neon);flex:none}
+  h1{
+    font-size:clamp(44px,7.2vw,104px);
+    line-height:1.02;font-weight:800;letter-spacing:-.035em;
+    text-wrap:balance;
+  }
+  h1 .hl{background:var(--neon);padding:0 .08em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .hero-sub{
+    margin-top:32px;max-width:34em;color:var(--grey);font-size:clamp(16px,1.4vw,19px);
+  }
+  .hero-actions{display:flex;gap:16px;margin-top:44px;flex-wrap:wrap}
+  .btn-primary{
+    background:var(--neon);color:var(--neon-ink);
+    border:2px solid var(--ink);
+    padding:18px 34px;min-height:56px;
+    font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    box-shadow:6px 6px 0 var(--ink);
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .btn-primary:hover{transform:translate(2px,2px);box-shadow:4px 4px 0 var(--ink)}
+  .btn-primary:active{transform:translate(6px,6px);box-shadow:0 0 0 var(--ink)}
+  .btn-secondary{
+    padding:18px 28px;min-height:56px;
+    border:2px solid var(--ink);
+    font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    transition:background .15s ease;
+  }
+  .btn-secondary:hover{background:var(--hairline)}
+  .hero-fact{border-top:1px solid var(--ink);padding-top:16px}
+  .hero-fact strong{
+    display:block;font-size:clamp(34px,3.4vw,52px);font-weight:800;letter-spacing:-.03em;
+    font-variant-numeric:tabular-nums;
+  }
+  .hero-fact span{font-size:13px;color:var(--grey);letter-spacing:.06em;text-transform:uppercase}
+
+  /* ---------- Section headers ---------- */
+  section{padding:clamp(48px,7vw,96px) 0}
+  .section-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:24px;flex-wrap:wrap;margin-bottom:clamp(32px,4vw,56px);
+  }
+  .section-head h2{
+    font-size:clamp(28px,3.4vw,48px);font-weight:800;letter-spacing:-.03em;
+  }
+  .section-head .index{
+    font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--grey);
+  }
+
+  /* ---------- Workspace ---------- */
+  .workspace{background:#f7f7f2;border-top:2px solid var(--line);border-bottom:2px solid var(--line)}
+  .tabs{
+    display:flex;flex-wrap:wrap;border:2px solid var(--ink);background:#fff;
+  }
+  .tab{
+    flex:1 1 160px;padding:16px 20px;min-height:56px;
+    font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    border-right:1px solid var(--ink);text-align:center;
+    transition:background .12s ease;
+  }
+  .tab:last-child{border-right:none}
+  .tab:hover{background:var(--hairline)}
+  .tab[aria-selected="true"]{background:var(--ink);color:#fff}
+  .tab-panel{border:2px solid var(--ink);border-top:none;background:#fff;padding:clamp(24px,4vw,48px)}
+  .tab-panel[hidden]{display:none}
+
+  .resume-summary{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--col-gap)}
+  .resume-id{grid-column:1/8}
+  .resume-score{grid-column:8/13;border-left:1px solid var(--hairline);padding-left:var(--col-gap)}
+  .resume-name{font-size:clamp(24px,2.6vw,36px);font-weight:800;letter-spacing:-.02em}
+  .resume-meta{margin-top:8px;color:var(--grey);font-size:14px}
+  .score-num{font-size:clamp(48px,5vw,72px);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .score-label{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--grey)}
+
+  .progress-track{
+    margin-top:28px;height:14px;border:2px solid var(--ink);background:#fff;position:relative;
+  }
+  .progress-fill{
+    position:absolute;inset:0;width:78%;background:var(--neon);
+    border-right:2px solid var(--ink);
+  }
+  .progress-caption{
+    margin-top:10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  }
+
+  .checklist{
+    margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:0;border:1px solid var(--ink);
+  }
+  .check-item{
+    display:flex;align-items:center;gap:14px;padding:18px 20px;
+    border-bottom:1px solid var(--hairline);font-size:15px;
+  }
+  .check-badge{
+    width:28px;height:28px;flex:none;display:grid;place-items:center;
+    border:2px solid var(--ink);font-size:14px;font-weight:800;
+  }
+  .check-item.done .check-badge{background:var(--ink);color:var(--neon)}
+  .check-item.todo .check-badge{background:var(--neon);color:var(--neon-ink)}
+  .check-item .state{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--grey)}
+  .check-item.todo .state{color:var(--ink)}
+
+  /* Panel: 动态 / 下一步 */
+  .plain-list{list-style:none}
+  .plain-list li{
+    display:flex;justify-content:space-between;gap:20px;align-items:baseline;
+    padding:18px 0;border-bottom:1px solid var(--hairline);font-size:15px;
+  }
+  .plain-list li:last-child{border-bottom:none}
+  .plain-list time{font-size:12px;color:var(--grey);letter-spacing:.08em;text-transform:uppercase;flex:none;font-variant-numeric:tabular-nums}
+
+  .next-step{
+    background:var(--ink);color:#fff;padding:clamp(24px,3vw,40px);
+    display:flex;flex-direction:column;gap:20px;
+  }
+  .next-step h3{font-size:clamp(22px,2.2vw,30px);font-weight:800;letter-spacing:-.02em}
+  .next-step h3 em{font-style:normal;color:var(--neon)}
+  .next-step p{color:#cfcfcf;font-size:15px;max-width:34em}
+  .next-step .btn-primary{align-self:flex-start}
+
+  /* ---------- Path ---------- */
+  .path-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--col-gap)}
+  .path-card{grid-column:span 4;border-top:4px solid var(--ink);padding-top:24px}
+  .path-card.current{border-top-color:var(--neon)}
+  .path-card .num{
+    font-size:clamp(40px,4vw,64px);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  }
+  .path-card h3{margin-top:16px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+  .path-card p{margin-top:10px;color:var(--grey);font-size:15px}
+  .path-card .tag{
+    display:inline-block;margin-top:18px;padding:6px 12px;
+    font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    border:1px solid var(--ink);
+  }
+  .path-card.current .tag{background:var(--neon);color:var(--neon-ink)}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:2px solid var(--line);padding:40px 0 56px}
+  .footer-inner{
+    display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center;
+    font-size:13px;color:var(--grey);letter-spacing:.06em;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:32px;transform:translate(-50%,16px);
+    background:var(--ink);color:#fff;padding:14px 24px;
+    font-size:14px;font-weight:700;letter-spacing:.04em;
+    border:2px solid var(--neon);
+    opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;
+    z-index:90;max-width:min(90vw,480px);text-align:center;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition:none !important;scroll-behavior:auto !important}
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr}
+    .hero-left,.hero-right{grid-column:1/-1}
+    .hero-right{flex-direction:row;flex-wrap:wrap}
+    .hero-fact{flex:1 1 140px}
+    .resume-summary{grid-template-columns:1fr}
+    .resume-id,.resume-score{grid-column:1/-1}
+    .resume-score{border-left:none;border-top:1px solid var(--hairline);padding-left:0;padding-top:24px}
+    .path-grid{grid-template-columns:1fr}
+    .path-card{grid-column:1/-1}
+  }
+  @media (max-width:640px){
+    nav ul{display:none}
+    .hero-actions{flex-direction:column;align-items:stretch}
+    .btn-primary,.btn-secondary{width:100%}
+    .tab{flex:1 1 100%;border-right:none;border-bottom:1px solid var(--ink)}
+    .tab:last-child{border-bottom:none}
+    .checklist{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header>
+    <div class="wrap header-inner">
+      <a class="brand" href="#" aria-label="Resumate 首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        Resumate
+      </a>
+      <nav aria-label="主导航">
+        <ul>
+          <li><a href="#main" aria-current="page">工作台</a></li>
+          <li><a href="#workspace">简历</a></li>
+          <li><a href="#path">求职路径</a></li>
+        </ul>
+      </nav>
+      <button class="header-cta" type="button" data-toast="已进入快速开始流程">快速开始</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-left">
+          <p class="kicker">Resumate · 求职工作台</p>
+          <h1>下一份工作，<br />从一份<span class="hl">准备好的简历</span>开始。</h1>
+          <p class="hero-sub">整理经历、打磨表达、追踪投递。Resumate 把「准备求职」拆成清晰可执行的步骤，你只需要一步一步走完。</p>
+          <div class="hero-actions">
+            <button class="btn-primary" type="button" data-toast="已打开简历编辑器">继续完善简历</button>
+            <button class="btn-secondary" type="button" data-toast="已创建新的求职计划">新建求职计划</button>
+          </div>
+        </div>
+        <div class="hero-right" aria-label="关键数据">
+          <div class="hero-fact"><strong>78%</strong><span>简历完成度</span></div>
+          <div class="hero-fact"><strong>3</strong><span>进行中的投递</span></div>
+          <div class="hero-fact"><strong>1</strong><span>待补全模块</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workspace -->
+    <section class="workspace" id="workspace" aria-labelledby="workspace-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="workspace-title">我的工作区</h2>
+          <p class="index">01 — Workspace</p>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="简历视图切换">
+          <button class="tab" type="button" role="tab" id="tab-overview" aria-selected="true" aria-controls="panel-overview">概览</button>
+          <button class="tab" type="button" role="tab" id="tab-activity" aria-selected="false" aria-controls="panel-activity" tabindex="-1">最近动态</button>
+          <button class="tab" type="button" role="tab" id="tab-next" aria-selected="false" aria-controls="panel-next" tabindex="-1">下一步</button>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview">
+          <div class="resume-summary">
+            <div class="resume-id">
+              <h3 class="resume-name">林默 — 产品设计师</h3>
+              <p class="resume-meta">上次编辑于 2 小时前 · 适用于产品设计岗位 · 中文版本</p>
+              <div class="progress-track" role="progressbar" aria-label="简历完成度" aria-valuenow="78" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-fill"></div>
+              </div>
+              <p class="progress-caption"><span>完成度</span><span>78 / 100</span></p>
+            </div>
+            <div class="resume-score">
+              <p class="score-num">78%</p>
+              <p class="score-label">完成度评分</p>
+            </div>
+          </div>
+          <div class="checklist" role="list" aria-label="简历模块清单">
+            <div class="check-item done" role="listitem"><span class="check-badge" aria-hidden="true">✓</span>个人信息<span class="state">已完成</span></div>
+            <div class="check-item done" role="listitem"><span class="check-badge" aria-hidden="true">✓</span>工作经历<span class="state">已完成</span></div>
+            <div class="check-item done" role="listitem"><span class="check-badge" aria-hidden="true">✓</span>项目成果<span class="state">已完成</span></div>
+            <div class="check-item todo" role="listitem"><span class="check-badge" aria-hidden="true">!</span>作品集链接<span class="state">待补全</span></div>
+          </div>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-activity" aria-labelledby="tab-activity" hidden>
+          <ul class="plain-list">
+            <li><span>完成了「工作经历」模块的措辞优化</span><time datetime="2026-05-18T10:42">今天 10:42</time></li>
+            <li><span>保存了 3 个目标职位关键词</span><time datetime="2026-05-17T18:20">昨天 18:20</time></li>
+            <li><span>导出了一份 PDF 简历（中文）</span><time datetime="2026-05-15">5 月 15 日</time></li>
+            <li><span>创建了求职计划「2026 春季产品岗」</span><time datetime="2026-05-12">5 月 12 日</time></li>
+          </ul>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-next" aria-labelledby="tab-next" hidden>
+          <div class="next-step">
+            <h3>今天只做<em>一件事</em>。</h3>
+            <p>补上作品集链接，简历完成度即可达到 100%。完成后建议立即导出 PDF 并更新到进行中的 3 个投递。</p>
+            <button class="btn-primary" type="button" data-toast="已定位到「作品集链接」模块">去完成</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Path -->
+    <section id="path" aria-labelledby="path-title">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 id="path-title">清晰的求职路径</h2>
+          <p class="index">02 — Path</p>
+        </div>
+        <div class="path-grid">
+          <article class="path-card">
+            <p class="num" aria-hidden="true">01</p>
+            <h3>整理经历</h3>
+            <p>把分散的项目与经历归拢到一处，形成结构化的个人素材库。</p>
+            <span class="tag">已完成</span>
+          </article>
+          <article class="path-card current">
+            <p class="num" aria-hidden="true">02</p>
+            <h3>打磨简历</h3>
+            <p>按目标职位逐模块打磨表达，用完成度追踪每一处短板。</p>
+            <span class="tag">进行中 · 78%</span>
+          </article>
+          <article class="path-card">
+            <p class="num" aria-hidden="true">03</p>
+            <h3>追踪投递</h3>
+            <p>记住每一次投递与反馈，让下一步行动始终清晰可见。</p>
+            <span class="tag">待开始</span>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>Resumate — 帮助用户准备下一份工作</span>
+      <span>Prototype · Style 01 · Editorial Swiss</span>
+    </div>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Toast feedback */
+  var toast = document.querySelector(".toast");
+  var toastTimer = null;
+  document.querySelectorAll("[data-toast]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      toast.textContent = btn.getAttribute("data-toast");
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2000);
+    });
+  });
+
+  /* Tabs with full keyboard support (WAI-ARIA tabs pattern) */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function activateTab(tab, setFocus){
+    tabs.forEach(function(t){
+      var selected = t === tab;
+      t.setAttribute("aria-selected", selected ? "true" : "false");
+      t.tabIndex = selected ? 0 : -1;
+      var panel = document.getElementById(t.getAttribute("aria-controls"));
+      if(panel) panel.hidden = !selected;
+    });
+    if(setFocus) tab.focus();
+  }
+  tabs.forEach(function(tab, i){
+    tab.addEventListener("click", function(){ activateTab(tab, false); });
+    tab.addEventListener("keydown", function(e){
+      var idx = null;
+      if(e.key === "ArrowRight") idx = (i + 1) % tabs.length;
+      else if(e.key === "ArrowLeft") idx = (i - 1 + tabs.length) % tabs.length;
+      else if(e.key === "Home") idx = 0;
+      else if(e.key === "End") idx = tabs.length - 1;
+      if(idx !== null){ e.preventDefault(); activateTab(tabs[idx], true); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

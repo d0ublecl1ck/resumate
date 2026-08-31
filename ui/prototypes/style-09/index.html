@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resumate · Glass Orbit — 准备你的下一份工作</title>
+<style>
+  :root{
+    --bg:#0e1216;
+    --bg-2:#141a21;
+    --ink:#eef4f6;
+    --muted:#9aa8b2;
+    --faint:#6b7883;
+    --cyan:#3fd6e0;
+    --cyan-deep:#0e7f8c;
+    --cyan-soft:rgba(63,214,224,.14);
+    --glass:rgba(255,255,255,.05);
+    --glass-strong:rgba(255,255,255,.09);
+    --line:rgba(255,255,255,.12);
+    --line-soft:rgba(255,255,255,.07);
+    --amber:#f5c26b;
+    --radius:16px;
+    --shadow:0 24px 60px rgba(0,0,0,.45);
+    --focus:0 0 0 3px rgba(63,214,224,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 85% -10%, rgba(63,214,224,.10), transparent 60%),
+      radial-gradient(700px 500px at -10% 30%, rgba(63,214,224,.06), transparent 55%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font:16px/1.6 "SF Pro Text",Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100dvh;
+  }
+  ::selection{background:rgba(63,214,224,.3)}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+  button:focus-visible,a:focus-visible{outline:none;box-shadow:var(--focus);border-radius:10px}
+  .shell{max-width:1180px;margin:0 auto;padding:0 28px 90px}
+
+  /* ── Nav ── */
+  .nav{
+    position:sticky;top:14px;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin-top:14px;padding:12px 18px;
+    background:rgba(18,24,30,.66);
+    backdrop-filter:blur(18px) saturate(1.4);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid var(--line-soft);border-radius:18px;
+  }
+  .brand{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:-.01em;font-size:17px;padding:6px 4px}
+  .brand-mark{
+    width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--cyan) 0%,var(--cyan-deep) 100%);
+    color:#06282c;font-size:16px;font-weight:800;
+    box-shadow:0 0 18px rgba(63,214,224,.35);
+  }
+  .nav-links{display:flex;gap:4px}
+  .nav-links a{
+    padding:9px 15px;border-radius:11px;font-size:14px;color:var(--muted);
+    transition:color .18s,background .18s;min-height:44px;display:inline-flex;align-items:center;
+  }
+  .nav-links a:hover{color:var(--ink);background:var(--glass)}
+  .nav-links a[aria-current="page"]{color:var(--cyan);background:var(--cyan-soft);font-weight:600}
+  .nav-cta{
+    padding:10px 18px;border-radius:12px;font-size:14px;font-weight:650;
+    background:var(--cyan);color:#06282c;min-height:44px;
+    transition:transform .15s,box-shadow .2s;
+    box-shadow:0 4px 16px rgba(63,214,224,.25);
+  }
+  .nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(63,214,224,.4)}
+  .nav-cta:active{transform:translateY(0) scale(.97)}
+
+  /* ── Hero ── */
+  .hero{
+    display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;
+    padding:88px 0 64px;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cyan);padding:7px 14px;border-radius:99px;
+    background:var(--cyan-soft);border:1px solid rgba(63,214,224,.25);
+  }
+  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,214,224,.5)}50%{opacity:.6;box-shadow:0 0 0 6px rgba(63,214,224,0)}}
+  .hero h1{
+    font-size:clamp(38px,5.4vw,62px);line-height:1.08;letter-spacing:-.035em;
+    font-weight:750;margin:22px 0 18px;text-wrap:balance;
+  }
+  .hero h1 .glow{
+    background:linear-gradient(100deg,#a8ecf0 0%,var(--cyan) 55%,#6ee7d8 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p.lede{color:var(--muted);font-size:17px;max-width:480px;margin:0}
+  .hero-actions{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+  .btn-primary{
+    padding:14px 26px;border-radius:13px;font-weight:700;font-size:15px;
+    background:var(--cyan);color:#06282c;min-height:48px;
+    box-shadow:0 6px 24px rgba(63,214,224,.3);
+    transition:transform .15s,box-shadow .2s;
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(63,214,224,.42)}
+  .btn-primary:active{transform:scale(.97)}
+  .btn-ghost{
+    padding:14px 22px;border-radius:13px;font-weight:600;font-size:15px;
+    background:var(--glass);border:1px solid var(--line);color:var(--ink);min-height:48px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    transition:background .18s,border-color .18s,transform .15s;
+  }
+  .btn-ghost:hover{background:var(--glass-strong);border-color:rgba(255,255,255,.22)}
+  .btn-ghost:active{transform:scale(.97)}
+  .hero-meta{display:flex;gap:26px;margin-top:36px;color:var(--faint);font-size:13px}
+  .hero-meta strong{display:block;color:var(--ink);font-size:19px;font-variant-numeric:tabular-nums}
+
+  /* Orbit visual */
+  .orbit-stage{position:relative;aspect-ratio:1;max-width:420px;margin:0 auto;width:100%}
+  .orbit-ring{
+    position:absolute;border-radius:50%;border:1px dashed rgba(63,214,224,.22);
+    inset:0;
+  }
+  .orbit-ring.r2{inset:16%}
+  .orbit-ring.r3{inset:32%}
+  .orbit-core{
+    position:absolute;inset:38%;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,rgba(63,214,224,.5),rgba(14,127,140,.35) 70%);
+    border:1px solid rgba(63,214,224,.4);
+    box-shadow:0 0 60px rgba(63,214,224,.25),inset 0 0 30px rgba(63,214,224,.15);
+    display:grid;place-items:center;text-align:center;
+  }
+  .orbit-core .pct{font-size:clamp(28px,3vw,36px);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+  .orbit-core small{color:#bdf0f4;font-size:12px;letter-spacing:.08em}
+  .sat{
+    position:absolute;width:14px;height:14px;border-radius:50%;
+    background:var(--cyan);box-shadow:0 0 14px rgba(63,214,224,.7);
+    offset-rotate:0deg;
+  }
+  .sat.s1{offset-path:circle(50% at 50% 50%);animation:orbit 14s linear infinite}
+  .sat.s2{offset-path:circle(34% at 50% 50%);animation:orbit 9s linear infinite reverse;background:#a8ecf0;width:10px;height:10px}
+  .sat.s3{offset-path:circle(18% at 50% 50%);animation:orbit 6.5s linear infinite;background:var(--amber);width:8px;height:8px;box-shadow:0 0 10px rgba(245,194,107,.6)}
+  @keyframes orbit{from{offset-distance:0%}to{offset-distance:100%}}
+  .orbit-tag{
+    position:absolute;padding:7px 12px;border-radius:10px;font-size:12px;font-weight:600;
+    background:rgba(20,28,35,.8);border:1px solid var(--line);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    color:var(--muted);white-space:nowrap;
+  }
+  .orbit-tag b{color:var(--cyan)}
+  .t1{top:6%;left:-4%}
+  .t2{bottom:12%;right:-6%}
+  .t3{bottom:-2%;left:14%}
+
+  /* ── Panels ── */
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--line-soft);
+    border-radius:var(--radius);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:var(--shadow);
+  }
+  .workspace{display:grid;grid-template-columns:1.45fr .8fr;gap:20px;align-items:start}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px 0;flex-wrap:wrap}
+  .panel-title{font-size:17px;font-weight:700;margin:0}
+  .panel-sub{color:var(--faint);font-size:13px;margin:4px 0 0}
+
+  /* Tabs */
+  .tabs{
+    display:flex;gap:4px;padding:4px;border-radius:12px;
+    background:rgba(0,0,0,.25);border:1px solid var(--line-soft);
+  }
+  .tab{
+    padding:9px 16px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);
+    min-height:40px;transition:background .18s,color .18s;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--cyan-soft);color:var(--cyan)}
+  .tab-body{padding:22px}
+  .tab-panel[hidden]{display:none}
+
+  /* Readiness */
+  .readiness{display:flex;gap:22px;align-items:center;margin-bottom:20px}
+  .ring{position:relative;width:92px;height:92px;flex-shrink:0}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .track{stroke:rgba(255,255,255,.08)}
+  .ring .val{stroke:var(--cyan);stroke-linecap:round;filter:drop-shadow(0 0 6px rgba(63,214,224,.5));transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)}
+  .ring-label{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .ring-label b{font-size:21px;font-variant-numeric:tabular-nums}
+  .ring-label small{display:block;color:var(--faint);font-size:10px;letter-spacing:.08em}
+  .readiness-info p{margin:0 0 6px;font-size:14px;color:var(--muted)}
+  .readiness-info strong{color:var(--ink)}
+  .chip{
+    display:inline-block;margin-top:6px;padding:4px 11px;border-radius:99px;font-size:12px;font-weight:600;
+    background:var(--cyan-soft);color:var(--cyan);border:1px solid rgba(63,214,224,.25);
+  }
+
+  .steps{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+  .step{
+    display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:12px;
+    border:1px solid var(--line-soft);background:rgba(255,255,255,.03);
+    transition:border-color .18s,background .18s;
+  }
+  .step:hover{border-color:rgba(63,214,224,.3)}
+  .step-check{
+    width:24px;height:24px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+    font-size:12px;font-weight:800;
+  }
+  .step.done .step-check{background:var(--cyan);color:#06282c}
+  .step.todo .step-check{border:1.5px solid rgba(245,194,107,.6);color:var(--amber);background:rgba(245,194,107,.08)}
+  .step-name{font-size:14px;font-weight:600}
+  .step-note{margin-left:auto;font-size:12px;color:var(--faint)}
+  .step.todo .step-note{color:var(--amber)}
+
+  /* Job match rows */
+  .jobs{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+  .job{
+    display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;
+    border:1px solid var(--line-soft);background:rgba(255,255,255,.03);
+  }
+  .job-logo{
+    width:40px;height:40px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;
+    font-weight:800;font-size:15px;background:var(--glass-strong);border:1px solid var(--line);color:var(--cyan);
+  }
+  .job-info{min-width:0}
+  .job-name{font-size:14px;font-weight:650}
+  .job-co{font-size:12px;color:var(--faint)}
+  .match{margin-left:auto;text-align:right;flex-shrink:0}
+  .match b{font-size:16px;color:var(--cyan);font-variant-numeric:tabular-nums}
+  .match small{display:block;font-size:11px;color:var(--faint)}
+
+  /* Tracking */
+  .kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .kcol{border:1px solid var(--line-soft);border-radius:12px;padding:12px;background:rgba(0,0,0,.18)}
+  .kcol h4{margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between}
+  .kcol h4 span{color:var(--cyan)}
+  .kcard{padding:11px 12px;border-radius:10px;background:var(--glass-strong);border:1px solid var(--line-soft);font-size:13px;margin-bottom:8px}
+  .kcard:last-child{margin-bottom:0}
+  .kcard small{display:block;color:var(--faint);font-size:11px;margin-top:3px}
+
+  /* Side column */
+  .side{display:grid;gap:20px}
+  .focus-card{
+    padding:22px;border-radius:var(--radius);
+    background:linear-gradient(150deg,rgba(63,214,224,.14),rgba(63,214,224,.04) 60%);
+    border:1px solid rgba(63,214,224,.28);
+    box-shadow:var(--shadow);
+  }
+  .focus-card h3{margin:0 0 8px;font-size:16px}
+  .focus-card p{margin:0 0 16px;font-size:13px;color:var(--muted)}
+  .activity{list-style:none;margin:0;padding:20px 22px;display:grid;gap:0}
+  .activity li{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+  .activity li:last-child{border-bottom:0}
+  .activity .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);margin-top:7px;flex-shrink:0;box-shadow:0 0 8px rgba(63,214,224,.5)}
+  .activity small{display:block;color:var(--faint);font-size:11px;margin-top:2px}
+
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line-soft);color:var(--faint);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  /* Toast */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+    background:rgba(20,28,35,.92);border:1px solid rgba(63,214,224,.35);
+    color:var(--ink);padding:13px 20px;border-radius:13px;font-size:14px;font-weight:600;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:200;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ── Responsive ── */
+  @media(max-width:900px){
+    .hero{grid-template-columns:1fr;padding:56px 0 44px;gap:40px}
+    .orbit-stage{max-width:340px}
+    .workspace{grid-template-columns:1fr}
+    .nav-links{display:none}
+  }
+  @media(max-width:560px){
+    .shell{padding:0 16px 70px}
+    .hero h1{font-size:36px}
+    .hero-actions{flex-direction:column;align-items:stretch}
+    .hero-actions button{width:100%}
+    .kanban{grid-template-columns:1fr}
+    .readiness{flex-direction:column;align-items:flex-start}
+    .panel-head{flex-direction:column;align-items:stretch}
+    .tabs{align-self:stretch}
+    .tab{flex:1}
+    .hero-meta{flex-wrap:wrap;gap:18px}
+    .t1{left:0}.t2{right:0}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="nav" role="banner">
+    <a class="brand" href="#top" aria-label="Resumate 首页">
+      <span class="brand-mark" aria-hidden="true">R</span> Resumate
+    </a>
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#workspace" aria-current="page">工作台</a>
+      <a href="#readiness">简历准备</a>
+      <a href="#jobs">职位匹配</a>
+      <a href="#tracking">投递追踪</a>
+    </nav>
+    <button class="nav-cta" type="button" data-toast="已打开简历编辑器（原型演示）">继续编辑简历</button>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <span class="eyebrow"><span class="pulse" aria-hidden="true"></span>下一份工作 · 准备中</span>
+        <h1 id="hero-title">让每一次投递，<br />都<span class="glow">更有把握</span>。</h1>
+        <p class="lede">Resumate 把你的经历、目标职位和投递节奏放进同一个轨道——简历准备度、岗位匹配与进展，一眼看清。</p>
+        <div class="hero-actions">
+          <button class="btn-primary" type="button" data-toast="继续完善简历：还差 2 个模块">继续完善简历 →</button>
+          <button class="btn-ghost" type="button" data-toast="已创建新的求职计划（原型演示）">＋ 新建求职计划</button>
+        </div>
+        <div class="hero-meta" aria-label="本周概览">
+          <div><strong>82%</strong>简历准备度</div>
+          <div><strong>6</strong>个匹配职位</div>
+          <div><strong>4</strong>份投递进行中</div>
+        </div>
+      </div>
+
+      <div class="orbit-stage" role="img" aria-label="简历准备度轨道图：中心显示 82%，外围轨道分布着经历、技能与作品集模块">
+        <div class="orbit-ring" aria-hidden="true"></div>
+        <div class="orbit-ring r2" aria-hidden="true"></div>
+        <div class="orbit-ring r3" aria-hidden="true"></div>
+        <div class="orbit-core">
+          <div><span class="pct" id="orbit-pct">82%</span><small>READY</small></div>
+        </div>
+        <span class="sat s1" aria-hidden="true"></span>
+        <span class="sat s2" aria-hidden="true"></span>
+        <span class="sat s3" aria-hidden="true"></span>
+        <span class="orbit-tag t1">工作经历 <b>已就绪</b></span>
+        <span class="orbit-tag t2">技能关键词 <b>+3</b></span>
+        <span class="orbit-tag t3">作品集 <b>待补充</b></span>
+      </div>
+    </section>
+
+    <section class="workspace" id="workspace" aria-label="求职工作区">
+      <div class="panel" id="readiness">
+        <div class="panel-head">
+          <div>
+            <h2 class="panel-title">我的求职工作区</h2>
+            <p class="panel-sub">林默 · 目标：高级产品设计师</p>
+          </div>
+          <div class="tabs" role="tablist" aria-label="工作区视图切换">
+            <button class="tab" type="button" role="tab" id="tab-resume" aria-selected="true" aria-controls="panel-resume">简历准备</button>
+            <button class="tab" type="button" role="tab" id="tab-jobs" aria-selected="false" aria-controls="panel-jobs" tabindex="-1">职位匹配</button>
+            <button class="tab" type="button" role="tab" id="tab-track" aria-selected="false" aria-controls="panel-track" tabindex="-1">投递追踪</button>
+          </div>
+        </div>
+
+        <div class="tab-body">
+          <div class="tab-panel" role="tabpanel" id="panel-resume" aria-labelledby="tab-resume">
+            <div class="readiness">
+              <div class="ring" role="img" aria-label="简历完成度 82%">
+                <svg width="92" height="92" viewBox="0 0 92 92" aria-hidden="true">
+                  <circle class="track" cx="46" cy="46" r="40" fill="none" stroke-width="8"/>
+                  <circle class="val" id="ring-val" cx="46" cy="46" r="40" fill="none" stroke-width="8"
+                          stroke-dasharray="251.3" stroke-dashoffset="45.2"/>
+                </svg>
+                <div class="ring-label"><div><b>82%</b><small>完成度</small></div></div>
+              </div>
+              <div class="readiness-info">
+                <p>简历 <strong>「林默_产品设计_v3」</strong> 还差最后一步。补上作品集链接，完成度即达 <strong>100%</strong>。</p>
+                <span class="chip">预计 10 分钟完成</span>
+              </div>
+            </div>
+            <ul class="steps">
+              <li class="step done"><span class="step-check" aria-hidden="true">✓</span><span class="step-name">个人信息</span><span class="step-note">已完成</span></li>
+              <li class="step done"><span class="step-check" aria-hidden="true">✓</span><span class="step-name">工作经历</span><span class="step-note">已完成</span></li>
+              <li class="step done"><span class="step-check" aria-hidden="true">✓</span><span class="step-name">项目成果量化</span><span class="step-note">已完成</span></li>
+              <li class="step todo"><span class="step-check" aria-hidden="true">!</span><span class="step-name">作品集链接</span><span class="step-note">待补充</span></li>
+            </ul>
+          </div>
+
+          <div class="tab-panel" role="tabpanel" id="panel-jobs" aria-labelledby="tab-jobs" hidden>
+            <ul class="jobs" id="jobs">
+              <li class="job"><span class="job-logo" aria-hidden="true">N</span><div class="job-info"><div class="job-name">高级产品设计师</div><div class="job-co">Nebula Labs · 上海 · 远程可选</div></div><div class="match"><b>94%</b><small>匹配度</small></div></li>
+              <li class="job"><span class="job-logo" aria-hidden="true">O</span><div class="job-info"><div class="job-name">产品设计 Lead</div><div class="job-co">Orbit Cloud · 杭州</div></div><div class="match"><b>88%</b><small>匹配度</small></div></li>
+              <li class="job"><span class="job-logo" aria-hidden="true">Q</span><div class="job-info"><div class="job-name">资深体验设计师</div><div class="job-co">Quanta · 深圳</div></div><div class="match"><b>81%</b><small>匹配度</small></div></li>
+            </ul>
+          </div>
+
+          <div class="tab-panel" role="tabpanel" id="panel-track" aria-labelledby="tab-track" hidden>
+            <div class="kanban" id="tracking">
+              <div class="kcol"><h4>已投递 <span>3</span></h4>
+                <div class="kcard">高级产品设计师 · Nebula Labs<small>3 天前</small></div>
+                <div class="kcard">UX Designer · Fathom<small>5 天前</small></div>
+                <div class="kcard">产品设计师 · Lumen<small>1 周前</small></div>
+              </div>
+              <div class="kcol"><h4>面试中 <span>1</span></h4>
+                <div class="kcard">产品设计 Lead · Orbit Cloud<small>二面 · 周四 14:00</small></div>
+              </div>
+              <div class="kcol"><h4>待跟进 <span>2</span></h4>
+                <div class="kcard">资深体验设计师 · Quanta<small>建议今天发送跟进邮件</small></div>
+                <div class="kcard">设计系统专家 · Vela<small>HR 已读，等待回复</small></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="focus-card">
+          <h3>今日焦点</h3>
+          <p>补上作品集链接，简历完成度即可到达 100%，并解锁 2 个高匹配职位的投递。</p>
+          <button class="btn-primary" type="button" data-toast="已定位到「作品集链接」模块（原型演示）" style="width:100%">立即完成 →</button>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2 class="panel-title">最近动态</h2>
+            <button class="btn-ghost" type="button" style="padding:8px 14px;min-height:40px;font-size:13px" data-toast="动态已刷新">刷新</button>
+          </div>
+          <ul class="activity">
+            <li><span class="dot" aria-hidden="true"></span><div>完成「项目成果量化」模块<small>今天 10:42</small></div></li>
+            <li><span class="dot" aria-hidden="true"></span><div>新增 3 个职位关键词匹配<small>昨天 18:20</small></div></li>
+            <li><span class="dot" aria-hidden="true"></span><div>导出 PDF 简历「v3」<small>2 天前</small></div></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Resumate · Glass Orbit 原型</span>
+    <span>把下一份工作，准备得更好。</span>
+  </footer>
+</div>
+
+<div class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Toast feedback */
+  var toast=document.querySelector('.toast'),timer=null;
+  document.querySelectorAll('[data-toast]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      toast.textContent=btn.getAttribute('data-toast');
+      toast.classList.add('show');
+      clearTimeout(timer);
+      timer=setTimeout(function(){toast.classList.remove('show')},2400);
+    });
+  });
+
+  /* Tabs with full keyboard support (ARIA tabs pattern) */
+  var tabs=Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function activate(tab,focus){
+    tabs.forEach(function(t){
+      var on=t===tab;
+      t.setAttribute('aria-selected',on?'true':'false');
+      t.tabIndex=on?0:-1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden=!on;
+    });
+    if(focus)tab.focus();
+  }
+  tabs.forEach(function(tab,i){
+    tab.addEventListener('click',function(){activate(tab,false)});
+    tab.addEventListener('keydown',function(e){
+      var n=null;
+      if(e.key==='ArrowRight')n=tabs[(i+1)%tabs.length];
+      else if(e.key==='ArrowLeft')n=tabs[(i-1+tabs.length)%tabs.length];
+      else if(e.key==='Home')n=tabs[0];
+      else if(e.key==='End')n=tabs[tabs.length-1];
+      if(n){e.preventDefault();activate(n,true)}
+    });
+  });
+
+  /* Readiness ring demo: click "立即完成" nudges ring toward 100% */
+  var ring=document.getElementById('ring-val'),pct=document.getElementById('orbit-pct'),done=false;
+  document.querySelector('.focus-card .btn-primary').addEventListener('click',function(){
+    if(done)return;done=true;
+    ring.style.strokeDashoffset='0';
+    var v=82,iv=setInterval(function(){
+      v++;pct.textContent=v+'%';
+      document.querySelector('.ring-label b').textContent=v+'%';
+      if(v>=100){clearInterval(iv);
+        var step=document.querySelector('.step.todo');
+        if(step){step.classList.remove('todo');step.classList.add('done');
+          step.querySelector('.step-check').textContent='✓';
+          step.querySelector('.step-note').textContent='已完成';}
+      }
+    },28);
+  });
+})();
+</script>
+</body>
+</html>
