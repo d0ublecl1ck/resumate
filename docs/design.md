@@ -4,20 +4,79 @@
 
 ## 设计哲学
 
-TODO
+Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`backend/` 提供 FastAPI 服务。后端当前实现健康检查，业务领域随具体需求增加。
+
+采用模块制组织 HTTP 能力，以明确的文件职责和显式依赖保持结构可追踪。基础设施探活使用 FastAPI 依赖；业务规则出现后，再在对应模块引入 service、dao 和 models。
 
 ## 架构
 
-TODO
+### 后端分层
+
+| 位置（相对 backend/） | 职责 |
+| --- | --- |
+| `app/main.py` | 组合根，显式导入并注册各模块 router |
+| `app/core/config.py` | Pydantic Settings，集中读取环境变量和 `.env`，缓存配置实例 |
+| `app/core/db.py` | SQLAlchemy 引擎、会话工厂、请求会话依赖和数据库探活依赖 |
+| `app/core/deps.py` | 分页参数依赖与鉴权占位 |
+| `app/modules/<domain>/api.py` | HTTP 路由、依赖声明、请求绑定及响应映射 |
+| `app/modules/<domain>/schemas.py` | 显式请求和响应契约 |
+| `app/shared/` | 两个以上模块复用的领域 schema、常量和工具 |
+| `app/jobs/`、`app/tasks/` | 长时或定时作业、小任务入口；当前仅目录占位 |
+
+- **WHEN** 实现 HTTP 接口 -> **MUST** 按领域放入 `app/modules/<domain>/`，路由仅处理传输语义，数据库访问放在 DAO 或基础设施依赖。
+- **WHEN** 模块需要业务规则和持久化 -> **MUST** 在模块内按 `api → service → dao → models` 组织；service **MUST NOT** 依赖 FastAPI 传输对象，DAO **MUST NOT** 决定展示内容或 HTTP 状态码。
+- **WHEN** 编写 `core` 或 `shared` -> **MUST NOT** 反向导入 `modules`；共享领域对象需至少两个模块复用。
+- **WHEN** 注册 router -> **MUST** 在 `app/main.py` 显式注册，**MUST NOT** 运行时扫描目录。
+
+### 健康检查流程
+
+`GET /health/ → check_database_connection → get_db → SELECT 1 → HealthResponse`
+
+`check_database_connection` 位于 `app/core/db.py`，以同步依赖运行 SQL，避免在异步路由中阻塞事件循环。`get_db` 在请求结束后关闭会话。路由仅构造响应模型。
+
+数据库可用时返回 `200 {"status":"ok"}`；连接或查询失败时异常交由框架处理，默认返回 `500 Internal Server Error`。因此该接口检查应用与数据库就绪状态。OpenAPI 位于 `/openapi.json`，交互文档位于 `/docs`。
 
 ## 数据模型
 
-TODO
+当前没有业务 ORM 模型或业务表。`DATABASE_URL` 由 Settings 读取，脚手架默认值为 `sqlite:///./app.db`，相对运行目录解析。
+
+`migrations/versions/` 目前仅包含占位文件；Alembic 依赖、配置与迁移脚本尚未建立。业务数据模型与数据库选型在对应功能设计时确定。
 
 ## 目录结构
 
-TODO
+```text
+.
+├── ui/                         # React + TypeScript + Vite
+├── backend/
+│   ├── pyproject.toml
+│   ├── uv.lock
+│   ├── README.md
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   ├── db.py
+│   │   │   └── deps.py
+│   │   ├── modules/health/
+│   │   │   ├── api.py
+│   │   │   └── schemas.py
+│   │   ├── shared/
+│   │   ├── jobs/
+│   │   └── tasks/
+│   ├── migrations/versions/   # 迁移目录占位
+│   └── tests/test_health.py
+├── docs/design.md
+├── docs/issues/
+└── quality-gates/
+```
+
+Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 ## 关键决策
 
-TODO
+- 后端采用 ArchKit FastAPI 模块制；通用蓝图中的 `user`、`report` 和 `cleanup` 是示例，具体业务模块按需求生成。
+- 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
+- `get_current_user` 尚为抛出 `NotImplementedError` 的占位函数，当前健康检查不依赖鉴权。
+- `APP_NAME` 配置字段已存在，但应用标题当前在 `main.py` 固定为 `backend`。
+- 后端用 uv 管理依赖；测试覆盖独立响应构造、真实数据库成功和故障路径及 OpenAPI 响应模型，测试数据库与运行数据库隔离。
+- 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。健康检查分层由代码审查与后端测试验证。
