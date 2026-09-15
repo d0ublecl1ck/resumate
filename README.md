@@ -18,7 +18,8 @@ uv run uvicorn app.main:app --reload
 
 ```bash
 uv run --directory backend pytest
+DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head
 archkit inspect .
 ```
 
-配置与接口行为见 [后端说明](backend/README.md)，架构见 [项目蓝图](docs/design.md)。
+迁移验证使用内存 SQLite。配置与接口行为见 [后端说明](backend/README.md)，架构见 [项目蓝图](docs/design.md)。

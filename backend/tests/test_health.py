@@ -15,15 +15,13 @@ from app.modules.health.api import get_health
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
-    )
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
 
-    def test_db() -> Iterator[Session]:
+    def database() -> Iterator[Session]:
         with Session(engine) as session:
             yield session
 
-    app.dependency_overrides[get_db] = test_db
+    app.dependency_overrides[get_db] = database
     try:
         with TestClient(app, raise_server_exceptions=False) as test_client:
             yield test_client
@@ -32,39 +30,30 @@ def client() -> Iterator[TestClient]:
         engine.dispose()
 
 
-def test_health_response_does_not_require_database_session() -> None:
-    response = asyncio.run(get_health())
-
-    assert response.model_dump() == {"status": "ok"}
+def test_response_is_independent_of_database():
+    assert asyncio.run(get_health()).model_dump() == {"status": "ok"}
 
 
-def test_health_returns_ok_status(client: TestClient) -> None:
+def test_health_and_schema(client: TestClient):
     response = client.get("/health/")
-
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+    document = client.get("/openapi.json").json()
+    schema = document["paths"]["/health/"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+    assert schema == {"$ref": "#/components/schemas/HealthResponse"}
 
 
-def test_health_route_is_documented_in_openapi(client: TestClient) -> None:
-    paths = client.get("/openapi.json").json()["paths"]
-
-    assert "/health/" in paths
-    assert paths["/health/"]["get"]["responses"]["200"]["content"]["application/json"]["schema"] == {
-        "$ref": "#/components/schemas/HealthResponse"
-    }
-
-
-def test_health_fails_when_database_is_unavailable(client: TestClient, tmp_path: Path) -> None:
+def test_database_failure_is_not_healthy(client: TestClient, tmp_path: Path):
     engine = create_engine(f"sqlite:///{tmp_path / 'missing' / 'app.db'}")
 
-    def unavailable_db() -> Iterator[Session]:
+    def database() -> Iterator[Session]:
         with Session(engine) as session:
             yield session
 
-    app.dependency_overrides[get_db] = unavailable_db
+    app.dependency_overrides[get_db] = database
     try:
         response = client.get("/health/")
-        assert response.status_code == 500, "Database failure must not report healthy"
-        assert response.text == "Internal Server Error", "Database details must not leak"
+        assert response.status_code == 500
+        assert response.text == "Internal Server Error"
     finally:
         engine.dispose()

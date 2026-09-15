@@ -40,7 +40,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 当前没有业务 ORM 模型或业务表。`DATABASE_URL` 由 Settings 读取，脚手架默认值为 `sqlite:///./app.db`，相对运行目录解析。
 
-`migrations/versions/` 目前仅包含占位文件；Alembic 依赖、配置与迁移脚本尚未建立。业务数据模型与数据库选型在对应功能设计时确定。
+Alembic 依赖、`alembic.ini`、`migrations/env.py` 与迁移文件模板已配置。`app/core/db.py` 定义声明式 `Base`；业务模型需继承它，并在迁移环境中显式导入。`migrations/versions/` 当前尚无业务迁移，业务数据模型与数据库选型在对应功能设计时确定。
 
 ## 目录结构
 
@@ -51,6 +51,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   ├── pyproject.toml
 │   ├── uv.lock
 │   ├── README.md
+│   ├── .env.example
+│   ├── alembic.ini
 │   ├── app/
 │   │   ├── main.py
 │   │   ├── core/
@@ -63,7 +65,10 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   ├── shared/
 │   │   ├── jobs/
 │   │   └── tasks/
-│   ├── migrations/versions/   # 迁移目录占位
+│   ├── migrations/
+│   │   ├── env.py
+│   │   ├── script.py.mako
+│   │   └── versions/
 │   └── tests/test_health.py
 ├── docs/design.md
 ├── docs/issues/
@@ -74,9 +79,9 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 ## 关键决策
 
-- 后端采用 ArchKit FastAPI 模块制；通用蓝图中的 `user`、`report` 和 `cleanup` 是示例，具体业务模块按需求生成。
+- 后端采用 FastAPI 模块制；当前业务域为 health，其余领域按需求增加，分层边界以本文为准。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
 - `get_current_user` 尚为抛出 `NotImplementedError` 的占位函数，当前健康检查不依赖鉴权。
-- `APP_NAME` 配置字段已存在，但应用标题当前在 `main.py` 固定为 `backend`。
+- `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试覆盖独立响应构造、真实数据库成功和故障路径及 OpenAPI 响应模型，测试数据库与运行数据库隔离。
 - 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。健康检查分层由代码审查与后端测试验证。
