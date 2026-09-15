@@ -20,8 +20,7 @@ Explore ten distinct homepage visual directions for Resumate before selecting on
 ## Scope
 
 - Produce ten standalone HTML prototypes under `ui/prototypes/style-01` through `style-10`.
-- Use `ui-ux-pro-max` guidance and keep each artifact independently viewable.
-- Use Pi K3 workers in parallel; workers must not create Issues or commits.
+- Keep each artifact independently viewable, responsive, and visually distinct.
 
 ## Non-goals
 
@@ -35,7 +34,7 @@ Explore ten distinct homepage visual directions for Resumate before selecting on
 
 ## Implementation
 
-Created ten independently viewable prototypes in `ui/prototypes/style-01` through `style-10`, plus `ui/prototypes/index.html` as a gallery chooser. Each Pi worker used the requested UI/UX and frontend skills without creating Issues or commits.
+Created ten independently viewable prototypes in `ui/prototypes/style-01` through `style-10`, plus `ui/prototypes/index.html` as a gallery chooser.
 
 ## Verification
 
