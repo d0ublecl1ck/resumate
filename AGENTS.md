@@ -6,4 +6,4 @@
 
 # FREAK
 
-- [ ] `docs/design.md` — 蓝图仍为模板；项目开始实现后核对架构与目录结构。记录：2026-08-31
+- [ ] `quality-gates/.gate-version` — 当前仅启用 generic 层；增加后端模块时核对 FastAPI 专项门禁覆盖。记录：2026-09-15
