@@ -1,19 +1,402 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Resumate 首页风格探索</title>
-  <style>body{margin:0;background:#f4f5f1;color:#17211b;font:16px/1.5 system-ui,sans-serif}.wrap{max-width:1180px;margin:auto;padding:42px 24px 60px}h1{font:500 48px/1.05 Georgia,serif;margin:0 0 10px}.sub{color:#68736c;margin:0 0 34px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.card{background:#fff;border:1px solid #dfe6df;border-radius:10px;overflow:hidden;box-shadow:0 10px 30px #18382912}.preview{height:170px;background:#e9eee8}.preview iframe{width:200%;height:340px;border:0;transform:scale(.5);transform-origin:0 0;pointer-events:none}.info{padding:15px 16px;display:flex;justify-content:space-between;align-items:center}.info strong{font-size:15px}.info a{color:#245c45;font-weight:700;text-decoration:none}@media(max-width:520px){h1{font-size:38px}.wrap{padding:28px 16px}.preview{height:150px}.preview iframe{height:300px}}</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resumate · 为下一份工作做好准备</title>
+  <style>
+    :root{
+      --ink:#1d2130;
+      --ink-soft:#4a5068;
+      --paper:#fff9ec;
+      --card:#ffffff;
+      --coral:#ff6b4a;
+      --coral-deep:#c23a17;
+      --cobalt:#2b3fd8;
+      --cobalt-deep:#1f2fb0;
+      --yellow:#ffe98f;
+      --yellow-soft:#fff4c4;
+      --line:#ead9bd;
+      --radius:20px;
+      --shadow:0 16px 40px rgba(29,33,48,.10);
+      --focus:0 0 0 3px var(--paper),0 0 0 6px var(--cobalt);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;background:var(--paper);color:var(--ink);
+      font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+      overflow-x:hidden;
+    }
+    button{font:inherit;cursor:pointer;touch-action:manipulation}
+    a{color:inherit;text-decoration:none}
+    :focus-visible{outline:none;box-shadow:var(--focus);border-radius:8px}
+
+    /* 背景渐变气泡（纯装饰） */
+    .blob{position:fixed;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none}
+    .blob-1{width:420px;height:420px;background:var(--coral);top:-120px;left:-100px}
+    .blob-2{width:360px;height:360px;background:var(--yellow);top:30%;right:-140px}
+    .blob-3{width:300px;height:300px;background:var(--cobalt);opacity:.22;bottom:-100px;left:20%}
+
+    .shell{max-width:1160px;margin:0 auto;padding:20px 24px 72px}
+
+    /* 顶栏 */
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:14px 0;
+    }
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+    .mark{
+      width:38px;height:38px;border-radius:12px;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--coral),var(--cobalt));color:#fff;font-weight:900;font-size:19px;
+      box-shadow:0 6px 14px rgba(43,63,216,.3);
+    }
+    .nav{display:flex;gap:6px;background:var(--card);border:2px solid var(--ink);border-radius:999px;padding:5px}
+    .nav a{
+      padding:9px 18px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink-soft);
+      min-height:44px;display:inline-flex;align-items:center;
+    }
+    .nav a[aria-current="page"]{background:var(--ink);color:#fff}
+    .nav a:hover:not([aria-current="page"]){background:var(--yellow-soft);color:var(--ink)}
+    .cta-nav{
+      border:2px solid var(--ink);background:var(--yellow);color:var(--ink);font-weight:800;
+      border-radius:999px;padding:11px 22px;min-height:44px;
+      box-shadow:4px 4px 0 var(--ink);transition:transform .15s,box-shadow .15s;
+    }
+    .cta-nav:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+    .cta-nav:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+
+    /* Hero */
+    .hero{padding:56px 0 40px;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;background:var(--card);border:2px solid var(--ink);
+      border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;box-shadow:3px 3px 0 var(--ink);
+    }
+    .eyebrow .pulse{width:9px;height:9px;border-radius:50%;background:var(--coral)}
+    .hero h1{
+      font-size:clamp(40px,5.4vw,66px);line-height:1.08;letter-spacing:-.03em;margin:22px 0 18px;font-weight:900;
+    }
+    .hero h1 .hl-coral{color:var(--coral-deep);position:relative}
+    .hero h1 .hl-underline{
+      background:linear-gradient(transparent 62%,var(--yellow) 62%);
+      padding:0 2px;border-radius:2px;
+    }
+    .hero p{color:var(--ink-soft);max-width:480px;font-size:17px;margin:0 0 28px}
+    .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+    .btn{
+      border-radius:999px;padding:14px 28px;font-weight:800;font-size:16px;min-height:48px;
+      border:2px solid var(--ink);transition:transform .15s,box-shadow .15s;
+    }
+    .btn-primary{background:var(--cobalt);color:#fff;box-shadow:5px 5px 0 var(--ink)}
+    .btn-primary:hover{background:var(--cobalt-deep);transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+    .btn-primary:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+    .btn-secondary{background:var(--card);color:var(--ink);box-shadow:5px 5px 0 var(--yellow)}
+    .btn-secondary:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--yellow)}
+    .btn-secondary:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--yellow)}
+
+    /* Hero 右侧简历卡片插画 */
+    .resume-mock{
+      background:var(--card);border:2px solid var(--ink);border-radius:var(--radius);
+      box-shadow:8px 8px 0 var(--coral);padding:24px;transform:rotate(1.5deg);
+    }
+    .resume-mock .rm-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .rm-avatar{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,var(--yellow),var(--coral));flex:none}
+    .rm-lines i{display:block;height:11px;border-radius:6px;background:var(--line);margin:9px 0}
+    .rm-lines .w60{width:60%}.rm-lines .w80{width:80%}.rm-lines .w45{width:45%}
+    .rm-badge{
+      display:inline-block;background:var(--yellow);border:2px solid var(--ink);border-radius:999px;
+      padding:3px 12px;font-size:12px;font-weight:800;margin:3px 4px 0 0;
+    }
+
+    /* 工作区 */
+    .workspace{display:grid;grid-template-columns:1.5fr 1fr;gap:24px;margin-top:24px}
+    .panel{
+      background:var(--card);border:2px solid var(--ink);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;
+    }
+    .panel-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      padding:18px 22px;border-bottom:2px solid var(--ink);
+    }
+    .panel-title{font-weight:900;font-size:18px;letter-spacing:-.01em}
+
+    /* Tabs */
+    .tabs{display:flex;gap:4px;background:var(--yellow-soft);border-radius:999px;padding:4px}
+    .tab{
+      border:0;background:transparent;color:var(--ink-soft);font-weight:700;font-size:14px;
+      padding:8px 16px;border-radius:999px;min-height:40px;transition:background .15s,color .15s;
+    }
+    .tab[aria-selected="true"]{background:var(--ink);color:#fff}
+    .tab:not([aria-selected="true"]):hover{color:var(--ink)}
+    .tabpanel{padding:22px}
+    .tabpanel[hidden]{display:none}
+
+    /* 进度总览 */
+    .progress-row{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+    .ring{position:relative;width:120px;height:120px;flex:none}
+    .ring svg{transform:rotate(-90deg)}
+    .ring .ring-val{
+      position:absolute;inset:0;display:grid;place-items:center;
+      font-weight:900;font-size:26px;font-variant-numeric:tabular-nums;
+    }
+    .ring .ring-val small{font-size:12px;font-weight:700;color:var(--ink-soft)}
+    .progress-meta{flex:1;min-width:220px}
+    .progress-meta h3{margin:0 0 6px;font-size:19px;font-weight:800}
+    .progress-meta p{margin:0;color:var(--ink-soft);font-size:14px}
+
+    /* 清单 */
+    .checklist{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:10px}
+    .check-item{
+      display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:14px;
+      padding:12px 14px;background:#fffdf6;transition:border-color .15s;
+    }
+    .check-item:hover{border-color:var(--ink)}
+    .check-item input{
+      appearance:none;width:26px;height:26px;flex:none;border:2px solid var(--ink);border-radius:8px;
+      background:var(--card);display:grid;place-items:center;cursor:pointer;margin:0;
+    }
+    .check-item input:checked{background:var(--cobalt);border-color:var(--cobalt)}
+    .check-item input:checked::after{content:"";width:12px;height:7px;border-left:3px solid #fff;border-bottom:3px solid #fff;transform:rotate(-45deg) translate(1px,-2px)}
+    .check-item input:focus-visible{box-shadow:var(--focus)}
+    .check-item .label{font-weight:600;font-size:15px}
+    .check-item.done .label{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--coral)}
+    .check-item .tag{margin-left:auto;font-size:12px;font-weight:800;padding:2px 10px;border-radius:999px;background:var(--yellow-soft);color:var(--ink);white-space:nowrap}
+
+    /* 侧栏 */
+    .side{display:grid;gap:24px;align-content:start}
+    .steps{padding:20px 22px;display:grid;gap:0}
+    .step{display:flex;gap:14px;padding:12px 0;border-bottom:1px dashed var(--line)}
+    .step:last-child{border:0}
+    .step-num{
+      width:34px;height:34px;flex:none;border-radius:50%;display:grid;place-items:center;
+      font-weight:900;font-size:14px;border:2px solid var(--ink);background:var(--card);
+    }
+    .step.done .step-num{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+    .step.now .step-num{background:var(--coral);border-color:var(--coral);color:#fff;animation:bob 2.4s ease-in-out infinite}
+    .step p{margin:0;font-size:14px;font-weight:700}
+    .step small{color:var(--ink-soft);font-size:12px}
+    .tip{
+      border:2px solid var(--ink);border-radius:var(--radius);padding:22px;
+      background:linear-gradient(135deg,var(--cobalt),var(--cobalt-deep));color:#fff;box-shadow:var(--shadow);
+    }
+    .tip strong{font-size:19px;font-weight:900;display:block;margin-bottom:6px}
+    .tip p{margin:0 0 16px;font-size:14px;color:#cdd4ff}
+    .tip .btn{background:var(--yellow);color:var(--ink);border-color:var(--ink);box-shadow:4px 4px 0 var(--ink);width:100%}
+    .tip .btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+    .tip .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    @media (prefers-reduced-motion:reduce){
+      *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;left:50%;bottom:28px;transform:translate(-50%,80px);
+      background:var(--ink);color:#fff;border-radius:999px;padding:12px 24px;font-weight:700;font-size:14px;
+      opacity:0;transition:transform .25s,opacity .25s;pointer-events:none;z-index:10;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    /* 响应式 */
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr;padding:36px 0 28px;gap:28px}
+      .resume-mock{transform:none;max-width:440px}
+      .workspace{grid-template-columns:1fr}
+    }
+    @media (max-width:600px){
+      .shell{padding:14px 16px 56px}
+      .topbar{flex-wrap:wrap}
+      .nav{order:3;width:100%;justify-content:space-between}
+      .nav a{flex:1;justify-content:center;padding:9px 8px}
+      .hero-actions{flex-direction:column;align-items:stretch}
+      .btn{width:100%}
+      .panel-head{flex-direction:column;align-items:flex-start}
+    }
+  </style>
 </head>
-<body><main class="wrap"><h1>Resumate 首页风格探索</h1><p class="sub">10 个方向，点击卡片进入完整原型。选定方向后再进入正式页面设计。</p><section class="grid">
-  <article class="card"><div class="preview"><iframe src="style-01/" title="Editorial Swiss"></iframe></div><div class="info"><strong>01 · Editorial Swiss</strong><a href="style-01/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-02/" title="Warm Paper"></iframe></div><div class="info"><strong>02 · Warm Paper</strong><a href="style-02/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-03/" title="Neo Brutalist"></iframe></div><div class="info"><strong>03 · Neo Brutalist</strong><a href="style-03/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-04/" title="Quiet Luxury"></iframe></div><div class="info"><strong>04 · Quiet Luxury</strong><a href="style-04/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-05/" title="Bento Career"></iframe></div><div class="info"><strong>05 · Bento Career</strong><a href="style-05/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-06/" title="Dark Studio"></iframe></div><div class="info"><strong>06 · Dark Studio</strong><a href="style-06/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-07/" title="Soft Botanical"></iframe></div><div class="info"><strong>07 · Soft Botanical</strong><a href="style-07/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-08/" title="Retro Terminal"></iframe></div><div class="info"><strong>08 · Retro Terminal</strong><a href="style-08/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-09/" title="Glass Orbit"></iframe></div><div class="info"><strong>09 · Glass Orbit</strong><a href="style-09/">查看 →</a></div></article>
-  <article class="card"><div class="preview"><iframe src="style-10/" title="Playful Gradient"></iframe></div><div class="info"><strong>10 · Playful Gradient</strong><a href="style-10/">查看 →</a></div></article>
-</section></main></body></html>
+<body>
+  <div class="blob blob-1" aria-hidden="true"></div>
+  <div class="blob blob-2" aria-hidden="true"></div>
+  <div class="blob blob-3" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Resumate 首页"><span class="mark" aria-hidden="true">R</span>Resumate</a>
+      <nav class="nav" aria-label="主导航">
+        <a href="#top" aria-current="page">工作台</a>
+        <a href="#workspace">简历</a>
+        <a href="#plan">求职计划</a>
+      </nav>
+      <button class="cta-nav" type="button" data-toast="编辑器准备中，马上开始打磨简历 ✍️">继续写简历</button>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <span class="eyebrow"><span class="pulse" aria-hidden="true"></span>周一 · 求职第 12 天</span>
+          <h1 id="hero-title">下一份工作，<br><span class="hl-coral">认真准备</span>的人<br>先拿到 <span class="hl-underline">offer</span>。</h1>
+          <p>Resumate 把写简历、投职位、备面试串成一条清晰的线。每天进步一点，让机会看见你。</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-toast="已打开简历编辑器，继续加油 🚀">继续完善简历 →</button>
+            <button class="btn btn-secondary" type="button" data-toast="已创建新的求职计划 📋">+ 新建求职计划</button>
+          </div>
+        </div>
+        <div class="resume-mock" aria-hidden="true">
+          <div class="rm-head">
+            <span class="rm-avatar"></span>
+            <div style="flex:1">
+              <div class="rm-lines"><i class="w60" style="margin:0 0 6px"></i><i class="w45" style="margin:0"></i></div>
+            </div>
+          </div>
+          <div class="rm-lines"><i></i><i class="w80"></i><i></i><i class="w60"></i></div>
+          <div style="margin-top:14px">
+            <span class="rm-badge">产品设计</span><span class="rm-badge">3 年经验</span><span class="rm-badge">作品集</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace" id="workspace" aria-label="求职工作区">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">我的简历准备</span>
+            <div class="tabs" role="tablist" aria-label="简历工作区视图">
+              <button class="tab" type="button" role="tab" id="tab-progress" aria-selected="true" aria-controls="panel-progress">进度概览</button>
+              <button class="tab" type="button" role="tab" id="tab-jobs" aria-selected="false" aria-controls="panel-jobs" tabindex="-1">投递记录</button>
+            </div>
+          </div>
+
+          <div class="tabpanel" role="tabpanel" id="panel-progress" aria-labelledby="tab-progress">
+            <div class="progress-row">
+              <div class="ring" role="img" aria-label="简历完成度 62%">
+                <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle cx="60" cy="60" r="50" fill="none" stroke="#f1e7d2" stroke-width="14"/>
+                  <circle id="ringArc" cx="60" cy="60" r="50" fill="none" stroke="#2b3fd8" stroke-width="14"
+                    stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="118.8"/>
+                </svg>
+                <span class="ring-val"><span id="ringVal">62<small>%</small></span></span>
+              </div>
+              <div class="progress-meta">
+                <h3>林默 · Product Designer</h3>
+                <p id="progressHint">勾选下面的清单，把完成度推到 100%。适用于产品设计岗位 · 上次编辑 2 小时前</p>
+              </div>
+            </div>
+            <ul class="checklist" id="checklist">
+              <li class="check-item done">
+                <input type="checkbox" id="ck1" checked data-label="个人信息">
+                <label class="label" for="ck1">个人信息</label>
+                <span class="tag">已完成</span>
+              </li>
+              <li class="check-item done">
+                <input type="checkbox" id="ck2" checked data-label="工作经历">
+                <label class="label" for="ck2">工作经历</label>
+                <span class="tag">已完成</span>
+              </li>
+              <li class="check-item done">
+                <input type="checkbox" id="ck3" checked data-label="项目成果">
+                <label class="label" for="ck3">项目成果</label>
+                <span class="tag">已完成</span>
+              </li>
+              <li class="check-item">
+                <input type="checkbox" id="ck4" data-label="作品集链接">
+                <label class="label" for="ck4">作品集链接</label>
+                <span class="tag">待补充</span>
+              </li>
+              <li class="check-item">
+                <input type="checkbox" id="ck5" data-label="自我评价">
+                <label class="label" for="ck5">自我评价</label>
+                <span class="tag">待补充</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="tabpanel" role="tabpanel" id="panel-jobs" aria-labelledby="tab-jobs" hidden>
+            <ul class="checklist" style="margin-top:0">
+              <li class="check-item"><span class="step-num" style="background:var(--cobalt);border-color:var(--cobalt);color:#fff">1</span><span class="label">投递「拾光 App · 高级产品设计师」</span><span class="tag">面试中</span></li>
+              <li class="check-item"><span class="step-num" style="background:var(--coral);border-color:var(--coral);color:#fff">2</span><span class="label">投递「南屿科技 · 产品设计专家」</span><span class="tag">已查看</span></li>
+              <li class="check-item"><span class="step-num">3</span><span class="label">收藏「澄海工作室 · 视觉设计师」</span><span class="tag">待投递</span></li>
+            </ul>
+            <p style="margin:18px 0 0;color:var(--ink-soft);font-size:14px">本周已投 2 份，回复率 50%。保持节奏 🎯</p>
+          </div>
+        </div>
+
+        <div class="side" id="plan">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">求职四步</span></div>
+            <div class="steps">
+              <div class="step done"><span class="step-num">✓</span><div><p>整理经历</p><small>3 段经历已归档</small></div></div>
+              <div class="step now"><span class="step-num">2</span><div><p>打磨简历</p><small>当前阶段 · 还差 2 项</small></div></div>
+              <div class="step"><span class="step-num">3</span><div><p>定向投递</p><small>本周目标 5 份</small></div></div>
+              <div class="step"><span class="step-num">4</span><div><p>面试冲刺</p><small>解锁于投递后</small></div></div>
+            </div>
+          </div>
+          <div class="tip">
+            <strong>今天只做一件事</strong>
+            <p>补上作品集链接，完成度立刻 +19%，简历通过率显著提升。</p>
+            <button class="btn" type="button" data-toast="已定位到「作品集链接」，去补全吧 ✨">去完成 →</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Toast 反馈
+    const toast = document.querySelector('.toast');
+    let toastTimer;
+    document.querySelectorAll('[data-toast]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        toast.textContent = btn.dataset.toast;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    });
+
+    // Tabs（支持方向键）
+    const tabs = [...document.querySelectorAll('.tab[role="tab"]')];
+    function selectTab(tab, focus = true) {
+      tabs.forEach(t => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', on);
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) tab.focus();
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => selectTab(t, false));
+      t.addEventListener('keydown', e => {
+        let n = null;
+        if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+        if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+        if (e.key === 'Home') n = 0;
+        if (e.key === 'End') n = tabs.length - 1;
+        if (n !== null) { e.preventDefault(); selectTab(tabs[n]); }
+      });
+    });
+
+    // 清单勾选联动进度环
+    const boxes = [...document.querySelectorAll('#checklist input[type="checkbox"]')];
+    const ringArc = document.getElementById('ringArc');
+    const ringVal = document.getElementById('ringVal');
+    const ring = document.querySelector('.ring');
+    const C = 314.16;
+    function refresh() {
+      const done = boxes.filter(b => b.checked).length;
+      const pct = Math.round(done / boxes.length * 100);
+      ringArc.style.strokeDashoffset = (C * (1 - pct / 100)).toFixed(1);
+      ringVal.innerHTML = pct + '<small>%</small>';
+      ring.setAttribute('aria-label', '简历完成度 ' + pct + '%');
+      boxes.forEach(b => {
+        const item = b.closest('.check-item');
+        item.classList.toggle('done', b.checked);
+        item.querySelector('.tag').textContent = b.checked ? '已完成' : '待补充';
+      });
+    }
+    boxes.forEach(b => b.addEventListener('change', refresh));
+  </script>
+</body>
+</html>
