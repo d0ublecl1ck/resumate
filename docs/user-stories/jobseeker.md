@@ -339,8 +339,10 @@
 ## Epic 13：系统设置与安全审计
 
 ### US-13.1 Agent 与模型配置【P0】
-作为求职者，我希望配置 Agent 行为（system_prompt、max_steps、enabled_tools、approval_policy）和模型 Provider，以便适配我的使用习惯与预算。
-- [ ] Agent 配置与模型配置 API
+作为求职者，我希望在个人设置中配置自己的 model 与 provider，由后端统一提供 AI 能力，以便用我选择的模型驱动对话编辑并控制成本。
+- [ ] 用户级模型配置：Provider、endpoint、model，存于个人设置
+- [ ] 后端 Model Gateway 统一对接各 Provider，向前端与 Agent 提供 AI 能力
+- [ ] Agent 行为配置（system_prompt、max_steps、enabled_tools、approval_policy）
 - [ ] API Key 加密保存，响应永不回传明文
 - [ ] 模型测试连通性接口
 

@@ -49,7 +49,9 @@
 - [ ] 接入文档含 Hermes、Codex 与通用 MCP 示例
 
 
-### US-12.4 能力发现与 Webhook【P1】
-作为外部 Agent 开发者，我希望通过 capability discovery 与 webhook 集成系统，以便自动化订阅变更。
-- [ ] `GET /.well-known/resume-agent` 返回 OpenAPI、MCP、认证方式和版本
-- [ ] Webhook：profile.updated、resume.version.created、export.completed
+### US-12.4 外部 Agent SKILL 接入指南【P0】
+作为外部 Agent 用户，我希望系统提供标准 SKILL 文件，指导我的 Agent 如何调用后端 API 并告知它可以为用户做哪些操作，以便外部 Agent 开箱即用地接管简历编辑。
+- [ ] 提供标准 SKILL（能力说明、API 调用方式、工具清单、典型操作流程）
+- [ ] SKILL 覆盖用户可能想要的操作：创建/编辑简历、选模板、从 Profile 生成、版本回滚、导出等
+- [ ] 外部 Agent 装载 SKILL 后无需阅读完整 OpenAPI 即可完成核心流程
+- [ ] SKILL 与公共 API 契约同步更新
