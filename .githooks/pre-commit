@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# pre-commit: 删除不再为空的目录中的 .gitkeep
+# 判定标准：.gitkeep 被 Git 跟踪，且其目录（含子目录）下存在其他被跟踪的文件。
+# 仅有未跟踪文件（如 .DS_Store）时保留 .gitkeep。
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+removed=()
+while IFS= read -r gk; do
+  dir=${gk%/.gitkeep}
+  others=$(git ls-files -- "$dir" | grep -vxF "$gk" | head -n 1 || true)
+  if [ -n "$others" ]; then
+    git rm -q --cached -- "$gk"
+    rm -f -- "$gk"
+    removed+=("$gk")
+  fi
+done < <(git ls-files '*.gitkeep')
+
+if ((${#removed[@]})); then
+  echo "pre-commit: 已删除不再为空的目录中的 .gitkeep:"
+  printf '  %s\n' "${removed[@]}"
+fi
