@@ -1,13 +1,14 @@
 ---
 id: 6afa5
-status: in-progress
+status: closed
 created_at: 2026-09-18T02:36:45.293Z
-updated_at: 2026-09-18T02:37:00.285Z
+updated_at: 2026-09-18T02:38:03.821Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-09-18T02:37:00.285Z
+closed_at: 2026-09-18T02:38:03.821Z
 ---
 
 # 调整模型配置与外部Agent接入用户故事
