@@ -26,6 +26,8 @@ archkit inspect .
 
 首页视觉规范以 [定稿原型](ui/prototypes/index.html) 为准。
 
+待实现的业务范围见 [用户故事](docs/user-stories/README.md)，授权、版本与失败处理见 [公共契约](docs/user-stories/contracts.md)，需求覆盖与原编号映射见 [覆盖表](docs/user-stories/coverage.md)。
+
 ## Git hooks
 
 克隆后执行一次 `git config core.hooksPath .githooks` 启用 pre-commit：提交前自动删除目录中已有其他被跟踪文件的 `.gitkeep`（仅 `.gitkeep` 或仅有未跟踪文件时保留）。
