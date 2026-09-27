@@ -42,7 +42,7 @@ def _document_payload(document: ResumeDocument | None) -> dict:
     return document.model_dump(by_alias=True, exclude_none=True)
 
 
-def _summarize_changes(before: dict, after: dict) -> tuple[int, list[str]]:
+def summarize_changes(before: dict, after: dict) -> tuple[int, list[str]]:
     before_sections = {section["id"]: section for section in before.get("sections", [])}
     after_sections = {section["id"]: section for section in after.get("sections", [])}
     changed = [section.get("title", section_id) for section_id, section in after_sections.items() if before_sections.get(section_id) != section]
@@ -62,7 +62,7 @@ def _commit_version(
     message: str,
     base_version_id: str | None = None,
 ) -> ResumeVersion:
-    change_count, affected_sections = _summarize_changes(resume.document or {}, document)
+    change_count, affected_sections = summarize_changes(resume.document or {}, document)
     now = _now()
     version = ResumeVersion(
         id=_new_id("ver"),
