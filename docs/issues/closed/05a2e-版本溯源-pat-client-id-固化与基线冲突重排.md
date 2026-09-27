@@ -1,14 +1,15 @@
 ---
 id: 05a2e
-status: in-progress
+status: closed
 created_at: 2026-09-27T16:34:28.992Z
-updated_at: 2026-09-27T16:34:45.155Z
+updated_at: 2026-09-27T16:47:14.927Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-27T16:34:45.155Z
+closed_at: 2026-09-27T16:47:14.927Z
 ---
 
 # 版本溯源、PAT client_id 固化与基线冲突重排
