@@ -31,20 +31,32 @@ Agent 配置目前只有 nextRunMode / budget；模型配置只有 provider / en
 
 ## Acceptance Criteria
 
-- [ ] 模型目录直接来自 litellm，仓库内不自维护任何模型清单。
-- [ ] provider / model / key 三者均可选，未配置时行为明确且可测试。
-- [ ] 连通性测试不泄漏 key，自动化测试不访问真实网络。
-- [ ] agent-core 提供可注入的 LiteLLMProvider，未安装 litellm 时优雅降级。
-- [ ] 前端 provider / model 来自 catalog，组件开源优先，i18n 双语齐全，pnpm -C ui test 与 archkit inspect . 通过。
-- [ ] 全量测试与 archkit inspect . 通过。
+- [x] 模型目录直接来自 litellm，仓库内不自维护任何模型清单。
+- [x] provider / model / key 三者均可选，未配置时行为明确且可测试。
+- [x] 连通性测试不泄漏 key，自动化测试不访问真实网络。
+- [x] agent-core 提供可注入的 LiteLLMProvider，未安装 litellm 时优雅降级。
+- [x] 前端 provider / model 来自 catalog，组件开源优先，i18n 双语齐全，pnpm -C ui test 与 archkit inspect . 通过。
+- [x] 全量测试与 archkit inspect . 通过。
 
 ## Implementation
 
-<!-- Complete after implementation. -->
+两条工作流（后端 + agent-core、前端）在隔离 worktree 中完成。
+
+- **选型**：litellm 作为 provider 适配与模型目录来源，仓库不自维护模型清单。
+- **后端 + agent-core**（`worktree-agent-core-pkg` → `23cf35a`，合并 `9912d6d`）：新增 `settings/catalog.py`（懒加载 litellm、`LITELLM_LOCAL_MODEL_COST_MAP=True` 离线读包内成本表、按 `litellm_provider` 分组、key 安全错误映射）；`GET /models/catalog`（settings:read，provider / q 过滤）；`/models/config` 的 provider / endpoint / model / key 全可选（`PUT {}` 可用）；`:test` 经 litellm、要求已配置 model；新增 `litellm_provider.py` 实现 `ModelProvider`（可选 extra、懒加载、未装抛 `LiteLLMUnavailableError`）；基础依赖仍为 httpx + pydantic。
+- **前端**（`worktree-agent-models-ui` → `bbee92c`，合并 `ace63b4`）：`types.ts` / `api.ts` 接入 catalog；新增 `ui/select.tsx`（封装 `@base-ui/react`，开源优先）；`settings-form.tsx` provider→model 级联、显式「不设置」保留可选、目录未命中保留已保存值；i18n 双语各 +8 键；MSW mock 与测试；扩展 `ui/prototypes/index.html` 目录选择态（只用既有令牌，无新视觉规则）。
 
 ## Verification
 
-<!-- Add commands and results after verification. -->
+| 命令 | 结果 |
+| --- | --- |
+| `uv run --directory backend pytest -q`（worktree） | exit 0，**120 passed** |
+| 集成后 `TEST_DATABASE_URL=...resumate_test_agentcore` 后端 | exit 0，**132 passed** |
+| `cd agent-core && uv sync && uv run pytest -q` | exit 0，**64 passed** |
+| `pnpm -C ui test` | 11 files / **57 passed** |
+| `archkit inspect .` | exit 0，Quality gates passed |
+
+目录数据来自 litellm（实测 131 providers / 3920 models）；测试设置本地成本表、连通性 monkeypatch，不访问真实网络；错误信息不含明文密钥；未装 litellm 时导入包仍可用。
 
 ## Related ADRs
 
