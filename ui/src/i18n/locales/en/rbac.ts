@@ -13,6 +13,10 @@ export default {
     title: "Permission catalogue",
     hint: "Permission codes are bound to endpoints and declared in code, so this list is read-only. Pick from it when creating or editing a role.",
   },
+  detail: {
+    empty: "Select a role on the left, or create a custom role.",
+    systemReadonly: "Built-in roles are owned by the code catalogue and are read-only.",
+  },
   group: {
     account: "Account",
     resume: "Resumes",
@@ -48,6 +52,7 @@ export default {
   },
   tree: {
     label: "Permission tree",
+    roleLabel: "Role tree",
     expand: "Expand",
     collapse: "Collapse",
   },

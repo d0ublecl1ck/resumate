@@ -13,6 +13,10 @@ export default {
     title: "权限目录",
     hint: "权限码与端点绑定，由代码静态声明，因此这里只读；新建/编辑角色时可从这里勾选。",
   },
+  detail: {
+    empty: "从左侧选择一个角色，或新建自定义角色。",
+    systemReadonly: "系统内置角色由代码目录维护，只读。",
+  },
   group: {
     account: "账号",
     resume: "简历",
@@ -48,6 +52,7 @@ export default {
   },
   tree: {
     label: "权限树",
+    roleLabel: "角色树",
     expand: "展开",
     collapse: "折叠",
   },
