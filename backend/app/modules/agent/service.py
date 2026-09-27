@@ -119,7 +119,7 @@ def _rebase_if_needed(db: Session, turn: AgentTurn, resume: Resume) -> bool:
     merged, conflict = rebase.merge_documents(old_base, staged, new_base)
     if conflict or merged is None:
         raise RebaseConflict(
-            "暂存改动与最新版本冲突，已保留暂存以待重新提案",
+            "暂存改动与最新版本冲突",
             latest_version_id=resume.current_version_id,
         )
     resume_service.stage_working_document(
@@ -136,6 +136,22 @@ def _rebase_if_needed(db: Session, turn: AgentTurn, resume: Resume) -> bool:
                 action.stale_reason = "基线已推进，需重新预览与审批"
     db.commit()
     return True
+
+
+def _rebase_or_abandon(db: Session, turn: AgentTurn, resume: Resume) -> tuple[bool, str | None]:
+    """Rebase, or on conflict abandon the staged copy so the turn can close.
+
+    Used by explicit cancel and the begin auto-close, where the turn must always
+    be able to reach a closed state (contract 15.7). Returns
+    (base_rebased, conflict_reason); a non-None reason means the staged working
+    copy was discarded as an explicit abandonment.
+    """
+    try:
+        return _rebase_if_needed(db, turn, resume), None
+    except RebaseConflict as conflict:
+        resume_service.clear_working_copy(resume)
+        db.commit()
+        return True, str(conflict)
 
 
 # --- idempotency ----------------------------------------------------------------
@@ -296,9 +312,22 @@ def clear_working_copy_quietly(resume: Resume) -> None:
 
 
 def _close_open_turn(db: Session, turn: AgentTurn, user: CurrentUser) -> None:
-    """C-04: settle and close an open turn before a new one starts."""
+    """C-04: settle and close an open turn before a new one starts.
+
+    A rebase conflict must never block the next turn (contract 15.7): the old
+    turn closes as cancelled and its conflicting staged copy is dropped so a
+    new turn can start.
+    """
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
-    _rebase_if_needed(db, turn, resume)
+    _, conflict_reason = _rebase_or_abandon(db, turn, resume)
+    if conflict_reason is not None:
+        for action in dao.list_actions_for_turn(db, turn.id):
+            if action.state == "pending":
+                action.state = "stale"
+                action.stale_reason = "基线冲突，旧轮次自动关闭"
+        _apply_result(turn, None, f"基线冲突，旧轮次自动关闭（{conflict_reason}）", "cancelled")
+        db.flush()
+        return
     message = turn.message or "轮次自动结算"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
     _apply_result(turn, version, message, "finalized")
@@ -375,13 +404,19 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
         return _replayed_turn(operation)
     _require_open(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
-    base_rebased = _rebase_if_needed(db, turn, resume)
+    base_rebased, conflict_reason = _rebase_or_abandon(db, turn, resume)
     for action in dao.list_actions_for_turn(db, turn.id):
         if action.state == "pending":
             action.state = "stale"
             action.stale_reason = "轮次已取消"
-    message = payload.reason or "Agent 轮次取消"
-    version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
+    if conflict_reason is not None:
+        # Explicit abandonment (contract 15.7): the conflicting staged copy is
+        # dropped on purpose so the turn can close, and the reason is recorded.
+        message = f"{payload.reason or 'Agent 轮次取消'}（{conflict_reason}）；暂存改动已按显式取消丢弃"
+        version = None
+    else:
+        message = payload.reason or "Agent 轮次取消"
+        version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
     _apply_result(turn, version, message, "cancelled")
     response = _turn_response(db, turn, base_rebased=base_rebased)
     _store_operation(db, turn, "cancel", payload.idempotency_key, request_hash, response)
