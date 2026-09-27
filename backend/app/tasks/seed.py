@@ -91,7 +91,6 @@ def seed_rbac(db: Session) -> int:
                 code=spec.code,
                 group=spec.group,
                 name=spec.name,
-                is_system=True,
                 created_at=now,
             )
             dao.add_permission(db, permission)
@@ -99,9 +98,16 @@ def seed_rbac(db: Session) -> int:
         else:
             permission.group = spec.group
             permission.name = spec.name
-            permission.is_system = True
         permissions[spec.code] = permission
     db.flush()
+
+    # The permission table mirrors the code catalogue exactly: prune any row that
+    # is no longer declared in rbac.py (permissions are code-owned, not user data).
+    catalogue = {spec.code for spec in PERMISSIONS}
+    for permission in dao.list_permissions(db):
+        if permission.code not in catalogue:
+            dao.remove_permission_links(db, permission.id)
+            dao.delete_permission(db, permission)
 
     # System roles are owned by rbac.py: reconcile their links exactly so an
     # out-of-band edit cannot silently widen a built-in role.

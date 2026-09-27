@@ -139,7 +139,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 当前公共端点（字段与 `ui/src/lib/types.ts` 对齐，JSON 使用 camelCase）：
 
 - 认证与权限：`POST /auth/register|login|logout`、`POST /auth/password`、`GET /auth/me`；用户：`GET /auth/users`（user:read）、`POST /auth/users/{id}/ban|unban`（user:ban/unban）、`POST /auth/users/{id}/role`（role:assign）。
-- 角色目录：`GET|POST /auth/roles`、`PATCH|DELETE /auth/roles/{id}`（role:write）；权限目录：`GET|POST /auth/permissions`、`PATCH|DELETE /auth/permissions/{id}`（permission:write）。会话经 HttpOnly Cookie 承载。
+- 角色目录：`GET|POST /auth/roles`、`PATCH|DELETE /auth/roles/{id}`（role:write）；权限目录只读：`GET /auth/permissions`。会话经 HttpOnly Cookie 承载。
 - 模板：`GET /templates`、`GET /templates/{template_id}`（只读）。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。
 - 岗位：`GET /jds`、`POST /jds`、`GET /jds/{jd_id}`、`PATCH /jds/{jd_id}`、`DELETE /jds/{jd_id}`、`PUT|DELETE /jds/{jd_id}/binding`。
@@ -157,9 +157,9 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。
 - 会话 Cookie 默认 `HttpOnly`、`SameSite=lax`、`Path=/`、TTL 7 天；生产必须开启 `SESSION_COOKIE_SECURE=true`。开发经 Vite 代理为同源，无需 `SameSite=None`。
 - `get_current_user` 由 `app/modules/auth/deps.py` 提供：读取 Cookie → 校验 Redis → 加载用户与 RBAC 投影并拒绝被封禁账号；业务模块从 auth.deps 导入，core 不反向依赖 modules。
-- 权限采用经典 RBAC 三表：`users` / `roles` / `permissions` 三实体，`user_roles` / `role_permissions` 两张关联表；权限码为 `resource:action`，内置角色 `user` < `admin` < `super_admin` 通过权限集合表达继承（14 / 17 / 19 个权限）。目录定义在 `app/modules/auth/rbac.py`，由 `app.tasks.seed` 幂等写入。
+- 权限采用经典 RBAC 三表：`users` / `roles` / `permissions` 三实体，`user_roles` / `role_permissions` 两张关联表；权限码为 `resource:action`，内置角色 `user` < `admin` < `super_admin` 通过权限集合表达继承（14 / 17 / 20 个权限）。目录定义在 `app/modules/auth/rbac.py`，由 `app.tasks.seed` 幂等写入并清理目录外的孤立权限；权限码与端点绑定、由代码静态声明，因此该目录只读，不提供在线增删改。
 - 每个受保护端点通过 `require_permission("code")` 显式声明所需权限；守卫测试遍历 `app.routes` 断言非 public 路由恰好解析出一个存在于目录中的权限码，防止新增端点漏配。public 白名单：health、register/login/logout、templates 只读、well-known、OpenAPI/docs。
-- RBAC 在线维护只针对自定义项：系统角色与系统权限由 `app/modules/auth/rbac.py` 目录拥有，接口拒绝改/删；`seed_rbac` 会把系统角色的权限集合精确同步回目录值，避免越权漂移。角色/权限 code 创建后不可变；删除仍被用户占用的角色返回 422；删除权限会清理 `role_permissions`。
+- RBAC 在线维护只针对**角色**：自定义角色可增删改，并从只读权限目录勾选权限；系统角色由 `app/modules/auth/rbac.py` 拥有，接口拒绝改/删，`seed_rbac` 会把系统角色的权限集合精确同步回目录值并清理孤立权限。权限码由代码静态声明（`require_permission` 导入期校验），UI 新建的权限码不会被任何端点使用，因此权限目录只读；角色 code 创建后不可变；删除仍被用户占用的角色返回 422。
 - actor 与 target 的层级约束在 service 侧校验：封禁/解封要求 actor 角色 rank 严格高于 target（admin 不能动 admin/super_admin）；改角色仅 super_admin，且不能改自己、不能移除最后一个 super_admin。
 - 密码使用 argon2 哈希；`app/tasks/seed.py` 幂等写入一个本地 bootstrap 管理员，部署前必须替换其密码。
 - 会话撤销语义：登出删除当前会话 key；改密码与封号删除该用户 `auth:user_sessions` 索引下的全部会话 key，均在下一次请求立即生效。

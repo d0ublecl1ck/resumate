@@ -19,8 +19,9 @@ def _superclient(session_clients, db_session):
     return client
 
 
-def test_catalogue_has_21_permissions() -> None:
-    assert len(PERMISSION_CODES) == 21
+def test_catalogue_has_20_permissions() -> None:
+    # Permission codes are code-owned; there is no online permission creation.
+    assert len(PERMISSION_CODES) == 20
 
 
 def test_super_admin_manages_custom_role(session_clients, db_session) -> None:
@@ -80,30 +81,13 @@ def test_delete_role_in_use_is_rejected(session_clients, db_session) -> None:
     assert client.delete(f"/auth/roles/{role['id']}").status_code == 204
 
 
-def test_custom_permission_crud_and_link_cleanup(session_clients, db_session) -> None:
+def test_permission_catalogue_is_read_only(session_clients, db_session) -> None:
     client = _superclient(session_clients, db_session)
+    permissions = client.get("/auth/permissions").json()
 
-    created = client.post("/auth/permissions", json={"code": "report:read", "group": "report", "name": "读取报表"})
-    assert created.status_code == 201, created.text
-    permission = created.json()
-    assert permission["isSystem"] is False
-
-    renamed = client.patch(f"/auth/permissions/{permission['id']}", json={"name": "查看报表"})
-    assert renamed.status_code == 200
-    assert renamed.json()["name"] == "查看报表"
-
-    role = client.post("/auth/roles", json={"code": "reporter", "name": "报表员", "permissions": ["report:read"]}).json()
-    assert role["permissions"] == ["report:read"]
-
-    assert client.delete(f"/auth/permissions/{permission['id']}").status_code == 204
-    reporter = next(item for item in client.get("/auth/roles").json() if item["code"] == "reporter")
-    assert reporter["permissions"] == []
-
-
-def test_system_permission_is_read_only(session_clients, db_session) -> None:
-    client = _superclient(session_clients, db_session)
-    system_permission = next(item for item in client.get("/auth/permissions").json() if item["code"] == "resume:read")
-
-    assert system_permission["isSystem"] is True
-    assert client.patch(f"/auth/permissions/{system_permission['id']}", json={"name": "x"}).status_code == 422
-    assert client.delete(f"/auth/permissions/{system_permission['id']}").status_code == 422
+    assert permissions
+    assert all("isSystem" not in item for item in permissions)
+    # The write endpoints must not exist; only the read-only catalogue remains.
+    assert client.post("/auth/permissions", json={"code": "report:read", "group": "report", "name": "x"}).status_code == 405
+    assert client.patch(f"/auth/permissions/{permissions[0]['id']}", json={"name": "x"}).status_code == 404
+    assert client.delete(f"/auth/permissions/{permissions[0]['id']}").status_code == 404

@@ -8,21 +8,15 @@ export default {
     system: "系统内置",
     custom: "自定义",
     count: "{{count}} 项权限",
-    empty: "还没有自定义角色。",
   },
   permissions: {
-    title: "权限",
-    hint: "端点所需的权限码由代码声明；自定义权限用于扩展角色目录。",
-    create: "新建权限",
-    system: "系统内置",
-    custom: "自定义",
-    empty: "还没有自定义权限。",
+    title: "权限目录",
+    hint: "权限码与端点绑定，由代码静态声明，因此这里只读；新建/编辑角色时可从这里勾选。",
   },
   fields: {
     code: "编码",
     name: "名称",
     description: "描述",
-    group: "分组",
     permissions: "权限",
   },
   actions: {
@@ -35,7 +29,6 @@ export default {
   },
   hints: {
     roleCode: "创建后不可修改；只能包含小写字母、数字与下划线。",
-    permissionCode: "创建后不可修改；形如 resource:action。",
   },
   state: {
     saving: "保存中…",

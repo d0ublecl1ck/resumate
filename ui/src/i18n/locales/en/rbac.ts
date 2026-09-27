@@ -8,21 +8,15 @@ export default {
     system: "Built-in",
     custom: "Custom",
     count: "{{count}} permissions",
-    empty: "No custom roles yet.",
   },
   permissions: {
-    title: "Permissions",
-    hint: "Endpoint permission codes are declared in code; custom permissions only extend the role catalogue.",
-    create: "New permission",
-    system: "Built-in",
-    custom: "Custom",
-    empty: "No custom permissions yet.",
+    title: "Permission catalogue",
+    hint: "Permission codes are bound to endpoints and declared in code, so this list is read-only. Pick from it when creating or editing a role.",
   },
   fields: {
     code: "Code",
     name: "Name",
     description: "Description",
-    group: "Group",
     permissions: "Permissions",
   },
   actions: {
@@ -35,7 +29,6 @@ export default {
   },
   hints: {
     roleCode: "Immutable after creation; lowercase letters, digits and underscores only.",
-    permissionCode: "Immutable after creation; shaped like resource:action.",
   },
   state: {
     saving: "Saving…",

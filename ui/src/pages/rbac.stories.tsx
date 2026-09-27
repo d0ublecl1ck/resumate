@@ -7,21 +7,19 @@ import { RbacPage } from "./rbac"
 import type { Permission, Role } from "@/lib/types"
 
 const SYSTEM_PERMISSIONS: Permission[] = [
-  { id: "perm_resume_read", code: "resume:read", group: "resume", name: "读取简历", isSystem: true }, // i18n-allow: Storybook 演示数据
-  { id: "perm_resume_write", code: "resume:write", group: "resume", name: "编辑简历", isSystem: true }, // i18n-allow: Storybook 演示数据
-  { id: "perm_user_read", code: "user:read", group: "user", name: "读取用户列表", isSystem: true }, // i18n-allow: Storybook 演示数据
-  { id: "perm_role_write", code: "role:write", group: "role", name: "维护角色", isSystem: true }, // i18n-allow: Storybook 演示数据
-  { id: "perm_permission_write", code: "permission:write", group: "permission", name: "维护权限目录", isSystem: true }, // i18n-allow: Storybook 演示数据
+  { id: "perm_resume_read", code: "resume:read", group: "resume", name: "读取简历" }, // i18n-allow: Storybook 演示数据
+  { id: "perm_resume_write", code: "resume:write", group: "resume", name: "编辑简历" }, // i18n-allow: Storybook 演示数据
+  { id: "perm_user_read", code: "user:read", group: "user", name: "读取用户列表" }, // i18n-allow: Storybook 演示数据
+  { id: "perm_role_write", code: "role:write", group: "role", name: "维护角色" }, // i18n-allow: Storybook 演示数据
 ]
 
 const SYSTEM_ROLES: Role[] = [
   { id: "role_user", code: "user", name: "普通用户", description: "", rank: 1, isSystem: true, permissions: ["resume:read"] }, // i18n-allow: Storybook 演示数据
   { id: "role_admin", code: "admin", name: "管理员", description: "", rank: 2, isSystem: true, permissions: ["resume:read", "user:read"] }, // i18n-allow: Storybook 演示数据
-  { id: "role_super_admin", code: "super_admin", name: "超级管理员", description: "", rank: 3, isSystem: true, permissions: ["resume:read", "resume:write", "user:read", "role:write", "permission:write"] }, // i18n-allow: Storybook 演示数据
+  { id: "role_super_admin", code: "super_admin", name: "超级管理员", description: "", rank: 3, isSystem: true, permissions: ["resume:read", "resume:write", "user:read", "role:write"] }, // i18n-allow: Storybook 演示数据
 ]
 
-const CUSTOM_PERMISSION: Permission = { id: "perm_report_read", code: "report:read", group: "report", name: "读取报表", isSystem: false } // i18n-allow: Storybook 演示数据
-const CUSTOM_ROLE: Role = { id: "role_reporter", code: "reporter", name: "报表员", description: "只读报表", rank: 0, isSystem: false, permissions: ["report:read", "resume:read"] } // i18n-allow: Storybook 演示数据
+const CUSTOM_ROLE: Role = { id: "role_reviewer", code: "reviewer", name: "审核员", description: "只读审核", rank: 0, isSystem: false, permissions: ["resume:read", "resume:write"] } // i18n-allow: Storybook 演示数据
 
 function Fixture({ roles, permissions }: { roles: Role[]; permissions: Permission[] }) {
   const [client] = useState(() => {
@@ -49,5 +47,5 @@ export const Default = {
 }
 
 export const WithCustomEntries = {
-  render: () => <Fixture roles={[...SYSTEM_ROLES, CUSTOM_ROLE]} permissions={[...SYSTEM_PERMISSIONS, CUSTOM_PERMISSION]} />,
+  render: () => <Fixture roles={[...SYSTEM_ROLES, CUSTOM_ROLE]} permissions={SYSTEM_PERMISSIONS} />,
 }

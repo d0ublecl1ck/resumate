@@ -46,7 +46,6 @@ PERMISSIONS: tuple[PermissionSpec, ...] = (
     PermissionSpec("role:read", "role", "读取角色与权限"),
     PermissionSpec("role:assign", "role", "分配用户角色"),
     PermissionSpec("role:write", "role", "维护角色"),
-    PermissionSpec("permission:write", "permission", "维护权限目录"),
 )
 
 _USER_PERMISSIONS: tuple[str, ...] = (
@@ -70,7 +69,6 @@ _SUPER_ADMIN_PERMISSIONS: tuple[str, ...] = _ADMIN_PERMISSIONS + (
     "role:read",
     "role:assign",
     "role:write",
-    "permission:write",
 )
 
 ROLES: tuple[RoleSpec, ...] = (
@@ -80,7 +78,6 @@ ROLES: tuple[RoleSpec, ...] = (
 )
 
 PERMISSION_CODES: frozenset[str] = frozenset(spec.code for spec in PERMISSIONS)
-PERMISSION_CODE_PATTERN = r"^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
 ROLE_CODE_PATTERN = r"^[a-z][a-z0-9_]*$"
 ROLE_CODES: tuple[str, ...] = tuple(spec.code for spec in ROLES)
 ROLE_RANK: dict[str, int] = {spec.code: spec.rank for spec in ROLES}

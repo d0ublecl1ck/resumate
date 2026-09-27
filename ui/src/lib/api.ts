@@ -20,8 +20,6 @@ import type {
   MatchGap,
   ModelConfig,
   Permission,
-  PermissionInput,
-  PermissionUpdateInput,
   Role,
   RoleInput,
   RoleUpdateInput,
@@ -471,7 +469,7 @@ export function getCapability(): Promise<CapabilityDiscovery> {
 }
 
 // ---------------------------------------------------------------------------
-// RBAC 管理：角色 / 权限（role:write / permission:write）
+// RBAC 管理：角色可维护（role:write）；权限目录只读
 // ---------------------------------------------------------------------------
 
 /** GET /auth/roles */
@@ -494,24 +492,9 @@ export function deleteRole(id: string): Promise<void> {
   return request<void>(`/auth/roles/${id}`, { method: "DELETE" })
 }
 
-/** GET /auth/permissions */
+/** GET /auth/permissions —— 只读权限目录，权限码由代码声明 */
 export function listPermissions(): Promise<Permission[]> {
   return request<Permission[]>("/auth/permissions")
-}
-
-/** POST /auth/permissions */
-export function createPermission(input: PermissionInput): Promise<Permission> {
-  return request<Permission>("/auth/permissions", { method: "POST", body: JSON.stringify(input) })
-}
-
-/** PATCH /auth/permissions/{id} */
-export function updatePermission(id: string, patch: PermissionUpdateInput): Promise<Permission> {
-  return request<Permission>(`/auth/permissions/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
-}
-
-/** DELETE /auth/permissions/{id} */
-export function deletePermission(id: string): Promise<void> {
-  return request<void>(`/auth/permissions/${id}`, { method: "DELETE" })
 }
 
 // ---------------------------------------------------------------------------

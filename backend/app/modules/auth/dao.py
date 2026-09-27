@@ -87,16 +87,8 @@ def list_role_permission_codes(db: Session, role_id: str) -> list[str]:
     return list(db.scalars(statement))
 
 
-def get_permission(db: Session, permission_id: str) -> Permission | None:
-    return db.get(Permission, permission_id)
-
-
 def get_permission_by_code(db: Session, code: str) -> Permission | None:
     return db.scalar(select(Permission).where(Permission.code == code))
-
-
-def list_permission_codes(db: Session) -> list[str]:
-    return list(db.scalars(select(Permission.code)))
 
 
 def list_role_permission_ids(db: Session, role_id: str) -> list[str]:
@@ -121,12 +113,12 @@ def remove_permission_links(db: Session, permission_id: str) -> None:
     db.execute(delete(RolePermission).where(RolePermission.permission_id == permission_id))
 
 
-def delete_role(db: Session, role: Role) -> None:
-    db.delete(role)
-
-
 def delete_permission(db: Session, permission: Permission) -> None:
     db.delete(permission)
+
+
+def delete_role(db: Session, role: Role) -> None:
+    db.delete(role)
 
 
 def count_role_users(db: Session, role_id: str) -> int:
