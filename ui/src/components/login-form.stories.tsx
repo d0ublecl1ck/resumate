@@ -1,24 +1,31 @@
-import { LoginForm } from "./login-form"
+import { useTranslation } from "react-i18next"
+import { LoginForm, type LoginMode } from "./login-form"
+
+function LoginStory({ mode = "login", submitting = false, errorKey }: { mode?: LoginMode; submitting?: boolean; errorKey?: string }) {
+  const { t } = useTranslation()
+  return (
+    <LoginForm
+      mode={mode}
+      onModeChange={() => {}}
+      onSubmit={() => {}}
+      submitting={submitting}
+      error={errorKey ? t(errorKey) : null}
+    />
+  )
+}
 
 export default {
   title: "Pages/Login",
   component: LoginForm,
   parameters: { layout: "fullscreen" },
-  args: {
-    mode: "login",
-    onModeChange: () => {},
-    onSubmit: () => {},
-    submitting: false,
-    error: null,
-  },
 }
 
-export const Login = {}
+export const Login = { render: () => <LoginStory /> }
 
-export const Register = { args: { mode: "register" } }
+export const Register = { render: () => <LoginStory mode="register" /> }
 
-export const Submitting = { args: { submitting: true } }
+export const Submitting = { render: () => <LoginStory submitting /> }
 
-export const InvalidCredentials = { args: { error: "邮箱或密码不正确。" } }
+export const InvalidCredentials = { render: () => <LoginStory errorKey="auth.errors.invalidCredentials" /> }
 
-export const AccountBanned = { args: { error: "账号已被封禁，请联系管理员。" } }
+export const AccountBanned = { render: () => <LoginStory errorKey="auth.errors.accountBanned" /> }

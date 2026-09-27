@@ -1,7 +1,9 @@
 // SCR-000 登录页（容器）：调用 /auth/login 或 /auth/register，成功后写入会话缓存并跳转。
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { Navigate, useLocation, useNavigate } from "react-router-dom"
+import i18n from "@/i18n"
 import { login as loginRequest, register as registerRequest } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { CURRENT_USER_QUERY_KEY, useCurrentUser } from "@/lib/session"
@@ -10,6 +12,7 @@ import { PageLoading } from "@/pages/states"
 import type { AuthUser } from "@/lib/types"
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
@@ -37,7 +40,7 @@ export function LoginPage() {
     }
   }
 
-  if (currentUser.isPending) return <PageLoading label="正在校验登录状态…" />
+  if (currentUser.isPending) return <PageLoading label={t("auth.sessionChecking")} />
   if (currentUser.data) return <Navigate to={from} replace />
 
   return (
@@ -56,11 +59,11 @@ export function LoginPage() {
 
 function messageFor(cause: unknown): string {
   if (cause instanceof ApiRequestError) {
-    if (cause.code === "ACCOUNT_BANNED") return "账号已被封禁，请联系管理员。"
-    if (cause.code === "INVALID_CREDENTIALS") return "邮箱或密码不正确。"
-    if (cause.code === "EMAIL_ALREADY_REGISTERED") return "该邮箱已注册，直接登录即可。"
-    if (cause.code === "NETWORK_ERROR") return "无法连接后端服务，请确认服务已启动。"
+    if (cause.code === "ACCOUNT_BANNED") return i18n.t("auth.errors.accountBanned")
+    if (cause.code === "INVALID_CREDENTIALS") return i18n.t("auth.errors.invalidCredentials")
+    if (cause.code === "EMAIL_ALREADY_REGISTERED") return i18n.t("auth.errors.emailRegistered")
+    if (cause.code === "NETWORK_ERROR") return i18n.t("auth.errors.network")
     return cause.message
   }
-  return "操作失败，请稍后重试。"
+  return i18n.t("auth.errors.generic")
 }
