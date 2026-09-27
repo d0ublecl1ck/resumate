@@ -162,9 +162,9 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 - 后端采用 FastAPI 模块制；业务域按需求增加，分层边界以本文为准。
 - 核心实体 CRUD 按 Profile、Resume、JD 三个模块落地；手动 `PUT document` 直接产生一个 `ResumeVersion`，Agent 侧按 C-03 走 `agent_turns` 的 Working Copy + finalize 聚合提交（`manual-edits` 的手动缓冲仍留待后续工单）。
-- Agent 操作层以 `app/modules/agent/` 落地：轮次固化执行模式（session > agent > account），approval 必须经 PendingAction 审批后 apply，full_access 可直接 apply；finalize 每轮每份简历至多提交一个版本，无差异不建空版本，基线过期返回 409。领域 Patch 采用显式 `op` 列表（setBasics / upsertSection / removeSection / upsertEntry / removeEntry），非 RFC 6902；接口与状态机冻结在 `docs/agent/agent-operation-api.md`。
+- Agent 操作层以 `app/modules/agent/` 落地：轮次固化执行模式（session > agent > account），approval 必须经 PendingAction 审批后 apply，full_access 可直接 apply；同一轮次重复 preview 会把既有 `pending` 待办置为 `stale`（「已被新的预览取代」）。finalize 每轮每份简历至多提交一个版本，无差异不建空版本，基线过期返回 409。领域 Patch 采用显式 `op` 列表（setBasics / upsertSection / removeSection / upsertEntry / removeEntry），非 RFC 6902；接口与状态机冻结在 `docs/agent/agent-operation-api.md`。
 - `agent-core/` 是只走公共 API 的 Agent 底座（Python, uv）：薄客户端、TurnSession、Patch 构造器、工具表与 C-09 运行时骨架；**MUST NOT** 直连数据库或维护第二套业务真相源，模型提供方以 Protocol 注入。
-- 本期 Agent 操作端点沿用会话身份 + RBAC（`resume:read` / `resume:write`）；PAT Bearer 鉴权与 Scope 强制、MCP、SDK、Webhook 属后续工单，`source` / `executionMode` 一律由服务端解析，客户端不能凭参数字段绕过确认。
+- Agent 操作端点支持两种身份：HttpOnly 会话 Cookie（可信前端）与 `Authorization: Bearer rsm_pat_...`（PAT），Bearer 优先。PAT 走独立 Scope 强制，端点所需权限码不在令牌 scope 内返回 403 `SCOPE_INSUFFICIENT`；撤销返回 401 `TOKEN_REVOKED`，过期/未知返回 401 `UNAUTHENTICATED`，成功与拒绝各写一条 `access_logs`。PAT 请求的 `source` 按 agent 处理，`executionMode` 入参被忽略、只按 agent 配置/账户默认固化，防止用参数绕过审批；约定见 [PAT 鉴权](agent/pat-auth.md)。MCP、SDK、Webhook 仍属后续工单。
 - 元数据修改（标题、标签、模板）不产生 Resume 版本；软删除保留 30 天恢复窗口。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
 - 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。
@@ -181,7 +181,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
 - 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 由 `SETTINGS_SECRET_KEY` 派生的 Fernet 密钥加密落库、只写入不回显（仅返回 `keyConfigured`），解密失败按未配置处理；连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。
 - 快捷键映射在写入时做按键冲突校验（同一按键不可绑定多个动作），冲突返回 422 并保留原映射。
-- 开放接入只做 PAT 签发、撤销与审计展示：请求鉴权强制（Bearer 中间件与 scope 校验）归认证工作流，不在本期。创建与撤销各写一条 `access_logs`（`purpose` 存稳定键，前端映射文案）。
+- 开放接入支持 PAT 签发、撤销、审计展示与请求鉴权：`Authorization: Bearer rsm_pat_...` 经 SHA-256 哈希查库校验（库中只存哈希），scope 与端点权限码同名、按集合强制，鉴权时更新 `last_used_at` 并写允许/拒绝审计。创建与撤销各写一条 `access_logs`（`purpose` 存稳定键，前端映射文案）。
 - 备份以 `resumate-backup/1.0` JSON 为权威载荷，导入始终创建新资源并重映射 ID；因 Profile 为单用户唯一行，导入时复用已存在的 Profile 容器、事实作为新行写入。证据附件未落地，附件列表为空。
 - UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计补充」区块登记暗色令牌与设置页交互态。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
