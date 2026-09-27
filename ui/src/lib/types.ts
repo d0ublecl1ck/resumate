@@ -458,6 +458,32 @@ export interface PersonalAccessToken {
   secretOnce?: string
 }
 
+export interface PersonalAccessTokenInput {
+  name: string
+  scopes: string[]
+  purpose?: string
+  resources?: string[]
+  fields?: string[]
+  expiresInDays?: number
+}
+
+/** 备份 JSON 载荷：格式由后端 resumate-backup/1.0 定义。 */
+export type BackupPayload = Record<string, unknown>
+
+export interface ImportCounts {
+  resumes: number
+  versions: number
+  profiles: number
+  facts: number
+  jds: number
+}
+
+export interface ImportResult {
+  imported: ImportCounts
+  idMappings: ImportPreview["idMappings"]
+  bindingRestores: ImportPreview["bindingRestores"]
+}
+
 export interface AccessLogEntry {
   id: string
   at: ISODate

@@ -2,11 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useParams, useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { getActiveRun, getResume, getTemplate, listJds } from "@/lib/api"
 import { ResumeEditor } from "@/components/resume-editor"
 import { PageLoading, PageNotFound } from "@/pages/states"
 
 export function ResumeEditorPage() {
+  const { t } = useTranslation()
   const { id = "" } = useParams()
   const [searchParams] = useSearchParams()
 
@@ -23,7 +25,7 @@ export function ResumeEditorPage() {
   const jdsQuery = useQuery({ queryKey: ["jds"], queryFn: () => listJds(), enabled: ready })
 
   if (resumeQuery.isPending) return <PageLoading />
-  if (!resume) return <PageNotFound target="简历" />
+  if (!resume) return <PageNotFound entity="resume" />
   if (runQuery.isPending || templateQuery.isPending || jdsQuery.isPending) return <PageLoading />
 
   const boundJds = (jdsQuery.data ?? []).filter((j) => resume.boundByJdIds.includes(j.id))
@@ -32,7 +34,7 @@ export function ResumeEditorPage() {
     <ResumeEditor
       resume={resume}
       run={runQuery.data}
-      templateName={templateQuery.data?.name ?? "默认模板"}
+      templateName={templateQuery.data?.name ?? t("resume.editor.defaultTemplate")}
       boundJds={boundJds}
       initialColumn={searchParams.get("panel") === "run" ? "chat" : "edit"}
     />

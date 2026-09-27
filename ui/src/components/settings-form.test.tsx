@@ -19,7 +19,7 @@ describe("SettingsForm", () => {
   it("保存偏好后显示已保存", async () => {
     renderForm()
 
-    fireEvent.click(screen.getByRole("switch", { name: "自动保存" }))
+    fireEvent.click(screen.getByRole("switch", { name: /自动保存/ }))
     fireEvent.click(screen.getByRole("button", { name: "保存偏好" }))
 
     expect(await screen.findByText("已保存")).toBeInTheDocument()

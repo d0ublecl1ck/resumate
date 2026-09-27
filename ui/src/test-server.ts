@@ -1,7 +1,19 @@
 // Vitest 用 MSW 服务器：已对接端点由后端契约驱动，fixtures 来自 content.ts。
 import { http, HttpResponse } from "msw"
 import { setupServer } from "msw/node"
-import { AGENT_CONFIG, JDS, MODEL_CONFIG, PROFILE, RESUMES, TEMPLATES, USER_PREFERENCES } from "@/lib/content"
+import {
+  ACCESS_LOGS,
+  AGENT_CONFIG,
+  CAPABILITY,
+  IMPORT_PREVIEW_SAMPLE,
+  JDS,
+  MODEL_CONFIG,
+  PATS,
+  PROFILE,
+  RESUMES,
+  TEMPLATES,
+  USER_PREFERENCES,
+} from "@/lib/content"
 import type { ProfileFact } from "@/lib/types"
 
 function notFound(message: string) {
@@ -117,6 +129,37 @@ export const handlers = [
   }),
   http.post(/\/api\/models\/config:test$/, () =>
     HttpResponse.json({ at: new Date().toISOString(), ok: true, message: "连接成功（HTTP 200）" }),
+  ),
+  http.get("/api/access/tokens", () => HttpResponse.json(PATS)),
+  http.post("/api/access/tokens", async ({ request }) => {
+    const body = (await request.json()) as { name?: string; scopes?: string[] }
+    return HttpResponse.json(
+      { ...PATS[0], id: "pat_mock_created", name: body.name ?? "Token", scopes: body.scopes ?? [], secretOnce: "rsm_pat_mock_secret_once" },
+      { status: 201 },
+    )
+  }),
+  http.post("/api/access/tokens/:id/revoke", ({ params }) => {
+    const base = PATS.find((item) => item.id === params.id) ?? PATS[0]
+    return HttpResponse.json({ ...base, status: "revoked" })
+  }),
+  http.get("/api/access/logs", () => HttpResponse.json(ACCESS_LOGS)),
+  http.get("/api/.well-known/resume-agent", () => HttpResponse.json(CAPABILITY)),
+  http.get("/api/backup/export", () =>
+    HttpResponse.json({
+      formatVersion: "resumate-backup/1.0",
+      exportedAt: new Date().toISOString(),
+      ownerId: PROFILE.ownerId,
+      resources: { profiles: [], resumes: [], resumeVersions: [], jobDescriptions: [] },
+    }),
+  ),
+  http.get("/api/backup/export/markdown", () => HttpResponse.text("# Resumate backup index")),
+  http.post(/\/api\/backup\/import:preview$/, () => HttpResponse.json(IMPORT_PREVIEW_SAMPLE)),
+  http.post("/api/backup/import", () =>
+    HttpResponse.json({
+      imported: { resumes: 1, versions: 2, profiles: 1, facts: 1, jds: 1 },
+      idMappings: IMPORT_PREVIEW_SAMPLE.idMappings,
+      bindingRestores: IMPORT_PREVIEW_SAMPLE.bindingRestores,
+    }),
   ),
 ]
 

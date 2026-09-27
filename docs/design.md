@@ -45,7 +45,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 `app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误、证据等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
 
-当前表：`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+当前表：`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
 
 业务失败统一返回 `{code, message, latestVersionId?}` 错误信封，`code` 取自 `app/shared/errors.py` 的机器错误码；资源不存在返回 404、基线过期返回 409、校验失败返回 422。
 
@@ -87,6 +87,10 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   │   └── ...（api/schemas/service/dao/models）
 │   │   ├── modules/settings/
 │   │   │   └── ...（api/schemas/service/dao/models）
+│   │   ├── modules/access/
+│   │   │   └── ...（api/schemas/service/dao/models）
+│   │   ├── modules/backup/
+│   │   │   └── ...（api/schemas/service）
 │   │   ├── shared/
 │   │   │   ├── schemas.py
 │   │   │   └── errors.py
@@ -105,7 +109,9 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │       ├── test_resume.py
 │       ├── test_jd.py
 │       ├── test_profile.py
-│       └── test_settings.py
+│       ├── test_settings.py
+│       ├── test_access.py
+│       └── test_backup.py
 ├── docs/design.md
 ├── docs/issues/
 └── quality-gates/
@@ -121,7 +127,9 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。
 - 岗位：`GET /jds`、`POST /jds`、`GET /jds/{jd_id}`、`PATCH /jds/{jd_id}`、`DELETE /jds/{jd_id}`、`PUT|DELETE /jds/{jd_id}/binding`。
 - 资料：`GET /profile`、`PATCH /profile/basics`、`GET|POST /profile/facts`、`GET|PATCH|DELETE /profile/facts/{fact_id}`。
-- 设置：`GET|PATCH /settings`（偏好）、`GET|PATCH /agent/config`、`GET|PUT /models/config`、`POST /models/config:test`。
+- 设置：`GET|PATCH /settings`（偏好）、`GET|PATCH /agent/config`、`GET|PUT /models/config`、`POST /models/config:test`。偏好中的 `fullAccessScopes`、`confirmRetainedOps`、`shortcuts[].action` 返回稳定 i18n 键而非展示文案。
+- 开放接入：`GET|POST /access/tokens`、`POST /access/tokens/{token_id}/revoke`、`GET /access/logs`、`GET /.well-known/resume-agent`；令牌明文只在创建响应返回一次（`secretOnce`），库中只存 SHA-256 哈希。
+- 备份：`GET /backup/export`、`GET /backup/export/markdown`、`POST /backup/import:preview`、`POST /backup/import`。
 
 ## 关键决策
 
@@ -134,7 +142,10 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
 - 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 由 `SETTINGS_SECRET_KEY` 派生的 Fernet 密钥加密落库、只写入不回显（仅返回 `keyConfigured`），解密失败按未配置处理；连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。
 - 快捷键映射在写入时做按键冲突校验（同一按键不可绑定多个动作），冲突返回 422 并保留原映射。
+- 开放接入只做 PAT 签发、撤销与审计展示：请求鉴权强制（Bearer 中间件与 scope 校验）归认证工作流，不在本期。创建与撤销各写一条 `access_logs`（`purpose` 存稳定键，前端映射文案）。
+- 备份以 `resumate-backup/1.0` JSON 为权威载荷，导入始终创建新资源并重映射 ID；因 Profile 为单用户唯一行，导入时复用已存在的 Profile 容器、事实作为新行写入。证据附件未落地，附件列表为空。
 - UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计补充」区块登记暗色令牌与设置页交互态。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
-- 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
+- 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
+- 前端界面文案由 i18next 管理，支持 `zh-CN` 与 `en`：语言选择持久化在 `localStorage`，启动时按「持久化 → 浏览器 → zh-CN」检测，切换同步 `html[lang]` 与文档标题；组件统一使用 `useTranslation()`，非 React 模块使用 `@/i18n` 单例。简历正文、JD 正文、事实内容与 Diff 原文属于用户内容，不随界面语言变化（US-13.4）。

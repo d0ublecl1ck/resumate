@@ -4,6 +4,7 @@
 // AI 结果为草案，用户核对/编辑后再创建。
 
 import { useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { JobDescription, ProposedJd } from "@/lib/types"
 import { parseJdFromText, parseJdFromImage, createJd } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -20,6 +21,7 @@ export function CreateJdModal({
   onClose: () => void
   onCreated: (jd: JobDescription) => void
 }) {
+  const { t } = useTranslation()
   const [mode, setMode] = useState<Mode>("text")
   const [text, setText] = useState("")
   const [imageName, setImageName] = useState<string | null>(null)
@@ -79,8 +81,8 @@ export function CreateJdModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="新增 JD">
-      <button className="absolute inset-0 bg-foreground/30 backdrop-blur-[1px]" aria-label="关闭" onClick={close} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={t("jd.create.title")}>
+      <button className="absolute inset-0 bg-foreground/30 backdrop-blur-[1px]" aria-label={t("common.actions.close")} onClick={close} />
       <div className="relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border-[1.5px] border-foreground/15 bg-card shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2.5">
@@ -88,11 +90,11 @@ export function CreateJdModal({
               <Sparkles className="size-4" aria-hidden />
             </span>
             <div>
-              <p className="text-sm font-semibold text-foreground">新增 JD</p>
-              <p className="text-xs text-muted-foreground">粘贴岗位文本或上传截图，AI 帮你整理成结构化岗位</p>
+              <p className="text-sm font-semibold text-foreground">{t("jd.create.title")}</p>
+              <p className="text-xs text-muted-foreground">{t("jd.create.subtitle")}</p>
             </div>
           </div>
-          <button onClick={close} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label="关闭">
+          <button onClick={close} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}>
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -100,8 +102,8 @@ export function CreateJdModal({
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {/* 输入方式切换 */}
           <div className="mb-4 inline-flex rounded-lg border border-border bg-background p-1">
-            <TabButton active={mode === "text"} onClick={() => setMode("text")} icon={<ClipboardPaste className="size-4" aria-hidden />} label="粘贴文本" />
-            <TabButton active={mode === "image"} onClick={() => setMode("image")} icon={<ImageUp className="size-4" aria-hidden />} label="上传截图" />
+            <TabButton active={mode === "text"} onClick={() => setMode("text")} icon={<ClipboardPaste className="size-4" aria-hidden />} label={t("jd.create.tabText")} />
+            <TabButton active={mode === "image"} onClick={() => setMode("image")} icon={<ImageUp className="size-4" aria-hidden />} label={t("jd.create.tabImage")} />
           </div>
 
           {mode === "text" ? (
@@ -110,7 +112,7 @@ export function CreateJdModal({
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={7}
-                placeholder="把招聘网站上的岗位 JD 直接粘贴进来（岗位名、公司、职责、要求…），AI 会自动拆解。"
+                placeholder={t("jd.create.textPlaceholder")}
                 className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               />
               <button
@@ -119,7 +121,7 @@ export function CreateJdModal({
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
               >
                 {parsing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-                {parsing ? "整理中…" : "AI 整理"}
+                {parsing ? t("jd.create.parsing") : t("jd.create.parseText")}
               </button>
             </div>
           ) : (
@@ -129,8 +131,8 @@ export function CreateJdModal({
                 className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-4 py-8 text-center text-sm text-muted-foreground transition-colors hover:border-cobalt/40 hover:bg-secondary/60"
               >
                 <ImageUp className="size-6 text-cobalt" aria-hidden />
-                {imageName ? <span className="font-medium text-foreground">{imageName}</span> : "点击选择岗位截图（JD 页面截图 / 招聘 App 截图）"}
-                <span className="text-xs">支持 PNG / JPG</span>
+                {imageName ? <span className="font-medium text-foreground">{imageName}</span> : t("jd.create.imagePlaceholder")}
+                <span className="text-xs">{t("jd.create.imageSupport")}</span>
               </button>
               <input
                 ref={fileRef}
@@ -143,7 +145,7 @@ export function CreateJdModal({
                 }}
               />
               {imagePreview ? (
-                <img src={imagePreview || "/placeholder.svg"} alt="岗位截图预览" className="max-h-48 w-full rounded-lg border border-border object-contain" />
+                <img src={imagePreview || "/placeholder.svg"} alt={t("jd.create.imageAlt")} className="max-h-48 w-full rounded-lg border border-border object-contain" />
               ) : null}
               <button
                 onClick={runImageParse}
@@ -151,7 +153,7 @@ export function CreateJdModal({
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
               >
                 {parsing ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-                {parsing ? "识别中…" : "AI 识别"}
+                {parsing ? t("jd.create.recognizing") : t("jd.create.parseImage")}
               </button>
             </div>
           )}
@@ -160,17 +162,17 @@ export function CreateJdModal({
           {draft ? (
             <div className="mt-5 rounded-xl border-[1.5px] border-foreground/15 bg-background p-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-semibold text-foreground">AI 整理结果（可编辑）</span>
-                <span className="text-[11px] text-muted-foreground">解析置信度 {Math.round(draft.parseConfidence * 100)}%</span>
+                <span className="text-sm font-semibold text-foreground">{t("jd.create.draftTitle")}</span>
+                <span className="text-[11px] text-muted-foreground">{t("jd.create.confidence", { percent: Math.round(draft.parseConfidence * 100) })}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="岗位名称" value={draft.role} onChange={(v) => setDraft({ ...draft, role: v })} />
-                <Field label="公司" value={draft.company ?? ""} onChange={(v) => setDraft({ ...draft, company: v })} />
+                <Field label={t("jd.create.fieldRole")} value={draft.role} onChange={(v) => setDraft({ ...draft, role: v })} />
+                <Field label={t("jd.create.fieldCompany")} value={draft.company ?? ""} onChange={(v) => setDraft({ ...draft, company: v })} />
               </div>
-              <Field className="mt-3" label="标签（逗号分隔）" value={draft.tags.join(", ")} onChange={(v) => setDraft({ ...draft, tags: v.split(/[,，]/).map((t) => t.trim()).filter(Boolean) })} />
-              <Field className="mt-3" label="来源链接（可选）" value={draft.sourceUrl ?? ""} onChange={(v) => setDraft({ ...draft, sourceUrl: v || undefined })} />
+              <Field className="mt-3" label={t("jd.create.fieldTags")} value={draft.tags.join(", ")} onChange={(v) => setDraft({ ...draft, tags: v.split(/[,，]/).map((t) => t.trim()).filter(Boolean) })} />
+              <Field className="mt-3" label={t("jd.create.fieldSourceUrl")} value={draft.sourceUrl ?? ""} onChange={(v) => setDraft({ ...draft, sourceUrl: v || undefined })} />
               <label className="mt-3 block">
-                <span className="mb-1 block text-[11px] font-medium text-muted-foreground">岗位描述</span>
+                <span className="mb-1 block text-[11px] font-medium text-muted-foreground">{t("jd.create.fieldBody")}</span>
                 <textarea
                   value={draft.body}
                   onChange={(e) => setDraft({ ...draft, body: e.target.value })}
@@ -185,13 +187,13 @@ export function CreateJdModal({
 
         {draft ? (
           <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
-            <button onClick={() => setDraft(null)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">重新整理</button>
+            <button onClick={() => setDraft(null)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary">{t("jd.create.reset")}</button>
             <button
               onClick={confirmCreate}
               disabled={creating || !draft.role.trim()}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
             >
-              {creating ? "创建中…" : "创建 JD"}
+              {creating ? t("jd.create.creating") : t("jd.create.confirm")}
             </button>
           </div>
         ) : null}

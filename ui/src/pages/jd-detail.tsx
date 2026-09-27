@@ -13,7 +13,7 @@ export function JdDetailPage() {
   const archived = useQuery({ queryKey: ["resumes", "archived"], queryFn: () => listResumes({ lifecycle: "archived" }) })
 
   if (jd.isPending || active.isPending || archived.isPending) return <PageLoading />
-  if (!jd.data) return <PageNotFound target="岗位 JD" />
+  if (!jd.data) return <PageNotFound entity="jd" />
 
   return <JdTuning jd={jd.data} resumes={[...(active.data ?? []), ...(archived.data ?? [])]} />
 }

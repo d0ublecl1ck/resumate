@@ -4,23 +4,16 @@
 // 后端已实现的端点走真实 HTTP（api-client.ts）；未实现的端点仍从 lib/content.ts
 // 读取 mock，待对应后端能力落地后再替换，函数签名与入参、返回类型保持不变。
 
-import {
-  ACCESS_LOGS,
-  AGENT_RUNS,
-  CAPABILITY,
-  CURRENT_USER,
-  IMPORT_PREVIEW_SAMPLE,
-  JOB_MATCHES,
-  PATS,
-  PROFILE,
-} from "./content"
+import { AGENT_RUNS, CURRENT_USER, JOB_MATCHES, PROFILE } from "./content"
 import type {
   AccessLogEntry,
   AgentConfig,
   AgentConfigUpdate,
   AgentRun,
+  BackupPayload,
   CapabilityDiscovery,
   ImportPreview,
+  ImportResult,
   JobDescription,
   JobMatchResult,
   MatchGap,
@@ -28,6 +21,7 @@ import type {
   ModelConfigUpdate,
   ModelTestResult,
   PersonalAccessToken,
+  PersonalAccessTokenInput,
   Profile,
   ProfileFact,
   ProfileFactInput,
@@ -44,7 +38,8 @@ import type {
   UserPreferencesUpdate,
   WorkbenchSummary,
 } from "./types"
-import { request } from "./api-client"
+import { request, requestText } from "./api-client"
+import i18n from "@/i18n"
 
 // 模拟网络延迟，方便页面演示 loading 状态。设为 0 可关闭。
 const LATENCY = 0
@@ -165,7 +160,7 @@ export function parseJdFromImage(fileName: string): Promise<ProposedJd> {
   const demo =
     "高级前端工程师\n某科技有限公司\n职责：负责 C 端核心页面开发，主导性能优化；参与前端工程化与团队规范建设。\n要求：5 年以上经验，精通 React 与 TypeScript，有大型项目性能调优与团队带教经验。"
   const parsed = heuristicParseJd(demo, "image")
-  parsed.note = `已从截图「${fileName}」识别出以下内容（演示为示例数据）。请核对后再创建。`
+  parsed.note = i18n.t("api.jd.note.imageDemo", { fileName })
   return resolve(parsed)
 }
 
@@ -190,12 +185,12 @@ function heuristicParseBasics(raw: string, basics: ResumeBasics): ProposedBasics
 
   const email = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)
   if (email && /(邮箱|邮件|email|mail)/i.test(text)) {
-    fields.push({ key: "email", label: "邮箱", before: basics.email, after: email[0] })
+    fields.push({ key: "email", label: i18n.t("api.basics.fields.email"), before: basics.email, after: email[0] })
   }
 
   const phone = text.match(/(?:\+?86[\s-]?)?1[3-9]\d(?:[\s-]?\d){8}/)
   if (phone && /(电话|手机|号码|phone|tel|联系方式)/i.test(text)) {
-    fields.push({ key: "phone", label: "电话", before: basics.phone, after: phone[0].trim() })
+    fields.push({ key: "phone", label: i18n.t("api.basics.fields.phone"), before: basics.phone, after: phone[0].trim() })
   }
 
   let city: string | undefined
@@ -204,24 +199,24 @@ function heuristicParseBasics(raw: string, basics: ResumeBasics): ProposedBasics
   if (m1) city = m1[1]
   else if (m2 && /(工作|生活|办公|定居|现在在|搬)/.test(text)) city = m2[1]
   if (city && city !== basics.location) {
-    fields.push({ key: "location", label: "城市", before: basics.location, after: city })
+    fields.push({ key: "location", label: i18n.t("api.basics.fields.location"), before: basics.location, after: city })
   }
 
   const headline = text.match(/(?:头衔|职位 ?title|一句话(?:介绍|标语)|个人标语|slogan|title)[：: 是]*(.+)$/i)
   if (headline && headline[1]) {
-    fields.push({ key: "headline", label: "头衔", before: basics.headline, after: headline[1].trim() })
+    fields.push({ key: "headline", label: i18n.t("api.basics.fields.headline"), before: basics.headline, after: headline[1].trim() })
   }
 
   const name = text.match(/(?:我(?:的名字|叫)|姓名|名字)[是叫：: ]*([\u4e00-\u9fa5]{2,4}|[A-Za-z][A-Za-z ]{1,19})/)
   if (name && name[1]) {
-    fields.push({ key: "fullName", label: "姓名", before: basics.fullName, after: name[1].trim() })
+    fields.push({ key: "fullName", label: i18n.t("api.basics.fields.fullName"), before: basics.fullName, after: name[1].trim() })
   }
 
   if (!fields.length) return null
   return {
     fields,
     parseConfidence: Math.min(0.95, 0.6 + fields.length * 0.1),
-    note: "识别为对基本信息的修改。确认后立即更新，不影响你的经历与技能条目。",
+    note: i18n.t("api.basics.note"),
   }
 }
 
@@ -238,24 +233,24 @@ function heuristicParseJd(raw: string, inputSource: "text" | "image"): ProposedJ
     const cleaned = roleLine.replace(/^.*?(岗位|职位|title)[：: ]*/i, "")
     role = (cleaned.match(roleRe)?.[0] || roleLine.match(roleRe)?.[0] || "").trim()
   }
-  if (role) extracted.push({ label: "岗位", value: role })
+  if (role) extracted.push({ label: i18n.t("api.jd.extracted.role"), value: role })
 
   let company: string | undefined
   const cm = text.match(/([\u4e00-\u9fa5A-Za-z]{2,20}?(?:集团|科技(?:有限)?公司|信息技术(?:有限)?公司|有限公司|公司))/)
   if (cm) company = cm[1]
-  if (company) extracted.push({ label: "公司", value: company })
+  if (company) extracted.push({ label: i18n.t("api.jd.extracted.company"), value: company })
 
   const url = text.match(/https?:\/\/\S+/)
   const sourceUrl = url?.[0]
-  if (sourceUrl) extracted.push({ label: "来源", value: sourceUrl })
+  if (sourceUrl) extracted.push({ label: i18n.t("api.jd.extracted.source"), value: sourceUrl })
 
   const tagRules: [string, RegExp][] = [
-    ["前端", /前端|react|vue|typescript|javascript/i],
-    ["后端", /后端|java|golang|\bgo\b|python|node/i],
-    ["性能优化", /性能|优化|调优|lcp|首屏|加载/i],
-    ["团队", /团队|带领|带教|管理|leader|负责人/i],
-    ["C 端", /c ?端|用户端|海量|高并发|交易链路/i],
-    ["架构", /架构|基础设施|中台|框架|工程化/i],
+    [i18n.t("api.jd.tags.frontend"), /前端|react|vue|typescript|javascript/i],
+    [i18n.t("api.jd.tags.backend"), /后端|java|golang|\bgo\b|python|node/i],
+    [i18n.t("api.jd.tags.performance"), /性能|优化|调优|lcp|首屏|加载/i],
+    [i18n.t("api.jd.tags.team"), /团队|带领|带教|管理|leader|负责人/i],
+    [i18n.t("api.jd.tags.cEnd"), /c ?端|用户端|海量|高并发|交易链路/i],
+    [i18n.t("api.jd.tags.architecture"), /架构|基础设施|中台|框架|工程化/i],
   ]
   const tags = tagRules.filter(([, re]) => re.test(text)).map(([t]) => t)
 
@@ -271,8 +266,8 @@ function heuristicParseJd(raw: string, inputSource: "text" | "image"): ProposedJ
     parseConfidence,
     note:
       inputSource === "image"
-        ? "已从截图识别内容，请核对后创建。"
-        : "已从粘贴文本中提取岗位、公司与标签。请核对后创建。",
+        ? i18n.t("api.jd.note.image")
+        : i18n.t("api.jd.note.text"),
     inputSource,
   }
 }
@@ -288,25 +283,28 @@ function heuristicParseFact(
   // 时间抽取
   const dateMatch =
     text.match(/(20\d{2})\s*年\s*(\d{1,2})?\s*月?/) || text.match(/(20\d{2})[-/.](\d{1,2})(?:[-/.]\d{1,2})?/)
-  if (dateMatch) extracted.push({ label: "时间", value: dateMatch[0] })
+  if (dateMatch) extracted.push({ label: i18n.t("api.fact.extracted.time"), value: dateMatch[0] })
 
   // 类型判定
-  const typeRules: { type: FactType; re: RegExp; label: string }[] = [
-    { type: "achievement", re: /(获奖|得奖|荣获|拿了.*奖|得了.*奖|获得.*奖|最佳|冠军|亚军|季军|第[一二三]名|荣誉|表彰|优秀员工|一等奖|二等奖|三等奖|金奖|银奖|奖学金|奖项)/, label: "成果" },
-    { type: "certificate", re: /(证书|认证|考取|资格证|通过了?.*考试|等级考试|PMP|CPA|CFA)/, label: "证书" },
-    { type: "education", re: /(毕业|学位|本科|硕士|博士|学士|大学|学院|GPA|专业)/, label: "教育" },
-    { type: "project", re: /(项目|开发了?|搭建|重构|上线|从 ?0 ?到 ?1|主导.*系统|做了个)/, label: "项目" },
-    { type: "skill", re: /(精通|熟练|掌握|会用|技能|擅长|语言|框架|工具链)/, label: "技能" },
-    { type: "experience", re: /(入职|担任|负责|工作|任职|带团队|晋升|离职)/, label: "经历" },
+  const typeRules: { type: FactType; re: RegExp }[] = [
+    { type: "achievement", re: /(获奖|得奖|荣获|拿了.*奖|得了.*奖|获得.*奖|最佳|冠军|亚军|季军|第[一二三]名|荣誉|表彰|优秀员工|一等奖|二等奖|三等奖|金奖|银奖|奖学金|奖项)/ },
+    { type: "certificate", re: /(证书|认证|考取|资格证|通过了?.*考试|等级考试|PMP|CPA|CFA)/ },
+    { type: "education", re: /(毕业|学位|本科|硕士|博士|学士|大学|学院|GPA|专业)/ },
+    { type: "project", re: /(项目|开发了?|搭建|重构|上线|从 ?0 ?到 ?1|主导.*系统|做了个)/ },
+    { type: "skill", re: /(精通|熟练|掌握|会用|技能|擅长|语言|框架|工具链)/ },
+    { type: "experience", re: /(入职|担任|负责|工作|任职|带团队|晋升|离职)/ },
   ]
   const matched = typeRules.find((r) => r.re.test(text))
   const type: FactType = matched?.type ?? "experience"
-  extracted.push({ label: "类型", value: matched?.label ?? "经历（默认）" })
+  extracted.push({
+    label: i18n.t("api.fact.extracted.type"),
+    value: matched ? i18n.t("api.fact.types." + matched.type) : i18n.t("api.fact.typeDefault"),
+  })
 
   // 标题：去掉开头的时间短语，截取首个短句
   let titleSource = text.replace(/^(在|于)?\s*20\d{2}\s*年\s*(\d{1,2}\s*月)?\s*/, "")
   const firstClause = titleSource.split(/[，,。.；;、\n]/)[0]?.trim() || titleSource
-  const title = firstClause.length > 24 ? firstClause.slice(0, 24) + "…" : firstClause || "未命名事实"
+  const title = firstClause.length > 24 ? firstClause.slice(0, 24) + "…" : firstClause || i18n.t("api.fact.untitled")
 
   // 更新判定：与现有事实标题/内容有明显 token 重合则视为更新建议
   const tokens = (title.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,}/g) || []).filter((t) => t.length >= 2)
@@ -336,8 +334,8 @@ function heuristicParseFact(
     evidenceStatus: "unverified",
     parseConfidence,
     note: isUpdate
-      ? `识别为对已有事实「${target!.title}」的补充更新。确认后将合并内容，证据状态保持待核实。`
-      : "识别为一条新事实��自然语言录入的内容默认为「待核实」，可在确认后上传证据再标记为已核实。",
+      ? i18n.t("api.fact.note.update", { title: target!.title })
+      : i18n.t("api.fact.note.create"),
   }
 }
 
@@ -418,26 +416,51 @@ export function getTemplate(id: string): Promise<ResumeTemplate | undefined> {
 
 /** GET /access/tokens */
 export function listPats(): Promise<PersonalAccessToken[]> {
-  return resolve(PATS)
+  return request<PersonalAccessToken[]>("/access/tokens")
+}
+
+/** POST /access/tokens —— 仅创建响应返回一次性 secretOnce */
+export function createPat(input: PersonalAccessTokenInput): Promise<PersonalAccessToken> {
+  return request<PersonalAccessToken>("/access/tokens", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** POST /access/tokens/{id}/revoke */
+export function revokePat(id: string): Promise<PersonalAccessToken> {
+  return request<PersonalAccessToken>(`/access/tokens/${id}/revoke`, { method: "POST" })
 }
 
 /** GET /access/logs */
 export function listAccessLogs(): Promise<AccessLogEntry[]> {
-  return resolve(ACCESS_LOGS)
+  return request<AccessLogEntry[]>("/access/logs")
 }
 
 /** GET /.well-known/resume-agent */
 export function getCapability(): Promise<CapabilityDiscovery> {
-  return resolve(CAPABILITY)
+  return request<CapabilityDiscovery>("/.well-known/resume-agent")
 }
 
 // ---------------------------------------------------------------------------
-// 备份迁移：export / import 预览
+// 备份迁移：export / markdown / import 预览 / import
 // ---------------------------------------------------------------------------
 
+/** GET /backup/export */
+export function exportBackup(): Promise<BackupPayload> {
+  return request<BackupPayload>("/backup/export")
+}
+
+/** GET /backup/export/markdown */
+export function exportBackupMarkdown(): Promise<string> {
+  return requestText("/backup/export/markdown")
+}
+
 /** POST /backup/import:preview */
-export function previewImport(): Promise<ImportPreview> {
-  return resolve(IMPORT_PREVIEW_SAMPLE)
+export function previewImport(payload: BackupPayload): Promise<ImportPreview> {
+  return request<ImportPreview>("/backup/import:preview", { method: "POST", body: JSON.stringify(payload) })
+}
+
+/** POST /backup/import */
+export function importBackup(payload: BackupPayload): Promise<ImportResult> {
+  return request<ImportResult>("/backup/import", { method: "POST", body: JSON.stringify(payload) })
 }
 
 // ---------------------------------------------------------------------------
@@ -462,10 +485,10 @@ export async function getWorkbenchSummary(): Promise<WorkbenchSummary> {
     unverifiedFactCount: profile.facts.filter((f) => f.evidence.status !== "verified").length,
     hasProfile: true,
     jobStage: [
-      { label: "建立事实库", done: true },
-      { label: "生成岗位简历", done: true },
-      { label: "针对性微调", done: false },
-      { label: "导出投递", done: false },
+      { label: "workbench.stage.establish", done: true },
+      { label: "workbench.stage.generate", done: true },
+      { label: "workbench.stage.tune", done: false },
+      { label: "workbench.stage.export", done: false },
     ],
   })
 }
