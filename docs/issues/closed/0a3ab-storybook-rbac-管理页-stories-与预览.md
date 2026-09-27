@@ -1,14 +1,15 @@
 ---
 id: 0a3ab
-status: in-progress
+status: closed
 created_at: 2026-09-27T13:00:00.000Z
-updated_at: 2026-09-27T04:11:44.096Z
+updated_at: 2026-09-27T04:13:23.607Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-09-27T04:11:44.096Z
+closed_at: 2026-09-27T04:13:23.607Z
 ---
 
 # Storybook：RBAC 管理页 stories 与预览
