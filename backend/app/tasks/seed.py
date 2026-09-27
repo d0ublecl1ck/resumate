@@ -1,4 +1,4 @@
-"""Seed built-in reference data.
+"""Seed built-in reference data and the local bootstrap admin.
 
 Run with: uv run python -m app.tasks.seed
 """
@@ -7,7 +7,11 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.db import SessionLocal
+from app.modules.auth.dao import get_user_by_email
+from app.modules.auth.models import User
+from app.modules.auth.security import hash_password
 from app.modules.templates.dao import get_template
 from app.modules.templates.models import Template
 
@@ -44,10 +48,34 @@ def seed_templates(db: Session) -> int:
     return created
 
 
+def seed_admin(db: Session) -> bool:
+    """Create the bootstrap admin once; returns True when it was created."""
+    settings = get_settings()
+    email = settings.bootstrap_admin_email.strip().lower()
+    if get_user_by_email(db, email) is not None:
+        return False
+    now = datetime.now(timezone.utc)
+    db.add(
+        User(
+            id="user_admin",
+            email=email,
+            display_name=settings.bootstrap_admin_name,
+            password_hash=hash_password(settings.bootstrap_admin_password),
+            role="admin",
+            is_banned=False,
+            created_at=now,
+            updated_at=now,
+        )
+    )
+    db.commit()
+    return True
+
+
 def main() -> None:
     with SessionLocal() as session:
-        created = seed_templates(session)
-    print(f"seeded {created} template(s)")
+        templates_created = seed_templates(session)
+        admin_created = seed_admin(session)
+    print(f"seeded {templates_created} template(s); bootstrap admin created={admin_created}")
 
 
 if __name__ == "__main__":

@@ -17,7 +17,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 | `app/main.py` | 组合根，显式导入并注册各模块 router |
 | `app/core/config.py` | Pydantic Settings，集中读取环境变量和 `.env`，缓存配置实例 |
 | `app/core/db.py` | SQLAlchemy 引擎、会话工厂、请求会话依赖和数据库探活依赖 |
-| `app/core/deps.py` | 分页参数依赖与单用户占位依赖 |
+| `app/core/deps.py` | 分页参数依赖与 `CurrentUser` 传输类型 |
+| `app/core/redis.py` | 进程级 Redis 客户端与 `get_redis` 依赖（会话存储） |
 | `app/modules/<domain>/api.py` | HTTP 路由、依赖声明、请求绑定及响应映射 |
 | `app/modules/<domain>/schemas.py` | 显式请求和响应契约 |
 | `app/modules/<domain>/service.py` | 业务规则、状态流转与跨 DAO 编排 |
@@ -45,7 +46,9 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 `app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误、证据等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
 
-当前表：`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+当前表：`users`（账号、密码哈希与封禁状态）、`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+
+会话不落在 PostgreSQL：Opaque Token 的 SHA-256 作为 Redis key（`auth:session:<sha256>`），用户维度用 `auth:user_sessions:<user_id>` 集合索引，删除 key 即撤销会话。Redis 不是事实源，丢失会话只影响登录态。
 
 业务失败统一返回 `{code, message, latestVersionId?}` 错误信封，`code` 取自 `app/shared/errors.py` 的机器错误码；资源不存在返回 404、基线过期返回 409、校验失败返回 422。
 
@@ -65,7 +68,17 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   ├── core/
 │   │   │   ├── config.py
 │   │   │   ├── db.py
-│   │   │   └── deps.py
+│   │   │   ├── deps.py
+│   │   │   └── redis.py
+│   │   ├── modules/auth/
+│   │   │   ├── api.py
+│   │   │   ├── schemas.py
+│   │   │   ├── service.py
+│   │   │   ├── dao.py
+│   │   │   ├── models.py
+│   │   │   ├── deps.py
+│   │   │   ├── security.py
+│   │   │   └── session_store.py
 │   │   ├── modules/health/
 │   │   │   ├── api.py
 │   │   │   └── schemas.py
@@ -111,7 +124,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │       ├── test_profile.py
 │       ├── test_settings.py
 │       ├── test_access.py
-│       └── test_backup.py
+│       ├── test_backup.py
+│       └── test_auth.py
 ├── docs/design.md
 ├── docs/issues/
 └── quality-gates/
@@ -123,6 +137,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 当前公共端点（字段与 `ui/src/lib/types.ts` 对齐，JSON 使用 camelCase）：
 
+- 认证：`POST /auth/register`、`POST /auth/login`、`POST /auth/logout`、`POST /auth/password`、`GET /auth/me`、`POST /auth/users/{user_id}/ban`（仅管理员）。会话经 HttpOnly Cookie 承载。
 - 模板：`GET /templates`、`GET /templates/{template_id}`（只读）。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。
 - 岗位：`GET /jds`、`POST /jds`、`GET /jds/{jd_id}`、`PATCH /jds/{jd_id}`、`DELETE /jds/{jd_id}`、`PUT|DELETE /jds/{jd_id}/binding`。
@@ -137,7 +152,11 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 核心实体 CRUD 按 Profile、Resume、JD 三个模块落地；简历文档提交（`PUT document`）直接产生一个 `ResumeVersion`，Working Copy / flush / finalize 的完整 C-03 模型留待后续工单。
 - 元数据修改（标题、标签、模板）不产生 Resume 版本；软删除保留 30 天恢复窗口。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
-- `get_current_user` 为单用户占位依赖，固定返回本地用户；接入真实认证前不得多用户部署。
+- 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。
+- 会话 Cookie 默认 `HttpOnly`、`SameSite=lax`、`Path=/`、TTL 7 天；生产必须开启 `SESSION_COOKIE_SECURE=true`。开发经 Vite 代理为同源，无需 `SameSite=None`。
+- `get_current_user` 由 `app/modules/auth/deps.py` 提供：读取 Cookie → 校验 Redis → 加载用户并拒绝被封禁账号；业务模块从 auth.deps 导入，core 不反向依赖 modules。
+- 密码使用 argon2 哈希；`app/tasks/seed.py` 幂等写入一个本地 bootstrap 管理员，部署前必须替换其密码。
+- 会话撤销语义：登出删除当前会话 key；改密码与封号删除该用户 `auth:user_sessions` 索引下的全部会话 key，均在下一次请求立即生效。
 - 统一错误契约放在 `app/shared/errors.py`，响应信封为 `ApiError`；`main.py` 注册异常处理器，各模块抛出领域异常而非手工构造状态码。
 - 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
 - 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 由 `SETTINGS_SECRET_KEY` 派生的 Fernet 密钥加密落库、只写入不回显（仅返回 `keyConfigured`），解密失败按未配置处理；连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。

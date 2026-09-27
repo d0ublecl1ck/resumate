@@ -17,7 +17,7 @@ def test_get_settings_is_idempotent(client: TestClient) -> None:
     assert body["autosave"] is True
     assert body["defaultTemplateId"] == ""
     assert body["defaultTemplateRetired"] is False
-    assert body["displayName"] == "本地用户"
+    assert body["displayName"] == "测试用户"
     assert body["shortcuts"]
     assert second.json() == body
 

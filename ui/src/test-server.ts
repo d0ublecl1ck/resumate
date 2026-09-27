@@ -14,7 +14,22 @@ import {
   TEMPLATES,
   USER_PREFERENCES,
 } from "@/lib/content"
-import type { ProfileFact } from "@/lib/types"
+import type { AuthUser, ProfileFact } from "@/lib/types"
+
+const AUTH_USER: AuthUser = {
+  id: "user_test",
+  email: "test@resumate.dev",
+  displayName: "测试用户",
+  role: "user",
+  isBanned: false,
+  createdAt: "2026-01-01T00:00:00+08:00",
+}
+
+const AUTH_ACCOUNTS: Record<string, string> = { "test@resumate.dev": "password123" }
+
+function unauthorized(code: string, message: string) {
+  return HttpResponse.json({ code, message }, { status: 401 })
+}
 
 function notFound(message: string) {
   return HttpResponse.json({ code: "RESOURCE_NOT_FOUND", message }, { status: 404 })
@@ -39,6 +54,18 @@ function createFact(body: Partial<ProfileFact>): ProfileFact {
 }
 
 export const handlers = [
+  http.get("/api/auth/me", () => HttpResponse.json(AUTH_USER)),
+  http.post("/api/auth/login", async ({ request }) => {
+    const body = (await request.json()) as { email: string; password: string }
+    const expected = AUTH_ACCOUNTS[body.email]
+    if (!expected || expected !== body.password) return unauthorized("INVALID_CREDENTIALS", "邮箱或密码不正确")
+    return HttpResponse.json(AUTH_USER)
+  }),
+  http.post("/api/auth/register", async ({ request }) => {
+    const body = (await request.json()) as { email: string; displayName: string }
+    return HttpResponse.json({ ...AUTH_USER, id: "user_mock_new", email: body.email, displayName: body.displayName }, { status: 201 })
+  }),
+  http.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
   http.get("/api/profile", () => HttpResponse.json(PROFILE)),
   http.patch("/api/profile/basics", async ({ request }) => {
     const patch = (await request.json()) as Record<string, unknown>
