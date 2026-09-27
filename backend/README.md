@@ -33,7 +33,7 @@ uv run uvicorn app.main:app --reload
 - `app/main.py`：显式导入和注册模块 router，并注册统一异常处理器。
 - `app/core/`：Settings、数据库引擎与请求会话、Redis 客户端、同步探活依赖、分页参数与 `CurrentUser` 类型。
 - `app/modules/<domain>/`：业务域按 `api → service → dao → models` 分层，schemas 定义接口契约。
-- `app/modules/auth/`：账号与 Opaque Token 会话；`session_store.py` 封装 Redis key 与撤销，`security.py` 负责 argon2 哈希，`deps.py` 提供 `get_current_user` / `require_admin`。
+- `app/modules/auth/`：账号与 Opaque Token 会话；`session_store.py` 封装 Redis key 与撤销，`security.py` 负责 argon2 哈希，`deps.py` 提供 `get_current_user` / `require_admin`。端点：`POST /auth/register|login|logout|password`、`GET /auth/me`、`POST /auth/users/{user_id}/ban`（仅管理员；改密码与封号会删除该用户全部会话 key）。
 - `app/modules/templates/`：模板只读查询，当前不含管理端写接口。
 - `app/modules/resume/`：简历元数据 CRUD、软删除/归档/恢复/复制、文档提交与版本列表。
 - `app/modules/jd/`：岗位 CRUD 与到简历的 0..1 软绑定。
