@@ -6,6 +6,8 @@
 
 Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`backend/` 提供 FastAPI 服务。后端以模块制提供 HTTP 能力，当前包含健康检查、模板只读接口，并按核心实体（Profile、Resume、JD）扩展业务域。
 
+此外，`agent-core/` 提供内置与外部 Agent 复用的运行时底座，只通过公共 API 读写业务状态；`backend/app/modules/agent/` 承载 Agent 操作契约（UserTurn、Working Copy、PendingAction 与领域 Patch），接口与状态机以 [Agent 操作 API 契约](agent/agent-operation-api.md) 为准。
+
 采用模块制组织 HTTP 能力，以明确的文件职责和显式依赖保持结构可追踪。基础设施探活使用 FastAPI 依赖；业务规则出现后，再在对应模块引入 service、dao 和 models。
 
 ## 架构
@@ -46,7 +48,9 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 `app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误、证据等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
 
-当前表：`users`（账号、密码哈希与封禁状态）、`roles` / `permissions` / `user_roles` / `role_permissions`（RBAC 三表与两张关联表）、`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+当前表：`users`（账号、密码哈希与封禁状态）、`roles` / `permissions` / `user_roles` / `role_permissions`（RBAC 三表与两张关联表）、`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）、`agent_turns`（UserTurn 与固化模式）、`agent_pending_actions`（审批待办）与 `agent_operations`（幂等结果）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+
+`resumes` 增补 `working_document` / `working_base_version_id` / `working_turn_id` / `working_revision` 四列承载 C-03 的 Working Copy：Agent 侧基于明确基线暂存，finalize 时才聚合为正式版本。
 
 会话不落在 PostgreSQL：Opaque Token 的 SHA-256 作为 Redis key（`auth:session:<sha256>`），用户维度用 `auth:user_sessions:<user_id>` 集合索引，删除 key 即撤销会话。Redis 不是事实源，丢失会话只影响登录态。
 
@@ -56,6 +60,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 ```text
 .
+├── agent-core/                 # Agent 底座（Python, uv）：公共 API 客户端、轮次会话、工具与 Skill
 ├── ui/                         # React + TypeScript + Vite
 ├── backend/
 │   ├── pyproject.toml
@@ -104,6 +109,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   │   └── ...（api/schemas/service/dao/models）
 │   │   ├── modules/backup/
 │   │   │   └── ...（api/schemas/service）
+│   │   ├── modules/agent/
+│   │   │   └── ...（api/schemas/service/dao/models + patch.py）
 │   │   ├── shared/
 │   │   │   ├── schemas.py
 │   │   │   └── errors.py
@@ -126,8 +133,10 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │       ├── test_access.py
 │       ├── test_access_control.py
 │       ├── test_backup.py
+│       ├── test_agent.py
 │       └── test_auth.py
 ├── docs/design.md
+├── docs/agent/agent-operation-api.md
 ├── docs/issues/
 └── quality-gates/
 ```
@@ -147,11 +156,15 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 设置：`GET|PATCH /settings`（偏好）、`GET|PATCH /agent/config`、`GET|PUT /models/config`、`POST /models/config:test`。偏好中的 `fullAccessScopes`、`confirmRetainedOps`、`shortcuts[].action` 返回稳定 i18n 键而非展示文案。
 - 开放接入：`GET|POST /access/tokens`、`POST /access/tokens/{token_id}/revoke`、`GET /access/logs`、`GET /.well-known/resume-agent`；令牌明文只在创建响应返回一次（`secretOnce`），库中只存 SHA-256 哈希。
 - 备份：`GET /backup/export`、`GET /backup/export/markdown`、`POST /backup/import:preview`、`POST /backup/import`。
+- Agent 操作：`POST /resumes/{resume_id}/turns`、`GET /turns/{turn_id}`、`POST /turns/{turn_id}/finalize|cancel`、`POST /turns/{turn_id}/patches:validate|preview|apply`、`GET /turns/{turn_id}/pending-actions`、`GET /resumes/{resume_id}/working-document`、`POST /pending-actions/{action_id}/approve|reject`；每个端点声明 `resume:read`（读）或 `resume:write`（写）。
 
 ## 关键决策
 
 - 后端采用 FastAPI 模块制；业务域按需求增加，分层边界以本文为准。
-- 核心实体 CRUD 按 Profile、Resume、JD 三个模块落地；简历文档提交（`PUT document`）直接产生一个 `ResumeVersion`，Working Copy / flush / finalize 的完整 C-03 模型留待后续工单。
+- 核心实体 CRUD 按 Profile、Resume、JD 三个模块落地；手动 `PUT document` 直接产生一个 `ResumeVersion`，Agent 侧按 C-03 走 `agent_turns` 的 Working Copy + finalize 聚合提交（`manual-edits` 的手动缓冲仍留待后续工单）。
+- Agent 操作层以 `app/modules/agent/` 落地：轮次固化执行模式（session > agent > account），approval 必须经 PendingAction 审批后 apply，full_access 可直接 apply；finalize 每轮每份简历至多提交一个版本，无差异不建空版本，基线过期返回 409。领域 Patch 采用显式 `op` 列表（setBasics / upsertSection / removeSection / upsertEntry / removeEntry），非 RFC 6902；接口与状态机冻结在 `docs/agent/agent-operation-api.md`。
+- `agent-core/` 是只走公共 API 的 Agent 底座（Python, uv）：薄客户端、TurnSession、Patch 构造器、工具表与 C-09 运行时骨架；**MUST NOT** 直连数据库或维护第二套业务真相源，模型提供方以 Protocol 注入。
+- 本期 Agent 操作端点沿用会话身份 + RBAC（`resume:read` / `resume:write`）；PAT Bearer 鉴权与 Scope 强制、MCP、SDK、Webhook 属后续工单，`source` / `executionMode` 一律由服务端解析，客户端不能凭参数字段绕过确认。
 - 元数据修改（标题、标签、模板）不产生 Resume 版本；软删除保留 30 天恢复窗口。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
 - 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。
