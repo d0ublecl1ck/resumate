@@ -316,3 +316,49 @@ def test_pending_action_stale_when_payload_differs(client: TestClient) -> None:
 
     assert response.status_code == 409
     assert response.json()["code"] == "PENDING_ACTION_STALE"
+
+
+def test_repeated_preview_supersedes_previous_pending_action(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="approval")
+
+    first = client.post(
+        f"/turns/{turn['id']}/patches:preview",
+        json={"ops": [{"op": "removeSection", "sectionId": "sec_experience"}], "reason": "第一次"},
+    ).json()
+    second = client.post(
+        f"/turns/{turn['id']}/patches:preview",
+        json={"ops": [_upsert_section_op()], "reason": "第二次"},
+    ).json()
+
+    assert first["pendingActionId"] != second["pendingActionId"]
+
+    actions = client.get(f"/turns/{turn['id']}/pending-actions").json()
+    assert len(actions) == 2
+    assert [action["state"] for action in actions].count("pending") == 1
+    by_id = {action["id"]: action for action in actions}
+    assert by_id[first["pendingActionId"]]["state"] == "stale"
+    assert by_id[first["pendingActionId"]]["staleReason"] == "已被新的预览取代"
+    # The cancel precedent leaves decided_at unset when a pending action is invalidated.
+    assert by_id[first["pendingActionId"]]["decidedAt"] is None
+    assert by_id[second["pendingActionId"]]["state"] == "pending"
+
+
+def test_repeated_preview_leaves_decided_actions_untouched(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="approval")
+    first = client.post(
+        f"/turns/{turn['id']}/patches:preview",
+        json={"ops": [{"op": "removeSection", "sectionId": "sec_experience"}]},
+    ).json()
+    approved = client.post(f"/pending-actions/{first['pendingActionId']}/approve", json={}).json()
+    assert approved["state"] == "approved"
+
+    client.post(
+        f"/turns/{turn['id']}/patches:preview",
+        json={"ops": [_upsert_section_op()]},
+    )
+
+    actions = client.get(f"/turns/{turn['id']}/pending-actions").json()
+    by_id = {action["id"]: action for action in actions}
+    assert by_id[first["pendingActionId"]]["state"] == "approved"
