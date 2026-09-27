@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.modules.jd import dao as jd_dao
 from app.modules.templates.service import get_template
 from app.shared.errors import BaseVersionStale, ResourceNotFound, ValidationFailed
 
@@ -235,3 +236,7 @@ def update_document(db: Session, owner_id: str, resume_id: str, payload: Documen
 def list_versions(db: Session, owner_id: str, resume_id: str) -> list[ResumeVersion]:
     _get_owned(db, owner_id, resume_id)
     return dao.list_versions(db, resume_id)
+
+
+def list_bound_jd_ids(db: Session, owner_id: str, resume_id: str) -> list[str]:
+    return jd_dao.list_jd_ids_for_resume(db, owner_id, resume_id)
