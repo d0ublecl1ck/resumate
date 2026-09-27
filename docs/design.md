@@ -159,6 +159,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - `get_current_user` 由 `app/modules/auth/deps.py` 提供：读取 Cookie → 校验 Redis → 加载用户与 RBAC 投影并拒绝被封禁账号；业务模块从 auth.deps 导入，core 不反向依赖 modules。
 - 权限采用经典 RBAC 三表：`users` / `roles` / `permissions` 三实体，`user_roles` / `role_permissions` 两张关联表；权限码为 `resource:action`，内置角色 `user` < `admin` < `super_admin` 通过权限集合表达继承（14 / 17 / 20 个权限）。目录定义在 `app/modules/auth/rbac.py`，由 `app.tasks.seed` 幂等写入并清理目录外的孤立权限；权限码与端点绑定、由代码静态声明，因此该目录只读，不提供在线增删改。
 - 每个受保护端点通过 `require_permission("code")` 显式声明所需权限；守卫测试遍历 `app.routes` 断言非 public 路由恰好解析出一个存在于目录中的权限码，防止新增端点漏配。public 白名单：health、register/login/logout、templates 只读、well-known、OpenAPI/docs。
+- RBAC 管理界面用权限树交互：权限目录按资源分组，角色编辑用三态勾选。树用开源 headless 组件 `@headless-tree/react`（+ `@headless-tree/core` 提供 feature 与 `useTree`），本身不带样式，由项目 Tailwind 令牌渲染；权限文案按权限码映射到 i18n，不直接渲染后端中文名。
 - RBAC 在线维护只针对**角色**：自定义角色可增删改，并从只读权限目录勾选权限；系统角色由 `app/modules/auth/rbac.py` 拥有，接口拒绝改/删，`seed_rbac` 会把系统角色的权限集合精确同步回目录值并清理孤立权限。权限码由代码静态声明（`require_permission` 导入期校验），UI 新建的权限码不会被任何端点使用，因此权限目录只读；角色 code 创建后不可变；删除仍被用户占用的角色返回 422。
 - actor 与 target 的层级约束在 service 侧校验：封禁/解封要求 actor 角色 rank 严格高于 target（admin 不能动 admin/super_admin）；改角色仅 super_admin，且不能改自己、不能移除最后一个 super_admin。
 - 密码使用 argon2 哈希；`app/tasks/seed.py` 幂等写入一个本地 bootstrap 管理员，部署前必须替换其密码。
