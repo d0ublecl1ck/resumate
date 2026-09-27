@@ -472,6 +472,32 @@ export interface ModelConfigUpdate {
   apiKey?: string
 }
 
+// ---------------------------------------------------------------------------
+// 模型目录（契约 §17 / 9546b）：只读，条目来自后端维护的 litellm 目录。
+// ---------------------------------------------------------------------------
+
+export interface ModelCatalogModel {
+  id: string
+  label: string
+  /** 上下文窗口（token） */
+  contextWindow?: number
+  maxOutputTokens?: number
+  inputCostPerMillion?: number
+  outputCostPerMillion?: number
+}
+
+export interface ModelCatalogProvider {
+  id: string
+  label: string
+  models: ModelCatalogModel[]
+}
+
+export interface ModelCatalog {
+  /** 目录来源，固定为 "litellm" */
+  source: string
+  providers: ModelCatalogProvider[]
+}
+
 export interface UserPreferences {
   theme: "paper" | "dark"
   language: string

@@ -6,6 +6,7 @@ import {
   CAPABILITY,
   IMPORT_PREVIEW_SAMPLE,
   JDS,
+  MODEL_CATALOG,
   MODEL_CONFIG,
   PATS,
   PROFILE,
@@ -170,6 +171,22 @@ export const handlers = [
   http.patch("/api/agent/config", async ({ request }) => {
     const patch = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ ...AGENT_CONFIG, ...patch })
+  }),
+  http.get("/api/models/catalog", ({ request }) => {
+    const url = new URL(request.url)
+    const provider = url.searchParams.get("provider")
+    const query = url.searchParams.get("q")?.trim().toLowerCase()
+    let providers = MODEL_CATALOG.providers.map((item) => ({ ...item, models: [...item.models] }))
+    if (provider) providers = providers.filter((item) => item.id === provider)
+    if (query) {
+      providers = providers
+        .map((item) => ({
+          ...item,
+          models: item.models.filter((model) => model.id.toLowerCase().includes(query) || model.label.toLowerCase().includes(query)),
+        }))
+        .filter((item) => item.models.length > 0)
+    }
+    return HttpResponse.json({ ...MODEL_CATALOG, providers })
   }),
   http.get("/api/models/config", () => HttpResponse.json(MODEL_CONFIG)),
   http.put("/api/models/config", async ({ request }) => {

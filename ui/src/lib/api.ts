@@ -19,6 +19,7 @@ import type {
   JobMatchResult,
   MatchGap,
   ModelConfig,
+  ModelCatalog,
   Permission,
   Role,
   RoleInput,
@@ -403,6 +404,18 @@ export function updateAgentConfig(patch: AgentConfigUpdate): Promise<AgentConfig
 /** GET /models/config */
 export function getModelConfig(): Promise<ModelConfig> {
   return request<ModelConfig>("/models/config")
+}
+
+/**
+ * GET /models/catalog —— 只读模型目录（契约 §17）；条目来自后端 litellm 目录。
+ * provider 按 provider id 过滤，q 按模型 id / 名称搜索。
+ */
+export function getModelCatalog(params?: { provider?: string; q?: string }): Promise<ModelCatalog> {
+  const search = new URLSearchParams()
+  if (params?.provider) search.set("provider", params.provider)
+  if (params?.q) search.set("q", params.q)
+  const suffix = search.toString()
+  return request<ModelCatalog>(`/models/catalog${suffix ? `?${suffix}` : ""}`)
 }
 
 /** PUT /models/config —— apiKey 为 write-only，响应不回显 */
