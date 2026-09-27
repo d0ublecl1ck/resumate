@@ -67,11 +67,16 @@ def _require_open(turn: AgentTurn) -> None:
         raise TurnAlreadyClosed("轮次已关闭，不能再修改")
 
 
-def _resolve_mode(db: Session, owner_id: str, requested: str | None) -> tuple[str, str]:
-    """Freeze the execution mode and its source for one turn (contract section 3)."""
-    if requested is not None:
+def _resolve_mode(db: Session, user: CurrentUser, requested: str | None) -> tuple[str, str]:
+    """Freeze the execution mode and its source for one turn (contract section 3).
+
+    A PAT caller's executionMode is untrusted and ignored (C-01/C-02): its mode
+    resolves only from the account agent config or the account default, so a
+    token cannot promote an account to full_access through the request body.
+    """
+    if user.auth_kind != "pat" and requested is not None:
         return requested, "session"
-    settings = settings_dao.get_by_owner(db, owner_id)
+    settings = settings_dao.get_by_owner(db, user.id)
     if settings is not None:
         mode = (settings.agent_config or {}).get("nextRunMode")
         if mode in MODE_VALUES:
@@ -258,7 +263,7 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         _close_open_turn(db, open_turn, user)
     if payload.base_version_id is not None and payload.base_version_id != resume.current_version_id:
         raise BaseVersionStale("简历已产生新版本，请基于最新版本重试", latest_version_id=resume.current_version_id)
-    mode, mode_source = _resolve_mode(db, user.id, payload.execution_mode)
+    mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
     source = payload.source if payload.source in ("agent", "client") else DEFAULT_SOURCE
     turn = AgentTurn(
         id=_new_id("turn"),
