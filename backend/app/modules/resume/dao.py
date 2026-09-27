@@ -46,3 +46,16 @@ def list_versions(db: Session, resume_id: str) -> list[ResumeVersion]:
 
 def add_version(db: Session, version: ResumeVersion) -> None:
     db.add(version)
+
+
+def list_owner_resumes(db: Session, owner_id: str) -> list[Resume]:
+    return list(db.scalars(select(Resume).where(Resume.owner_id == owner_id)))
+
+
+def list_all_versions(db: Session, owner_id: str) -> list[ResumeVersion]:
+    statement = (
+        select(ResumeVersion)
+        .join(Resume, Resume.id == ResumeVersion.resume_id)
+        .where(Resume.owner_id == owner_id)
+    )
+    return list(db.scalars(statement))
