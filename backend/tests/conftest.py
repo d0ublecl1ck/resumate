@@ -1,10 +1,6 @@
 import os
 from collections.abc import Iterator
 
-# litellm loads its model cost map on import; force the copy bundled with the
-# package so the test suite never reaches the network.
-os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
-
 import fakeredis
 import pytest
 from fastapi.testclient import TestClient

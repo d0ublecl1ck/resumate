@@ -252,13 +252,13 @@ def _effective(payload: ModelConfigUpdate | None, saved: dict, key: str) -> str:
 
 
 def get_model_catalog(*, provider: str | None = None, query: str | None = None) -> ModelCatalogResponse:
-    """Serve the read-only model catalog directly from litellm (section 17)."""
+    """Serve the read-only model catalog from the committed models.dev snapshot."""
     try:
         entries = catalog.list_catalog(provider=provider, query=query)
     except catalog.ModelCatalogUnavailable as exc:
         raise ValidationFailed(str(exc)) from exc
     return ModelCatalogResponse(
-        source="litellm",
+        source=catalog.CATALOG_SOURCE,
         providers=[
             ModelCatalogProvider(
                 id=entry.id,
