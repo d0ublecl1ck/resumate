@@ -1,14 +1,18 @@
 // SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
-// 所有内容都可用「对话」维护：改基本信息、新增/更新某段经历等，AI 整理后显式确认。
+// 两条维护路径并存：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及「对话维护资料」抽屉——AI 整理后由用户显式确认再写入（C-07）。
 // 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
 
 import { Link } from "react-router-dom"
 import { useState } from "react"
-import type { FactType, Profile, ProfileFact, ResumeBasics } from "@/lib/types"
+import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
+import { createFactManually, updateBasics, updateFact } from "@/lib/api"
 import { EvidenceBadge } from "@/components/kit/badges"
 import { ProfileAssistant } from "@/components/profile-assistant"
+import { ProfileBasicsForm } from "@/components/profile-basics-form"
+import { ProfileFactForm } from "@/components/profile-fact-form"
 import { cn } from "@/lib/utils"
-import { Mail, MapPin, MessageSquarePlus, Phone, Plus, Link2, Sparkles, Pencil } from "lucide-react"
+import { Mail, MapPin, MessageSquarePlus, Pencil, Phone, Plus, Link2, Sparkles } from "lucide-react"
 
 const SECTIONS: { type: FactType; title: string; empty: string }[] = [
   { type: "experience", title: "职业经历", empty: "补充一段工作或实习经历，例如「2021 年起在某电商做高级前端」。" },
@@ -19,6 +23,9 @@ const SECTIONS: { type: FactType; title: string; empty: string }[] = [
   { type: "certificate", title: "证书资质", empty: "补充你考取的证书或资格认证。" },
 ]
 
+/** 直接编辑中的事实表单：新增或修正某一条。 */
+type FactEditor = { mode: "create"; type: FactType } | { mode: "update"; fact: ProfileFact }
+
 export function ProfileWorkspace({ profile }: { profile: Profile }) {
   const [basics, setBasics] = useState<ResumeBasics>(profile.basics)
   const [facts, setFacts] = useState<ProfileFact[]>(profile.facts)
@@ -26,6 +33,8 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
   const [prefill, setPrefill] = useState<{ hint: string } | null>(null)
   const [defaultType, setDefaultType] = useState<FactType | undefined>()
   const [flashId, setFlashId] = useState<string | null>(null)
+  const [editingBasics, setEditingBasics] = useState(false)
+  const [factEditor, setFactEditor] = useState<FactEditor | null>(null)
 
   function openAssistant(opts?: { hint?: string; type?: FactType }) {
     setPrefill(opts?.hint ? { hint: opts.hint } : null)
@@ -33,14 +42,45 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
     setAssistantOpen(true)
   }
 
+  function flash(id: string) {
+    setFlashId(id)
+    window.setTimeout(() => setFlashId((cur) => (cur === id ? null : cur)), 2500)
+  }
+
   function handleCommitFact(fact: ProfileFact, operation: "create" | "update") {
     setFacts((prev) => (operation === "update" ? prev.map((f) => (f.id === fact.id ? fact : f)) : [fact, ...prev]))
-    setFlashId(fact.id)
-    window.setTimeout(() => setFlashId((id) => (id === fact.id ? null : id)), 2500)
+    flash(fact.id)
   }
 
   function handleCommitBasics(next: ResumeBasics) {
     setBasics(next)
+  }
+
+  async function handleSaveBasics(next: ResumeBasics) {
+    const saved = await updateBasics(next)
+    setBasics(saved)
+    setEditingBasics(false)
+  }
+
+  async function handleSaveFact(input: ProfileFactInput) {
+    if (factEditor?.mode === "update") {
+      const current = factEditor.fact
+      const verified = input.evidence.status === "verified"
+      const saved = await updateFact(current.id, {
+        ...current,
+        ...input,
+        confidence: verified ? 0.9 : 0.5,
+        verifiedAt: verified ? (current.verifiedAt ?? new Date().toISOString()) : undefined,
+      })
+      setFacts((prev) => prev.map((f) => (f.id === saved.id ? saved : f)))
+      setFactEditor(null)
+      flash(saved.id)
+      return
+    }
+    const created = await createFactManually(input)
+    setFacts((prev) => [created, ...prev])
+    setFactEditor(null)
+    flash(created.id)
   }
 
   return (
@@ -66,72 +106,111 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      {/* 基本信息（像简历表头） */}
+      {/* 基本信息（像简历表头）：直接编辑与对话编辑并存 */}
       <section className="card-frame p-6" aria-label="基本信息">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h2 className="font-serif text-2xl font-bold text-foreground">{basics.fullName}</h2>
-            <p className="mt-1 text-sm text-foreground/80">{basics.headline}</p>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
-              {basics.email ? (
-                <span className="inline-flex items-center gap-1.5"><Mail className="size-3.5" aria-hidden /> {basics.email}</span>
-              ) : null}
-              {basics.phone ? (
-                <span className="inline-flex items-center gap-1.5"><Phone className="size-3.5" aria-hidden /> {basics.phone}</span>
-              ) : null}
-              {basics.location ? (
-                <span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5" aria-hidden /> {basics.location}</span>
+        {editingBasics ? (
+          <ProfileBasicsForm initial={basics} onSave={handleSaveBasics} onCancel={() => setEditingBasics(false)} />
+        ) : (
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="font-serif text-2xl font-bold text-foreground">{basics.fullName}</h2>
+              <p className="mt-1 text-sm text-foreground/80">{basics.headline}</p>
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+                {basics.email ? (
+                  <span className="inline-flex items-center gap-1.5"><Mail className="size-3.5" aria-hidden /> {basics.email}</span>
+                ) : null}
+                {basics.phone ? (
+                  <span className="inline-flex items-center gap-1.5"><Phone className="size-3.5" aria-hidden /> {basics.phone}</span>
+                ) : null}
+                {basics.location ? (
+                  <span className="inline-flex items-center gap-1.5"><MapPin className="size-3.5" aria-hidden /> {basics.location}</span>
+                ) : null}
+              </div>
+              {basics.links.length ? (
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                  {basics.links.map((l) => (
+                    <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-cobalt hover:underline">
+                      <Link2 className="size-3.5" aria-hidden /> {l.label}
+                    </a>
+                  ))}
+                </div>
               ) : null}
             </div>
-            {basics.links.length ? (
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                {basics.links.map((l) => (
-                  <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-cobalt hover:underline">
-                    <Link2 className="size-3.5" aria-hidden /> {l.label}
-                  </a>
-                ))}
-              </div>
-            ) : null}
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+              <button
+                onClick={() => setEditingBasics(true)}
+                aria-label="编辑基本信息"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cobalt/40 px-3 py-2 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
+              >
+                <Pencil className="size-3.5" aria-hidden /> 编辑
+              </button>
+              <button
+                onClick={() => openAssistant({ hint: "把我的城市改成 " })}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                <MessageSquarePlus className="size-3.5" aria-hidden /> 对话编辑
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => openAssistant({ hint: "把我的城市改成 " })}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-          >
-            <Pencil className="size-3.5" aria-hidden /> 对话编辑
-          </button>
-        </div>
+        )}
       </section>
 
       {/* 分区：经历 / 项目 / 教育 / 技能 / 成果 / 证书 */}
       {SECTIONS.map((section) => {
         const items = facts.filter((f) => f.type === section.type)
+        const creating = factEditor?.mode === "create" && factEditor.type === section.type
         return (
           <section key={section.type} aria-label={section.title}>
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 font-serif text-lg font-bold text-foreground">
                 {section.title}
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">{items.length}</span>
               </h2>
-              <button
-                onClick={() => openAssistant({ hint: `${section.title}：`, type: section.type })}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-              >
-                <Plus className="size-3.5" aria-hidden /> 对话添加
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFactEditor({ mode: "create", type: section.type })}
+                  aria-label={`手动添加${section.title}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/20 bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <Plus className="size-3.5" aria-hidden /> 手动添加
+                </button>
+                <button
+                  onClick={() => openAssistant({ hint: `${section.title}：`, type: section.type })}
+                  aria-label={`对话添加${section.title}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                >
+                  <MessageSquarePlus className="size-3.5 text-cobalt" aria-hidden /> 对话添加
+                </button>
+              </div>
             </div>
+
+            {creating ? (
+              <div className="mb-3">
+                <ProfileFactForm mode="create" defaultType={section.type} onSave={handleSaveFact} onCancel={() => setFactEditor(null)} />
+              </div>
+            ) : null}
 
             {items.length ? (
               <ul className="space-y-3">
                 {items.map((f) => (
-                  <FactRow key={f.id} fact={f} flash={flashId === f.id} onUpdate={() => openAssistant({ hint: `补充「${f.title}」：` })} />
+                  <FactRow
+                    key={f.id}
+                    fact={f}
+                    flash={flashId === f.id}
+                    editing={factEditor?.mode === "update" && factEditor.fact.id === f.id}
+                    onEdit={() => setFactEditor({ mode: "update", fact: f })}
+                    onCancelEdit={() => setFactEditor(null)}
+                    onSaveEdit={handleSaveFact}
+                    onUpdate={() => openAssistant({ hint: `补充「${f.title}」：` })}
+                  />
                 ))}
               </ul>
-            ) : (
+            ) : creating ? null : (
               <button
-                onClick={() => openAssistant({ hint: `${section.title}：`, type: section.type })}
+                onClick={() => setFactEditor({ mode: "create", type: section.type })}
                 className="flex w-full items-center gap-3 rounded-lg border border-dashed border-border bg-card/40 px-4 py-4 text-left text-sm text-muted-foreground transition-colors hover:border-cobalt/40 hover:bg-secondary/60"
               >
-                <MessageSquarePlus className="size-4 shrink-0 text-cobalt" aria-hidden />
+                <Plus className="size-4 shrink-0 text-cobalt" aria-hidden />
                 {section.empty}
               </button>
             )}
@@ -151,7 +230,31 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
   )
 }
 
-function FactRow({ fact, flash, onUpdate }: { fact: ProfileFact; flash?: boolean; onUpdate: () => void }) {
+function FactRow({
+  fact,
+  flash,
+  editing,
+  onEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onUpdate,
+}: {
+  fact: ProfileFact
+  flash?: boolean
+  editing: boolean
+  onEdit: () => void
+  onCancelEdit: () => void
+  onSaveEdit: (input: ProfileFactInput) => Promise<void>
+  onUpdate: () => void
+}) {
+  if (editing) {
+    return (
+      <li>
+        <ProfileFactForm mode="update" fact={fact} onSave={onSaveEdit} onCancel={onCancelEdit} />
+      </li>
+    )
+  }
+
   return (
     <li className={cn("card-soft p-4 transition-colors", flash && "border-cobalt bg-cobalt/5")}>
       <div className="flex items-start justify-between gap-3">
@@ -169,12 +272,22 @@ function FactRow({ fact, flash, onUpdate }: { fact: ProfileFact; flash?: boolean
             </div>
           ) : null}
         </div>
-        <button
-          onClick={onUpdate}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
-        >
-          <MessageSquarePlus className="size-3.5" aria-hidden /> 对话更新
-        </button>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <button
+            onClick={onEdit}
+            aria-label={`编辑「${fact.title}」`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
+          >
+            <Pencil className="size-3.5" aria-hidden /> 编辑
+          </button>
+          <button
+            onClick={onUpdate}
+            aria-label={`对话更新「${fact.title}」`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+          >
+            <MessageSquarePlus className="size-3.5" aria-hidden /> 对话更新
+          </button>
+        </div>
       </div>
     </li>
   )

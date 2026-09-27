@@ -11,18 +11,10 @@ import type {
   ResumeBasics,
 } from "@/lib/types"
 import { parseProfileInput, createFact, updateFact, updateBasics } from "@/lib/api"
+import { FACT_TYPE_LABEL, FACT_TYPE_ORDER } from "@/lib/profile"
 import { EvidenceBadge } from "@/components/kit/badges"
 import { cn } from "@/lib/utils"
 import { Bot, CircleCheck, Loader2, Send, Sparkles, User, X } from "lucide-react"
-
-const TYPE_LABEL: Record<FactType, string> = {
-  experience: "经历",
-  project: "项目",
-  skill: "技能",
-  education: "教育",
-  achievement: "成果",
-  certificate: "证书",
-}
 
 type Message =
   | { id: string; kind: "user"; text: string }
@@ -327,8 +319,8 @@ function FactCard({
             disabled={isUpdate}
             className="w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
           >
-            {Object.entries(TYPE_LABEL).map(([k, l]) => (
-              <option key={k} value={k}>{l}</option>
+            {FACT_TYPE_ORDER.map((k) => (
+              <option key={k} value={k}>{FACT_TYPE_LABEL[k]}</option>
             ))}
           </select>
         </label>
