@@ -12,6 +12,7 @@ from app.main import app
 from app.modules.jd import models as jd_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401
+from app.modules.settings import models as settings_models  # noqa: F401
 from app.modules.templates import models as templates_models  # noqa: F401
 from app.tasks.seed import seed_templates
 
