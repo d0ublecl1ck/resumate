@@ -1,14 +1,15 @@
 ---
 id: 9546b
-status: in-progress
+status: closed
 created_at: 2026-09-27T16:34:29.332Z
-updated_at: 2026-09-27T16:34:45.668Z
+updated_at: 2026-09-27T16:47:16.954Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-27T16:34:45.668Z
+closed_at: 2026-09-27T16:47:16.954Z
 ---
 
 # Agent 模型设置真实化：开源模型目录与 provider/model/key 配置
