@@ -49,6 +49,9 @@ class Permission(Base):
     code: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     group: Mapped[str] = mapped_column(String(32), nullable=False, default="")
     name: Mapped[str] = mapped_column(String(120), nullable=False)
+    # System permissions come from the code catalogue and cannot be renamed or
+    # deleted online; custom permissions are fully manageable.
+    is_system: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 

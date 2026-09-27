@@ -14,9 +14,13 @@ from .schemas import (
     BanRequest,
     ChangePasswordRequest,
     LoginRequest,
+    PermissionCreate,
     PermissionResponse,
+    PermissionUpdate,
     RegisterRequest,
+    RoleCreate,
     RoleResponse,
+    RoleUpdate,
     RoleUpdateRequest,
     UserResponse,
 )
@@ -39,6 +43,28 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 def _clear_session_cookie(response: Response) -> None:
     response.delete_cookie(key=get_settings().session_cookie_name, path="/")
+
+
+def _role_response(db: Session, role) -> RoleResponse:
+    return RoleResponse(
+        id=role.id,
+        code=role.code,
+        name=role.name,
+        description=role.description,
+        rank=role.rank,
+        is_system=role.is_system,
+        permissions=dao.list_role_permission_codes(db, role.id),
+    )
+
+
+def _permission_response(permission) -> PermissionResponse:
+    return PermissionResponse(
+        id=permission.id,
+        code=permission.code,
+        group=permission.group,
+        name=permission.name,
+        is_system=permission.is_system,
+    )
 
 
 def _user_response(db: Session, user: User) -> UserResponse:
@@ -143,16 +169,7 @@ def list_roles(
     _: CurrentUser = Depends(require_permission("role:read")),
     db: Session = Depends(get_db),
 ) -> list[RoleResponse]:
-    return [
-        RoleResponse(
-            code=role.code,
-            name=role.name,
-            description=role.description,
-            rank=role.rank,
-            permissions=dao.list_role_permission_codes(db, role.id),
-        )
-        for role in service.list_roles(db)
-    ]
+    return [_role_response(db, role) for role in service.list_roles(db)]
 
 
 @router.get("/permissions", response_model=list[PermissionResponse])
@@ -160,10 +177,63 @@ def list_permissions(
     _: CurrentUser = Depends(require_permission("role:read")),
     db: Session = Depends(get_db),
 ) -> list[PermissionResponse]:
-    return [
-        PermissionResponse(code=permission.code, group=permission.group, name=permission.name)
-        for permission in service.list_permissions(db)
-    ]
+    return [_permission_response(permission) for permission in service.list_permissions(db)]
+
+
+@router.post("/roles", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
+def create_role(
+    payload: RoleCreate,
+    _: CurrentUser = Depends(require_permission("role:write")),
+    db: Session = Depends(get_db),
+) -> RoleResponse:
+    return _role_response(db, service.create_role(db, payload))
+
+
+@router.patch("/roles/{role_id}", response_model=RoleResponse)
+def update_role(
+    role_id: str,
+    payload: RoleUpdate,
+    _: CurrentUser = Depends(require_permission("role:write")),
+    db: Session = Depends(get_db),
+) -> RoleResponse:
+    return _role_response(db, service.update_role(db, role_id, payload))
+
+
+@router.delete("/roles/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_role(
+    role_id: str,
+    _: CurrentUser = Depends(require_permission("role:write")),
+    db: Session = Depends(get_db),
+) -> None:
+    service.delete_role(db, role_id)
+
+
+@router.post("/permissions", response_model=PermissionResponse, status_code=status.HTTP_201_CREATED)
+def create_permission(
+    payload: PermissionCreate,
+    _: CurrentUser = Depends(require_permission("permission:write")),
+    db: Session = Depends(get_db),
+) -> PermissionResponse:
+    return _permission_response(service.create_permission(db, payload))
+
+
+@router.patch("/permissions/{permission_id}", response_model=PermissionResponse)
+def update_permission(
+    permission_id: str,
+    payload: PermissionUpdate,
+    _: CurrentUser = Depends(require_permission("permission:write")),
+    db: Session = Depends(get_db),
+) -> PermissionResponse:
+    return _permission_response(service.update_permission(db, permission_id, payload))
+
+
+@router.delete("/permissions/{permission_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_permission(
+    permission_id: str,
+    _: CurrentUser = Depends(require_permission("permission:write")),
+    db: Session = Depends(get_db),
+) -> None:
+    service.delete_permission(db, permission_id)
 
 
 @router.post("/users/{user_id}/role", response_model=UserResponse)

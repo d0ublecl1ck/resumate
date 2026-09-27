@@ -29,5 +29,6 @@ export default {
     jds: "Job descriptions",
     settings: "Settings & Agent",
     templates: "Templates",
+    rbac: "Roles & permissions",
   },
 }

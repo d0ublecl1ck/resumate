@@ -29,5 +29,6 @@ export default {
     jds: "JD 库",
     settings: "设置与 Agent",
     templates: "模板库",
+    rbac: "角色与权限",
   },
 }

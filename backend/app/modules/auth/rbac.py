@@ -45,6 +45,8 @@ PERMISSIONS: tuple[PermissionSpec, ...] = (
     PermissionSpec("user:unban", "user", "解除封禁"),
     PermissionSpec("role:read", "role", "读取角色与权限"),
     PermissionSpec("role:assign", "role", "分配用户角色"),
+    PermissionSpec("role:write", "role", "维护角色"),
+    PermissionSpec("permission:write", "permission", "维护权限目录"),
 )
 
 _USER_PERMISSIONS: tuple[str, ...] = (
@@ -64,7 +66,12 @@ _USER_PERMISSIONS: tuple[str, ...] = (
     "backup:write",
 )
 _ADMIN_PERMISSIONS: tuple[str, ...] = _USER_PERMISSIONS + ("user:read", "user:ban", "user:unban")
-_SUPER_ADMIN_PERMISSIONS: tuple[str, ...] = _ADMIN_PERMISSIONS + ("role:read", "role:assign")
+_SUPER_ADMIN_PERMISSIONS: tuple[str, ...] = _ADMIN_PERMISSIONS + (
+    "role:read",
+    "role:assign",
+    "role:write",
+    "permission:write",
+)
 
 ROLES: tuple[RoleSpec, ...] = (
     RoleSpec("user", "普通用户", 1, "只能操作自己的简历、岗位、事实与设置。", _USER_PERMISSIONS),
@@ -73,6 +80,8 @@ ROLES: tuple[RoleSpec, ...] = (
 )
 
 PERMISSION_CODES: frozenset[str] = frozenset(spec.code for spec in PERMISSIONS)
+PERMISSION_CODE_PATTERN = r"^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
+ROLE_CODE_PATTERN = r"^[a-z][a-z0-9_]*$"
 ROLE_CODES: tuple[str, ...] = tuple(spec.code for spec in ROLES)
 ROLE_RANK: dict[str, int] = {spec.code: spec.rank for spec in ROLES}
 DEFAULT_ROLE_CODE = "user"

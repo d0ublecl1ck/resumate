@@ -75,6 +75,7 @@ const ROUTES = [
   "/settings/access",
   "/admin/templates",
   "/admin/templates/tpl_modern",
+  "/admin/rbac",
 ]
 
 describe("路由冒烟", () => {

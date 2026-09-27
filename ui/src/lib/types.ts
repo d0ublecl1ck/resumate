@@ -63,6 +63,48 @@ export interface AuthUser {
   createdAt: ISODate
 }
 
+export interface Role {
+  id: string
+  code: string
+  name: string
+  description: string
+  rank: number
+  isSystem: boolean
+  permissions: string[]
+}
+
+export interface RoleInput {
+  code: string
+  name: string
+  description?: string
+  permissions: string[]
+}
+
+export interface RoleUpdateInput {
+  name?: string
+  description?: string
+  permissions?: string[]
+}
+
+export interface Permission {
+  id: string
+  code: string
+  group: string
+  name: string
+  isSystem: boolean
+}
+
+export interface PermissionInput {
+  code: string
+  group: string
+  name: string
+}
+
+export interface PermissionUpdateInput {
+  group?: string
+  name?: string
+}
+
 // ---------------------------------------------------------------------------
 // 来源与证据（DES-009 / C-07）
 // ---------------------------------------------------------------------------
