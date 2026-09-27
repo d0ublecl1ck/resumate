@@ -4,7 +4,7 @@
 
 ## 设计哲学
 
-Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`backend/` 提供 FastAPI 服务。后端当前实现健康检查，业务领域随具体需求增加。
+Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`backend/` 提供 FastAPI 服务。后端以模块制提供 HTTP 能力，当前包含健康检查、模板只读接口，并按核心实体（Profile、Resume、JD）扩展业务域。
 
 采用模块制组织 HTTP 能力，以明确的文件职责和显式依赖保持结构可追踪。基础设施探活使用 FastAPI 依赖；业务规则出现后，再在对应模块引入 service、dao 和 models。
 
@@ -38,9 +38,11 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 ## 数据模型
 
-当前没有业务 ORM 模型或业务表。`DATABASE_URL` 由 Settings 读取，脚手架默认值为 `sqlite:///./app.db`，相对运行目录解析。
+运行数据库为 PostgreSQL，驱动使用 psycopg 3（`postgresql+psycopg://`）。`DATABASE_URL` 由 Settings 读取，默认 `postgresql+psycopg://localhost:5432/resumate`；本地开发另需 `resumate_test` 测试库。
 
-Alembic 依赖、`alembic.ini`、`migrations/env.py` 与迁移文件模板已配置。`app/core/db.py` 定义声明式 `Base`；业务模型需继承它，并在迁移环境中显式导入。`migrations/versions/` 当前尚无业务迁移，业务数据模型与数据库选型在对应功能设计时确定。
+`app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
+
+业务失败统一返回 `{code, message, latestVersionId?}` 错误信封，`code` 取自 `app/shared/errors.py` 的机器错误码；资源不存在返回 404、基线过期返回 409、校验失败返回 422。
 
 ## 目录结构
 
@@ -62,14 +64,27 @@ Alembic 依赖、`alembic.ini`、`migrations/env.py` 与迁移文件模板已配
 │   │   ├── modules/health/
 │   │   │   ├── api.py
 │   │   │   └── schemas.py
+│   │   ├── modules/templates/
+│   │   │   ├── api.py
+│   │   │   ├── schemas.py
+│   │   │   ├── service.py
+│   │   │   ├── dao.py
+│   │   │   └── models.py
 │   │   ├── shared/
+│   │   │   ├── schemas.py
+│   │   │   └── errors.py
 │   │   ├── jobs/
 │   │   └── tasks/
+│   │       └── seed.py
 │   ├── migrations/
 │   │   ├── env.py
 │   │   ├── script.py.mako
 │   │   └── versions/
-│   └── tests/test_health.py
+│   └── tests/
+│       ├── conftest.py
+│       ├── test_health.py
+│       ├── test_templates.py
+│       └── test_deps.py
 ├── docs/design.md
 ├── docs/issues/
 └── quality-gates/
@@ -79,9 +94,11 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 ## 关键决策
 
-- 后端采用 FastAPI 模块制；当前业务域为 health，其余领域按需求增加，分层边界以本文为准。
+- 后端采用 FastAPI 模块制；业务域按需求增加，分层边界以本文为准。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
-- `get_current_user` 尚为抛出 `NotImplementedError` 的占位函数，当前健康检查不依赖鉴权。
+- `get_current_user` 为单用户占位依赖，固定返回本地用户；接入真实认证前不得多用户部署。
+- 统一错误契约放在 `app/shared/errors.py`，响应信封为 `ApiError`；`main.py` 注册异常处理器，各模块抛出领域异常而非手工构造状态码。
+- 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
-- 后端用 uv 管理依赖；测试覆盖独立响应构造、真实数据库成功和故障路径及 OpenAPI 响应模型，测试数据库与运行数据库隔离。
-- 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。健康检查分层由代码审查与后端测试验证。
+- 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
+- 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
