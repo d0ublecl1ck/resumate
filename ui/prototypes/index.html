@@ -349,8 +349,23 @@
             <li class="check-item"><span class="label">分区保存：编辑 → 保存中 → 已保存 / 失败</span><span class="tag">Agent / 模型 / 偏好</span></li>
             <li class="check-item"><span class="label">快捷键冲突</span><span class="tag">后端拒绝并保留原映射</span></li>
             <li class="check-item"><span class="label">模型凭证</span><span class="tag">只显示「已配置」，不回显</span></li>
+            <li class="check-item"><span class="label">模型目录选择</span><span class="tag">Provider → Model 级联</span></li>
             <li class="check-item"><span class="label">默认模板失效</span><span class="tag">提示重新选择</span></li>
           </ul>
+          <div style="margin-top:16px;display:grid;gap:10px">
+            <p style="margin:0;color:var(--ink-soft);font-size:13px">
+              模型目录选择态（9546b）：provider 与 model 级联自只读目录（GET /models/catalog），
+              选中 / 可选用既有标签样式标记；目录未命中时保留已保存值并标注「不在当前目录」。
+            </p>
+            <ul class="checklist" style="margin-top:0" aria-label="Provider 目录选择态">
+              <li class="check-item done"><span class="label">Provider · openai</span><span class="tag">已选</span></li>
+              <li class="check-item"><span class="label">Provider · anthropic</span><span class="tag">可选</span></li>
+            </ul>
+            <ul class="checklist" style="margin-top:0" aria-label="Model 目录选择态">
+              <li class="check-item done"><span class="label">Model · GPT-4o mini</span><span class="tag">已选</span></li>
+              <li class="check-item"><span class="label">Model · Claude 3.5 Sonnet</span><span class="tag">可选</span></li>
+            </ul>
+          </div>
           <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
             暗色令牌（ui/src/index.css 的 .dark）：background/card 取 ink 系低明度，
             foreground 取 paper 系高明度，border/input 取中间明度，ring 取 cobalt 亮化；
