@@ -14,7 +14,7 @@ afterEach(cleanup)
 describe("model catalog stories", () => {
   it("Default loads the catalog", async () => {
     render(Default.render())
-    expect(await screen.findByText("目录来源：litellm")).toBeInTheDocument()
+    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
   })
@@ -31,20 +31,20 @@ describe("model catalog stories", () => {
 
   it("ModelNotInCatalog marks the saved model as missing", async () => {
     render(ModelNotInCatalog.render())
-    expect(await screen.findByText("目录来源：litellm")).toBeInTheDocument()
+    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("legacy-model（不在当前目录）")
   })
 
   it("ProviderNotInCatalog marks the saved provider as missing and disables the model select", async () => {
     render(ProviderNotInCatalog.render())
-    expect(await screen.findByText("目录来源：litellm")).toBeInTheDocument()
+    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("legacy-openai（不在当前目录）")
     expect(screen.getByRole("combobox", { name: "Model" })).toBeDisabled()
   })
 
   it("NoProviderSelected shows the empty option", async () => {
     render(NoProviderSelected.render())
-    expect(await screen.findByText("目录来源：litellm")).toBeInTheDocument()
+    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("未设置")
     expect(screen.getByRole("combobox", { name: "Model" })).toBeDisabled()
   })

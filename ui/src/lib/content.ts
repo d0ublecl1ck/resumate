@@ -448,9 +448,9 @@ export const MODEL_CONFIG: ModelConfig = {
   lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" },
 }
 
-// 只读模型目录（契约 §17）：真实数据由后端从 litellm 目录产出，这里仅作为前端演示 fixture。
+// 只读模型目录（契约 §17）：真实数据由后端从 models.dev 快照产出，这里仅作为前端演示 fixture。
 export const MODEL_CATALOG: ModelCatalog = {
-  source: "litellm",
+  source: "models.dev",
   providers: [
     {
       id: "openai",
