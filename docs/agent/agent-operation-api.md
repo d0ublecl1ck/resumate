@@ -288,14 +288,14 @@ agent-core/
 
 **GET /models/catalog**（权限 settings:read）→ ModelCatalogResponse：
 
-- source：字符串，固定 "litellm"。
+- source：字符串，固定 "models.dev"。
 - providers：数组，元素为 { id, label, models }；models 元素为 { id, label, contextWindow?, maxOutputTokens?, inputCostPerMillion?, outputCostPerMillion? }。
 - 可选查询参数：provider（按 provider id 过滤）、q（按模型 id / 名称搜索）。
-- 数据直接来自 litellm 目录，仓库不自维护任何模型清单。
+- 数据来自开源目录 models.dev 的快照：刷新脚本把上游 api.json 投影为本地快照（id / name / limit / cost）写入仓库，运行时读本地文件、离线可用；仓库不自维护 provider / model 清单。
 
 **GET | PUT /models/config**（settings:read / settings:write）形状不变：provider、endpoint、model 均可选，apiKey write-only、只返回 keyConfigured。
 
-**POST /models/config:test**（settings:write）用 litellm 做连通性测试；响应与错误均不含明文密钥。
+**POST /models/config:test**（settings:write）用 httpx 调用 OpenAI 兼容的 /chat/completions 做连通性测试；响应与错误均不含明文密钥。provider 适配统一为 OpenAI 兼容实现（OpenAICompatibleProvider），非 OpenAI 兼容的原生协议暂不支持。
 
 前端：模型设置表单的 provider / model 来自 catalog，使用既有开源组件（@base-ui/react 等），文案走 i18n 双语。
 
