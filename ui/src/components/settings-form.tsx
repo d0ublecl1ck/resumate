@@ -1,7 +1,9 @@
 // SCR-010 设置与 Agent 运行配置。「当前运行」与「后续默认」分区（BR-D02）；
-// 凭证不回显（BR-D17）；测试连接不泄露密钥。
+// 凭证不回显（BR-D17）；测试连接不泄露密钥。界面文案走 i18n，语言切换入口也在这里。
 
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
 import type { AgentConfig, ExecutionMode, ModelConfig, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
@@ -17,22 +19,28 @@ export function SettingsForm({
   prefs: UserPreferences
   templates: ResumeTemplate[]
 }) {
+  const { t } = useTranslation()
   const [nextMode, setNextMode] = useState<ExecutionMode>(agent.nextRunMode)
   const [autosave, setAutosave] = useState(prefs.autosave)
   const [testState, setTestState] = useState<"idle" | "testing" | "ok">("idle")
+  const activeLocale = currentLocale()
+
+  const scopes = agent.fullAccessScopes.map((scope) => t("settings.agent.fullAccessScope." + scope, { defaultValue: scope })).join(t("common.listSeparator"))
+  const retained = agent.confirmRetainedOps.map((op) => t("settings.agent.confirmRetainedOp." + op, { defaultValue: op })).join(t("common.listSeparator"))
+  const modeSource = t("settings.agent.source." + agent.modeSource, { defaultValue: agent.modeSource })
 
   return (
     <div className="space-y-6">
       {/* Agent 模式 */}
-      <Section title="Agent 运行模式" hint="当前运行中的 Run 使用固化模式；这里的更改只对之后创建的 Run 生效。">
+      <Section title={t("settings.agent.title")} hint={t("settings.agent.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">当前运行 Run</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{agent.currentRunMode ?? "无运行中 Run"}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">模式来源：{agent.modeSource}（服务端固化，不可改）</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.currentRun")}</p>
+            <p className="mt-1 text-sm font-semibold text-foreground">{agent.currentRunMode ? t("common.executionMode." + agent.currentRunMode) : t("settings.agent.noCurrentRun")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.agent.modeSource", { source: modeSource })}</p>
           </div>
           <div className="rounded-lg border border-border p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">后续 Run 默认</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.nextRunDefault")}</p>
             <div className="mt-2 flex gap-2">
               {(["approval", "full_access"] as ExecutionMode[]).map((m) => (
                 <button
@@ -41,7 +49,7 @@ export function SettingsForm({
                   aria-pressed={nextMode === m}
                   className={cn("flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors", nextMode === m ? "border-cobalt bg-cobalt/5 text-foreground" : "border-border text-muted-foreground hover:bg-secondary")}
                 >
-                  {m === "approval" ? "Approval 逐项确认" : "Full Access"}
+                  {t("common.executionMode." + m)}
                 </button>
               ))}
             </div>
@@ -49,24 +57,24 @@ export function SettingsForm({
         </div>
         {nextMode === "full_access" ? (
           <div className="mt-3 rounded-lg border border-gold/60 bg-gold/15 p-3 text-xs leading-5 text-foreground">
-            <p className="font-medium">Full Access 免确认范围：</p>
-            <p className="mt-1">{agent.fullAccessScopes.join("、")}。</p>
-            <p className="mt-1.5 font-medium">仍保留确认的高影响操作：</p>
-            <p className="mt-1">{agent.confirmRetainedOps.join("、")}。</p>
+            <p className="font-medium">{t("settings.agent.fullAccessScopes")}</p>
+            <p className="mt-1">{scopes}。</p>
+            <p className="mt-1.5 font-medium">{t("settings.agent.confirmRetainedOps")}</p>
+            <p className="mt-1">{retained}。</p>
           </div>
         ) : null}
       </Section>
 
       {/* 模型配置 */}
-      <Section title="模型配置" hint="API Key 加密存储，界面不回显；测试连接不会泄露密钥。">
+      <Section title={t("settings.model.title")} hint={t("settings.model.hint")}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <ReadField label="Provider" value={model.provider} />
-          <ReadField label="Endpoint" value={model.endpoint} />
-          <ReadField label="Model" value={model.model} />
+          <ReadField label={t("settings.model.provider")} value={model.provider} />
+          <ReadField label={t("settings.model.endpoint")} value={model.endpoint} />
+          <ReadField label={t("settings.model.model")} value={model.model} />
           <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">API Key</p>
+            <p className="text-xs text-muted-foreground">{t("settings.model.apiKey")}</p>
             <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <KeyRound className="size-3.5 text-cobalt" aria-hidden /> {model.keyConfigured ? "已配置（不回显）" : "未配置"}
+              <KeyRound className="size-3.5 text-cobalt" aria-hidden /> {model.keyConfigured ? t("settings.model.keyConfigured") : t("settings.model.keyMissing")}
             </p>
           </div>
         </div>
@@ -78,23 +86,42 @@ export function SettingsForm({
             }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary"
           >
-            <RefreshCw className={cn("size-4", testState === "testing" && "animate-spin")} aria-hidden /> 测试连接
+            <RefreshCw className={cn("size-4", testState === "testing" && "animate-spin")} aria-hidden /> {t("settings.model.test")}
           </button>
           {testState === "ok" ? (
-            <span className="inline-flex items-center gap-1 text-sm text-cobalt"><CheckCircle2 className="size-4" aria-hidden /> 连接成功</span>
+            <span className="inline-flex items-center gap-1 text-sm text-cobalt"><CheckCircle2 className="size-4" aria-hidden /> {t("settings.model.connectionOk")}</span>
           ) : model.lastTest ? (
-            <span className="text-xs text-muted-foreground">上次：{model.lastTest.message}</span>
+            <span className="text-xs text-muted-foreground">{t("settings.model.lastTest", { message: model.lastTest.message })}</span>
           ) : null}
         </div>
       </Section>
 
       {/* 偏好 */}
-      <Section title="个人偏好" hint="主题、语言、自动保存、默认模板与快捷键。部分参数（语言/时区/头像边界）依赖 D-02 冻结。">
+      <Section title={t("settings.preferences.title")} hint={t("settings.preferences.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReadField label="显示名称" value={prefs.displayName} />
-          <ReadField label="语言" value={prefs.language} badge="待冻结 D-02" />
+          <ReadField label={t("settings.preferences.displayName")} value={prefs.displayName} />
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">{t("settings.preferences.language")}</p>
+            <div className="mt-2 flex gap-2" role="group" aria-label={t("settings.preferences.language")}>
+              {SUPPORTED_LOCALES.map((locale) => (
+                <button
+                  key={locale.code}
+                  type="button"
+                  onClick={() => changeLocale(locale.code)}
+                  aria-pressed={activeLocale === locale.code}
+                  className={cn(
+                    "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+                    activeLocale === locale.code ? "border-cobalt bg-cobalt/5 text-foreground" : "border-border text-muted-foreground hover:bg-secondary",
+                  )}
+                >
+                  {t(locale.labelKey)}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{t("settings.preferences.languageHint")}</p>
+          </div>
           <label className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm text-foreground">自动保存（30s 静默提交）</span>
+            <span className="text-sm text-foreground">{t("settings.preferences.autosave")}</span>
             <button
               onClick={() => setAutosave((v) => !v)}
               role="switch"
@@ -105,24 +132,24 @@ export function SettingsForm({
             </button>
           </label>
           <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">默认模板</p>
+            <p className="text-xs text-muted-foreground">{t("settings.preferences.defaultTemplate")}</p>
             <select defaultValue={prefs.defaultTemplateId} className="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30">
-              {templates.filter((t) => t.status === "published").map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
+              {templates.filter((tpl) => tpl.status === "published").map((tpl) => (
+                <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
               ))}
             </select>
           </div>
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">快捷键</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("settings.preferences.shortcuts")}</p>
           <ul className="grid gap-1.5 sm:grid-cols-2">
             {prefs.shortcuts.map((s) => (
               <li key={s.action} className="flex items-center justify-between rounded-md border border-border px-3 py-1.5 text-sm">
-                <span className="text-foreground">{s.action}</span>
+                <span className="text-foreground">{t("settings.preferences.shortcutAction." + s.action, { defaultValue: s.action })}</span>
                 <span className="flex items-center gap-2">
                   <kbd className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-secondary-foreground">{s.keys}</kbd>
-                  {s.conflict ? <span className="inline-flex items-center gap-1 text-xs text-coral"><AlertTriangle className="size-3" aria-hidden /> 冲突</span> : null}
+                  {s.conflict ? <span className="inline-flex items-center gap-1 text-xs text-coral"><AlertTriangle className="size-3" aria-hidden /> {t("settings.preferences.shortcutConflict")}</span> : null}
                 </span>
               </li>
             ))}
