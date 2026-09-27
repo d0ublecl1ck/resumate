@@ -32,7 +32,7 @@ def _to_response(db: Session, owner_id: str, resume: Resume) -> ResumeResponse:
         lifecycle=resume.lifecycle,
         save_state=resume.save_state,
         updated_at=resume.updated_at,
-        bound_by_jd_ids=[],
+        bound_by_jd_ids=service.list_bound_jd_ids(db, owner_id, resume.id),
         restore_deadline=resume.restore_deadline,
         profile_id=resume.profile_id,
         document=ResumeDocument.model_validate(resume.document),
