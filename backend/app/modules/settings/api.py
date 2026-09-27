@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -9,6 +9,7 @@ from . import service
 from .schemas import (
     AgentConfigResponse,
     AgentConfigUpdate,
+    ModelCatalogResponse,
     ModelConfigResponse,
     ModelConfigUpdate,
     ModelTestResult,
@@ -59,6 +60,15 @@ def get_model_config(
     user: CurrentUser = Depends(require_permission("settings:read")),
 ) -> ModelConfigResponse:
     return service.get_model_config(db, user)
+
+
+@router.get("/models/catalog", response_model=ModelCatalogResponse)
+def get_model_catalog(
+    provider: str | None = Query(default=None, description="Filter by litellm provider id."),
+    q: str | None = Query(default=None, description="Case-insensitive model id/name search."),
+    _user: CurrentUser = Depends(require_permission("settings:read")),
+) -> ModelCatalogResponse:
+    return service.get_model_catalog(provider=provider, query=q)
 
 
 @router.put("/models/config", response_model=ModelConfigResponse)

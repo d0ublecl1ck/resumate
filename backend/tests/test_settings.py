@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.settings import service
+from app.modules.settings import catalog, service
 from app.modules.settings.models import UserSettings
 
 
@@ -100,13 +100,13 @@ def test_clearing_api_key_marks_key_unconfigured(client: TestClient) -> None:
 
 
 def test_model_test_failure_does_not_leak_key(client: TestClient, monkeypatch) -> None:
-    client.put("/models/config", json={"endpoint": "https://api.example.com/v1", "apiKey": "sk-super-secret"})
+    client.put("/models/config", json={"model": "gpt-4o-mini", "apiKey": "sk-super-secret"})
 
-    def fail(endpoint: str, api_key: str | None) -> tuple[bool, str]:
-        assert api_key == "sk-super-secret"
-        return False, "模型服务返回 HTTP 401，请检查 Endpoint、模型名与凭证"
+    def fail(**kwargs) -> tuple[bool, str]:
+        assert kwargs["api_key"] == "sk-super-secret"
+        return False, "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
 
-    monkeypatch.setattr(service, "_probe", fail)
+    monkeypatch.setattr(catalog, "probe_connection", fail)
 
     response = client.post("/models/config:test")
 
@@ -117,8 +117,8 @@ def test_model_test_failure_does_not_leak_key(client: TestClient, monkeypatch) -
 
 
 def test_model_test_success_records_timestamp(client: TestClient, monkeypatch) -> None:
-    client.put("/models/config", json={"endpoint": "https://api.example.com/v1"})
-    monkeypatch.setattr(service, "_probe", lambda endpoint, api_key: (True, "连接成功（HTTP 200）"))
+    client.put("/models/config", json={"provider": "openai", "model": "gpt-4o-mini"})
+    monkeypatch.setattr(catalog, "probe_connection", lambda **kwargs: (True, "连接成功"))
 
     body = client.post("/models/config:test").json()
 
@@ -128,11 +128,84 @@ def test_model_test_success_records_timestamp(client: TestClient, monkeypatch) -
     assert client.get("/models/config").json()["lastTest"]["message"] == body["message"]
 
 
-def test_model_test_without_endpoint_is_rejected(client: TestClient) -> None:
+def test_model_test_without_model_is_rejected(client: TestClient) -> None:
     response = client.post("/models/config:test")
 
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_model_config_fields_are_all_optional(client: TestClient) -> None:
+    assert client.put("/models/config", json={}).status_code == 200
+
+    provider_only = client.put("/models/config", json={"provider": "openai"}).json()
+    assert provider_only["provider"] == "openai"
+    assert provider_only["model"] == ""
+    assert provider_only["endpoint"] == ""
+    assert provider_only["keyConfigured"] is False
+
+    model_only = client.put("/models/config", json={"model": "gpt-4o-mini"}).json()
+    assert model_only["provider"] == "openai"  # untouched by the partial update
+    assert model_only["model"] == "gpt-4o-mini"
+
+    endpoint_only = client.put(
+        "/models/config", json={"endpoint": "https://api.example.com/v1"}
+    ).json()
+    assert endpoint_only["endpoint"] == "https://api.example.com/v1"
+
+
+def test_model_catalog_comes_from_litellm(client: TestClient) -> None:
+    response = client.get("/models/catalog")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["source"] == "litellm"
+    assert body["providers"]
+
+    openai = next((provider for provider in body["providers"] if provider["id"] == "openai"), None)
+    assert openai is not None
+    assert openai["label"] == "openai"
+    assert openai["models"]
+    sample = openai["models"][0]
+    assert set(sample) <= {
+        "id",
+        "label",
+        "contextWindow",
+        "maxOutputTokens",
+        "inputCostPerMillion",
+        "outputCostPerMillion",
+    }
+    assert any(model.get("contextWindow") is not None for model in openai["models"])
+    assert any(model.get("inputCostPerMillion") is not None for model in openai["models"])
+
+
+def test_model_catalog_filters_by_query(client: TestClient) -> None:
+    full = client.get("/models/catalog").json()
+    needle = full["providers"][0]["models"][0]["id"][:4]
+
+    filtered = client.get("/models/catalog", params={"q": needle}).json()
+
+    assert filtered["providers"]
+    for provider in filtered["providers"]:
+        for model in provider["models"]:
+            assert needle.lower() in model["id"].lower()
+
+
+def test_model_catalog_provider_filter_returns_only_that_provider(client: TestClient) -> None:
+    full = client.get("/models/catalog").json()
+    target = full["providers"][0]["id"]
+
+    body = client.get("/models/catalog", params={"provider": target}).json()
+
+    assert [provider["id"] for provider in body["providers"]] == [target]
+    assert body["providers"][0]["models"]
+
+
+def test_model_catalog_serves_the_bundled_litellm_map(client: TestClient) -> None:
+    # The catalog must not depend on a live GitHub fetch; the module defaults
+    # litellm to its bundled map, so a full catalog proves it resolved offline.
+    body = client.get("/models/catalog").json()
+    assert sum(len(provider["models"]) for provider in body["providers"]) > 100
 
 
 def test_api_key_is_encrypted_at_rest(client: TestClient, db_session: Session) -> None:
@@ -149,7 +222,7 @@ def test_api_key_is_encrypted_at_rest(client: TestClient, db_session: Session) -
 def test_undecryptable_key_is_treated_as_unconfigured(
     client: TestClient, db_session: Session, monkeypatch
 ) -> None:
-    client.put("/models/config", json={"endpoint": "https://api.example.com/v1", "apiKey": "sk-1"})
+    client.put("/models/config", json={"model": "gpt-4o-mini", "apiKey": "sk-1"})
     row = db_session.scalar(select(UserSettings))
     assert row is not None
     config = dict(row.model_config)
@@ -158,11 +231,11 @@ def test_undecryptable_key_is_treated_as_unconfigured(
     db_session.commit()
     captured: dict[str, str | None] = {}
 
-    def probe(endpoint: str, api_key: str | None) -> tuple[bool, str]:
-        captured["key"] = api_key
-        return True, "连接成功（HTTP 200）"
+    def probe(**kwargs) -> tuple[bool, str]:
+        captured["key"] = kwargs["api_key"]
+        return True, "连接成功"
 
-    monkeypatch.setattr(service, "_probe", probe)
+    monkeypatch.setattr(catalog, "probe_connection", probe)
 
     response = client.post("/models/config:test")
 

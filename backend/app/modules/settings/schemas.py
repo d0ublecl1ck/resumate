@@ -57,6 +57,28 @@ class ModelConfigUpdate(ApiModel):
     api_key: str | None = Field(default=None, max_length=400)
 
 
+class ModelCatalogModel(ApiModel):
+    """One selectable model from the litellm catalog (contract section 17)."""
+
+    id: str
+    label: str
+    context_window: int | None = None
+    max_output_tokens: int | None = None
+    input_cost_per_million: float | None = None
+    output_cost_per_million: float | None = None
+
+
+class ModelCatalogProvider(ApiModel):
+    id: str
+    label: str
+    models: list[ModelCatalogModel] = Field(default_factory=list)
+
+
+class ModelCatalogResponse(ApiModel):
+    source: Literal["litellm"] = "litellm"
+    providers: list[ModelCatalogProvider] = Field(default_factory=list)
+
+
 class UserPreferencesResponse(ApiModel):
     theme: Theme
     language: str
