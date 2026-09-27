@@ -282,3 +282,18 @@ agent-core/
 - access_logs 只承载鉴权语义（PAT 认证允许 / 拒绝、Scope 拒绝），不承载业务操作审计。
 - 不新增独立业务审计表。
 
+## 17. 模型目录与配置 API（9546b）
+
+**GET /models/catalog**（权限 settings:read）→ ModelCatalogResponse：
+
+- source：字符串，固定 "litellm"。
+- providers：数组，元素为 { id, label, models }；models 元素为 { id, label, contextWindow?, maxOutputTokens?, inputCostPerMillion?, outputCostPerMillion? }。
+- 可选查询参数：provider（按 provider id 过滤）、q（按模型 id / 名称搜索）。
+- 数据直接来自 litellm 目录，仓库不自维护任何模型清单。
+
+**GET | PUT /models/config**（settings:read / settings:write）形状不变：provider、endpoint、model 均可选，apiKey write-only、只返回 keyConfigured。
+
+**POST /models/config:test**（settings:write）用 litellm 做连通性测试；响应与错误均不含明文密钥。
+
+前端：模型设置表单的 provider / model 来自 catalog，使用既有开源组件（@base-ui/react 等），文案走 i18n 双语。
+
