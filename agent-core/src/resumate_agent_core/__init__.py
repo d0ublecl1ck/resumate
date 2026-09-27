@@ -8,6 +8,7 @@ never touches the business database (contract C-09).
 from .client import ResumateClient
 from .config import AgentCoreSettings
 from .errors import ApiClientError, ErrorCode, MalformedResponseError, TransportError
+from .litellm_provider import LiteLLMProvider, LiteLLMUnavailableError
 from .models import (
     CapabilityResponse,
     DiffItem,
@@ -80,6 +81,8 @@ __all__ = [
     "ErrorCode",
     "ErrorEvent",
     "FinalizeEvent",
+    "LiteLLMProvider",
+    "LiteLLMUnavailableError",
     "MalformedResponseError",
     "Message",
     "MessageEvent",

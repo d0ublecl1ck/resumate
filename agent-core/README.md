@@ -25,10 +25,35 @@ model-agnostic runtime loop.
 
 ```bash
 cd agent-core
-uv sync            # installs runtime deps (httpx + pydantic v2) and pytest
+uv sync            # runtime deps (httpx + pydantic v2) plus pytest
 ```
 
-Python `>=3.11` is required.
+Python `>=3.11` is required. The base package has no model-vendor
+dependency: `httpx` stays the only required HTTP library.
+
+## Model provider (optional)
+
+`LiteLLMProvider` adapts any litellm-supported provider to the runtime's
+`ModelProvider` Protocol. litellm is optional and lazily imported, so the base
+install keeps working without it; constructing the provider without litellm
+raises `LiteLLMUnavailableError` with install guidance.
+
+```bash
+uv sync --extra litellm        # or: pip install 'resumate-agent-core[litellm]'
+```
+
+```python
+from resumate_agent_core import AgentRuntime, LiteLLMProvider
+
+provider = LiteLLMProvider(model="gpt-4o-mini", api_key="<key>", provider="openai")
+runtime = AgentRuntime(client, provider)
+for event in runtime.run("res_abc", "Tighten the experience bullets"):
+    print(event.type, event)
+```
+
+`LiteLLMProvider` defaults `LITELLM_LOCAL_MODEL_COST_MAP=True` so importing
+litellm uses the catalog bundled with the installed package and never fetches
+it from the network.
 
 ## Quickstart
 
@@ -78,6 +103,7 @@ src/resumate_agent_core/
   turn.py      # TurnSession + idempotency-key helper
   tools.py     # TOOLS registry: name -> schema + client callable
   runtime.py   # C-09 loop skeleton (ModelProvider Protocol, budget, cancel, events)
+  litellm_provider.py  # optional LiteLLMProvider (lazy litellm import)
   skills.py    # SKILL.md loader for a skills directory
 ```
 
