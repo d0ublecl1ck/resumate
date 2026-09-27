@@ -3,8 +3,6 @@ import copy
 import hashlib
 from collections import Counter
 from datetime import datetime, timezone
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from cryptography.fernet import Fernet, InvalidToken
@@ -15,12 +13,15 @@ from app.core.deps import CurrentUser
 from app.modules.templates import dao as templates_dao
 from app.shared.errors import ValidationFailed
 
-from . import dao
+from . import catalog, dao
 from .models import UserSettings
 from .schemas import (
     AgentBudget,
     AgentConfigResponse,
     AgentConfigUpdate,
+    ModelCatalogModel,
+    ModelCatalogProvider,
+    ModelCatalogResponse,
     ModelConfigResponse,
     ModelConfigUpdate,
     ModelTestResult,
@@ -50,7 +51,6 @@ DEFAULT_MODEL_CONFIG: dict = {"provider": "", "endpoint": "", "model": ""}
 FULL_ACCESS_SCOPES = ["read_search_compare_render", "content_patch", "metadata_update_archive"]
 CONFIRM_RETAINED_OPS = ["delete", "history_restore", "overwrite_export", "profile_to_resume", "fact_promotion"]
 
-PROBE_TIMEOUT_SECONDS = 5
 # Marks a Fernet ciphertext so keys written before encryption existed still read.
 ENCRYPTED_PREFIX = "fernet:"
 
@@ -242,35 +242,62 @@ def update_model_config(db: Session, user: CurrentUser, payload: ModelConfigUpda
     return _model_config(settings)
 
 
-def _probe(endpoint: str, api_key: str | None) -> tuple[bool, str]:
-    """Call the provider's model list; never include the credential in the result."""
-    if not endpoint.startswith(("http://", "https://")):
-        raise ValidationFailed("Endpoint 必须以 http:// 或 https:// 开头")
-    url = endpoint.rstrip("/") + "/models"
-    headers = {"Accept": "application/json"}
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+def _effective(payload: ModelConfigUpdate | None, saved: dict, key: str) -> str:
+    """Prefer an explicit request value, else the saved one; empty means unset."""
+    if payload is not None:
+        value = getattr(payload, key)
+        if value is not None:
+            return value
+    return saved.get(key, "") or ""
+
+
+def get_model_catalog(*, provider: str | None = None, query: str | None = None) -> ModelCatalogResponse:
+    """Serve the read-only model catalog from the committed models.dev snapshot."""
     try:
-        with urlopen(Request(url, headers=headers, method="GET"), timeout=PROBE_TIMEOUT_SECONDS) as response:
-            status = getattr(response, "status", 200)
-        return True, f"连接成功（HTTP {status}）"
-    except HTTPError as error:
-        return False, f"模型服务返回 HTTP {error.code}，请检查 Endpoint、模型名与凭证"
-    except (URLError, TimeoutError, OSError):
-        return False, "无法连接模型服务，请检查 Endpoint 与网络"
+        entries = catalog.list_catalog(provider=provider, query=query)
+    except catalog.ModelCatalogUnavailable as exc:
+        raise ValidationFailed(str(exc)) from exc
+    return ModelCatalogResponse(
+        source=catalog.CATALOG_SOURCE,
+        providers=[
+            ModelCatalogProvider(
+                id=entry.id,
+                label=entry.label,
+                models=[
+                    ModelCatalogModel(
+                        id=model.id,
+                        label=model.label,
+                        context_window=model.context_window,
+                        max_output_tokens=model.max_output_tokens,
+                        input_cost_per_million=model.input_cost_per_million,
+                        output_cost_per_million=model.output_cost_per_million,
+                    )
+                    for model in entry.models
+                ],
+            )
+            for entry in entries
+        ],
+    )
 
 
 def test_model_connection(db: Session, user: CurrentUser, payload: ModelConfigUpdate | None = None) -> ModelTestResult:
     settings = get_or_create(db, user)
     saved = settings.model_config or {}
-    endpoint = (payload.endpoint if payload and payload.endpoint is not None else saved.get("endpoint", "")) or ""
+    provider = _effective(payload, saved, "provider").strip()
+    model = _effective(payload, saved, "model").strip()
+    endpoint = _effective(payload, saved, "endpoint").strip()
     if payload and payload.api_key is not None:
         api_key = payload.api_key or None
     else:
         api_key = _decrypt_secret(saved.get("apiKey", ""))
-    if not endpoint:
-        raise ValidationFailed("请先配置模型 Endpoint")
-    ok, message = _probe(endpoint, api_key)
+    if not model:
+        raise ValidationFailed("请先配置模型")
+    ok, message = catalog.probe_connection(
+        model=model,
+        provider=provider or None,
+        api_key=api_key,
+        api_base=endpoint or None,
+    )
     result = ModelTestResult(at=_now(), ok=ok, message=message)
     config = dict(settings.model_config or {})
     config["lastTest"] = result.model_dump(mode="json", by_alias=True)

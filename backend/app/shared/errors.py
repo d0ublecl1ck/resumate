@@ -10,6 +10,11 @@ class ErrorCode(StrEnum):
 
     BASE_VERSION_STALE = "BASE_VERSION_STALE"
     TURN_ALREADY_CLOSED = "TURN_ALREADY_CLOSED"
+    TURN_NOT_OPEN = "TURN_NOT_OPEN"
+    IDEMPOTENCY_CONFLICT = "IDEMPOTENCY_CONFLICT"
+    PENDING_ACTION_NOT_APPROVED = "PENDING_ACTION_NOT_APPROVED"
+    PENDING_ACTION_STALE = "PENDING_ACTION_STALE"
+    REBASE_CONFLICT = "REBASE_CONFLICT"
     SCOPE_INSUFFICIENT = "SCOPE_INSUFFICIENT"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     TOKEN_REVOKED = "TOKEN_REVOKED"
@@ -56,6 +61,36 @@ class BaseVersionStale(ApiException):
     code = ErrorCode.BASE_VERSION_STALE
 
 
+class TurnAlreadyClosed(ApiException):
+    status_code = 409
+    code = ErrorCode.TURN_ALREADY_CLOSED
+
+
+class TurnNotOpen(ApiException):
+    status_code = 409
+    code = ErrorCode.TURN_NOT_OPEN
+
+
+class IdempotencyConflict(ApiException):
+    status_code = 409
+    code = ErrorCode.IDEMPOTENCY_CONFLICT
+
+
+class PendingActionNotApproved(ApiException):
+    status_code = 409
+    code = ErrorCode.PENDING_ACTION_NOT_APPROVED
+
+
+class PendingActionStale(ApiException):
+    status_code = 409
+    code = ErrorCode.PENDING_ACTION_STALE
+
+
+class RebaseConflict(ApiException):
+    status_code = 409
+    code = ErrorCode.REBASE_CONFLICT
+
+
 class Unauthenticated(ApiException):
     status_code = 401
     code = ErrorCode.UNAUTHENTICATED
@@ -66,6 +101,11 @@ class InvalidCredentials(ApiException):
     code = ErrorCode.INVALID_CREDENTIALS
 
 
+class TokenRevoked(ApiException):
+    status_code = 401
+    code = ErrorCode.TOKEN_REVOKED
+
+
 class AccountBanned(ApiException):
     status_code = 403
     code = ErrorCode.ACCOUNT_BANNED
@@ -74,6 +114,11 @@ class AccountBanned(ApiException):
 class Forbidden(ApiException):
     status_code = 403
     code = ErrorCode.FORBIDDEN
+
+
+class ScopeInsufficient(ApiException):
+    status_code = 403
+    code = ErrorCode.SCOPE_INSUFFICIENT
 
 
 class EmailAlreadyRegistered(ApiException):
