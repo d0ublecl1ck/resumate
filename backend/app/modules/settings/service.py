@@ -1,11 +1,16 @@
+import base64
 import copy
+import hashlib
+from collections import Counter
 from datetime import datetime, timezone
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
 
+from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.deps import CurrentUser
 from app.modules.templates import dao as templates_dao
 from app.shared.errors import ValidationFailed
@@ -44,6 +49,43 @@ FULL_ACCESS_SCOPES = ["读取、检索、比较、渲染", "普通内容 Patch",
 CONFIRM_RETAINED_OPS = ["删除", "历史恢复 / undo / redo", "覆盖已有导出文件", "Profile 选材生成简历", "事实晋升 Profile"]
 
 PROBE_TIMEOUT_SECONDS = 5
+# Marks a Fernet ciphertext so keys written before encryption existed still read.
+ENCRYPTED_PREFIX = "fernet:"
+
+
+def _fernet() -> Fernet:
+    secret = get_settings().settings_secret_key or "resumate-local-dev-secret"
+    key = base64.urlsafe_b64encode(hashlib.sha256(secret.encode("utf-8")).digest())
+    return Fernet(key)
+
+
+def _encrypt_secret(value: str) -> str:
+    return ENCRYPTED_PREFIX + _fernet().encrypt(value.encode("utf-8")).decode("ascii")
+
+
+def _decrypt_secret(value: str) -> str | None:
+    """Return the plaintext key, or None when it cannot be decrypted."""
+    if not value.startswith(ENCRYPTED_PREFIX):
+        return value or None
+    try:
+        return _fernet().decrypt(value[len(ENCRYPTED_PREFIX):].encode("ascii")).decode("utf-8")
+    except (InvalidToken, ValueError):
+        return None
+
+
+def _normalize_keys(keys: str) -> str:
+    return " ".join(keys.split()).lower()
+
+
+def _validate_shortcuts(shortcuts: list[Shortcut]) -> None:
+    owner: dict[str, str] = {}
+    for shortcut in shortcuts:
+        normalized = _normalize_keys(shortcut.keys)
+        if not normalized:
+            continue
+        if normalized in owner:
+            raise ValidationFailed(f"按键 {shortcut.keys} 已绑定给「{owner[normalized]}」，请先解除冲突")
+        owner[normalized] = shortcut.action
 
 
 def _now() -> datetime:
@@ -91,6 +133,11 @@ def _template_available(db: Session, template_id: str) -> bool:
 def _preferences(db: Session, settings: UserSettings) -> UserPreferencesResponse:
     prefs = settings.preferences or {}
     template_id = prefs.get("defaultTemplateId", "")
+    shortcuts = [Shortcut.model_validate(item) for item in prefs.get("shortcuts", [])]
+    counts = Counter(_normalize_keys(item.keys) for item in shortcuts if item.keys.strip())
+    for shortcut in shortcuts:
+        if counts[_normalize_keys(shortcut.keys)] > 1:
+            shortcut.conflict = True
     return UserPreferencesResponse(
         theme=prefs.get("theme", DEFAULT_THEME),
         language=prefs.get("language", DEFAULT_LANGUAGE),
@@ -98,7 +145,7 @@ def _preferences(db: Session, settings: UserSettings) -> UserPreferencesResponse
         autosave=prefs.get("autosave", DEFAULT_AUTOSAVE),
         default_template_id=template_id,
         default_template_retired=not _template_available(db, template_id),
-        shortcuts=[Shortcut.model_validate(item) for item in prefs.get("shortcuts", [])],
+        shortcuts=shortcuts,
     )
 
 
@@ -137,6 +184,8 @@ def get_preferences(db: Session, user: CurrentUser) -> UserPreferencesResponse:
 
 def update_preferences(db: Session, user: CurrentUser, payload: UserPreferencesUpdate) -> UserPreferencesResponse:
     settings = get_or_create(db, user)
+    if payload.shortcuts is not None:
+        _validate_shortcuts(payload.shortcuts)
     prefs = dict(settings.preferences or {})
     prefs.update(payload.model_dump(by_alias=True, exclude_none=True))
     settings.preferences = prefs
@@ -179,7 +228,7 @@ def update_model_config(db: Session, user: CurrentUser, payload: ModelConfigUpda
     if "apiKey" in data:
         secret = (data["apiKey"] or "").strip()
         if secret:
-            config["apiKey"] = secret
+            config["apiKey"] = _encrypt_secret(secret)
         else:
             config.pop("apiKey", None)
     # Any edit invalidates the previous connectivity result.
@@ -213,7 +262,10 @@ def test_model_connection(db: Session, user: CurrentUser, payload: ModelConfigUp
     settings = get_or_create(db, user)
     saved = settings.model_config or {}
     endpoint = (payload.endpoint if payload and payload.endpoint is not None else saved.get("endpoint", "")) or ""
-    api_key = (payload.api_key if payload and payload.api_key is not None else saved.get("apiKey")) or None
+    if payload and payload.api_key is not None:
+        api_key = payload.api_key or None
+    else:
+        api_key = _decrypt_secret(saved.get("apiKey", ""))
     if not endpoint:
         raise ValidationFailed("请先配置模型 Endpoint")
     ok, message = _probe(endpoint, api_key)

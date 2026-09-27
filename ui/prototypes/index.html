@@ -337,6 +337,27 @@
           </div>
         </div>
       </section>
+
+      <section class="panel" id="settings-dark" aria-label="设计补充：暗色令牌与设置页状态" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · 暗色令牌与设置页状态</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            设置页（SCR-010）不在首页原型范围内，交互态与暗色令牌在此登记，组件与首页共用同一套令牌。
+          </p>
+          <ul class="checklist" style="margin-top:14px">
+            <li class="check-item"><span class="label">主题双态</span><span class="tag">paper / dark</span></li>
+            <li class="check-item"><span class="label">分区保存：编辑 → 保存中 → 已保存 / 失败</span><span class="tag">Agent / 模型 / 偏好</span></li>
+            <li class="check-item"><span class="label">快捷键冲突</span><span class="tag">后端拒绝并保留原映射</span></li>
+            <li class="check-item"><span class="label">模型凭证</span><span class="tag">只显示「已配置」，不回显</span></li>
+            <li class="check-item"><span class="label">默认模板失效</span><span class="tag">提示重新选择</span></li>
+          </ul>
+          <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            暗色令牌（ui/src/index.css 的 .dark）：background/card 取 ink 系低明度，
+            foreground 取 paper 系高明度，border/input 取中间明度，ring 取 cobalt 亮化；
+            coral/cobalt/gold 强调色保持不变。
+          </p>
+        </div>
+      </section>
     </main>
   </div>
 

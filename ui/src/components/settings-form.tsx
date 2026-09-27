@@ -44,6 +44,7 @@ export function SettingsForm({
   const [theme, setTheme] = useState(prefs.theme)
   const [autosave, setAutosave] = useState(prefs.autosave)
   const [defaultTemplateId, setDefaultTemplateId] = useState(prefs.defaultTemplateId)
+  const [shortcuts, setShortcuts] = useState(prefs.shortcuts)
   const [prefsStatus, setPrefsStatus] = useState<SaveState>("idle")
 
   const agentMutation = useMutation({
@@ -78,10 +79,11 @@ export function SettingsForm({
   })
 
   const prefsMutation = useMutation({
-    mutationFn: () => updatePreferences({ displayName, language, theme, autosave, defaultTemplateId }),
+    mutationFn: () => updatePreferences({ displayName, language, theme, autosave, defaultTemplateId, shortcuts }),
     onMutate: () => setPrefsStatus("saving"),
     onSuccess: (data) => {
       queryClient.setQueryData(["preferences"], data)
+      setShortcuts(data.shortcuts)
       setPrefsStatus("saved")
     },
     onError: () => setPrefsStatus("error"),
@@ -367,11 +369,20 @@ export function SettingsForm({
         <div className="mt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">快捷键</p>
           <ul className="grid gap-1.5 sm:grid-cols-2">
-            {prefs.shortcuts.map((shortcut) => (
-              <li key={shortcut.action} className="flex items-center justify-between rounded-md border border-border px-3 py-1.5 text-sm">
+            {shortcuts.map((shortcut, index) => (
+              <li key={shortcut.action} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-1.5 text-sm">
                 <span className="text-foreground">{shortcut.action}</span>
                 <span className="flex items-center gap-2">
-                  <kbd className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-secondary-foreground">{shortcut.keys}</kbd>
+                  <input
+                    aria-label={shortcut.action + " 快捷键"}
+                    value={shortcut.keys}
+                    onChange={(event) => {
+                      const keys = event.target.value
+                      setShortcuts((items) => items.map((item, position) => (position === index ? { ...item, keys } : item)))
+                      setPrefsStatus("idle")
+                    }}
+                    className="w-24 rounded-md border border-input bg-background px-2 py-1 text-center font-mono text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+                  />
                   {shortcut.conflict ? (
                     <span className="inline-flex items-center gap-1 text-xs text-coral">
                       <AlertTriangle className="size-3" aria-hidden /> 冲突
@@ -381,7 +392,7 @@ export function SettingsForm({
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[11px] text-muted-foreground">快捷键编辑与冲突校验待后续工单；本期只持久化后端返回的映射。</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">同一按键不能绑定多个动作；冲突会在保存时被后端拒绝并保留原映射。</p>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">

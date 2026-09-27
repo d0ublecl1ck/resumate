@@ -1,6 +1,9 @@
 from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.modules.settings import service
+from app.modules.settings.models import UserSettings
 
 
 def test_get_settings_is_idempotent(client: TestClient) -> None:
@@ -130,3 +133,60 @@ def test_model_test_without_endpoint_is_rejected(client: TestClient) -> None:
 
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_api_key_is_encrypted_at_rest(client: TestClient, db_session: Session) -> None:
+    client.put("/models/config", json={"apiKey": "sk-plain-secret"})
+
+    row = db_session.scalar(select(UserSettings))
+
+    assert row is not None
+    stored = row.model_config["apiKey"]
+    assert stored.startswith(service.ENCRYPTED_PREFIX)
+    assert "sk-plain-secret" not in stored
+
+
+def test_undecryptable_key_is_treated_as_unconfigured(
+    client: TestClient, db_session: Session, monkeypatch
+) -> None:
+    client.put("/models/config", json={"endpoint": "https://api.example.com/v1", "apiKey": "sk-1"})
+    row = db_session.scalar(select(UserSettings))
+    assert row is not None
+    config = dict(row.model_config)
+    config["apiKey"] = service.ENCRYPTED_PREFIX + "not-a-real-token"
+    row.model_config = config
+    db_session.commit()
+    captured: dict[str, str | None] = {}
+
+    def probe(endpoint: str, api_key: str | None) -> tuple[bool, str]:
+        captured["key"] = api_key
+        return True, "连接成功（HTTP 200）"
+
+    monkeypatch.setattr(service, "_probe", probe)
+
+    response = client.post("/models/config:test")
+
+    assert response.status_code == 200
+    assert captured["key"] is None
+
+
+def test_conflicting_shortcuts_are_rejected_and_keep_original(client: TestClient) -> None:
+    current = client.get("/settings").json()["shortcuts"]
+    conflicting = [current[0], {**current[1], "keys": current[0]["keys"]}]
+
+    response = client.patch("/settings", json={"shortcuts": conflicting})
+
+    assert response.status_code == 422
+    assert "已绑定" in response.json()["message"]
+    assert client.get("/settings").json()["shortcuts"][1]["keys"] == current[1]["keys"]
+
+
+def test_shortcuts_can_be_saved_when_unique(client: TestClient) -> None:
+    current = client.get("/settings").json()["shortcuts"]
+    updated = [{**item, "keys": item["keys"] + "!"} for item in current]
+
+    response = client.patch("/settings", json={"shortcuts": updated})
+
+    assert response.status_code == 200
+    assert response.json()["shortcuts"][0]["keys"].endswith("!")
+    assert response.json()["shortcuts"][0]["conflict"] is not True
