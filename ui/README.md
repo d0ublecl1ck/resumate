@@ -18,6 +18,15 @@ pnpm dev
 
 测试通过 MSW（`src/test-server.ts`）以 fixtures 驱动真实 fetch 路径，不需要后端进程。
 
+## 国际化（i18n）
+
+界面文案由 i18next + react-i18next 管理，当前支持 `zh-CN` 与 `en`：
+
+- 入口与语言检测：`src/i18n/index.ts`（本地持久化 `resumate.locale` → 浏览器语言 → `zh-CN` 兜底），切换时同步 `html[lang]` 与文档标题。
+- 资源：`src/i18n/locales/<locale>/<namespace>.ts`，命名空间为 `common`、`nav`、`settings`、`workbench`、`resume`、`jd`、`profile`、`templates`、`api`；两种语言的键结构必须一致（`i18n.test.ts` 会校验）。
+- 组件内使用 `useTranslation()` + `t("namespace.key")`；非 React 模块（`lib/api.ts`、`lib/api-client.ts`）直接使用 `@/i18n` 默认实例。
+- 语言切换入口在设置页「个人偏好」。简历正文、JD 正文、事实内容与 Diff 原文属于用户内容，不随界面语言变化。
+
 ---
 
 
