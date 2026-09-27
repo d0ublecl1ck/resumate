@@ -2,6 +2,7 @@
 // 章节移动支持按钮（不只拖拽）。每次有效输入应重置 30s 静默计时（C-05），
 // 这里通过 onDirty 通知上层更新保存状态。
 
+import { useTranslation } from "react-i18next"
 import type { ResumeDocument, ResumeSection } from "@/lib/types"
 import { SourceBadge } from "@/components/kit/badges"
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react"
@@ -13,6 +14,8 @@ export function StructuredEditor({
   document: ResumeDocument
   onChange: (next: ResumeDocument) => void
 }) {
+  const { t } = useTranslation()
+
   function updateBasics<K extends keyof ResumeDocument["basics"]>(key: K, value: ResumeDocument["basics"][K]) {
     onChange({ ...document, basics: { ...document.basics, [key]: value } })
   }
@@ -33,13 +36,13 @@ export function StructuredEditor({
     <div className="space-y-5">
       {/* 基本信息 */}
       <section className="card-soft p-4">
-        <h3 className="mb-3 text-sm font-bold text-foreground">基本信息</h3>
+        <h3 className="mb-3 text-sm font-bold text-foreground">{t("resume.structured.basics")}</h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <LabeledInput label="姓名" value={document.basics.fullName} onChange={(v) => updateBasics("fullName", v)} />
-          <LabeledInput label="一句话头衔" value={document.basics.headline} onChange={(v) => updateBasics("headline", v)} />
-          <LabeledInput label="邮箱" value={document.basics.email} onChange={(v) => updateBasics("email", v)} />
-          <LabeledInput label="电话" value={document.basics.phone} onChange={(v) => updateBasics("phone", v)} />
-          <LabeledInput label="所在地" value={document.basics.location} onChange={(v) => updateBasics("location", v)} />
+          <LabeledInput label={t("resume.structured.fullName")} value={document.basics.fullName} onChange={(v) => updateBasics("fullName", v)} />
+          <LabeledInput label={t("resume.structured.headline")} value={document.basics.headline} onChange={(v) => updateBasics("headline", v)} />
+          <LabeledInput label={t("resume.structured.email")} value={document.basics.email} onChange={(v) => updateBasics("email", v)} />
+          <LabeledInput label={t("resume.structured.phone")} value={document.basics.phone} onChange={(v) => updateBasics("phone", v)} />
+          <LabeledInput label={t("resume.structured.location")} value={document.basics.location} onChange={(v) => updateBasics("location", v)} />
         </div>
       </section>
 
@@ -51,11 +54,11 @@ export function StructuredEditor({
               value={sec.title}
               onChange={(e) => updateSection(sec.id, { title: e.target.value })}
               className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-bold text-foreground outline-none hover:border-border focus:border-ring focus:ring-2 focus:ring-ring/30"
-              aria-label={`章节标题：${sec.title}`}
+              aria-label={t("resume.structured.sectionTitle", { title: sec.title })}
             />
             <div className="flex shrink-0 gap-1">
-              <IconBtn label="上移章节" onClick={() => moveSection(index, -1)}><ChevronUp className="size-4" /></IconBtn>
-              <IconBtn label="下移章节" onClick={() => moveSection(index, 1)}><ChevronDown className="size-4" /></IconBtn>
+              <IconBtn label={t("resume.structured.moveSectionUp")} onClick={() => moveSection(index, -1)}><ChevronUp className="size-4" /></IconBtn>
+              <IconBtn label={t("resume.structured.moveSectionDown")} onClick={() => moveSection(index, 1)}><ChevronDown className="size-4" /></IconBtn>
             </div>
           </div>
 
@@ -65,7 +68,7 @@ export function StructuredEditor({
               onChange={(e) => updateSection(sec.id, { text: e.target.value })}
               rows={3}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-              aria-label={`${sec.title} 内容`}
+              aria-label={t("resume.structured.sectionContent", { title: sec.title })}
             />
           ) : null}
 
@@ -78,7 +81,7 @@ export function StructuredEditor({
                     updateSection(sec.id, { entries: sec.entries.map((en) => (en.id === entry.id ? { ...en, title: e.target.value } : en)) })
                   }
                   className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm font-semibold text-foreground outline-none hover:border-border focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  aria-label="条目标题"
+                  aria-label={t("resume.structured.entryTitle")}
                 />
                 {entry.period ? <span className="shrink-0 text-xs text-muted-foreground">{entry.period}</span> : null}
               </div>
@@ -95,10 +98,10 @@ export function StructuredEditor({
                         updateSection(sec.id, { entries: sec.entries.map((en) => (en.id === entry.id ? { ...en, bullets } : en)) })
                       }}
                       className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-                      aria-label={`要点 ${bi + 1}`}
+                      aria-label={t("resume.structured.bulletIndex", { index: bi + 1 })}
                     />
                     <IconBtn
-                      label="删除要点"
+                      label={t("resume.structured.deleteBullet")}
                       onClick={() =>
                         updateSection(sec.id, {
                           entries: sec.entries.map((en) => (en.id === entry.id ? { ...en, bullets: en.bullets.filter((_, i) => i !== bi) } : en)),
@@ -116,7 +119,7 @@ export function StructuredEditor({
                 }
                 className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-cobalt hover:underline"
               >
-                <Plus className="size-3.5" aria-hidden /> 添加要点
+                <Plus className="size-3.5" aria-hidden /> {t("resume.structured.addBullet")}
               </button>
             </div>
           ))}

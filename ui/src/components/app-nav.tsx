@@ -4,6 +4,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { logout as logoutRequest } from "@/lib/api"
 import { CURRENT_USER_QUERY_KEY, useCurrentUser } from "@/lib/session"
@@ -22,14 +23,14 @@ import {
 } from "lucide-react"
 
 const MAIN = [
-  { href: "/", label: "工作台", icon: LayoutDashboard },
-  { href: "/resumes", label: "简历库", icon: FileText },
-  { href: "/profile", label: "个人资料", icon: UserRound },
-  { href: "/jds", label: "JD 库", icon: Boxes },
-  { href: "/settings", label: "设置与 Agent", icon: Settings },
+  { href: "/", labelKey: "nav.items.workbench", icon: LayoutDashboard },
+  { href: "/resumes", labelKey: "nav.items.resumes", icon: FileText },
+  { href: "/profile", labelKey: "nav.items.profile", icon: UserRound },
+  { href: "/jds", labelKey: "nav.items.jds", icon: Boxes },
+  { href: "/settings", labelKey: "nav.items.settings", icon: Settings },
 ]
 
-const ADMIN = [{ href: "/admin/templates", label: "模板库", icon: Boxes }]
+const ADMIN = [{ href: "/admin/templates", labelKey: "nav.items.templates", icon: Boxes }]
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/"
@@ -67,12 +68,13 @@ function NavItem({
 }
 
 export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; onToggle?: () => void }) {
+  const { t } = useTranslation()
   const pathname = useLocation().pathname
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const user = useCurrentUser().data
-  const displayName = user?.displayName ?? "未登录"
-  const roleLabel = user?.role === "admin" ? "管理员" : "求职者"
+  const displayName = user?.displayName ?? t("nav.role.anonymous")
+  const roleLabel = user?.role === "admin" ? t("nav.role.admin") : t("nav.role.jobseeker")
 
   async function handleLogout() {
     try {
@@ -84,16 +86,16 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
   }
 
   return (
-    <nav aria-label="主导航" className="flex h-full flex-col gap-1 p-3">
+    <nav aria-label={t("nav.aria.main")} className="flex h-full flex-col gap-1 p-3">
       <div className={cn("mb-4", collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between px-1")}>
-        <Link to="/" className="flex items-center gap-2.5" title="Resumate">
+        <Link to="/" className="flex items-center gap-2.5" title={t("nav.brand.name")}>
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Sparkles className="size-5" aria-hidden />
           </span>
           {!collapsed && (
             <span>
-              <span className="block font-serif text-lg font-bold leading-none text-foreground">Resumate</span>
-              <span className="block text-[11px] text-muted-foreground">对话式简历工作台</span>
+              <span className="block font-serif text-lg font-bold leading-none text-foreground">{t("nav.brand.name")}</span>
+              <span className="block text-[11px] text-muted-foreground">{t("nav.brand.tagline")}</span>
             </span>
           )}
         </Link>
@@ -101,7 +103,7 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
           <button
             type="button"
             onClick={onToggle}
-            aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
+            aria-label={collapsed ? t("nav.aria.expandSidebar") : t("nav.aria.collapseSidebar")}
             className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             {collapsed ? <PanelLeftOpen className="size-5" aria-hidden /> : <PanelLeftClose className="size-5" aria-hidden />}
@@ -112,7 +114,7 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
       <ul className="space-y-1">
         {MAIN.map((item) => (
           <li key={item.href}>
-            <NavItem href={item.href} label={item.label} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
+            <NavItem href={item.href} label={t(item.labelKey)} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
           </li>
         ))}
       </ul>
@@ -120,12 +122,12 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
       {collapsed ? (
         <div className="my-3 border-t border-border" />
       ) : (
-        <div className="mb-2 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">管理员</div>
+        <div className="mb-2 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("nav.group.admin")}</div>
       )}
       <ul className="space-y-1">
         {ADMIN.map((item) => (
           <li key={item.href}>
-            <NavItem href={item.href} label={item.label} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
+            <NavItem href={item.href} label={t(item.labelKey)} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
           </li>
         ))}
       </ul>
@@ -151,14 +153,14 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
         <button
           type="button"
           onClick={handleLogout}
-          title={collapsed ? "退出登录" : undefined}
+          title={collapsed ? t("nav.actions.logout") : undefined}
           className={cn(
             "flex w-full items-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
             collapsed ? "justify-center py-2" : "gap-3 px-3 py-2",
           )}
         >
           <LogOut className="size-5 shrink-0" aria-hidden />
-          {collapsed ? <span className="sr-only">退出登录</span> : "退出登录"}
+          {collapsed ? <span className="sr-only">{t("nav.actions.logout")}</span> : t("nav.actions.logout")}
         </button>
       </div>
     </nav>
@@ -167,6 +169,7 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
 
 // 窄屏（< md）顶部导航：品牌 + 汉堡菜单，展开后复用同一套主/管理员链接。
 export function MobileNav() {
+  const { t } = useTranslation()
   const pathname = useLocation().pathname
   const [open, setOpen] = useState(false)
   const links = [...MAIN, ...ADMIN]
@@ -178,7 +181,7 @@ export function MobileNav() {
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Sparkles className="size-4" aria-hidden />
           </span>
-          <span className="font-serif text-base font-bold leading-none text-foreground">Resumate</span>
+          <span className="font-serif text-base font-bold leading-none text-foreground">{t("nav.brand.name")}</span>
         </Link>
         <button
           type="button"
@@ -188,12 +191,12 @@ export function MobileNav() {
           className="flex size-9 items-center justify-center rounded-lg border border-border text-foreground hover:bg-secondary"
         >
           {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
-          <span className="sr-only">{open ? "关闭菜单" : "打开菜单"}</span>
+          <span className="sr-only">{open ? t("nav.aria.closeMenu") : t("nav.aria.openMenu")}</span>
         </button>
       </div>
 
       {open && (
-        <nav id="mobile-nav-menu" aria-label="主导航" className="border-t border-border px-3 pb-3 pt-2">
+        <nav id="mobile-nav-menu" aria-label={t("nav.aria.main")} className="border-t border-border px-3 pb-3 pt-2">
           <ul className="space-y-1">
             {links.map((item) => {
               const active = isActive(pathname, item.href)
@@ -210,7 +213,7 @@ export function MobileNav() {
                     )}
                   >
                     <Icon className="size-5 shrink-0" aria-hidden />
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 </li>
               )
