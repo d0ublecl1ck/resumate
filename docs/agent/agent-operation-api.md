@@ -276,6 +276,8 @@ agent-core/
 
 新增机器错误码 REBASE_CONFLICT（409）。
 
+7. 逃逸路径：preview / apply / finalize 冲突时返回 409 且保留暂存（排队）。**cancel 与 begin 自动关闭旧轮是显式放弃路径**：遇冲突不再报错，而是关闭轮次并丢弃冲突暂存、记录原因，保证不会出现「无法关闭的轮次」或「无法开启新轮次」的死锁。
+
 ## 16. 审计落点（C-10）
 
 - Agent 写操作的审计事实源为「版本 + 轮次」记录：ResumeVersion 经第 14 节补齐 client_id / user_turn_id / execution_mode 后，可从版本追到轮次、客户端与模式；Turn 记录 finalize / cancel 与结果。
