@@ -1,14 +1,15 @@
 ---
 id: f15af
-status: in-progress
+status: closed
 created_at: 2026-09-27T17:17:29.083Z
-updated_at: 2026-09-27T17:17:56.177Z
+updated_at: 2026-09-27T17:23:13.905Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-27T17:17:56.177Z
+closed_at: 2026-09-27T17:23:13.905Z
 ---
 
 # 模型目录轻量化、模型设置 Storybook 与 new-react-page 流程固化
