@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import get_settings
 from app.modules.health.api import router as health_router
 from app.modules.jd.api import router as jd_router
+from app.modules.profile.api import router as profile_router
 from app.modules.resume.api import router as resume_router
 from app.modules.templates.api import router as templates_router
 from app.shared.errors import ApiError, ApiException, ErrorCode
@@ -31,3 +32,4 @@ app.include_router(health_router)
 app.include_router(templates_router)
 app.include_router(resume_router)
 app.include_router(jd_router)
+app.include_router(profile_router)
