@@ -1,6 +1,20 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import './App.css'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
+import { AppShell } from "@/components/app-shell"
+import { WorkbenchPage } from "@/pages/workbench"
+import { ResumesPage } from "@/pages/resumes"
+import { ResumeEditorPage } from "@/pages/resume-editor"
+import { ResumeVersionsPage } from "@/pages/resume-versions"
+import { JdsPage } from "@/pages/jds"
+import { JdDetailPage } from "@/pages/jd-detail"
+import { ProfilePage } from "@/pages/profile"
+import { SettingsLayout } from "@/pages/settings-layout"
+import { SettingsPage } from "@/pages/settings"
+import { BackupPage } from "@/pages/settings-backup"
+import { AccessPage } from "@/pages/settings-access"
+import { TemplatesPage } from "@/pages/templates"
+import { TemplateEditorPage } from "@/pages/template-editor"
+import { NotFoundPage } from "@/pages/not-found"
 
 const queryClient = new QueryClient()
 
@@ -8,10 +22,31 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <main>
-          <nav aria-label="Primary navigation"><Link to="/">Resumate</Link></nav>
-          <Routes><Route path="/" element={<h1>Resumate</h1>} /></Routes>
-        </main>
+        <Routes>
+          <Route
+            element={
+              <AppShell>
+                <Outlet />
+              </AppShell>
+            }
+          >
+            <Route index element={<WorkbenchPage />} />
+            <Route path="resumes" element={<ResumesPage />} />
+            <Route path="resumes/:id" element={<ResumeEditorPage />} />
+            <Route path="resumes/:id/versions" element={<ResumeVersionsPage />} />
+            <Route path="jds" element={<JdsPage />} />
+            <Route path="jds/:id" element={<JdDetailPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="settings" element={<SettingsLayout />}>
+              <Route index element={<SettingsPage />} />
+              <Route path="backup" element={<BackupPage />} />
+              <Route path="access" element={<AccessPage />} />
+            </Route>
+            <Route path="admin/templates" element={<TemplatesPage />} />
+            <Route path="admin/templates/:id" element={<TemplateEditorPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
       </BrowserRouter>
     </QueryClientProvider>
   )
