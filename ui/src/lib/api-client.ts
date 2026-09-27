@@ -1,6 +1,7 @@
 // 统一 HTTP 客户端：基地址、JSON 编解码与后端机器错误映射（C-06）。
 // 开发环境默认请求 /api，由 Vite 代理转发到后端；可用 VITE_API_BASE_URL 覆盖。
 
+import i18n from "@/i18n"
 import type { ApiError, MachineErrorCode } from "@/lib/types"
 
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "/api"
@@ -28,7 +29,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers })
   } catch {
-    throw new ApiRequestError("NETWORK_ERROR", "无法连接后端服务，请确认服务已启动。", 0)
+    throw new ApiRequestError("NETWORK_ERROR", i18n.t("common.errors.network"), 0)
   }
 
   if (response.status === 204) {
@@ -41,7 +42,7 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
     const error = payload as ApiError | null
     throw new ApiRequestError(
       error?.code ?? "VALIDATION_FAILED",
-      error?.message ?? response.statusText ?? "请求失败",
+      error?.message ?? response.statusText ?? i18n.t("common.errors.requestFailed"),
       response.status,
       error?.latestVersionId,
     )

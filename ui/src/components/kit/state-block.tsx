@@ -1,6 +1,7 @@
 // DES-012 空 / 加载 / 错误 / 冲突 / 权限不足 / 冻结统一状态块。
 // 约束：错误码、用户说明、下一步动作都必须有文本。
 
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, Ban, Inbox, Loader2, Snowflake, TriangleAlert } from "lucide-react"
 
@@ -30,6 +31,7 @@ export function StateBlock({
   action?: React.ReactNode
   className?: string
 }) {
+  const { t } = useTranslation()
   const meta = META[kind]
   const Icon = meta.icon
   return (
@@ -41,7 +43,7 @@ export function StateBlock({
       <div className="space-y-1">
         <p className="font-serif text-lg font-bold text-foreground text-balance">{title}</p>
         {description ? <p className="mx-auto max-w-sm text-sm leading-6 text-muted-foreground text-pretty">{description}</p> : null}
-        {errorCode ? <p className="font-mono text-xs text-coral">错误码：{errorCode}</p> : null}
+        {errorCode ? <p className="font-mono text-xs text-coral">{t("common.pageState.errorCode", { code: errorCode })}</p> : null}
       </div>
       {action ? <div className="pt-1">{action}</div> : null}
     </div>

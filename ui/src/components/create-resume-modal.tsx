@@ -4,16 +4,17 @@
 
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import type { JobDescription, ResumeTemplate } from "@/lib/types"
 import { MessageSquare, PenLine, Sparkles, X } from "lucide-react"
 
 type Method = "chat" | "form" | "profile"
 
-const METHODS: { key: Method; label: string; desc: string; icon: React.ElementType }[] = [
-  { key: "form", label: "表单创建", desc: "从空白结构化表单开始，显式提交即授权", icon: PenLine },
-  { key: "chat", label: "对话创建", desc: "用自然语言描述目标，Agent 生成首版（approval 需确认）", icon: MessageSquare },
-  { key: "profile", label: "Profile 生成", desc: "选择 JD 与事实，从事实库选材生成", icon: Sparkles },
+const METHODS: { key: Method; labelKey: string; descKey: string; icon: React.ElementType }[] = [
+  { key: "form", labelKey: "resume.create.method.form.label", descKey: "resume.create.method.form.desc", icon: PenLine },
+  { key: "chat", labelKey: "resume.create.method.chat.label", descKey: "resume.create.method.chat.desc", icon: MessageSquare },
+  { key: "profile", labelKey: "resume.create.method.profile.label", descKey: "resume.create.method.profile.desc", icon: Sparkles },
 ]
 
 export function CreateResumeModal({
@@ -27,6 +28,7 @@ export function CreateResumeModal({
   templates: ResumeTemplate[]
   jds: JobDescription[]
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [method, setMethod] = useState<Method>("form")
   const [title, setTitle] = useState("")
@@ -38,6 +40,8 @@ export function CreateResumeModal({
 
   const usableTemplates = templates.filter((t) => t.status === "published")
   const needsConfirm = method === "chat" || method === "profile"
+  const methodMeta = METHODS.find((m) => m.key === method)
+  const selectedTemplate = usableTemplates.find((tpl) => tpl.id === templateId)
 
   function submit() {
     // 前端演示：真实实现会调用 POST /resumes 或发起 Agent 创建任务。
@@ -47,20 +51,20 @@ export function CreateResumeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button className="absolute inset-0 bg-foreground/40" aria-label="关闭" onClick={onClose} />
+      <button className="absolute inset-0 bg-foreground/40" aria-label={t("common.actions.close")} onClick={onClose} />
       <div role="dialog" aria-modal="true" aria-labelledby="create-title" className="relative z-10 w-full max-w-lg card-frame max-h-[88vh] overflow-auto p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h2 id="create-title" className="font-serif text-2xl font-bold text-foreground">开始一份新的简历</h2>
-            <p className="mt-1 text-sm text-muted-foreground">选择创建方式，锁定标题、岗位、模板与来源。</p>
+            <h2 id="create-title" className="font-serif text-2xl font-bold text-foreground">{t("resume.create.title")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("resume.create.description")}</p>
           </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="关闭">
+          <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}>
             <X className="size-5" />
           </button>
         </div>
 
         <fieldset className="mt-5">
-          <legend className="mb-2 text-sm font-medium text-foreground">创建方式</legend>
+          <legend className="mb-2 text-sm font-medium text-foreground">{t("resume.create.methodLegend")}</legend>
           <div className="grid gap-2">
             {METHODS.map((m) => {
               const Icon = m.icon
@@ -74,8 +78,8 @@ export function CreateResumeModal({
                 >
                   <Icon className={cn("mt-0.5 size-5 shrink-0", active ? "text-cobalt" : "text-muted-foreground")} aria-hidden />
                   <span>
-                    <span className="block text-sm font-medium text-foreground">{m.label}</span>
-                    <span className="block text-xs text-muted-foreground">{m.desc}</span>
+                    <span className="block text-sm font-medium text-foreground">{t(m.labelKey)}</span>
+                    <span className="block text-xs text-muted-foreground">{t(m.descKey)}</span>
                   </span>
                 </button>
               )
@@ -84,25 +88,25 @@ export function CreateResumeModal({
         </fieldset>
 
         <div className="mt-5 grid gap-4">
-          <Field label="简历标题">
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="例如：高级前端工程师简历" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
+          <Field label={t("resume.create.fields.title")}>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("resume.create.placeholders.title")} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
           </Field>
-          <Field label="目标岗位">
-            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="例如：高级前端工程师" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
+          <Field label={t("resume.create.fields.role")}>
+            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder={t("resume.create.placeholders.role")} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30" />
           </Field>
-          <Field label="模板">
+          <Field label={t("resume.create.fields.template")}>
             <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30">
-              {usableTemplates.map((t) => (
-                <option key={t.id} value={t.id}>{t.name} · rev.{t.revision}</option>
+              {usableTemplates.map((tpl) => (
+                <option key={tpl.id} value={tpl.id}>{tpl.name} · {t("resume.create.revision", { revision: tpl.revision })}</option>
               ))}
             </select>
           </Field>
           {method !== "form" ? (
-            <Field label="关联 JD（可选）">
+            <Field label={t("resume.create.fields.jdOptional")}>
               <select value={jdId} onChange={(e) => setJdId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30">
-                <option value="">不关联</option>
+                <option value="">{t("resume.create.noJd")}</option>
                 {jds.map((j) => (
-                  <option key={j.id} value={j.id}>{j.role}{j.company ? ` · ${j.company}` : ""} · rev.{j.revision}</option>
+                  <option key={j.id} value={j.id}>{j.role}{j.company ? ` · ${j.company}` : ""} · {t("resume.create.revision", { revision: j.revision })}</option>
                 ))}
               </select>
             </Field>
@@ -111,21 +115,26 @@ export function CreateResumeModal({
 
         {/* 创建摘要（DES-015 影响摘要） */}
         <div className="mt-5 rounded-lg bg-secondary p-3 text-xs leading-5 text-secondary-foreground">
-          <p className="font-medium text-foreground">创建摘要</p>
+          <p className="font-medium text-foreground">{t("resume.create.summary.title")}</p>
           <p className="mt-1">
-            方式：{METHODS.find((m) => m.key === method)?.label}；标题：{title || "（未填写）"}；岗位：{role || "（未填写）"}；模板：{usableTemplates.find((t) => t.id === templateId)?.name ?? "—"}
+            {t("resume.create.summary.line", {
+              method: t(methodMeta?.labelKey ?? ""),
+              title: title || t("resume.create.notFilled"),
+              role: role || t("resume.create.notFilled"),
+              template: selectedTemplate?.name ?? "—",
+            })}
           </p>
-          {needsConfirm ? <p className="mt-1 text-coral">approval 模式：Agent 创建将展示创建摘要，需你二次确认后才会创建。</p> : <p className="mt-1">表单创建：点击「创建」即视为授权，直接创建空草稿。</p>}
+          {needsConfirm ? <p className="mt-1 text-coral">{t("resume.create.approvalNotice")}</p> : <p className="mt-1">{t("resume.create.formNotice")}</p>}
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">取消</button>
+          <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">{t("common.actions.cancel")}</button>
           <button
             onClick={submit}
             disabled={!title || !role}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {needsConfirm ? "预览创建摘要" : "创建"}
+            {needsConfirm ? t("resume.create.previewSummary") : t("common.actions.create")}
           </button>
         </div>
       </div>

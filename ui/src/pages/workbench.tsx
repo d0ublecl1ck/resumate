@@ -4,13 +4,25 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { getWorkbenchSummary } from "@/lib/api"
 import { SaveStateBadge } from "@/components/kit/badges"
 import { StateBlock } from "@/components/kit/state-block"
 import { PageLoading } from "@/pages/states"
 import { ArrowRight, Boxes, CircleCheck, FileText, Plus, ShieldQuestion, UserRound } from "lucide-react"
 
+/** 用户昵称属于用户数据，不参与翻译（US-1.6）；未接入账户昵称前保留演示值。 */
+const USER_DISPLAY_NAME = "张沐"
+
+/** 按本地时段选择问候语（US-1.6：问候随语言与当地时段变化）。 */
+function greetingPeriod(hour: number): "morning" | "afternoon" | "evening" {
+  if (hour >= 5 && hour < 12) return "morning"
+  if (hour >= 12 && hour < 18) return "afternoon"
+  return "evening"
+}
+
 export function WorkbenchPage() {
+  const { t } = useTranslation()
   const { data: s, isPending } = useQuery({ queryKey: ["workbench-summary"], queryFn: getWorkbenchSummary })
 
   if (isPending || !s) return <PageLoading />
@@ -21,11 +33,11 @@ export function WorkbenchPage() {
         <Hero pendingCount={0} draftCount={0} />
         <StateBlock
           kind="empty"
-          title="先建立你的事实库"
-          description="Resumate 从真实职业事实出发。建立 Profile 后，才能生成有依据、可追溯的岗位简历。"
+          title={t("workbench.empty.title")}
+          description={t("workbench.empty.description")}
           action={
             <Link to="/profile" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-              建立 Profile <ArrowRight className="size-4" />
+              {t("workbench.empty.action")} <ArrowRight className="size-4" />
             </Link>
           }
         />
@@ -49,13 +61,13 @@ export function WorkbenchPage() {
             </span>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                有 {s.pendingActionCount} 项 Agent 修改待确认
+                {t("workbench.pending.title", { n: s.pendingActionCount })}
               </p>
-              <p className="text-xs text-muted-foreground">在「{s.latestResume.title}」的编辑工作台里审阅并处理</p>
+              <p className="text-xs text-muted-foreground">{t("workbench.pending.description", { title: s.latestResume.title })}</p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1 text-sm font-medium text-cobalt">
-            去处理 <ArrowRight className="size-4" />
+            {t("workbench.pending.action")} <ArrowRight className="size-4" />
           </span>
         </Link>
       ) : null}
@@ -66,12 +78,12 @@ export function WorkbenchPage() {
           <EntryCard
             to={`/resumes/${s.latestResume.id}`}
             icon={FileText}
-            eyebrow="继续编辑"
+            eyebrow={t("workbench.entry.continueEditing")}
             title={s.latestResume.title}
             meta={
               <span className="flex items-center gap-2">
                 <SaveStateBadge state={s.latestResume.saveState} />
-                <span className="text-xs text-muted-foreground">更新于 {s.latestResume.updatedAt.slice(5, 16).replace("T", " ")}</span>
+                <span className="text-xs text-muted-foreground">{t("workbench.entry.updatedAt", { date: s.latestResume.updatedAt.slice(5, 16).replace("T", " ") })}</span>
               </span>
             }
           />
@@ -82,9 +94,9 @@ export function WorkbenchPage() {
           <EntryCard
             to={`/jds/${s.latestJd.id}`}
             icon={Boxes}
-            eyebrow="最新岗位"
+            eyebrow={t("workbench.entry.latestJd")}
             title={`${s.latestJd.role}${s.latestJd.company ? " · " + s.latestJd.company : ""}`}
-            meta={<span className="text-xs text-muted-foreground">rev.{s.latestJd.revision} · 可发起岗位微调</span>}
+            meta={<span className="text-xs text-muted-foreground">{t("workbench.entry.jdMeta", { revision: s.latestJd.revision })}</span>}
           />
         ) : null}
 
@@ -92,11 +104,11 @@ export function WorkbenchPage() {
         <EntryCard
           to="/profile"
           icon={UserRound}
-          eyebrow="事实库完整度"
-          title={`${s.profileCompleteness}% 完整`}
+          eyebrow={t("workbench.entry.profileCompleteness")}
+          title={t("workbench.entry.completenessValue", { percent: s.profileCompleteness })}
           meta={
             <span className="text-xs text-muted-foreground">
-              {s.unverifiedFactCount > 0 ? `${s.unverifiedFactCount} 条事实待核实` : "全部事实已核实"}
+              {s.unverifiedFactCount > 0 ? t("workbench.entry.unverifiedFacts", { facts: s.unverifiedFactCount }) : t("workbench.entry.allFactsVerified")}
             </span>
           }
         />
@@ -105,22 +117,22 @@ export function WorkbenchPage() {
         <EntryCard
           to="/resumes"
           icon={FileText}
-          eyebrow="全部简历"
-          title="进入简历库"
-          meta={<span className="text-xs text-muted-foreground">{s.uncommittedDraftCount} 份有未提交草稿</span>}
+          eyebrow={t("workbench.entry.allResumes")}
+          title={t("workbench.entry.toResumeLibrary")}
+          meta={<span className="text-xs text-muted-foreground">{t("workbench.entry.uncommittedDrafts", { drafts: s.uncommittedDraftCount })}</span>}
         />
       </div>
 
       {/* 求职阶段进度 */}
       <section className="card-soft p-5">
-        <h2 className="mb-4 text-sm font-semibold text-foreground">求职阶段</h2>
+        <h2 className="mb-4 text-sm font-semibold text-foreground">{t("workbench.jobStage")}</h2>
         <ol className="grid gap-3 sm:grid-cols-4">
           {s.jobStage.map((stage, i) => (
             <li key={stage.label} className="flex items-center gap-2.5">
               <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${stage.done ? "bg-cobalt text-primary-foreground" : "border border-border text-muted-foreground"}`}>
                 {stage.done ? <CircleCheck className="size-4" aria-hidden /> : i + 1}
               </span>
-              <span className={`text-sm ${stage.done ? "text-foreground" : "text-muted-foreground"}`}>{stage.label}</span>
+              <span className={`text-sm ${stage.done ? "text-foreground" : "text-muted-foreground"}`}>{t(stage.label)}</span>
             </li>
           ))}
         </ol>
@@ -130,22 +142,25 @@ export function WorkbenchPage() {
 }
 
 function Hero({ pendingCount, draftCount }: { pendingCount: number; draftCount: number }) {
+  const { t } = useTranslation()
+  const period = greetingPeriod(new Date().getHours())
+
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">你好，张沐</p>
+        <p className="text-sm text-muted-foreground">{t("workbench.hero.greeting." + period, { name: USER_DISPLAY_NAME })}</p>
         <h1 className="font-serif text-3xl font-bold leading-[1.15] tracking-tight text-foreground sm:text-4xl text-balance">
-          AI 全程陪跑，<span className="text-cobalt">从经历到 offer</span>
+          {t("workbench.hero.headlinePrefix")}<span className="text-cobalt">{t("workbench.hero.headlineHighlight")}</span>
         </h1>
         <p className="max-w-xl text-sm leading-6 text-muted-foreground text-pretty">
-          从对话录入真实经历，到 AI 辅助打磨每一版简历，再到模拟面试逐题演练——一条龙帮你拿下心仪岗位。
+          {t("workbench.hero.description")}
         </p>
         <p className="text-xs text-muted-foreground">
-          {draftCount} 份未提交草稿 · {pendingCount} 项待确认修改
+          {t("workbench.hero.stats", { draftCount, pendingCount })}
         </p>
       </div>
       <Link to="/resumes?create=1" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
-        <Plus className="size-4" aria-hidden /> 新建简历
+        <Plus className="size-4" aria-hidden /> {t("workbench.hero.newResume")}
       </Link>
     </header>
   )
