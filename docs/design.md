@@ -45,7 +45,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 `app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误、证据等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
 
-当前表：`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+当前表：`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
 
 业务失败统一返回 `{code, message, latestVersionId?}` 错误信封，`code` 取自 `app/shared/errors.py` 的机器错误码；资源不存在返回 404、基线过期返回 409、校验失败返回 422。
 
@@ -85,6 +85,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   │   └── ...（api/schemas/service/dao/models）
 │   │   ├── modules/profile/
 │   │   │   └── ...（api/schemas/service/dao/models）
+│   │   ├── modules/settings/
+│   │   │   └── ...（api/schemas/service/dao/models）
 │   │   ├── shared/
 │   │   │   ├── schemas.py
 │   │   │   └── errors.py
@@ -102,7 +104,8 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │       ├── test_templates.py
 │       ├── test_resume.py
 │       ├── test_jd.py
-│       └── test_profile.py
+│       ├── test_profile.py
+│       └── test_settings.py
 ├── docs/design.md
 ├── docs/issues/
 └── quality-gates/
@@ -118,6 +121,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。
 - 岗位：`GET /jds`、`POST /jds`、`GET /jds/{jd_id}`、`PATCH /jds/{jd_id}`、`DELETE /jds/{jd_id}`、`PUT|DELETE /jds/{jd_id}/binding`。
 - 资料：`GET /profile`、`PATCH /profile/basics`、`GET|POST /profile/facts`、`GET|PATCH|DELETE /profile/facts/{fact_id}`。
+- 设置：`GET|PATCH /settings`（偏好）、`GET|PATCH /agent/config`、`GET|PUT /models/config`、`POST /models/config:test`。
 
 ## 关键决策
 
@@ -128,6 +132,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - `get_current_user` 为单用户占位依赖，固定返回本地用户；接入真实认证前不得多用户部署。
 - 统一错误契约放在 `app/shared/errors.py`，响应信封为 `ApiError`；`main.py` 注册异常处理器，各模块抛出领域异常而非手工构造状态码。
 - 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
+- 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 只写入、不回显（仅返回 `keyConfigured`），连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
 - 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。

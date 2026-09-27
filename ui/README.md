@@ -14,7 +14,7 @@ uv run uvicorn app.main:app --reload   # http://localhost:8000
 pnpm dev
 ```
 
-可用 `VITE_API_BASE_URL` 覆盖基地址（见 `.env.example`）。`src/lib/api.ts` 中后端尚未实现的端点（Agent Run、自然语言解析、配置、PAT/访问日志、备份、工作台 mock 统计）仍读取 `src/lib/content.ts`。
+可用 `VITE_API_BASE_URL` 覆盖基地址（见 `.env.example`）。`src/lib/api.ts` 中后端尚未实现的端点（Agent Run、自然语言解析、PAT/访问日志、备份、工作台 mock 统计）仍读取 `src/lib/content.ts`；系统设置（`/settings`、`/agent/config`、`/models/config` 与连通性测试）已改走真实 HTTP。
 
 测试通过 MSW（`src/test-server.ts`）以 fixtures 驱动真实 fetch 路径，不需要后端进程。
 
