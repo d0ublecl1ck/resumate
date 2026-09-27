@@ -54,11 +54,20 @@ describe("ProfileWorkspace 直接编辑", () => {
     expect(screen.getByLabelText("证据状态")).toHaveValue("unverified")
   })
 
-  it("保留对话编辑入口", () => {
+  it("对话入口只在页头，卡片上不重复", () => {
     renderProfile()
     expect(screen.getByRole("button", { name: "对话维护资料" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "对话编辑" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "对话添加职业经历" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "对话更新「商详页性能优化」" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "对话编辑" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "对话添加职业经历" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "对话更新「商详页性能优化」" })).not.toBeInTheDocument()
+    expect(screen.queryByText("对话添加")).not.toBeInTheDocument()
+    expect(screen.queryByText("对话更新")).not.toBeInTheDocument()
+  })
+
+  it("直接编辑入口保留", () => {
+    renderProfile()
+    expect(screen.getByRole("button", { name: "编辑基本信息" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "手动添加职业经历" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "编辑「商详页性能优化」" })).toBeInTheDocument()
   })
 })
