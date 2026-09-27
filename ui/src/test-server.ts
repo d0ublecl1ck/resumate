@@ -1,7 +1,7 @@
 // Vitest 用 MSW 服务器：已对接端点由后端契约驱动，fixtures 来自 content.ts。
 import { http, HttpResponse } from "msw"
 import { setupServer } from "msw/node"
-import { JDS, PROFILE, RESUMES, TEMPLATES } from "@/lib/content"
+import { AGENT_CONFIG, JDS, MODEL_CONFIG, PROFILE, RESUMES, TEMPLATES, USER_PREFERENCES } from "@/lib/content"
 import type { ProfileFact } from "@/lib/types"
 
 function notFound(message: string) {
@@ -98,6 +98,26 @@ export const handlers = [
     const template = TEMPLATES.find((item) => item.id === params.id)
     return template ? HttpResponse.json(template) : notFound(`模板 ${params.id} 不存在`)
   }),
+  http.get("/api/settings", () => HttpResponse.json(USER_PREFERENCES)),
+  http.patch("/api/settings", async ({ request }) => {
+    const patch = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ ...USER_PREFERENCES, ...patch })
+  }),
+  http.get("/api/agent/config", () => HttpResponse.json(AGENT_CONFIG)),
+  http.patch("/api/agent/config", async ({ request }) => {
+    const patch = (await request.json()) as Record<string, unknown>
+    return HttpResponse.json({ ...AGENT_CONFIG, ...patch })
+  }),
+  http.get("/api/models/config", () => HttpResponse.json(MODEL_CONFIG)),
+  http.put("/api/models/config", async ({ request }) => {
+    const patch = (await request.json()) as Record<string, unknown>
+    const { apiKey, ...rest } = patch
+    const keyConfigured = typeof apiKey === "string" ? apiKey.length > 0 : MODEL_CONFIG.keyConfigured
+    return HttpResponse.json({ ...MODEL_CONFIG, ...rest, keyConfigured })
+  }),
+  http.post(/\/api\/models\/config:test$/, () =>
+    HttpResponse.json({ at: new Date().toISOString(), ok: true, message: "连接成功（HTTP 200）" }),
+  ),
 ]
 
 export const server = setupServer(...handlers)
