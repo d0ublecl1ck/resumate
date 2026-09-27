@@ -95,6 +95,11 @@ class InvalidCredentials(ApiException):
     code = ErrorCode.INVALID_CREDENTIALS
 
 
+class TokenRevoked(ApiException):
+    status_code = 401
+    code = ErrorCode.TOKEN_REVOKED
+
+
 class AccountBanned(ApiException):
     status_code = 403
     code = ErrorCode.ACCOUNT_BANNED
@@ -103,6 +108,11 @@ class AccountBanned(ApiException):
 class Forbidden(ApiException):
     status_code = 403
     code = ErrorCode.FORBIDDEN
+
+
+class ScopeInsufficient(ApiException):
+    status_code = 403
+    code = ErrorCode.SCOPE_INSUFFICIENT
 
 
 class EmailAlreadyRegistered(ApiException):
