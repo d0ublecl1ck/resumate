@@ -47,7 +47,7 @@ describe("SettingsForm", () => {
   it("从模型目录加载 provider 与 model", async () => {
     renderForm()
 
-    expect(await screen.findByText("目录来源：litellm")).toBeInTheDocument()
+    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
   })

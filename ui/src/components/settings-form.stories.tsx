@@ -17,7 +17,7 @@ function applyCatalogHandlers(state: CatalogState) {
     worker.use(
       http.get("/api/models/catalog", async () => {
         await delay("infinite")
-        return HttpResponse.json({ source: "litellm", providers: [] })
+        return HttpResponse.json({ source: "models.dev", providers: [] })
       }),
     )
   }
