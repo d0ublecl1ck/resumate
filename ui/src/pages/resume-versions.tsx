@@ -11,7 +11,7 @@ export function ResumeVersionsPage() {
   const { data: resume, isPending } = useQuery({ queryKey: ["resume", id], queryFn: () => getResume(id) })
 
   if (isPending) return <PageLoading />
-  if (!resume) return <PageNotFound target="简历" />
+  if (!resume) return <PageNotFound entity="resume" />
 
   return <VersionHistory resume={resume} />
 }

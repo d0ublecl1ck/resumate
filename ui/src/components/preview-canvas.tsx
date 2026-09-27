@@ -1,6 +1,7 @@
 // DES-013 预览画布。草稿预览必须标明「草稿预览」；正式版本预览与 PDF
 // 使用相同内容版本、模板版本与导出配置。画布不是唯一读取方式：提供文本结构。
 
+import { useTranslation } from "react-i18next"
 import type { ResumeDocument } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +18,7 @@ export function PreviewCanvas({
   templateName: string
   className?: string
 }) {
+  const { t } = useTranslation()
   return (
     <div className={cn("flex h-full flex-col", className)}>
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
@@ -26,7 +28,7 @@ export function PreviewCanvas({
             mode === "draft" ? "border-coral/40 bg-coral/5 text-coral" : "border-foreground/25 bg-secondary text-foreground",
           )}
         >
-          {mode === "draft" ? "草稿预览" : "正式版本预览"}
+          {mode === "draft" ? t("resume.preview.draft") : t("resume.preview.committed")}
         </span>
         <span className="text-xs text-muted-foreground">
           {templateName} · <code className="font-mono">{versionId}</code>
@@ -34,7 +36,7 @@ export function PreviewCanvas({
       </div>
 
       <div className="flex-1 overflow-auto bg-muted/40 p-4">
-        <article className="mx-auto max-w-[46rem] rounded-md bg-card p-8 shadow-sm ring-1 ring-border" aria-label="简历预览内容">
+        <article className="mx-auto max-w-[46rem] rounded-md bg-card p-8 shadow-sm ring-1 ring-border" aria-label={t("resume.preview.contentAria")}>
           <header className="border-b border-border pb-4">
             <h2 className="font-serif text-2xl font-bold text-foreground">{document.basics.fullName}</h2>
             <p className="mt-1 text-sm text-cobalt">{document.basics.headline}</p>
