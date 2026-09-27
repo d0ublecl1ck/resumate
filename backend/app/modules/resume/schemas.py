@@ -66,6 +66,11 @@ class ResumeVersionResponse(ApiModel):
     committed_at: datetime
     parent_version_id: str | None = None
     base_version_id: str | None = None
+    client_id: str | None = None
+    conversation_id: str | None = None
+    user_turn_id: str | None = None
+    agent_run_id: str | None = None
+    execution_mode: Literal["approval", "full_access"] | None = None
 
 
 class ResumeResponse(ApiModel):

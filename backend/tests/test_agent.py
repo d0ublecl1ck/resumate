@@ -55,6 +55,25 @@ def _upsert_section_op() -> dict:
     }
 
 
+def _stage_conflicting_change(client: TestClient, resume: dict) -> dict:
+    """Stage an agent edit, then advance the base so it conflicts on rebase."""
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    agent_section = {
+        "id": "sec_experience",
+        "kind": "experience",
+        "title": "Agent 标题",
+        "entries": [{"id": "entry_1", "title": "高级前端工程师", "bullets": ["负责核心页面"]}],
+    }
+    applied = client.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": [{"op": "upsertSection", "section": agent_section}]},
+    )
+    assert applied.status_code == 200, applied.text
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("手动标题")})
+    assert manual.status_code == 200, manual.text
+    return turn
+
+
 def test_full_access_apply_then_finalize_is_idempotent(client: TestClient) -> None:
     resume = _create(client)
     turn = _begin(client, resume["id"], executionMode="full_access")
@@ -157,7 +176,46 @@ def test_apply_to_closed_turn_returns_turn_already_closed(client: TestClient) ->
     assert client.get(f"/turns/{turn['id']}").status_code == 200
 
 
-def test_finalize_after_manual_commit_returns_base_stale(client: TestClient) -> None:
+def test_session_turn_keeps_reported_client_id(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], clientId="会话客户端", executionMode="full_access")
+
+    assert turn["clientId"] == "会话客户端"
+    assert turn["source"] == "agent"
+
+
+def test_manual_document_version_leaves_agent_trace_null(client: TestClient) -> None:
+    resume = _create(client)
+    assert client.get(f"/resumes/{resume['id']}/versions").json()[-1]["userTurnId"] is None
+
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("项目经历")})
+    assert manual.status_code == 200, manual.text
+
+    latest = client.get(f"/resumes/{resume['id']}/versions").json()[-1]
+    assert latest["userTurnId"] is None
+    assert latest["executionMode"] is None
+    assert latest["clientId"] is None
+    assert latest["conversationId"] is None
+    assert latest["agentRunId"] is None
+
+
+def test_finalize_records_version_traceability(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], clientId="终端A", executionMode="full_access")
+    assert client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]}).status_code == 200
+
+    assert client.post(f"/turns/{turn['id']}/finalize", json={}).status_code == 200
+
+    latest = client.get(f"/resumes/{resume['id']}/versions").json()[-1]
+    assert latest["source"] == "agent"
+    assert latest["clientId"] == "终端A"
+    assert latest["userTurnId"] == turn["id"]
+    assert latest["executionMode"] == "full_access"
+    assert latest["conversationId"] is None
+    assert latest["agentRunId"] is None
+
+
+def test_finalize_after_manual_base_advance_rebases(client: TestClient) -> None:
     resume = _create(client)
     turn = _begin(client, resume["id"], executionMode="full_access")
 
@@ -167,11 +225,215 @@ def test_finalize_after_manual_commit_returns_base_stale(client: TestClient) -> 
     assert latest != resume["currentVersionId"]
 
     response = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["state"] == "finalized"
+    assert body["baseVersionId"] == latest
+    assert body["result"]["versionId"] is None
+    assert body["result"]["baseRebased"] is True
+    assert len(client.get(f"/resumes/{resume['id']}/versions").json()) == 2
+
+
+def test_apply_after_manual_base_advance_continues(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("过往经历")})
+    latest = manual.json()["currentVersionId"]
+
+    applied = client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]})
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["baseRebased"] is True
+
+    working = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert working["baseVersionId"] == latest
+    titles = [section["title"] for section in working["document"]["sections"]]
+    assert "过往经历" in titles
+    assert "项目经历" in titles
+
+
+def test_clean_rebase_merges_agent_and_manual_changes(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    assert client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]}).status_code == 200
+
+    manual_doc = _document()
+    manual_doc["basics"]["headline"] = "手动更新头衔"
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": manual_doc})
+    latest = manual.json()["currentVersionId"]
+
+    finalize = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert finalize.status_code == 200, finalize.text
+    body = finalize.json()
+    assert body["result"]["baseRebased"] is True
+    assert body["result"]["versionId"].startswith("ver_")
+
+    version = client.get(f"/resumes/{resume['id']}/versions").json()[-1]
+    assert version["id"] == body["result"]["versionId"]
+    assert version["baseVersionId"] == latest
+    document = client.get(f"/resumes/{resume['id']}").json()["document"]
+    assert document["basics"]["headline"] == "手动更新头衔"
+    assert any(section["id"] == "sec_projects" for section in document["sections"])
+
+
+def test_conflicting_rebase_keeps_working_document(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    agent_section = {
+        "id": "sec_experience",
+        "kind": "experience",
+        "title": "Agent 标题",
+        "entries": [{"id": "entry_1", "title": "高级前端工程师", "bullets": ["负责核心页面"]}],
+    }
+    applied = client.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": [{"op": "upsertSection", "section": agent_section}]},
+    )
+    assert applied.status_code == 200, applied.text
+    before = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert before["document"]["sections"][0]["title"] == "Agent 标题"
+
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("手动标题")})
+    latest = manual.json()["currentVersionId"]
+
+    conflict = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "REBASE_CONFLICT"
+    assert conflict.json()["latestVersionId"] == latest
+
+    after = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert after["dirty"] is True
+    assert after["workingRevision"] == before["workingRevision"]
+    assert after["baseVersionId"] == before["baseVersionId"]
+    assert after["document"]["sections"][0]["title"] == "Agent 标题"
+
+    again = client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]})
+    assert again.status_code == 409
+    assert again.json()["code"] == "REBASE_CONFLICT"
+
+    preview = client.post(f"/turns/{turn['id']}/patches:preview", json={"ops": [_upsert_section_op()]})
+    assert preview.status_code == 409
+    assert preview.json()["code"] == "REBASE_CONFLICT"
+
+    kept = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert kept["dirty"] is True
+    assert kept["document"]["sections"][0]["title"] == "Agent 标题"
+
+
+def test_cancel_after_manual_base_advance_settles(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    assert client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]}).status_code == 200
+
+    manual_doc = _document()
+    manual_doc["basics"]["headline"] = "手动头衔"
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": manual_doc})
+    latest = manual.json()["currentVersionId"]
+
+    cancelled = client.post(f"/turns/{turn['id']}/cancel", json={"reason": "重排后停止"})
+    assert cancelled.status_code == 200, cancelled.text
+    body = cancelled.json()
+    assert body["state"] == "cancelled"
+    assert body["result"]["baseRebased"] is True
+    assert body["result"]["versionId"].startswith("ver_")
+
+    version = client.get(f"/resumes/{resume['id']}/versions").json()[-1]
+    assert version["id"] == body["result"]["versionId"]
+    assert version["baseVersionId"] == latest
+    document = client.get(f"/resumes/{resume['id']}").json()["document"]
+    assert any(section["id"] == "sec_projects" for section in document["sections"])
+    assert client.get(f"/resumes/{resume['id']}/working-document").json()["dirty"] is False
+
+
+def test_clean_rebase_marks_approved_action_stale(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="approval")
+    first_ops = [_upsert_section_op()]
+    first = client.post(f"/turns/{turn['id']}/patches:preview", json={"ops": first_ops}).json()
+    assert client.post(f"/pending-actions/{first['pendingActionId']}/approve", json={}).status_code == 200
+    assert client.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": first_ops, "pendingActionId": first["pendingActionId"]},
+    ).status_code == 200
+
+    second_ops = [{"op": "removeSection", "sectionId": "sec_experience"}]
+    second = client.post(f"/turns/{turn['id']}/patches:preview", json={"ops": second_ops}).json()
+    second_id = second["pendingActionId"]
+    assert client.post(f"/pending-actions/{second_id}/approve", json={}).status_code == 200
+
+    manual_doc = _document()
+    manual_doc["basics"]["headline"] = "手动头衔"
+    client.put(f"/resumes/{resume['id']}/document", json={"document": manual_doc})
+
+    finalize = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert finalize.status_code == 200, finalize.text
+    assert finalize.json()["result"]["baseRebased"] is True
+
+    actions = {action["id"]: action for action in client.get(f"/turns/{turn['id']}/pending-actions").json()}
+    assert actions[second_id]["state"] == "stale"
+    assert actions[second_id]["staleReason"]
+
+
+def test_apply_with_stale_explicit_base_returns_base_stale(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("项目经历")})
+    latest = manual.json()["currentVersionId"]
+
+    response = client.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": [_upsert_section_op()], "baseVersionId": resume["currentVersionId"]},
+    )
 
     assert response.status_code == 409
-    body = response.json()
-    assert body["code"] == "BASE_VERSION_STALE"
-    assert body["latestVersionId"] == latest
+    assert response.json()["code"] == "BASE_VERSION_STALE"
+    assert response.json()["latestVersionId"] == latest
+
+
+def test_conflicting_turn_can_be_cancelled(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _stage_conflicting_change(client, resume)
+
+    conflict = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "REBASE_CONFLICT"
+
+    cancelled = client.post(f"/turns/{turn['id']}/cancel", json={"reason": "放弃本轮"})
+    assert cancelled.status_code == 200, cancelled.text
+    body = cancelled.json()
+    assert body["state"] == "cancelled"
+    assert body["result"]["state"] == "cancelled"
+    assert body["result"]["versionId"] is None
+    assert body["result"]["message"].startswith("放弃本轮")
+    assert "冲突" in body["result"]["message"]
+    assert "丢弃" in body["result"]["message"]
+    assert len(client.get(f"/resumes/{resume['id']}/versions").json()) == 2
+
+    working = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert working["dirty"] is False
+    assert working["workingRevision"] == 0
+    assert client.get(f"/turns/{turn['id']}").json()["state"] == "cancelled"
+
+
+def test_begin_after_conflict_closes_old_turn_and_starts_new(client: TestClient) -> None:
+    resume = _create(client)
+    first = _stage_conflicting_change(client, resume)
+    assert client.post(f"/turns/{first['id']}/finalize", json={}).status_code == 409
+
+    created = client.post(f"/resumes/{resume['id']}/turns", json={"executionMode": "full_access"})
+    assert created.status_code == 201, created.text
+    second = created.json()
+
+    old = client.get(f"/turns/{first['id']}").json()
+    assert old["state"] == "cancelled"
+    assert old["result"]["state"] == "cancelled"
+    assert old["result"]["versionId"] is None
+    assert "基线冲突" in old["result"]["message"]
+    assert second["state"] == "open"
+    assert second["baseVersionId"] == client.get(f"/resumes/{resume['id']}").json()["currentVersionId"]
+
+    working = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert working["dirty"] is False
+    assert working["workingRevision"] == 0
 
 
 def test_cancel_settles_applied_changes(client: TestClient) -> None:

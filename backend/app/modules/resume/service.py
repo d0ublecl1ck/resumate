@@ -61,6 +61,11 @@ def _commit_version(
     actor_id: str,
     message: str,
     base_version_id: str | None = None,
+    client_id: str | None = None,
+    conversation_id: str | None = None,
+    user_turn_id: str | None = None,
+    agent_run_id: str | None = None,
+    execution_mode: str | None = None,
 ) -> ResumeVersion:
     change_count, affected_sections = summarize_changes(resume.document or {}, document)
     now = _now()
@@ -75,6 +80,11 @@ def _commit_version(
         snapshot=document,
         parent_version_id=resume.current_version_id,
         base_version_id=base_version_id,
+        client_id=client_id,
+        conversation_id=conversation_id,
+        user_turn_id=user_turn_id,
+        agent_run_id=agent_run_id,
+        execution_mode=execution_mode,
         started_at=now,
         committed_at=now,
     )
@@ -122,6 +132,9 @@ def commit_working_copy(
     actor_id: str,
     message: str,
     source: str = "agent",
+    client_id: str | None = None,
+    user_turn_id: str | None = None,
+    execution_mode: str | None = None,
 ) -> ResumeVersion | None:
     """Aggregate the Working Copy into exactly one version; None when unchanged."""
     if not working_copy_is_dirty(resume):
@@ -136,9 +149,22 @@ def commit_working_copy(
         actor_id=actor_id,
         message=message,
         base_version_id=resume.working_base_version_id,
+        client_id=client_id,
+        user_turn_id=user_turn_id,
+        execution_mode=execution_mode,
     )
     clear_working_copy(resume)
     return version
+
+
+def get_version_snapshot(db: Session, version_id: str | None) -> dict | None:
+    """Return a deep copy of a version snapshot, or None when it is unknown."""
+    if version_id is None:
+        return None
+    version = dao.get_version(db, version_id)
+    if version is None:
+        return None
+    return copy.deepcopy(version.snapshot or {})
 
 
 def clear_working_copy(resume: Resume) -> None:

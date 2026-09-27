@@ -14,6 +14,7 @@ class ErrorCode(StrEnum):
     IDEMPOTENCY_CONFLICT = "IDEMPOTENCY_CONFLICT"
     PENDING_ACTION_NOT_APPROVED = "PENDING_ACTION_NOT_APPROVED"
     PENDING_ACTION_STALE = "PENDING_ACTION_STALE"
+    REBASE_CONFLICT = "REBASE_CONFLICT"
     SCOPE_INSUFFICIENT = "SCOPE_INSUFFICIENT"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     TOKEN_REVOKED = "TOKEN_REVOKED"
@@ -83,6 +84,11 @@ class PendingActionNotApproved(ApiException):
 class PendingActionStale(ApiException):
     status_code = 409
     code = ErrorCode.PENDING_ACTION_STALE
+
+
+class RebaseConflict(ApiException):
+    status_code = 409
+    code = ErrorCode.REBASE_CONFLICT
 
 
 class Unauthenticated(ApiException):

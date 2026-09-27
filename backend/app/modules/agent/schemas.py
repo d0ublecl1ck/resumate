@@ -92,6 +92,7 @@ class PatchPreviewResponse(ApiModel):
     diff: list[DiffItem]
     pending_action_id: str | None
     requires_confirmation: bool
+    base_rebased: bool = False
 
 
 class PatchApplyResponse(ApiModel):
@@ -103,6 +104,7 @@ class PatchApplyResponse(ApiModel):
     working_revision: int
     pending_action_id: str | None
     idempotent_replay: bool = False
+    base_rebased: bool = False
 
 
 # --- Resources (section 4) ------------------------------------------------------
@@ -132,6 +134,7 @@ class TurnResult(ApiModel):
     affected_sections: list[str]
     message: str
     idempotent_replay: bool = False
+    base_rebased: bool = False
 
 
 class UserTurnResponse(ApiModel):

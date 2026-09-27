@@ -22,6 +22,9 @@ class CurrentUser:
     auth_kind: str = "session"
     pat_id: str | None = None
     scopes: frozenset[str] = frozenset()
+    # Server-fixed client identifier for PAT calls (token name, falling back to
+    # pat_id). Session callers leave it None and may self-report clientId.
+    client_id: str | None = None
 
 
 @dataclass(frozen=True)
