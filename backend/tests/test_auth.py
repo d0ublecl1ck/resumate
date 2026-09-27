@@ -92,7 +92,7 @@ def test_seeded_admin_can_log_in(session_clients, db_session) -> None:
     response = _login(client, "admin@resumate.dev", "resumate-admin")
 
     assert response.status_code == 200, response.text
-    assert response.json()["role"] == "admin"
+    assert response.json()["role"] == "super_admin"
 
 
 def test_change_password_revokes_every_session(session_clients, fake_redis) -> None:

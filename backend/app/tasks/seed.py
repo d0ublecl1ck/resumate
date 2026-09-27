@@ -1,16 +1,18 @@
-"""Seed built-in reference data and the local bootstrap admin.
+"""Seed built-in reference data: templates, the RBAC catalogue and the bootstrap admin.
 
 Run with: uv run python -m app.tasks.seed
 """
 
 from datetime import datetime, timezone
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal
-from app.modules.auth.dao import get_user_by_email
-from app.modules.auth.models import User
+from app.modules.auth import dao
+from app.modules.auth.models import Permission, Role, RolePermission, User
+from app.modules.auth.rbac import BOOTSTRAP_ROLE_CODE, PERMISSIONS, ROLES, role_permissions
 from app.modules.auth.security import hash_password
 from app.modules.templates.dao import get_template
 from app.modules.templates.models import Template
@@ -37,6 +39,10 @@ BUILTIN_TEMPLATES: list[dict[str, object]] = [
 ]
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def seed_templates(db: Session) -> int:
     """Insert missing built-in templates; safe to run repeatedly."""
     created = 0
@@ -48,25 +54,89 @@ def seed_templates(db: Session) -> int:
     return created
 
 
+def seed_rbac(db: Session) -> int:
+    """Upsert roles, permissions and their links; returns newly created rows."""
+    now = _now()
+    created = 0
+    roles: dict[str, Role] = {}
+    for spec in ROLES:
+        role = dao.get_role_by_code(db, spec.code)
+        if role is None:
+            role = Role(
+                id="role_" + spec.code,
+                code=spec.code,
+                name=spec.name,
+                description=spec.description,
+                rank=spec.rank,
+                is_system=True,
+                created_at=now,
+                updated_at=now,
+            )
+            dao.add_role(db, role)
+            created += 1
+        else:
+            role.name = spec.name
+            role.description = spec.description
+            role.rank = spec.rank
+        roles[spec.code] = role
+    db.flush()
+
+    permissions: dict[str, Permission] = {}
+    for spec in PERMISSIONS:
+        permission = db.scalar(select(Permission).where(Permission.code == spec.code))
+        if permission is None:
+            permission = Permission(
+                id="perm_" + spec.code.replace(":", "_"),
+                code=spec.code,
+                group=spec.group,
+                name=spec.name,
+                created_at=now,
+            )
+            dao.add_permission(db, permission)
+            created += 1
+        permissions[spec.code] = permission
+    db.flush()
+
+    existing = {(link.role_id, link.permission_id) for link in db.scalars(select(RolePermission))}
+    for spec in ROLES:
+        role = roles[spec.code]
+        for code in role_permissions(spec.code):
+            permission = permissions[code]
+            if (role.id, permission.id) not in existing:
+                dao.add_role_permission(db, role.id, permission.id)
+    db.commit()
+    return created
+
+
 def seed_admin(db: Session) -> bool:
-    """Create the bootstrap admin once; returns True when it was created."""
+    """Create the bootstrap super admin once, promoting it if it already exists."""
+    seed_rbac(db)
     settings = get_settings()
     email = settings.bootstrap_admin_email.strip().lower()
-    if get_user_by_email(db, email) is not None:
+    role = dao.get_role_by_code(db, BOOTSTRAP_ROLE_CODE)
+    if role is None:
+        raise RuntimeError("缺少内置角色 super_admin，请先运行 seed_rbac")
+    existing = dao.get_user_by_email(db, email)
+    if existing is not None:
+        current = {item.code for item in dao.list_user_roles(db, existing.id)}
+        if BOOTSTRAP_ROLE_CODE not in current:
+            dao.clear_user_roles(db, existing.id)
+            dao.add_user_role(db, existing.id, role.id)
+            db.commit()
         return False
-    now = datetime.now(timezone.utc)
-    db.add(
-        User(
-            id="user_admin",
-            email=email,
-            display_name=settings.bootstrap_admin_name,
-            password_hash=hash_password(settings.bootstrap_admin_password),
-            role="admin",
-            is_banned=False,
-            created_at=now,
-            updated_at=now,
-        )
+    now = _now()
+    user = User(
+        id="user_admin",
+        email=email,
+        display_name=settings.bootstrap_admin_name,
+        password_hash=hash_password(settings.bootstrap_admin_password),
+        is_banned=False,
+        created_at=now,
+        updated_at=now,
     )
+    db.add(user)
+    db.flush()
+    dao.add_user_role(db, user.id, role.id)
     db.commit()
     return True
 
@@ -74,8 +144,9 @@ def seed_admin(db: Session) -> bool:
 def main() -> None:
     with SessionLocal() as session:
         templates_created = seed_templates(session)
+        rbac_created = seed_rbac(session)
         admin_created = seed_admin(session)
-    print(f"seeded {templates_created} template(s); bootstrap admin created={admin_created}")
+    print(f"seeded {templates_created} template(s), {rbac_created} rbac row(s); bootstrap admin created={admin_created}")
 
 
 if __name__ == "__main__":

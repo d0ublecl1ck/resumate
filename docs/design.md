@@ -46,7 +46,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 
 `app/core/db.py` 定义声明式 `Base`。业务模型继承 `Base`，按领域放在 `app/modules/<domain>/models.py`，并在 `migrations/env.py` 显式导入以便 Alembic 自动生成迁移；`migrations/versions/` 保存迁移。嵌套结构（文档章节、模板校验错误、证据等）使用 JSON 列，主键为应用层生成的 UUID 字符串，时间戳统一使用带时区的 UTC 值。
 
-当前表：`users`（账号、密码哈希与封禁状态）、`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
+当前表：`users`（账号、密码哈希与封禁状态）、`roles` / `permissions` / `user_roles` / `role_permissions`（RBAC 三表与两张关联表）、`templates`（模板只读支撑）、`resumes` 与 `resume_versions`（简历资源与不可变内容版本）、`job_descriptions`（岗位与 0..1 软绑定）、`profiles` 与 `profile_facts`（职业事实库）、`user_settings`（用户偏好、Agent 配置与模型配置）、`personal_access_tokens` 与 `access_logs`（PAT 元数据与访问审计；只存令牌哈希）。事实反向引用通过扫描 `resume_versions.snapshot` 中的 `provenance.factId` 计算，JD 反向关联通过 `job_descriptions.bound_resume_id` 查询。
 
 会话不落在 PostgreSQL：Opaque Token 的 SHA-256 作为 Redis key（`auth:session:<sha256>`），用户维度用 `auth:user_sessions:<user_id>` 集合索引，删除 key 即撤销会话。Redis 不是事实源，丢失会话只影响登录态。
 
@@ -70,7 +70,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │   │   │   ├── db.py
 │   │   │   ├── deps.py
 │   │   │   └── redis.py
-│   │   ├── modules/auth/
+│   │   ├── modules/auth/          # 含 rbac.py：内置角色与权限目录
 │   │   │   ├── api.py
 │   │   │   ├── schemas.py
 │   │   │   ├── service.py
@@ -124,6 +124,7 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 │       ├── test_profile.py
 │       ├── test_settings.py
 │       ├── test_access.py
+│       ├── test_access_control.py
 │       ├── test_backup.py
 │       └── test_auth.py
 ├── docs/design.md
@@ -154,7 +155,10 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
 - 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。
 - 会话 Cookie 默认 `HttpOnly`、`SameSite=lax`、`Path=/`、TTL 7 天；生产必须开启 `SESSION_COOKIE_SECURE=true`。开发经 Vite 代理为同源，无需 `SameSite=None`。
-- `get_current_user` 由 `app/modules/auth/deps.py` 提供：读取 Cookie → 校验 Redis → 加载用户并拒绝被封禁账号；业务模块从 auth.deps 导入，core 不反向依赖 modules。
+- `get_current_user` 由 `app/modules/auth/deps.py` 提供：读取 Cookie → 校验 Redis → 加载用户与 RBAC 投影并拒绝被封禁账号；业务模块从 auth.deps 导入，core 不反向依赖 modules。
+- 权限采用经典 RBAC 三表：`users` / `roles` / `permissions` 三实体，`user_roles` / `role_permissions` 两张关联表；权限码为 `resource:action`，内置角色 `user` < `admin` < `super_admin` 通过权限集合表达继承（14 / 17 / 19 个权限）。目录定义在 `app/modules/auth/rbac.py`，由 `app.tasks.seed` 幂等写入。
+- 每个受保护端点通过 `require_permission("code")` 显式声明所需权限；守卫测试遍历 `app.routes` 断言非 public 路由恰好解析出一个存在于目录中的权限码，防止新增端点漏配。public 白名单：health、register/login/logout、templates 只读、well-known、OpenAPI/docs。
+- actor 与 target 的层级约束在 service 侧校验：封禁/解封要求 actor 角色 rank 严格高于 target（admin 不能动 admin/super_admin）；改角色仅 super_admin，且不能改自己、不能移除最后一个 super_admin。
 - 密码使用 argon2 哈希；`app/tasks/seed.py` 幂等写入一个本地 bootstrap 管理员，部署前必须替换其密码。
 - 会话撤销语义：登出删除当前会话 key；改密码与封号删除该用户 `auth:user_sessions` 索引下的全部会话 key，均在下一次请求立即生效。
 - 统一错误契约放在 `app/shared/errors.py`，响应信封为 `ApiError`；`main.py` 注册异常处理器，各模块抛出领域异常而非手工构造状态码。

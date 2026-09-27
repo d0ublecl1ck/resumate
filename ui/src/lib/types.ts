@@ -49,13 +49,16 @@ export interface ApiError {
 // 会话与账号（b6708）
 // ---------------------------------------------------------------------------
 
-export type UserRole = "user" | "admin"
+export type UserRole = "user" | "admin" | "super_admin"
 
 export interface AuthUser {
   id: string
   email: string
   displayName: string
+  /** 最高角色码，用于展示；完整角色与权限见 roles / permissions。 */
   role: UserRole
+  roles: string[]
+  permissions: string[]
   isBanned: boolean
   createdAt: ISODate
 }

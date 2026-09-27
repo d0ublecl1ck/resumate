@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import require_permission
 
 from . import service
 from .models import Resume
@@ -47,7 +47,7 @@ def get_resumes(
     query: str | None = None,
     tag: str | None = None,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> list[ResumeResponse]:
     resumes = service.list_resumes(db, user.id, lifecycle=lifecycle, query=query, tag=tag)
     return [_to_response(db, user.id, resume) for resume in resumes]
@@ -57,7 +57,7 @@ def get_resumes(
 def create_resume(
     payload: ResumeCreate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.create_resume(db, user.id, payload))
 
@@ -66,7 +66,7 @@ def create_resume(
 def get_resume(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.get_resume(db, user.id, resume_id))
 
@@ -76,7 +76,7 @@ def update_resume(
     resume_id: str,
     payload: ResumeUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.update_resume(db, user.id, resume_id, payload))
 
@@ -85,7 +85,7 @@ def update_resume(
 def delete_resume(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.delete_resume(db, user.id, resume_id))
 
@@ -94,7 +94,7 @@ def delete_resume(
 def archive_resume(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.archive_resume(db, user.id, resume_id))
 
@@ -103,7 +103,7 @@ def archive_resume(
 def restore_resume(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.restore_resume(db, user.id, resume_id))
 
@@ -112,7 +112,7 @@ def restore_resume(
 def duplicate_resume(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.duplicate_resume(db, user.id, resume_id))
 
@@ -121,7 +121,7 @@ def duplicate_resume(
 def get_document(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> ResumeDocument:
     return ResumeDocument.model_validate(service.get_document(db, user.id, resume_id))
 
@@ -131,7 +131,7 @@ def update_document(
     resume_id: str,
     payload: DocumentUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.update_document(db, user.id, resume_id, payload))
 
@@ -140,6 +140,6 @@ def update_document(
 def get_versions(
     resume_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> list[ResumeVersionResponse]:
     return [ResumeVersionResponse.model_validate(version) for version in service.list_versions(db, user.id, resume_id)]

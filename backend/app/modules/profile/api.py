@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import require_permission
 from app.modules.resume.schemas import ResumeBasics
 
 from . import service
@@ -54,7 +54,7 @@ def _profile_response(db: Session, profile: Profile, facts: list[ProfileFact]) -
 @router.get("/profile", response_model=ProfileResponse)
 def get_profile(
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:read")),
 ) -> ProfileResponse:
     profile = service.get_or_create_profile(db, user.id)
     return _profile_response(db, profile, service.list_facts(db, user.id))
@@ -64,7 +64,7 @@ def get_profile(
 def update_basics(
     payload: ProfileBasicsUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:write")),
 ) -> ProfileResponse:
     profile = service.update_basics(db, user.id, payload)
     return _profile_response(db, profile, service.list_facts(db, user.id))
@@ -74,7 +74,7 @@ def update_basics(
 def get_facts(
     type: str | None = None,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:read")),
 ) -> list[ProfileFactResponse]:
     references = service.reference_index(db, user.id)
     return [_fact_response(fact, references.get(fact.id, [])) for fact in service.list_facts(db, user.id, type=type)]
@@ -84,7 +84,7 @@ def get_facts(
 def create_fact(
     payload: ProfileFactCreate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:write")),
 ) -> ProfileFactResponse:
     fact = service.create_fact(db, user.id, payload)
     return _fact_response(fact, [])
@@ -94,7 +94,7 @@ def create_fact(
 def get_fact(
     fact_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:read")),
 ) -> ProfileFactResponse:
     fact = service.get_fact(db, user.id, fact_id)
     return _fact_response(fact, service.reference_index(db, user.id).get(fact_id, []))
@@ -105,7 +105,7 @@ def update_fact(
     fact_id: str,
     payload: ProfileFactUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:write")),
 ) -> ProfileFactResponse:
     fact = service.update_fact(db, user.id, fact_id, payload)
     return _fact_response(fact, service.reference_index(db, user.id).get(fact_id, []))
@@ -115,6 +115,6 @@ def update_fact(
 def delete_fact(
     fact_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("profile:write")),
 ) -> FactDeletionImpact:
     return service.delete_fact(db, user.id, fact_id)

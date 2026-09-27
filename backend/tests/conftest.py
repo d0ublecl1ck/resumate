@@ -15,15 +15,24 @@ from app.main import app
 from app.modules.access import models as access_models  # noqa: F401
 from app.modules.auth import models as auth_models  # noqa: F401
 from app.modules.auth.deps import get_current_user
+from app.modules.auth.rbac import PERMISSION_CODES
 from app.modules.jd import models as jd_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401
 from app.modules.settings import models as settings_models  # noqa: F401
 from app.modules.templates import models as templates_models  # noqa: F401
-from app.tasks.seed import seed_templates
+from app.tasks.seed import seed_rbac, seed_templates
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+psycopg://localhost:5432/resumate_test")
-TEST_USER = CurrentUser(id="user_test", display_name="测试用户", role="user")
+# Business-module tests bypass the real cookie flow; grant every permission so
+# each case can focus on its own concern. Auth/RBAC cases use session_clients.
+TEST_USER = CurrentUser(
+    id="user_test",
+    display_name="测试用户",
+    role="super_admin",
+    roles=("super_admin",),
+    permissions=frozenset(PERMISSION_CODES),
+)
 
 
 @pytest.fixture(scope="session")
@@ -34,6 +43,7 @@ def engine() -> Iterator[Engine]:
     Base.metadata.create_all(test_engine)
     with Session(test_engine) as session:
         seed_templates(session)
+        seed_rbac(session)
     yield test_engine
     Base.metadata.drop_all(test_engine)
     test_engine.dispose()
