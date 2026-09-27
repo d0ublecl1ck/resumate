@@ -1,14 +1,15 @@
 ---
 id: b4440
-status: in-progress
+status: closed
 created_at: 2026-09-27T12:45:00.000Z
-updated_at: 2026-09-27T04:05:53.635Z
+updated_at: 2026-09-27T04:10:03.490Z
 priority: high
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-09-27T04:05:53.635Z
+closed_at: 2026-09-27T04:10:03.490Z
 ---
 
 # 角色与权限在线增删改（RBAC 管理界面）
