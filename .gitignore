@@ -5,3 +5,7 @@
 /node_modules/
 /ui/node_modules/
 /ui/dist/
+
+# Planner local working memory
+/task_plan.md
+/notes.md

@@ -1,9 +1,8 @@
 // API 客户端：严格镜像 FastAPI 公共契约端点（C-10 能力表）。
 //
 // 约定：每个函数对应一个真实 REST 端点，注释里写明 METHOD + path。
-// 当前实现从 lib/content.ts 读取（前端演示），返回 Promise 以模拟网络。
-// 对接后端时，把每个函数体从「读取 content」替换为对应的 fetch(endpoint) 即可，
-// 函数签名、入参、返回类型都不变。
+// 后端已实现的端点走真实 HTTP（api-client.ts）；未实现的端点仍从 lib/content.ts
+// 读取 mock，待对应后端能力落地后再替换，函数签名与入参、返回类型保持不变。
 
 import {
   ACCESS_LOGS,
@@ -12,13 +11,10 @@ import {
   CAPABILITY,
   CURRENT_USER,
   IMPORT_PREVIEW_SAMPLE,
-  JDS,
   JOB_MATCHES,
   MODEL_CONFIG,
   PATS,
   PROFILE,
-  RESUMES,
-  TEMPLATES,
   USER_PREFERENCES,
 } from "./content"
 import type {
@@ -43,9 +39,11 @@ import type {
   FactType,
   Resume,
   ResumeTemplate,
+  ResumeVersion,
   UserPreferences,
   WorkbenchSummary,
 } from "./types"
+import { request } from "./api-client"
 
 // 模拟网络延迟，方便页面演示 loading 状态。设为 0 可关闭。
 const LATENCY = 0
@@ -59,22 +57,22 @@ function resolve<T>(data: T): Promise<T> {
 
 /** GET /resumes */
 export function listResumes(params?: { lifecycle?: Resume["lifecycle"]; query?: string; tag?: string }): Promise<Resume[]> {
-  let items = RESUMES.filter((r) => r.lifecycle !== "deleted")
-  if (params?.lifecycle) items = items.filter((r) => r.lifecycle === params.lifecycle)
-  if (params?.query) items = items.filter((r) => r.title.includes(params.query!) || r.targetRole.includes(params.query!))
-  if (params?.tag) items = items.filter((r) => r.tags.includes(params.tag!))
-  return resolve(items.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
+  const search = new URLSearchParams()
+  if (params?.lifecycle) search.set("lifecycle", params.lifecycle)
+  if (params?.query) search.set("query", params.query)
+  if (params?.tag) search.set("tag", params.tag)
+  const suffix = search.toString()
+  return request<Resume[]>(`/resumes${suffix ? `?${suffix}` : ""}`)
 }
 
 /** GET /resumes/{id} */
 export function getResume(id: string): Promise<Resume | undefined> {
-  return resolve(RESUMES.find((r) => r.id === id))
+  return request<Resume>(`/resumes/${id}`)
 }
 
 /** GET /resumes/{id}/versions */
-export async function listResumeVersions(id: string) {
-  const r = await getResume(id)
-  return r?.versions ?? []
+export function listResumeVersions(id: string) {
+  return request<ResumeVersion[]>(`/resumes/${id}/versions`)
 }
 
 // ---------------------------------------------------------------------------
@@ -92,7 +90,7 @@ export function getActiveRun(resumeId: string): Promise<AgentRun | undefined> {
 
 /** GET /profile */
 export function getProfile(): Promise<Profile> {
-  return resolve(PROFILE)
+  return request<Profile>("/profile")
 }
 
 /** POST /profile/match-job */
@@ -109,38 +107,18 @@ export function parseFactFromText(text: string): Promise<ProposedFactChange> {
   return resolve(heuristicParseFact(text, PROFILE.facts))
 }
 
-let factSeq = 0
-function createFactRecord(input: ProfileFactInput, source: string): ProfileFact {
-  factSeq += 1
-  return {
-    id: `fact_${Date.now().toString(36)}_${factSeq}`,
-    type: input.type,
-    title: input.title,
-    content: input.content,
-    tags: input.tags,
-    source,
-    evidence: input.evidence,
-    confidence: input.evidence.status === "verified" ? 0.9 : 0.5,
-    visibility: input.visibility,
-    referencedBy: [],
-  }
-}
-
 /** POST /profile/facts —— 用户确认对话建议后创建事实（证据默认待核实，C-07） */
 export function createFact(input: ProposedFactChange): Promise<ProfileFact> {
-  return resolve(
-    createFactRecord(
-      {
-        type: input.type,
-        title: input.title,
-        content: input.content,
-        tags: input.tags,
-        evidence: { status: input.evidenceStatus },
-        visibility: "resume_only",
-      },
-      "对话录入",
-    ),
-  )
+  return request<ProfileFact>("/profile/facts", {
+    method: "POST",
+    body: JSON.stringify({
+      type: input.type,
+      title: input.title,
+      content: input.content,
+      tags: input.tags,
+      evidence: { status: input.evidenceStatus },
+    }),
+  })
 }
 
 /**
@@ -148,15 +126,12 @@ export function createFact(input: ProposedFactChange): Promise<ProfileFact> {
  * 与对话路径只在来源标记上不同；证据状态由表单决定，默认待核实（BR-D09）。
  */
 export function createFactManually(input: ProfileFactInput): Promise<ProfileFact> {
-  return resolve(createFactRecord(input, "手动录入"))
+  return request<ProfileFact>("/profile/facts", { method: "POST", body: JSON.stringify(input) })
 }
 
 /** PATCH /profile/facts/{id} —— 用户确认后更新事实（对话与直接编辑共用） */
 export function updateFact(id: string, patch: Partial<ProfileFact>): Promise<ProfileFact> {
-  const base = PROFILE.facts.find((f) => f.id === id)
-  // 直接编辑可能作用在对话新建、尚未回到 mock 数据源的条目上；
-  // patch 携带完整可编辑字段时，按 PATCH 语义返回合并结果。
-  return resolve(base ? { ...structuredClone(base), ...patch } : ({ ...patch, id } as ProfileFact))
+  return request<ProfileFact>(`/profile/facts/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
 }
 
 /**
@@ -171,8 +146,9 @@ export function parseProfileInput(text: string): Promise<ProfileInputResult> {
 }
 
 /** PATCH /profile/basics —— 用户确认后更新基本信息 */
-export function updateBasics(patch: Partial<ResumeBasics>): Promise<ResumeBasics> {
-  return resolve({ ...structuredClone(PROFILE.basics), ...patch })
+export async function updateBasics(patch: Partial<ResumeBasics>): Promise<ResumeBasics> {
+  const profile = await request<Profile>("/profile/basics", { method: "PATCH", body: JSON.stringify(patch) })
+  return profile.basics
 }
 
 /** POST /jds:parse-text —— 把粘贴的岗位文本整理成结构化 JD 草案 */
@@ -194,20 +170,16 @@ export function parseJdFromImage(fileName: string): Promise<ProposedJd> {
 
 /** POST /jds —— 用户确认后创建 JD */
 export function createJd(input: ProposedJd): Promise<JobDescription> {
-  const now = new Date().toISOString()
-  const jd: JobDescription = {
-    id: `jd_${Date.now().toString(36)}`,
-    ownerId: CURRENT_USER.id,
-    role: input.role || "未命名岗位",
-    company: input.company,
-    body: input.body,
-    sourceUrl: input.sourceUrl,
-    tags: input.tags,
-    revision: 1,
-    createdAt: now,
-    updatedAt: now,
-  }
-  return resolve(jd)
+  return request<JobDescription>("/jds", {
+    method: "POST",
+    body: JSON.stringify({
+      role: input.role,
+      company: input.company,
+      body: input.body,
+      sourceUrl: input.sourceUrl,
+      tags: input.tags,
+    }),
+  })
 }
 
 // —— 启发式自然语言基本信息解析 ——
@@ -374,15 +346,16 @@ function heuristicParseFact(
 
 /** GET /jds */
 export function listJds(params?: { query?: string; tag?: string }): Promise<JobDescription[]> {
-  let items = [...JDS]
-  if (params?.query) items = items.filter((j) => j.role.includes(params.query!) || (j.company ?? "").includes(params.query!))
-  if (params?.tag) items = items.filter((j) => j.tags.includes(params.tag!))
-  return resolve(items.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
+  const search = new URLSearchParams()
+  if (params?.query) search.set("query", params.query)
+  if (params?.tag) search.set("tag", params.tag)
+  const suffix = search.toString()
+  return request<JobDescription[]>(`/jds${suffix ? `?${suffix}` : ""}`)
 }
 
 /** GET /jds/{id} */
 export function getJd(id: string): Promise<JobDescription | undefined> {
-  return resolve(JDS.find((j) => j.id === id))
+  return request<JobDescription>(`/jds/${id}`)
 }
 
 // ---------------------------------------------------------------------------
@@ -410,12 +383,12 @@ export function getPreferences(): Promise<UserPreferences> {
 
 /** GET /templates */
 export function listTemplates(): Promise<ResumeTemplate[]> {
-  return resolve(TEMPLATES)
+  return request<ResumeTemplate[]>("/templates")
 }
 
 /** GET /templates/{id} */
 export function getTemplate(id: string): Promise<ResumeTemplate | undefined> {
-  return resolve(TEMPLATES.find((t) => t.id === id))
+  return request<ResumeTemplate>(`/templates/${id}`)
 }
 
 // ---------------------------------------------------------------------------

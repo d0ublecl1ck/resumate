@@ -1,4 +1,25 @@
-# React + TypeScript + Vite
+# Resumate UI
+
+React + TypeScript + Vite 前端。
+
+## 对接后端
+
+已实现的核心实体端点通过 `src/lib/api-client.ts` 走真实 HTTP，默认基地址 `/api`：
+
+```bash
+# 1. 启动后端（另开终端，backend/ 目录）
+uv run uvicorn app.main:app --reload   # http://localhost:8000
+
+# 2. 启动前端，Vite 会把 /api 代理到后端
+pnpm dev
+```
+
+可用 `VITE_API_BASE_URL` 覆盖基地址（见 `.env.example`）。`src/lib/api.ts` 中后端尚未实现的端点（Agent Run、自然语言解析、配置、PAT/访问日志、备份、工作台 mock 统计）仍读取 `src/lib/content.ts`。
+
+测试通过 MSW（`src/test-server.ts`）以 fixtures 驱动真实 fetch 路径，不需要后端进程。
+
+---
+
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
