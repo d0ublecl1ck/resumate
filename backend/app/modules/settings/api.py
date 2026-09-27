@@ -64,7 +64,7 @@ def get_model_config(
 
 @router.get("/models/catalog", response_model=ModelCatalogResponse)
 def get_model_catalog(
-    provider: str | None = Query(default=None, description="Filter by litellm provider id."),
+    provider: str | None = Query(default=None, description="Filter by models.dev provider id."),
     q: str | None = Query(default=None, description="Case-insensitive model id/name search."),
     _user: CurrentUser = Depends(require_permission("settings:read")),
 ) -> ModelCatalogResponse:
