@@ -1,14 +1,15 @@
 ---
 id: 8f581
-status: in-progress
+status: closed
 created_at: 2026-09-27T04:22:22.811Z
-updated_at: 2026-09-27T04:27:35.044Z
+updated_at: 2026-09-27T04:27:44.525Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-09-27T04:27:35.044Z
+closed_at: 2026-09-27T04:27:44.525Z
 ---
 
 # RBAC 权限树交互（headless-tree）
