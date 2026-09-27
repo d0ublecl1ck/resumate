@@ -1,4 +1,5 @@
 import api from "./api"
+import auth from "./auth"
 import common from "./common"
 import jd from "./jd"
 import nav from "./nav"
@@ -18,4 +19,5 @@ export default {
   profile,
   templates,
   api,
+  auth,
 }
