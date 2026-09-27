@@ -58,7 +58,7 @@ class ModelConfigUpdate(ApiModel):
 
 
 class ModelCatalogModel(ApiModel):
-    """One selectable model from the litellm catalog (contract section 17)."""
+    """One selectable model from the models.dev snapshot (contract section 17)."""
 
     id: str
     label: str
@@ -75,7 +75,7 @@ class ModelCatalogProvider(ApiModel):
 
 
 class ModelCatalogResponse(ApiModel):
-    source: Literal["litellm"] = "litellm"
+    source: Literal["models.dev"] = "models.dev"
     providers: list[ModelCatalogProvider] = Field(default_factory=list)
 
 

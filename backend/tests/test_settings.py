@@ -154,17 +154,17 @@ def test_model_config_fields_are_all_optional(client: TestClient) -> None:
     assert endpoint_only["endpoint"] == "https://api.example.com/v1"
 
 
-def test_model_catalog_comes_from_litellm(client: TestClient) -> None:
+def test_model_catalog_comes_from_models_dev_snapshot(client: TestClient) -> None:
     response = client.get("/models/catalog")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["source"] == "litellm"
+    assert body["source"] == "models.dev"
     assert body["providers"]
 
     openai = next((provider for provider in body["providers"] if provider["id"] == "openai"), None)
     assert openai is not None
-    assert openai["label"] == "openai"
+    assert openai["label"] == "OpenAI"
     assert openai["models"]
     sample = openai["models"][0]
     assert set(sample) <= {
@@ -188,7 +188,8 @@ def test_model_catalog_filters_by_query(client: TestClient) -> None:
     assert filtered["providers"]
     for provider in filtered["providers"]:
         for model in provider["models"]:
-            assert needle.lower() in model["id"].lower()
+            haystack = f"{model['id']} {model['label']}".lower()
+            assert needle.lower() in haystack
 
 
 def test_model_catalog_provider_filter_returns_only_that_provider(client: TestClient) -> None:
@@ -201,9 +202,9 @@ def test_model_catalog_provider_filter_returns_only_that_provider(client: TestCl
     assert body["providers"][0]["models"]
 
 
-def test_model_catalog_serves_the_bundled_litellm_map(client: TestClient) -> None:
-    # The catalog must not depend on a live GitHub fetch; the module defaults
-    # litellm to its bundled map, so a full catalog proves it resolved offline.
+def test_model_catalog_reads_the_local_snapshot_offline(client: TestClient) -> None:
+    # The catalog must never reach the network at request time; the committed
+    # snapshot resolves the full catalog.
     body = client.get("/models/catalog").json()
     assert sum(len(provider["models"]) for provider in body["providers"]) > 100
 
