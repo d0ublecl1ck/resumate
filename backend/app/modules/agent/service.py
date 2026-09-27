@@ -359,10 +359,14 @@ def preview_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRe
         )
     after = patch.apply(document, payload.ops)
     diff = patch.build_diff(document, after, payload.reason)
-    change_count, affected_sections = resume_service._summarize_changes(document, after)
+    change_count, affected_sections = resume_service.summarize_changes(document, after)
     pending_action_id: str | None = None
     requires_confirmation = turn.execution_mode == "approval"
     if requires_confirmation:
+        for existing in dao.list_actions_for_turn(db, turn.id):
+            if existing.state == "pending":
+                existing.state = "stale"
+                existing.stale_reason = "已被新的预览取代"
         action = PendingAction(
             id=_new_id("pa"),
             owner_id=user.id,
@@ -442,7 +446,7 @@ def apply_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchAppl
     if errors:
         raise ValidationFailed("；".join(error.message for error in errors))
     after = patch.apply(document, payload.ops)
-    change_count, affected_sections = resume_service._summarize_changes(document, after)
+    change_count, affected_sections = resume_service.summarize_changes(document, after)
     resume_service.stage_working_document(resume, after, turn_id=turn.id, base_version_id=turn.base_version_id)
     if action is not None:
         action.state = "consumed"
