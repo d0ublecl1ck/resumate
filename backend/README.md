@@ -31,6 +31,9 @@ uv run uvicorn app.main:app --reload
 - `app/core/`：Settings、数据库引擎与请求会话、同步探活依赖、分页参数、单用户占位依赖。
 - `app/modules/<domain>/`：业务域按 `api → service → dao → models` 分层，schemas 定义接口契约。
 - `app/modules/templates/`：模板只读查询，当前不含管理端写接口。
+- `app/modules/resume/`：简历元数据 CRUD、软删除/归档/恢复/复制、文档提交与版本列表。
+- `app/modules/jd/`：岗位 CRUD 与到简历的 0..1 软绑定。
+- `app/modules/profile/`：职业事实库、基本信息与事实 CRUD，删除返回反向引用。
 - `app/shared/`：至少两个模块复用的领域对象；`schemas.py` 提供 camelCase 线协议基类，`errors.py` 提供机器错误码、领域异常与 `ApiError` 信封。core 和 shared 不反向依赖 modules。
 - `app/jobs/`：长时或定时作业；`app/tasks/seed.py`：内置参考数据幂等种子。
 - `migrations/`：Alembic 环境；`tests/`：接口验证。
