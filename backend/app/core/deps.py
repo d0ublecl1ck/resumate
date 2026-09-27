@@ -16,6 +16,12 @@ class CurrentUser:
     role: str = "user"
     roles: tuple[str, ...] = ()
     permissions: frozenset[str] = frozenset()
+    # "session" for the cookie flow; "pat" for a Bearer personal access token.
+    # pat_id / scopes are only meaningful for the latter and default empty so
+    # existing session-based constructions keep working.
+    auth_kind: str = "session"
+    pat_id: str | None = None
+    scopes: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
