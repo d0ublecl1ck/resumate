@@ -15,6 +15,11 @@ export default {
   },
   role: {
     jobseeker: "求职者",
+    admin: "管理员",
+    anonymous: "未登录",
+  },
+  actions: {
+    logout: "退出登录",
   },
   items: {
     workbench: "工作台",

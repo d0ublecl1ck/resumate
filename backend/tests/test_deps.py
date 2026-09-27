@@ -1,7 +1,13 @@
-from app.core.deps import get_current_user
+from app.core.deps import CurrentUser, get_pagination
 
 
-def test_current_user_is_the_single_local_owner() -> None:
-    user = get_current_user()
+def test_current_user_carries_role() -> None:
+    user = CurrentUser(id="user_test", display_name="测试用户", role="admin")
 
-    assert user.id == "user_local"
+    assert user.role == "admin"
+
+
+def test_pagination_params() -> None:
+    params = get_pagination(page=2, size=50)
+
+    assert (params.page, params.size) == (2, 50)

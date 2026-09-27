@@ -15,9 +15,9 @@ describe("App", () => {
     window.history.pushState({}, "", "/")
   })
 
-  it("渲染应用外壳与主导航", () => {
+  it("渲染应用外壳与主导航", async () => {
     renderAt("/")
-    expect(screen.getAllByRole("navigation", { name: "主导航" }).length).toBeGreaterThan(0)
+    expect((await screen.findAllByRole("navigation", { name: "主导航" })).length).toBeGreaterThan(0)
     expect(screen.getAllByRole("link", { name: /简历库/ }).length).toBeGreaterThan(0)
   })
 
@@ -37,9 +37,9 @@ describe("App", () => {
     expect(await screen.findByText("未找到该页面")).toBeInTheDocument()
   })
 
-  it("窄屏导航可展开并暴露主导航链接", () => {
+  it("窄屏导航可展开并暴露主导航链接", async () => {
     renderAt("/")
-    const toggle = screen.getByRole("button", { name: "打开菜单" })
+    const toggle = await screen.findByRole("button", { name: "打开菜单" })
     expect(toggle).toHaveAttribute("aria-expanded", "false")
 
     fireEvent.click(toggle)
@@ -48,9 +48,9 @@ describe("App", () => {
     expect(screen.getAllByRole("navigation", { name: "主导航" }).length).toBeGreaterThanOrEqual(2)
   })
 
-  it("主导航链接可聚焦", () => {
+  it("主导航链接可聚焦", async () => {
     renderAt("/")
-    const links = screen.getAllByRole("link", { name: /工作台/ })
+    const links = await screen.findAllByRole("link", { name: /工作台/ })
     links[0].focus()
     expect(links[0]).toHaveFocus()
   })
@@ -82,7 +82,7 @@ describe("路由冒烟", () => {
 
   it.each(ROUTES)("%s 可渲染且加载完成", async (path) => {
     renderAt(path)
-    expect(screen.getAllByRole("navigation", { name: "主导航" }).length).toBeGreaterThan(0)
+    expect((await screen.findAllByRole("navigation", { name: "主导航" })).length).toBeGreaterThan(0)
     await waitFor(() => expect(screen.queryByText("加载中")).not.toBeInTheDocument())
   })
 })

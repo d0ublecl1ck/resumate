@@ -17,6 +17,8 @@ import { AccessPage } from "@/pages/settings-access"
 import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
 import { NotFoundPage } from "@/pages/not-found"
+import { LoginPage } from "@/pages/login"
+import { RequireAuth } from "@/components/require-auth"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,11 +37,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          <Route path="login" element={<LoginPage />} />
           <Route
             element={
-              <AppShell>
-                <Outlet />
-              </AppShell>
+              <RequireAuth>
+                <AppShell>
+                  <Outlet />
+                </AppShell>
+              </RequireAuth>
             }
           >
             <Route index element={<WorkbenchPage />} />
