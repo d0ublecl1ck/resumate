@@ -1,4 +1,82 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
-:root { font-family: system-ui, sans-serif; color: #1f2937; background: #f9fafb; }
-body { margin: 0; }
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-coral: var(--coral);
+  --color-cobalt: var(--cobalt);
+  --color-gold: var(--gold);
+  --font-sans: var(--font-geist), var(--font-noto-sans), sans-serif;
+  --font-serif: var(--font-noto-serif), 'Songti SC', serif;
+  --radius-lg: 0.8rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+:root {
+  /* 字体：Geist 由 @fontsource/geist 提供（见 src/main.tsx），
+     中文回落到系统字体，与 ui/prototypes/index.html 的字体栈一致。 */
+  --font-geist: 'Geist';
+  --font-noto-sans: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC';
+  --font-noto-serif: 'Songti SC', 'Noto Serif SC';
+
+  color-scheme: light;
+  --background: oklch(0.97 0.012 90);
+  --foreground: oklch(0.22 0.025 258);
+  --card: oklch(0.995 0.006 90);
+  --card-foreground: oklch(0.22 0.025 258);
+  --popover: oklch(0.995 0.006 90);
+  --popover-foreground: oklch(0.22 0.025 258);
+  --primary: oklch(0.25 0.045 258);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --secondary: oklch(0.93 0.018 90);
+  --secondary-foreground: oklch(0.25 0.045 258);
+  --muted: oklch(0.93 0.018 90);
+  --muted-foreground: oklch(0.48 0.035 258);
+  --accent: oklch(0.91 0.025 90);
+  --accent-foreground: oklch(0.25 0.045 258);
+  --border: oklch(0.84 0.025 90);
+  --input: oklch(0.82 0.025 90);
+  --ring: oklch(0.49 0.16 255);
+  --coral: oklch(0.66 0.18 30);
+  --cobalt: oklch(0.48 0.17 255);
+  --gold: oklch(0.84 0.16 88);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+  button, input, textarea { font: inherit; }
+}
+
+.font-serif { font-family: var(--font-noto-serif), 'Songti SC', serif; }
+
+/* 粗边框卡片：设计基线的标志性元素 */
+.card-frame {
+  border: 1.5px solid var(--foreground);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+.card-soft {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
