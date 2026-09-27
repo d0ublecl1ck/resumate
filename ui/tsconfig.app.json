@@ -16,6 +16,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* 路径别名，与 components.json 的 @/* 对齐（TS 6 起 baseUrl 已废弃，paths 相对本文件解析） */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
