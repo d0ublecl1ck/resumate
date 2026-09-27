@@ -2,6 +2,7 @@ from alembic import context
 
 from app.core.config import get_settings
 from app.core.db import Base, engine
+from app.modules.resume import models as resume_models  # noqa: F401
 from app.modules.templates import models as templates_models  # noqa: F401
 
 # Import each business model module explicitly here before autogeneration.

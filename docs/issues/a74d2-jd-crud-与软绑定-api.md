@@ -6,7 +6,7 @@ updated_at: 2026-09-27T02:22:57.907Z
 priority: high
 labels: []
 parent: af02e
-blocked_by: [d8c9f]
+blocked_by: [d8c9f, 0981a]
 design_section: 数据模型
 ---
 
