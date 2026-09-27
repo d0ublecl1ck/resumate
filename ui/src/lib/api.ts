@@ -34,6 +34,7 @@ import type {
   PersonalAccessToken,
   Profile,
   ProfileFact,
+  ProfileFactInput,
   ProposedFactChange,
   ProposedBasicsChange,
   ProfileInputResult,
@@ -108,28 +109,54 @@ export function parseFactFromText(text: string): Promise<ProposedFactChange> {
   return resolve(heuristicParseFact(text, PROFILE.facts))
 }
 
-/** POST /profile/facts —— 用户确认后创建事实（证据默认待核实，C-07） */
-export function createFact(input: ProposedFactChange): Promise<ProfileFact> {
-  const fact: ProfileFact = {
-    id: `fact_${Date.now().toString(36)}`,
+let factSeq = 0
+function createFactRecord(input: ProfileFactInput, source: string): ProfileFact {
+  factSeq += 1
+  return {
+    id: `fact_${Date.now().toString(36)}_${factSeq}`,
     type: input.type,
     title: input.title,
     content: input.content,
     tags: input.tags,
-    source: "对话录入",
-    evidence: { status: input.evidenceStatus },
-    confidence: input.evidenceStatus === "verified" ? 0.9 : 0.5,
-    visibility: "resume_only",
+    source,
+    evidence: input.evidence,
+    confidence: input.evidence.status === "verified" ? 0.9 : 0.5,
+    visibility: input.visibility,
     referencedBy: [],
   }
-  return resolve(fact)
 }
 
-/** PATCH /profile/facts/{id} —— 用户确认后更新事实 */
+/** POST /profile/facts —— 用户确认对话建议后创建事实（证据默认待核实，C-07） */
+export function createFact(input: ProposedFactChange): Promise<ProfileFact> {
+  return resolve(
+    createFactRecord(
+      {
+        type: input.type,
+        title: input.title,
+        content: input.content,
+        tags: input.tags,
+        evidence: { status: input.evidenceStatus },
+        visibility: "resume_only",
+      },
+      "对话录入",
+    ),
+  )
+}
+
+/**
+ * POST /profile/facts —— 用户在表单中直接录入事实。
+ * 与对话路径只在来源标记上不同；证据状态由表单决定，默认待核实（BR-D09）。
+ */
+export function createFactManually(input: ProfileFactInput): Promise<ProfileFact> {
+  return resolve(createFactRecord(input, "手动录入"))
+}
+
+/** PATCH /profile/facts/{id} —— 用户确认后更新事实（对话与直接编辑共用） */
 export function updateFact(id: string, patch: Partial<ProfileFact>): Promise<ProfileFact> {
   const base = PROFILE.facts.find((f) => f.id === id)
-  if (!base) throw new Error("RESOURCE_NOT_FOUND")
-  return resolve({ ...structuredClone(base), ...patch })
+  // 直接编辑可能作用在对话新建、尚未回到 mock 数据源的条目上；
+  // patch 携带完整可编辑字段时，按 PATCH 语义返回合并结果。
+  return resolve(base ? { ...structuredClone(base), ...patch } : ({ ...patch, id } as ProfileFact))
 }
 
 /**

@@ -274,6 +274,19 @@ export interface ProposedFactChange {
   note: string
 }
 
+/**
+ * 直接编辑（表单）写入事实的输入。
+ * 与对话解析结果分开：表单里的内容由用户直接填写，不经过模型推断（BR-D09）。
+ */
+export interface ProfileFactInput {
+  type: FactType
+  title: string
+  content: string
+  tags: string[]
+  evidence: { status: EvidenceStatus; label?: string }
+  visibility: FactVisibility
+}
+
 export interface Profile {
   id: string
   ownerId: string
