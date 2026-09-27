@@ -183,6 +183,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
         auth_kind="pat",
         pat_id=token.id,
         scopes=scopes,
+        client_id=token.name or token.id,
     )
 
 

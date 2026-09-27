@@ -48,6 +48,10 @@ def add_version(db: Session, version: ResumeVersion) -> None:
     db.add(version)
 
 
+def get_version(db: Session, version_id: str) -> ResumeVersion | None:
+    return db.get(ResumeVersion, version_id)
+
+
 def list_owner_resumes(db: Session, owner_id: str) -> list[Resume]:
     return list(db.scalars(select(Resume).where(Resume.owner_id == owner_id)))
 
