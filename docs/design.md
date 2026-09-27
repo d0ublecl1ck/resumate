@@ -164,7 +164,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 核心实体 CRUD 按 Profile、Resume、JD 三个模块落地；手动 `PUT document` 直接产生一个 `ResumeVersion`，Agent 侧按 C-03 走 `agent_turns` 的 Working Copy + finalize 聚合提交（`manual-edits` 的手动缓冲仍留待后续工单）。
 - Agent 操作层以 `app/modules/agent/` 落地：轮次固化执行模式（session > agent > account），approval 必须经 PendingAction 审批后 apply，full_access 可直接 apply；同一轮次重复 preview 会把既有 `pending` 待办置为 `stale`（「已被新的预览取代」）。finalize 每轮每份简历至多提交一个版本，无差异不建空版本，基线过期返回 409。领域 Patch 采用显式 `op` 列表（setBasics / upsertSection / removeSection / upsertEntry / removeEntry），非 RFC 6902；接口与状态机冻结在 `docs/agent/agent-operation-api.md`。
 - `agent-core/` 是只走公共 API 的 Agent 底座（Python, uv）：薄客户端、TurnSession、Patch 构造器、工具表与 C-09 运行时骨架；**MUST NOT** 直连数据库或维护第二套业务真相源，模型提供方以 Protocol 注入。
-- Agent 操作端点支持两种身份：HttpOnly 会话 Cookie（可信前端）与 `Authorization: Bearer rsm_pat_...`（PAT），Bearer 优先。PAT 走独立 Scope 强制，端点所需权限码不在令牌 scope 内返回 403 `SCOPE_INSUFFICIENT`；撤销返回 401 `TOKEN_REVOKED`，过期/未知返回 401 `UNAUTHENTICATED`，成功与拒绝各写一条 `access_logs`。PAT 请求的 `source` 按 agent 处理，`executionMode` 入参被忽略、只按 agent 配置/账户默认固化，防止用参数绕过审批；约定见 [PAT 鉴权](agent/pat-auth.md)。MCP、SDK、Webhook 仍属后续工单。
+- Agent 操作端点支持两种身份：HttpOnly 会话 Cookie（可信前端）与 `Authorization: Bearer rsm_pat_...`（PAT），Bearer 优先。PAT 走独立 Scope 强制，端点所需权限码不在令牌 scope 内返回 403 `SCOPE_INSUFFICIENT`；撤销返回 401 `TOKEN_REVOKED`，过期/未知返回 401 `UNAUTHENTICATED`，成功与拒绝各写一条 `access_logs`。PAT 请求的 `source` 按 agent 处理，`executionMode` 入参被忽略、只按 agent 配置/账户默认固化，防止用参数绕过审批；约定见 [Agent 操作 API 契约](agent/agent-operation-api.md) 第 13 节。MCP、SDK、Webhook 仍属后续工单。
 - 元数据修改（标题、标签、模板）不产生 Resume 版本；软删除保留 30 天恢复窗口。
 - 健康检查没有业务规则，保留 `api.py + schemas.py` 两件套；数据库探活复用 `core/db.py` 的会话依赖。
 - 认证采用 Opaque Token + Redis + HttpOnly Cookie：token 由 `secrets.token_urlsafe` 生成，Redis 只存其 SHA-256；每个请求都校验 Redis，删除 key 即立即失效。

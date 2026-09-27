@@ -216,3 +216,69 @@ agent-core/
 ## 12. API 操作 Skill 职责
 
 **agent-core/skills/resumate-api-operations/SKILL.md** 面向 Hermes / Codex / 通用 Agent，必须包含：能力发现与鉴权、执行模式、最小闭环步骤（含 approval 与 full_access 两条路径）、每个端点的工具/参数/确认/轮次步骤、错误码处理、幂等键约定，以及一个可复制的端到端示例。
+
+## 13. PAT Bearer 鉴权与 Scope（并入）
+
+> 本节由原 docs/agent/pat-auth.md 并入，作为唯一契约基线。
+
+### 13.1 认证路径
+
+- 请求带 **Authorization: Bearer rsm_pat_...** → PAT 身份；否则走 HttpOnly 会话 Cookie；二者同时存在时 Bearer 优先。
+
+### 13.2 校验顺序
+
+1. Bearer 明文 SHA-256 后查 personal_access_tokens.token_hash。
+2. 未命中 → 401 UNAUTHENTICATED。
+3. revoked_at 非空 → 401 TOKEN_REVOKED。
+4. expires_at 已过 → 401 UNAUTHENTICATED。
+5. 加载 owner 与 RBAC 投影；被封禁 → 403 ACCOUNT_BANNED。
+6. 端点权限码不在 PAT scopes → 403 SCOPE_INSUFFICIENT。
+7. 通过 → 更新 last_used_at，写一条 allowed access_logs。
+8. 任一拒绝 → 写一条 denied access_logs（error_code 为机器码）。
+
+审计条数：认证成功先写 allowed；若随后因 scope 被拒再写 denied。即 scope 拒绝的请求共两行（allowed + denied），保留更完整信息。
+
+### 13.3 Scope 与权限
+
+- 允许的 scope 集合为 access/service.py 的 ALLOWED_SCOPES；端点权限码与 scope 同名，按集合成员判断。
+- 非 scopable 权限（access:write、user:read、role:write 等）PAT 一律 SCOPE_INSUFFICIENT。
+
+### 13.4 身份、client_id 与信任边界
+
+- CurrentUser 含 auth_kind（session | pat）、pat_id、scopes。
+- **PAT 请求的 client_id 由服务端固化**：忽略请求体 clientId，使用 PAT 的 name（回退 pat_id）。会话请求仍可使用请求体 clientId。
+- PAT 请求的 source 按 agent 处理；**executionMode 入参被忽略**，模式只从 agent 配置 / 账户默认解析。
+- 不得回传令牌明文或哈希。
+
+## 14. 版本记录溯源（C-03）
+
+- resume_versions 增加 5 个可空列：client_id、conversation_id、user_turn_id、agent_run_id、execution_mode。
+- ResumeVersionResponse 暴露上述字段（camelCase，可空）。
+- Agent finalize 提交时写入 client_id（turn.client_id）、user_turn_id（turn.id）、execution_mode（turn.execution_mode）；conversation_id / agent_run_id 本期留空。
+- 手动 PUT document 提交时 user_turn_id / execution_mode 留空。
+- 迁移在现有 head 之后新增一版，5 列均可空。
+
+## 15. 基线推进时的重排与队列（C-04 / C-06）
+
+触发：preview / apply / finalize / cancel 时 turn.base_version_id != resume.current_version_id（用户手动提交把基线推进了）。
+
+规则：
+
+1. 若该轮没有暂存改动（working_turn_id != turn.id）→ 仅把 turn.base_version_id 刷新为当前版本后继续，不报错。
+2. 若有暂存改动 → 三方重排：old_base = turn.base_version_id 对应版本快照（无则空文档），staged = Resume.working_document，new_base = Resume.document；把 old_base → staged 的增量重新应用到 new_base 之上。
+3. 逐作用域判定：
+   - basics：双方都改 → 冲突；仅 agent 改 → 取 agent；否则取 new_base。
+   - 章节按 id：agent 新增且 new_base 已有同 id → 冲突；agent 删除且 new_base 仍在 → 删除；agent 修改且 new_base 同章节也改了 → 冲突；否则取 agent 版本。
+   - 条目按 id 同规则。
+4. 无冲突 → 写回暂存文档，把 Resume.working_base_version_id 与 turn.base_version_id 更新为当前版本，working_revision 递增；响应标记 baseRebased=true。approval 下原有已批准待办因 Diff 变化置 stale，需重新 preview + approve。
+5. 有冲突 → **不得丢弃暂存**：保留暂存文档（排队待处理），返回 409 REBASE_CONFLICT（latestVersionId = 当前版本），并暂停该轮新的写执行（C-02）。Agent 可读取 working-document 后重新提案。
+6. cancel 同样先重排；无冲突则按 C-04 结算已应用改动后关闭，不再丢弃。
+
+新增机器错误码 REBASE_CONFLICT（409）。
+
+## 16. 审计落点（C-10）
+
+- Agent 写操作的审计事实源为「版本 + 轮次」记录：ResumeVersion 经第 14 节补齐 client_id / user_turn_id / execution_mode 后，可从版本追到轮次、客户端与模式；Turn 记录 finalize / cancel 与结果。
+- access_logs 只承载鉴权语义（PAT 认证允许 / 拒绝、Scope 拒绝），不承载业务操作审计。
+- 不新增独立业务审计表。
+
