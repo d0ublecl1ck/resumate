@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { RbacPage } from "@/pages/rbac"
 
@@ -22,6 +22,17 @@ describe("RbacPage", () => {
     expect(screen.getByText("role:write")).toBeInTheDocument()
     // 权限码与端点绑定，界面不提供在线新建权限。
     expect(screen.queryByRole("button", { name: /新建权限/ })).not.toBeInTheDocument()
+  })
+
+  it("角色弹窗用权限树勾选权限", async () => {
+    renderPage()
+    fireEvent.click(await screen.findByRole("button", { name: /新建角色/ }))
+
+    const dialog = screen.getByRole("dialog")
+
+    expect(within(dialog).getByRole("tree")).toBeInTheDocument()
+    expect(within(dialog).getByText("resume:read")).toBeInTheDocument()
+    expect(within(dialog).getAllByRole("checkbox").length).toBeGreaterThan(0)
   })
 
   it("新建自定义角色后关闭弹窗", async () => {

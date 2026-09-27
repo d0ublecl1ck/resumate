@@ -1,12 +1,15 @@
 // SCR-113 角色与权限管理。
-// 角色可在线维护（自定义角色 CRUD + 从目录勾选权限）；权限码由代码静态声明，
-// 因此权限目录只读展示，不提供在线新建/编辑/删除。
+// 角色可在线维护；权限码由代码静态声明，因此权限目录以「按资源分组的权限树」只读展示。
+// 角色编辑弹窗用同一棵树做三态勾选（开源 headless 组件 @headless-tree/react）。
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import type { TreeInstance } from "@headless-tree/core"
 import { createRole, deleteRole, listPermissions, listRoles, updateRole } from "@/lib/api"
 import type { Permission, Role, RoleInput, RoleUpdateInput } from "@/lib/types"
+import { PermissionTree } from "@/components/permission-tree"
+import { checkedPermissionCodes, type PermissionTreeNode } from "@/lib/permission-tree"
 import { PageHeader } from "@/components/kit/toolbar"
 import { PageLoading } from "@/pages/states"
 import { cn } from "@/lib/utils"
@@ -83,18 +86,19 @@ export function RbacPage() {
 
       <section className="card-soft p-5">
         <h2 className="text-sm font-bold text-foreground">{t("rbac.permissions.title")}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t("rbac.permissions.hint")}</p>
-        <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {permissionList.map((permission) => (
-            <li key={permission.id} className="rounded-lg border border-border p-2.5">
-              <p className="truncate text-sm font-medium text-foreground">{permission.name}</p>
-              <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">{permission.code}</p>
-            </li>
-          ))}
-        </ul>
+        <p className="mt-1 mb-3 text-xs text-muted-foreground">{t("rbac.permissions.hint")}</p>
+        <PermissionTree permissions={permissionList} />
       </section>
 
-      {roleDraft ? <RoleDialog role={roleDraft} permissions={permissionList} onClose={() => setRoleDraft(null)} onSaved={refresh} /> : null}
+      {roleDraft ? (
+        <RoleDialog
+          key={roleDraft === "new" ? "new" : roleDraft.id}
+          role={roleDraft}
+          permissions={permissionList}
+          onClose={() => setRoleDraft(null)}
+          onSaved={refresh}
+        />
+      ) : null}
     </div>
   )
 }
@@ -123,15 +127,17 @@ function RoleDialog({ role, permissions, onClose, onSaved }: { role: Role | "new
   const [code, setCode] = useState(isNew ? "" : role.code)
   const [name, setName] = useState(isNew ? "" : role.name)
   const [description, setDescription] = useState(isNew ? "" : role.description)
-  const [selected, setSelected] = useState<string[]>(isNew ? [] : role.permissions)
+  const [selected] = useState<string[]>(isNew ? [] : role.permissions)
+  const treeRef = useRef<TreeInstance<PermissionTreeNode> | null>(null)
 
   const mutation = useMutation({
     mutationFn: () => {
+      const chosen = treeRef.current ? checkedPermissionCodes(treeRef.current) : selected
       if (isNew) {
-        const input: RoleInput = { code: code.trim(), name: name.trim(), description: description.trim(), permissions: selected }
+        const input: RoleInput = { code: code.trim(), name: name.trim(), description: description.trim(), permissions: chosen }
         return createRole(input)
       }
-      const patch: RoleUpdateInput = { name: name.trim(), description: description.trim(), permissions: selected }
+      const patch: RoleUpdateInput = { name: name.trim(), description: description.trim(), permissions: chosen }
       return updateRole(role.id, patch)
     },
     onSuccess: () => {
@@ -139,10 +145,6 @@ function RoleDialog({ role, permissions, onClose, onSaved }: { role: Role | "new
       onClose()
     },
   })
-
-  function toggle(permissionCode: string) {
-    setSelected((items) => (items.includes(permissionCode) ? items.filter((item) => item !== permissionCode) : [...items, permissionCode]))
-  }
 
   return (
     <Dialog title={isNew ? t("rbac.roles.create") : t("rbac.actions.edit")} onClose={onClose}>
@@ -160,17 +162,8 @@ function RoleDialog({ role, permissions, onClose, onSaved }: { role: Role | "new
         <input className={INPUT_CLASS} value={description} onChange={(event) => setDescription(event.target.value)} />
       </label>
       <div className="mt-4">
-        <p className="text-xs font-medium text-muted-foreground">{t("rbac.fields.permissions")}</p>
-        <ul className="mt-2 grid max-h-64 gap-1.5 overflow-auto sm:grid-cols-2">
-          {permissions.map((permission) => (
-            <li key={permission.id}>
-              <label className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs">
-                <input type="checkbox" checked={selected.includes(permission.code)} onChange={() => toggle(permission.code)} />
-                <span className="font-mono">{permission.code}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">{t("rbac.fields.permissions")}</p>
+        <PermissionTree permissions={permissions} checkedCodes={selected} checkable onTreeReady={(tree) => { treeRef.current = tree }} />
       </div>
       <div className="mt-5 flex items-center justify-end gap-2">
         {mutation.isError ? <span className="text-xs text-coral">{errorMessage(mutation.error, t("rbac.errors.actionFailed"))}</span> : null}
