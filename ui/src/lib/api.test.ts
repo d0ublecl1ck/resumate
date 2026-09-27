@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { getProfile, getResume } from "@/lib/api"
+import { getModelConfig, getPreferences, getProfile, getResume, updatePreferences } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { server } from "@/test-server"
 
@@ -28,5 +28,24 @@ describe("API 对接", () => {
     server.use(http.get("/api/profile", () => HttpResponse.error()))
 
     await expect(getProfile()).rejects.toMatchObject({ code: "NETWORK_ERROR", status: 0 })
+  })
+
+  it("设置端点走真实 HTTP 契约", async () => {
+    const prefs = await getPreferences()
+
+    expect(prefs.theme).toBe("paper")
+    expect(prefs.shortcuts.length).toBeGreaterThan(0)
+
+    const updated = await updatePreferences({ autosave: false, displayName: "张沐" })
+
+    expect(updated.autosave).toBe(false)
+    expect(updated.displayName).toBe("张沐")
+  })
+
+  it("模型配置不回显明文密钥", async () => {
+    const config = await getModelConfig()
+
+    expect(config.keyConfigured).toBe(true)
+    expect("apiKey" in config).toBe(false)
   })
 })

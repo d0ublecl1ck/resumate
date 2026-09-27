@@ -396,12 +396,26 @@ export interface AgentConfig {
   budget: { maxTokens: number; maxTurns: number; maxCostUsd: number }
 }
 
+export interface ModelTestResult {
+  at: ISODate
+  ok: boolean
+  message: string
+}
+
 export interface ModelConfig {
   provider: string
   endpoint: string
   model: string
   keyConfigured: boolean // 凭证不回显（BR-D17）
-  lastTest?: { at: ISODate; ok: boolean; message: string }
+  lastTest?: ModelTestResult
+}
+
+export interface ModelConfigUpdate {
+  provider?: string
+  endpoint?: string
+  model?: string
+  /** write-only：仅提交，后端不回显 */
+  apiKey?: string
 }
 
 export interface UserPreferences {
@@ -413,6 +427,13 @@ export interface UserPreferences {
   defaultTemplateRetired?: boolean
   shortcuts: { action: string; keys: string; conflict?: boolean }[]
 }
+
+export interface AgentConfigUpdate {
+  nextRunMode?: ExecutionMode
+  budget?: Partial<AgentConfig["budget"]>
+}
+
+export type UserPreferencesUpdate = Partial<Pick<UserPreferences, "theme" | "language" | "displayName" | "autosave" | "defaultTemplateId">>
 
 // ---------------------------------------------------------------------------
 // 开放接入（C-10）

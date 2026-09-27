@@ -6,20 +6,18 @@
 
 import {
   ACCESS_LOGS,
-  AGENT_CONFIG,
   AGENT_RUNS,
   CAPABILITY,
   CURRENT_USER,
   IMPORT_PREVIEW_SAMPLE,
   JOB_MATCHES,
-  MODEL_CONFIG,
   PATS,
   PROFILE,
-  USER_PREFERENCES,
 } from "./content"
 import type {
   AccessLogEntry,
   AgentConfig,
+  AgentConfigUpdate,
   AgentRun,
   CapabilityDiscovery,
   ImportPreview,
@@ -27,6 +25,8 @@ import type {
   JobMatchResult,
   MatchGap,
   ModelConfig,
+  ModelConfigUpdate,
+  ModelTestResult,
   PersonalAccessToken,
   Profile,
   ProfileFact,
@@ -41,6 +41,7 @@ import type {
   ResumeTemplate,
   ResumeVersion,
   UserPreferences,
+  UserPreferencesUpdate,
   WorkbenchSummary,
 } from "./types"
 import { request } from "./api-client"
@@ -359,22 +360,42 @@ export function getJd(id: string): Promise<JobDescription | undefined> {
 }
 
 // ---------------------------------------------------------------------------
-// 配置：agent/config / models / settings / execution-mode
+// 配置：agent/config / models / settings
 // ---------------------------------------------------------------------------
 
 /** GET /agent/config */
 export function getAgentConfig(): Promise<AgentConfig> {
-  return resolve(AGENT_CONFIG)
+  return request<AgentConfig>("/agent/config")
+}
+
+/** PATCH /agent/config */
+export function updateAgentConfig(patch: AgentConfigUpdate): Promise<AgentConfig> {
+  return request<AgentConfig>("/agent/config", { method: "PATCH", body: JSON.stringify(patch) })
 }
 
 /** GET /models/config */
 export function getModelConfig(): Promise<ModelConfig> {
-  return resolve(MODEL_CONFIG)
+  return request<ModelConfig>("/models/config")
+}
+
+/** PUT /models/config —— apiKey 为 write-only，响应不回显 */
+export function updateModelConfig(patch: ModelConfigUpdate): Promise<ModelConfig> {
+  return request<ModelConfig>("/models/config", { method: "PUT", body: JSON.stringify(patch) })
+}
+
+/** POST /models/config:test —— 后端发起连通性测试，响应与错误均不含明文密钥 */
+export function testModelConnection(): Promise<ModelTestResult> {
+  return request<ModelTestResult>("/models/config:test", { method: "POST" })
 }
 
 /** GET /settings */
 export function getPreferences(): Promise<UserPreferences> {
-  return resolve(USER_PREFERENCES)
+  return request<UserPreferences>("/settings")
+}
+
+/** PATCH /settings */
+export function updatePreferences(patch: UserPreferencesUpdate): Promise<UserPreferences> {
+  return request<UserPreferences>("/settings", { method: "PATCH", body: JSON.stringify(patch) })
 }
 
 // ---------------------------------------------------------------------------
