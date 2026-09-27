@@ -2,6 +2,7 @@
 // 控件样式沿用事实卡片与结构化编辑器（border-input / focus:ring-ring/30），不引入新视觉规则。
 
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { ResumeBasics } from "@/lib/types"
 import { Plus, Trash2 } from "lucide-react"
 
@@ -14,6 +15,7 @@ export function ProfileBasicsForm({
   onSave: (next: ResumeBasics) => Promise<void>
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState<ResumeBasics>(() => structuredClone(initial))
   const [busy, setBusy] = useState(false)
 
@@ -50,36 +52,36 @@ export function ProfileBasicsForm({
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        <LabeledInput label="姓名" value={draft.fullName} onChange={(v) => set("fullName", v)} />
-        <LabeledInput label="一句话头衔" value={draft.headline} onChange={(v) => set("headline", v)} />
-        <LabeledInput label="邮箱" value={draft.email} onChange={(v) => set("email", v)} />
-        <LabeledInput label="电话" value={draft.phone} onChange={(v) => set("phone", v)} />
-        <LabeledInput label="城市" value={draft.location} onChange={(v) => set("location", v)} />
+        <LabeledInput label={t("profile.basics.fullName")} value={draft.fullName} onChange={(v) => set("fullName", v)} />
+        <LabeledInput label={t("profile.basics.headline")} value={draft.headline} onChange={(v) => set("headline", v)} />
+        <LabeledInput label={t("profile.basics.email")} value={draft.email} onChange={(v) => set("email", v)} />
+        <LabeledInput label={t("profile.basics.phone")} value={draft.phone} onChange={(v) => set("phone", v)} />
+        <LabeledInput label={t("profile.basics.location")} value={draft.location} onChange={(v) => set("location", v)} />
       </div>
 
       <fieldset>
-        <legend className="mb-2 text-xs font-medium text-muted-foreground">链接</legend>
+        <legend className="mb-2 text-xs font-medium text-muted-foreground">{t("profile.basics.links")}</legend>
         <ul className="space-y-2">
           {draft.links.map((link, index) => (
             <li key={index} className="flex items-center gap-2">
               <input
                 value={link.label}
                 onChange={(e) => updateLink(index, { label: e.target.value })}
-                placeholder="名称"
-                aria-label={`链接 ${index + 1} 名称`}
+                placeholder={t("profile.basics.linkLabel")}
+                aria-label={t("profile.basics.linkNameAria", { index: index + 1 })}
                 className="w-28 shrink-0 rounded-md border border-input bg-card px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               />
               <input
                 value={link.url}
                 onChange={(e) => updateLink(index, { url: e.target.value })}
                 placeholder="https://"
-                aria-label={`链接 ${index + 1} 地址`}
+                aria-label={t("profile.basics.linkUrlAria", { index: index + 1 })}
                 className="min-w-0 flex-1 rounded-md border border-input bg-card px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               />
               <button
                 type="button"
                 onClick={() => setDraft((prev) => ({ ...prev, links: prev.links.filter((_, i) => i !== index) }))}
-                aria-label={`删除链接 ${index + 1}`}
+                aria-label={t("profile.basics.deleteLinkAria", { index: index + 1 })}
                 className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Trash2 className="size-4" aria-hidden />
@@ -92,7 +94,7 @@ export function ProfileBasicsForm({
           onClick={() => setDraft((prev) => ({ ...prev, links: [...prev.links, { label: "", url: "" }] }))}
           className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-cobalt hover:underline"
         >
-          <Plus className="size-3.5" aria-hidden /> 添加链接
+          <Plus className="size-3.5" aria-hidden /> {t("profile.basics.addLink")}
         </button>
       </fieldset>
 
@@ -103,7 +105,7 @@ export function ProfileBasicsForm({
           disabled={!valid || busy}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
-          {busy ? "保存中…" : "保存基本信息"}
+          {busy ? t("profile.actions.savingBasics") : t("profile.actions.saveBasics")}
         </button>
         <button
           type="button"
@@ -111,9 +113,9 @@ export function ProfileBasicsForm({
           disabled={busy}
           className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
         >
-          取消
+          {t("common.actions.cancel")}
         </button>
-        {!valid ? <span className="text-xs text-coral">姓名不能为空。</span> : null}
+        {!valid ? <span className="text-xs text-coral">{t("profile.basics.nameRequired")}</span> : null}
       </div>
     </div>
   )

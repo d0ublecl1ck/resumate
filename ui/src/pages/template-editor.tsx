@@ -11,7 +11,7 @@ export function TemplateEditorPage() {
   const { data: template, isPending } = useQuery({ queryKey: ["template", id], queryFn: () => getTemplate(id) })
 
   if (isPending) return <PageLoading />
-  if (!template) return <PageNotFound target="模板" />
+  if (!template) return <PageNotFound entity="template" />
 
   return <TemplateEditor template={template} />
 }

@@ -1,3 +1,4 @@
+import "@/i18n"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom"
 import { ApiRequestError } from "@/lib/api-client"

@@ -5,6 +5,7 @@
 
 import { Link } from "react-router-dom"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
 import { createFactManually, updateBasics, updateFact } from "@/lib/api"
 import { EvidenceBadge } from "@/components/kit/badges"
@@ -14,25 +15,32 @@ import { ProfileFactForm } from "@/components/profile-fact-form"
 import { cn } from "@/lib/utils"
 import { Mail, MapPin, MessageSquarePlus, Pencil, Phone, Plus, Link2, Sparkles } from "lucide-react"
 
-const SECTIONS: { type: FactType; title: string; empty: string }[] = [
-  { type: "experience", title: "职业经历", empty: "补充一段工作或实习经历，例如「2021 年起在某电商做高级前端」。" },
-  { type: "project", title: "项目与作品", empty: "描述一个你主导或参与的项目及其成果。" },
-  { type: "education", title: "教育背景", empty: "填写你的学历，例如「2018 年硕士毕业于某大学计算机专业」。" },
-  { type: "skill", title: "技能专长", empty: "列出你擅长的技术或工具，例如「精通 React 与 TypeScript」。" },
-  { type: "achievement", title: "成果与获奖", empty: "记录一次获奖或亮眼的量化成果。" },
-  { type: "certificate", title: "证书资质", empty: "补充你考取的证书或资格认证。" },
+const SECTIONS: { type: FactType; titleKey: string; emptyKey: string }[] = [
+  { type: "experience", titleKey: "profile.sections.experience.title", emptyKey: "profile.sections.experience.empty" },
+  { type: "project", titleKey: "profile.sections.project.title", emptyKey: "profile.sections.project.empty" },
+  { type: "education", titleKey: "profile.sections.education.title", emptyKey: "profile.sections.education.empty" },
+  { type: "skill", titleKey: "profile.sections.skill.title", emptyKey: "profile.sections.skill.empty" },
+  { type: "achievement", titleKey: "profile.sections.achievement.title", emptyKey: "profile.sections.achievement.empty" },
+  { type: "certificate", titleKey: "profile.sections.certificate.title", emptyKey: "profile.sections.certificate.empty" },
 ]
 
 /** 直接编辑中的事实表单：新增或修正某一条。 */
 type FactEditor = { mode: "create"; type: FactType } | { mode: "update"; fact: ProfileFact }
 
 export function ProfileWorkspace({ profile }: { profile: Profile }) {
+  const { t } = useTranslation()
   const [basics, setBasics] = useState<ResumeBasics>(profile.basics)
   const [facts, setFacts] = useState<ProfileFact[]>(profile.facts)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [flashId, setFlashId] = useState<string | null>(null)
   const [editingBasics, setEditingBasics] = useState(false)
   const [factEditor, setFactEditor] = useState<FactEditor | null>(null)
+
+  const sections = SECTIONS.map((section) => ({
+    ...section,
+    title: t(section.titleKey),
+    empty: t(section.emptyKey),
+  }))
 
   function flash(id: string) {
     setFlashId(id)
@@ -80,9 +88,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
       {/* 页头 */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">个人资料</h1>
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">{t("profile.title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            你的职业主档。简历从这里选材生成——完善度 <span className="font-semibold text-foreground">{profile.completeness}%</span>
+            {t("profile.subtitlePrefix")}
+            <span className="font-semibold text-foreground">{profile.completeness}%</span>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -90,16 +99,16 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
             onClick={() => setAssistantOpen(true)}
             className="inline-flex items-center gap-2 rounded-lg border-[1.5px] border-foreground/20 bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
           >
-            <MessageSquarePlus className="size-4 text-cobalt" aria-hidden /> 对话维护资料
+            <MessageSquarePlus className="size-4 text-cobalt" aria-hidden /> {t("profile.actions.openAssistant")}
           </button>
           <Link to="/resumes?create=1" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-            <Sparkles className="size-4" aria-hidden /> 生成简历
+            <Sparkles className="size-4" aria-hidden /> {t("profile.actions.generateResume")}
           </Link>
         </div>
       </div>
 
       {/* 基本信息（像简历表头）：直接编辑；对话入口统一在页头 */}
-      <section className="card-frame p-6" aria-label="基本信息">
+      <section className="card-frame p-6" aria-label={t("profile.basics.sectionAria")}>
         {editingBasics ? (
           <ProfileBasicsForm initial={basics} onSave={handleSaveBasics} onCancel={() => setEditingBasics(false)} />
         ) : (
@@ -131,10 +140,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
             <div className="flex shrink-0">
               <button
                 onClick={() => setEditingBasics(true)}
-                aria-label="编辑基本信息"
+                aria-label={t("profile.actions.editBasics")}
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cobalt/40 px-3 py-2 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
               >
-                <Pencil className="size-3.5" aria-hidden /> 编辑
+                <Pencil className="size-3.5" aria-hidden /> {t("profile.actions.edit")}
               </button>
             </div>
           </div>
@@ -142,7 +151,7 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
       </section>
 
       {/* 分区：经历 / 项目 / 教育 / 技能 / 成果 / 证书 */}
-      {SECTIONS.map((section) => {
+      {sections.map((section) => {
         const items = facts.filter((f) => f.type === section.type)
         const creating = factEditor?.mode === "create" && factEditor.type === section.type
         return (
@@ -154,10 +163,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
               </h2>
               <button
                 onClick={() => setFactEditor({ mode: "create", type: section.type })}
-                aria-label={`手动添加${section.title}`}
+                aria-label={t("profile.actions.addManually") + section.title}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/20 bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
               >
-                <Plus className="size-3.5" aria-hidden /> 手动添加
+                <Plus className="size-3.5" aria-hidden /> {t("profile.actions.addManually")}
               </button>
             </div>
 
@@ -219,6 +228,8 @@ function FactRow({
   onCancelEdit: () => void
   onSaveEdit: (input: ProfileFactInput) => Promise<void>
 }) {
+  const { t } = useTranslation()
+
   if (editing) {
     return (
       <li>
@@ -238,18 +249,18 @@ function FactRow({
           <p className="mt-1.5 text-sm leading-6 text-foreground/80">{fact.content}</p>
           {fact.tags.length ? (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {fact.tags.map((t) => (
-                <span key={t} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">{t}</span>
+              {fact.tags.map((tag) => (
+                <span key={tag} className="rounded-md bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground">{tag}</span>
               ))}
             </div>
           ) : null}
         </div>
         <button
           onClick={onEdit}
-          aria-label={`编辑「${fact.title}」`}
+          aria-label={t("profile.actions.editFact", { title: fact.title })}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
         >
-          <Pencil className="size-3.5" aria-hidden /> 编辑
+          <Pencil className="size-3.5" aria-hidden /> {t("profile.actions.edit")}
         </button>
       </div>
     </li>

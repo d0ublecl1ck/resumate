@@ -3,5 +3,5 @@
 import { PageNotFound } from "@/pages/states"
 
 export function NotFoundPage() {
-  return <PageNotFound target="页面" />
+  return <PageNotFound entity="page" />
 }

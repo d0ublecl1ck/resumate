@@ -2,6 +2,7 @@
 
 import { Link } from "react-router-dom"
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { JobDescription, Resume } from "@/lib/types"
 import { JdBindingBadge } from "@/components/kit/badges"
 import { PageHeader, FilterToolbar } from "@/components/kit/toolbar"
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { ArrowRight, Building2, Link2, Plus, Tag } from "lucide-react"
 
 export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Resume[] }) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState("")
   const [tag, setTag] = useState<string | undefined>()
   const [items, setItems] = useState<JobDescription[]>(jds)
@@ -39,11 +41,11 @@ export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Re
   return (
     <div className="space-y-6">
       <PageHeader
-        title="JD 库"
-        description="集中保存岗位需求。每个 JD 显示 revision 与当前软绑定；绑定只是快速选定简历，不改变简历内容。"
+        title={t("jd.library.title")}
+        description={t("jd.library.description")}
         actions={
           <button onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-            <Plus className="size-4" aria-hidden /> 新增 JD
+            <Plus className="size-4" aria-hidden /> {t("jd.create.title")}
           </button>
         }
       />
@@ -51,8 +53,8 @@ export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Re
       <FilterToolbar
         query={query}
         onQuery={setQuery}
-        placeholder="按岗位或公司搜索…"
-        chips={allTags.map((t) => ({ key: t, label: t }))}
+        placeholder={t("jd.library.searchPlaceholder")}
+        chips={allTags.map((tagValue) => ({ key: tagValue, label: tagValue }))}
         activeChip={tag}
         onChip={(k) => setTag((prev) => (prev === k ? undefined : k))}
       />
@@ -65,15 +67,15 @@ export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Re
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link to={`/jds/${jd.id}`} className="font-serif text-lg font-bold text-foreground hover:underline">{jd.role}</Link>
-                    <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">rev.{jd.revision}</span>
+                    <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("jd.revisionShort", { revision: jd.revision })}</span>
                   </div>
                   {jd.company ? (
                     <p className="flex items-center gap-1.5 text-sm text-muted-foreground"><Building2 className="size-3.5" aria-hidden /> {jd.company}</p>
                   ) : null}
                   <p className="line-clamp-2 max-w-2xl text-sm leading-6 text-foreground/80">{jd.body}</p>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    {jd.tags.map((t) => (
-                      <span key={t} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground"><Tag className="size-3" aria-hidden /> {t}</span>
+                    {jd.tags.map((tagValue) => (
+                      <span key={tagValue} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground"><Tag className="size-3" aria-hidden /> {tagValue}</span>
                     ))}
                   </div>
                 </div>
@@ -81,24 +83,24 @@ export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Re
                 <div className="flex shrink-0 flex-col items-end gap-2 text-right">
                   {jd.boundResumeId ? (
                     jd.boundResumeAvailable === false ? (
-                      <JdBindingBadge kind="unavailable" resumeTitle="绑定简历不可用" />
+                      <JdBindingBadge kind="unavailable" resumeTitle={t("jd.library.bindingUnavailable")} />
                     ) : (
                       <JdBindingBadge kind="bound" resumeTitle={resumeTitle(jd.boundResumeId)} />
                     )
                   ) : (
                     <JdBindingBadge kind="unbound" />
                   )}
-                  <p className="text-xs text-muted-foreground">更新 {jd.updatedAt.slice(0, 10)}</p>
+                  <p className="text-xs text-muted-foreground">{t("jd.library.updated", { date: jd.updatedAt.slice(0, 10) })}</p>
                 </div>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
                 <Link to={`/jds/${jd.id}`} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                  发起岗位微调 <ArrowRight className="size-3.5" aria-hidden />
+                  {t("jd.library.startTuning")} <ArrowRight className="size-3.5" aria-hidden />
                 </Link>
                 {jd.sourceUrl ? (
                   <a href={jd.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
-                    <Link2 className="size-3.5" aria-hidden /> 来源链接
+                    <Link2 className="size-3.5" aria-hidden /> {t("jd.library.sourceLink")}
                   </a>
                 ) : null}
               </div>
@@ -108,12 +110,12 @@ export function JdLibrary({ jds, resumes }: { jds: JobDescription[]; resumes: Re
       ) : (
         <StateBlock
           kind="empty"
-          title={query || tag ? "没有匹配的 JD" : "还没有保存 JD"}
-          description={query || tag ? "已保留筛选条件。" : "粘贴岗位文本或上传截图，AI 帮你整理成结构化 JD。"}
+          title={query || tag ? t("jd.library.emptyFilteredTitle") : t("jd.library.emptyTitle")}
+          description={query || tag ? t("jd.library.emptyFilteredDescription") : t("jd.library.emptyDescription")}
           action={
             query || tag ? undefined : (
               <button onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                <Plus className="size-4" aria-hidden /> 新增 JD
+                <Plus className="size-4" aria-hidden /> {t("jd.create.title")}
               </button>
             )
           }
