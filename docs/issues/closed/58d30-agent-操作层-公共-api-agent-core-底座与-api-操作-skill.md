@@ -1,14 +1,15 @@
 ---
 id: 58d30
-status: in-progress
+status: closed
 created_at: 2026-09-27T16:01:44.042Z
-updated_at: 2026-09-27T16:02:37.538Z
+updated_at: 2026-09-27T16:11:29.923Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-27T16:02:37.538Z
+closed_at: 2026-09-27T16:11:29.923Z
 ---
 
 # Agent 操作层：公共 API、agent-core 底座与 API 操作 Skill
