@@ -254,3 +254,23 @@ def test_scope_denial_writes_denied_access_log(session_clients) -> None:
     assert scope_logs[0]["result"] == "denied"
     assert scope_logs[0]["scope"] == "resume:write"
     assert scope_logs[0]["errorCode"] == "SCOPE_INSUFFICIENT"
+
+
+def test_pat_turn_client_id_is_fixed_and_body_client_ignored(session_clients) -> None:
+    session = session_clients()
+    _register(session)
+    resume = _create_resume(session)
+    token = _issue(session, ["resume:write"], name="我的终端")
+    pat = session_clients()
+
+    created = pat.post(
+        f"/resumes/{resume['id']}/turns",
+        json={"clientId": "伪造客户端", "source": "client", "executionMode": "full_access"},
+        headers=_bearer(token["secretOnce"]),
+    )
+
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["clientId"] == "我的终端"
+    assert body["source"] == "agent"
+    assert body["executionMode"] == "approval"
