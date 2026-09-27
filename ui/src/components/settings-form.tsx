@@ -3,11 +3,12 @@
 // 测试连接由后端发起，任何响应都不含明文密钥。界面文案统一走 i18n。
 
 import { useState, type ReactNode } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
-import { testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
+import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
 
@@ -113,6 +114,33 @@ export function SettingsForm({
   const publishedTemplates = templates.filter((tpl) => tpl.status === "published")
   const testResult = testMutation.data ?? model.lastTest
 
+  // 模型目录（契约 §17）：provider / model 只从只读目录选择；目录失败时保留已保存值。
+  const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: () => getModelCatalog() })
+  const catalogProviders = catalogQuery.data?.providers ?? []
+  const catalogSource = catalogQuery.data?.source
+  const selectedProvider = catalogProviders.find((item) => item.id === provider)
+  const selectedModel = selectedProvider?.models.find((item) => item.id === modelName)
+
+  const providerOptions = [
+    { value: "", label: t("settings.model.providerNone") },
+    ...catalogProviders.map((item) => ({ value: item.id, label: item.label })),
+    ...(provider && !catalogProviders.some((item) => item.id === provider)
+      ? [{ value: provider, label: t("settings.model.catalogMissingOption", { id: provider }) }]
+      : []),
+  ]
+  const modelOptions = selectedProvider
+    ? [
+        { value: "", label: t("settings.model.modelNone") },
+        ...selectedProvider.models.map((item) => ({ value: item.id, label: item.label })),
+        ...(modelName && !selectedProvider.models.some((item) => item.id === modelName)
+          ? [{ value: modelName, label: t("settings.model.catalogMissingOption", { id: modelName }) }]
+          : []),
+      ]
+    : [
+        { value: "", label: t("settings.model.modelNone") },
+        ...(modelName ? [{ value: modelName, label: t("settings.model.catalogMissingOption", { id: modelName }) }] : []),
+      ]
+
   return (
     <div className="space-y-6">
       <Section title={t("settings.agent.title")} hint={t("settings.agent.hint")}>
@@ -197,17 +225,69 @@ export function SettingsForm({
 
       <Section title={t("settings.model.title")} hint={t("settings.model.hint")}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="rounded-lg border border-border p-3">
+          <div className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.model.provider")}</FieldLabel>
-            <input
-              className={INPUT_CLASS}
+            <Select
+              items={providerOptions}
               value={provider}
-              onChange={(event) => {
-                setProvider(event.target.value)
+              onValueChange={(next) => {
+                const nextProviderId = String(next ?? "")
+                setProvider(nextProviderId)
+                const nextProvider = catalogProviders.find((item) => item.id === nextProviderId)
+                setModelName(nextProvider?.models[0]?.id ?? "")
                 setModelStatus("idle")
               }}
-            />
-          </label>
+            >
+              <SelectTrigger className="mt-1" aria-label={t("settings.model.provider")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providerOptions.map((option) => (
+                  <SelectItem key={option.value || "__none__"} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <FieldLabel>{t("settings.model.model")}</FieldLabel>
+            <Select
+              items={modelOptions}
+              value={modelName}
+              disabled={!selectedProvider}
+              onValueChange={(next) => {
+                setModelName(String(next ?? ""))
+                setModelStatus("idle")
+              }}
+            >
+              <SelectTrigger className="mt-1" aria-label={t("settings.model.model")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {modelOptions.map((option) => (
+                  <SelectItem key={option.value || "__none__"} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedModel ? (
+              <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                {[
+                  selectedModel.contextWindow !== undefined ? t("settings.model.contextWindow", { tokens: selectedModel.contextWindow }) : null,
+                  selectedModel.inputCostPerMillion !== undefined || selectedModel.outputCostPerMillion !== undefined
+                    ? t("settings.model.pricePerMillion", {
+                        input: selectedModel.inputCostPerMillion ?? "-",
+                        output: selectedModel.outputCostPerMillion ?? "-",
+                      })
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(separator)}
+              </p>
+            ) : null}
+          </div>
           <label className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.model.endpoint")}</FieldLabel>
             <input
@@ -216,17 +296,6 @@ export function SettingsForm({
               value={endpoint}
               onChange={(event) => {
                 setEndpoint(event.target.value)
-                setModelStatus("idle")
-              }}
-            />
-          </label>
-          <label className="rounded-lg border border-border p-3">
-            <FieldLabel>{t("settings.model.model")}</FieldLabel>
-            <input
-              className={INPUT_CLASS}
-              value={modelName}
-              onChange={(event) => {
-                setModelName(event.target.value)
                 setModelStatus("idle")
               }}
             />
@@ -249,6 +318,13 @@ export function SettingsForm({
             </p>
           </label>
         </div>
+        {catalogQuery.isPending ? <p className="mt-3 text-xs text-muted-foreground">{t("settings.model.catalogLoading")}</p> : null}
+        {catalogQuery.isError ? (
+          <p className="mt-3 inline-flex items-center gap-1 text-xs text-coral">
+            <AlertTriangle className="size-3.5" aria-hidden /> {t("settings.model.catalogError")}
+          </p>
+        ) : null}
+        {catalogSource ? <p className="mt-3 text-[11px] text-muted-foreground">{t("settings.model.catalogSource", { source: catalogSource })}</p> : null}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
