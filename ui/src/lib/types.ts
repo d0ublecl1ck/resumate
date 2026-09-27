@@ -33,11 +33,31 @@ export type MachineErrorCode =
   | "TOKEN_REVOKED"
   | "TEMPLATE_IN_USE"
   | "VALIDATION_FAILED"
+  | "UNAUTHENTICATED" // 401
+  | "INVALID_CREDENTIALS" // 401
+  | "ACCOUNT_BANNED" // 403
+  | "FORBIDDEN" // 403
+  | "EMAIL_ALREADY_REGISTERED" // 409
 
 export interface ApiError {
   code: MachineErrorCode
   message: string
   latestVersionId?: string
+}
+
+// ---------------------------------------------------------------------------
+// 会话与账号（b6708）
+// ---------------------------------------------------------------------------
+
+export type UserRole = "user" | "admin"
+
+export interface AuthUser {
+  id: string
+  email: string
+  displayName: string
+  role: UserRole
+  isBanned: boolean
+  createdAt: ISODate
 }
 
 // ---------------------------------------------------------------------------

@@ -15,6 +15,11 @@ class ErrorCode(StrEnum):
     TOKEN_REVOKED = "TOKEN_REVOKED"
     TEMPLATE_IN_USE = "TEMPLATE_IN_USE"
     VALIDATION_FAILED = "VALIDATION_FAILED"
+    UNAUTHENTICATED = "UNAUTHENTICATED"
+    INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
+    ACCOUNT_BANNED = "ACCOUNT_BANNED"
+    FORBIDDEN = "FORBIDDEN"
+    EMAIL_ALREADY_REGISTERED = "EMAIL_ALREADY_REGISTERED"
 
 
 class ApiError(ApiModel):
@@ -49,3 +54,28 @@ class ValidationFailed(ApiException):
 class BaseVersionStale(ApiException):
     status_code = 409
     code = ErrorCode.BASE_VERSION_STALE
+
+
+class Unauthenticated(ApiException):
+    status_code = 401
+    code = ErrorCode.UNAUTHENTICATED
+
+
+class InvalidCredentials(ApiException):
+    status_code = 401
+    code = ErrorCode.INVALID_CREDENTIALS
+
+
+class AccountBanned(ApiException):
+    status_code = 403
+    code = ErrorCode.ACCOUNT_BANNED
+
+
+class Forbidden(ApiException):
+    status_code = 403
+    code = ErrorCode.FORBIDDEN
+
+
+class EmailAlreadyRegistered(ApiException):
+    status_code = 409
+    code = ErrorCode.EMAIL_ALREADY_REGISTERED
