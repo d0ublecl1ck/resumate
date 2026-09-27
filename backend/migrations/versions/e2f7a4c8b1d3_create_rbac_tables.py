@@ -50,9 +50,9 @@ def upgrade() -> None:
     # System roles must exist before the legacy users.role values can be linked.
     op.execute(
         "INSERT INTO roles (id, code, name, description, rank, is_system, created_at, updated_at) VALUES "
-        "('role_user', 'user', '普通用户', '', 1, true, now(), now()), "
-        "('role_admin', 'admin', '管理员', '', 2, true, now(), now()), "
-        "('role_super_admin', 'super_admin', '超级管理员', '', 3, true, now(), now())"
+        "('role_user', 'user', '普通用户', '', 1, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), "
+        "('role_admin', 'admin', '管理员', '', 2, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), "
+        "('role_super_admin', 'super_admin', '超级管理员', '', 3, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
     )
     op.execute(
         "INSERT INTO user_roles (user_id, role_id) "

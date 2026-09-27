@@ -86,6 +86,69 @@ def _commit_version(
     return version
 
 
+def read_working_document(resume: Resume) -> dict:
+    """Return the staged Working Copy, falling back to the committed document."""
+    if resume.working_document is not None:
+        return copy.deepcopy(resume.working_document)
+    return copy.deepcopy(resume.document or {})
+
+
+def working_copy_is_dirty(resume: Resume) -> bool:
+    """True when a staged document exists and differs from the committed one."""
+    return resume.working_document is not None and (resume.working_document or {}) != (resume.document or {})
+
+
+def stage_working_document(
+    resume: Resume,
+    document: dict,
+    *,
+    turn_id: str,
+    base_version_id: str | None,
+) -> None:
+    """Stage a candidate document for one turn; each staged apply bumps working_revision."""
+    if resume.working_turn_id == turn_id and resume.working_document is not None:
+        resume.working_revision = (resume.working_revision or 0) + 1
+    else:
+        resume.working_revision = 1
+    resume.working_document = document
+    resume.working_turn_id = turn_id
+    resume.working_base_version_id = base_version_id
+
+
+def commit_working_copy(
+    db: Session,
+    resume: Resume,
+    *,
+    actor_id: str,
+    message: str,
+    source: str = "agent",
+) -> ResumeVersion | None:
+    """Aggregate the Working Copy into exactly one version; None when unchanged."""
+    if not working_copy_is_dirty(resume):
+        clear_working_copy(resume)
+        return None
+    document = copy.deepcopy(resume.working_document)
+    version = _commit_version(
+        db,
+        resume,
+        document,
+        source=source,
+        actor_id=actor_id,
+        message=message,
+        base_version_id=resume.working_base_version_id,
+    )
+    clear_working_copy(resume)
+    return version
+
+
+def clear_working_copy(resume: Resume) -> None:
+    """Drop any staged document so the resume reads from the committed version."""
+    resume.working_document = None
+    resume.working_base_version_id = None
+    resume.working_turn_id = None
+    resume.working_revision = 0
+
+
 def list_resumes(db: Session, owner_id: str, *, lifecycle: str | None, query: str | None, tag: str | None) -> list[Resume]:
     return dao.list_resumes(db, owner_id, lifecycle=lifecycle, query=query, tag=tag)
 
