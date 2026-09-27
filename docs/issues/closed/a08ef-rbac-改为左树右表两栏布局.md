@@ -1,14 +1,15 @@
 ---
 id: a08ef
-status: in-progress
+status: closed
 created_at: 2026-09-27T05:00:00.000Z
-updated_at: 2026-09-27T04:34:21.834Z
+updated_at: 2026-09-27T05:06:41.981Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-09-27T04:34:21.834Z
+closed_at: 2026-09-27T05:06:41.981Z
 ---
 
 # RBAC 改为左树右表两栏布局
