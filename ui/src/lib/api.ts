@@ -407,7 +407,7 @@ export function getModelConfig(): Promise<ModelConfig> {
 }
 
 /**
- * GET /models/catalog —— 只读模型目录（契约 §17）；条目来自后端 litellm 目录。
+ * GET /models/catalog —— 只读模型目录（契约 §17）；条目来自后端 models.dev 快照。
  * provider 按 provider id 过滤，q 按模型 id / 名称搜索。
  */
 export function getModelCatalog(params?: { provider?: string; q?: string }): Promise<ModelCatalog> {

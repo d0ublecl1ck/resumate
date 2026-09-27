@@ -52,7 +52,7 @@ describe("API 对接", () => {
   it("模型目录返回 provider 与 model 列表", async () => {
     const catalog = await getModelCatalog()
 
-    expect(catalog.source).toBe("litellm")
+    expect(catalog.source).toBe("models.dev")
     const openai = catalog.providers.find((provider) => provider.id === "openai")
     expect(openai?.models.some((model) => model.id === "gpt-4o-mini")).toBe(true)
   })
