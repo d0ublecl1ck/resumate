@@ -30,6 +30,9 @@ CAPABILITIES = [
     "settings.read",
     "access.tokens",
     "backup.export",
+    "agent.turns",
+    "agent.patches",
+    "agent.pending_actions",
 ]
 
 
