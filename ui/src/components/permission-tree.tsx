@@ -25,11 +25,14 @@ export function PermissionTree({
   permissions,
   checkedCodes = [],
   checkable = false,
+  disabled = false,
   onTreeReady,
 }: {
   permissions: Permission[]
   checkedCodes?: string[]
   checkable?: boolean
+  /** 只读展示勾选状态（例如系统内置角色）：仍然显示复选框，但不可修改。 */
+  disabled?: boolean
   onTreeReady?: (tree: TreeInstance<PermissionTreeNode>) => void
 }) {
   const { t } = useTranslation()
@@ -108,7 +111,7 @@ export function PermissionTree({
             ) : (
               <span className="size-4 shrink-0" aria-hidden />
             )}
-            {checkable ? <input type="checkbox" {...item.getCheckboxProps()} className="size-3.5 accent-cobalt" /> : null}
+            {checkable ? <input type="checkbox" {...item.getCheckboxProps()} disabled={disabled} className="size-3.5 accent-cobalt disabled:opacity-60" /> : null}
             <span className="truncate text-foreground">{item.getItemName()}</span>
             {item.isFolder() ? null : <span className="ml-auto shrink-0 font-mono text-[11px] text-muted-foreground">{item.getKey()}</span>}
           </li>

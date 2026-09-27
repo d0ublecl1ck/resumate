@@ -30,7 +30,7 @@ const AUTH_ACCOUNTS: Record<string, string> = { "test@resumate.dev": "password12
 
 const RBAC_ROLES: Role[] = [
   { id: "role_user", code: "user", name: "普通用户", description: "", rank: 1, isSystem: true, permissions: ["resume:read"] },
-  { id: "role_super_admin", code: "super_admin", name: "超级管理员", description: "", rank: 3, isSystem: true, permissions: ["resume:read", "resume:write", "role:write", "permission:write"] },
+  { id: "role_super_admin", code: "super_admin", name: "超级管理员", description: "", rank: 3, isSystem: true, permissions: ["resume:read", "resume:write", "role:write"] },
 ]
 
 const RBAC_PERMISSIONS: Permission[] = [
