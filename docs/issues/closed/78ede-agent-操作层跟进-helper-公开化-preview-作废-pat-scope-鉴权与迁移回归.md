@@ -1,14 +1,15 @@
 ---
 id: 78ede
-status: in-progress
+status: closed
 created_at: 2026-09-27T16:14:25.457Z
-updated_at: 2026-09-27T16:14:38.432Z
+updated_at: 2026-09-27T16:19:34.095Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-27T16:14:38.432Z
+closed_at: 2026-09-27T16:19:34.095Z
 ---
 
 # Agent 操作层跟进：helper 公开化、preview 作废、PAT Scope 鉴权与迁移回归
