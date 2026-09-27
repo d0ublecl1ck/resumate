@@ -21,6 +21,7 @@ import type {
   AccessLogEntry,
   AgentConfig,
   AgentRun,
+  AuthUser,
   CapabilityDiscovery,
   ImportPreview,
   JobDescription,
@@ -49,6 +50,30 @@ import { request } from "./api-client"
 const LATENCY = 0
 function resolve<T>(data: T): Promise<T> {
   return new Promise((r) => (LATENCY ? setTimeout(() => r(structuredClone(data)), LATENCY) : r(structuredClone(data))))
+}
+
+// ---------------------------------------------------------------------------
+// 认证：注册 / 登录 / 登出 / 当前用户（b6708）
+// ---------------------------------------------------------------------------
+
+/** GET /auth/me */
+export function getCurrentUser(): Promise<AuthUser> {
+  return request<AuthUser>("/auth/me")
+}
+
+/** POST /auth/login */
+export function login(email: string, password: string): Promise<AuthUser> {
+  return request<AuthUser>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) })
+}
+
+/** POST /auth/register —— 注册成功即登录（后端下发 HttpOnly Cookie） */
+export function register(input: { email: string; password: string; displayName: string }): Promise<AuthUser> {
+  return request<AuthUser>("/auth/register", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** POST /auth/logout —— 服务端删除 Redis 会话 key 并清 Cookie */
+export function logout(): Promise<void> {
+  return request<void>("/auth/logout", { method: "POST" })
 }
 
 // ---------------------------------------------------------------------------
