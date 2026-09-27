@@ -3,3 +3,4 @@
 - [ ] `quality-gates/.gate-version` — 当前仅启用 generic 层，后端已有 FastAPI 健康检查；开发业务模块前核对专项门禁覆盖，generic 通过不等价于后端架构验证。记录：2026-09-21
 - [ ] `docs/prd/对话式简历编辑系统-屏幕流定义.md` §1、§10 — 当前使用 `UJ-D*`/`FEA-D*`/`PER-D*`/`BR-D*` 推导标识；正式前置工件建立后替换并复核矩阵，线框评审补齐 P0 状态。记录：2026-09-21
 - [ ] `ui/prototypes/index.html` — 定稿原型未覆盖设置页的语言切换控件（US-13.4 入口）；本次复用 SCR-010 已有的分段选择控件视觉（`border-cobalt bg-cobalt/5` 选中态），未新增页面视觉规则，待原型补该状态。记录：2026-09-27
+- [ ] `ui/prototypes/index.html` — 定稿原型未覆盖 RBAC 页的左树右表两栏布局（a08ef）；本次仅复用既有设计令牌与组件（`card-soft` / `primary` 等），未新增页面视觉规则，待原型补充该状态。记录：2026-09-27
