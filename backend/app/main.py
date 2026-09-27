@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
+from app.modules.auth.api import router as auth_router
 from app.modules.health.api import router as health_router
 from app.modules.jd.api import router as jd_router
 from app.modules.profile.api import router as profile_router
@@ -29,6 +30,7 @@ async def handle_request_validation_error(request: Request, exc: RequestValidati
 
 
 app.include_router(health_router)
+app.include_router(auth_router)
 app.include_router(templates_router)
 app.include_router(resume_router)
 app.include_router(jd_router)
