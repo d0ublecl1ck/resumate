@@ -3,6 +3,7 @@
 
 import { useState } from "react"
 import { AppNav, MobileNav } from "@/components/app-nav"
+import { ThemeSync } from "@/components/theme-sync"
 import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "resumate.sidebar.collapsed"
@@ -20,6 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-background">
+      <ThemeSync />
       <aside
         className={cn(
           "sticky top-0 hidden h-screen shrink-0 border-r border-border bg-card/40 transition-[width] duration-200 md:block",

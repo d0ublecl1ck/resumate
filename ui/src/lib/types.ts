@@ -433,7 +433,9 @@ export interface AgentConfigUpdate {
   budget?: Partial<AgentConfig["budget"]>
 }
 
-export type UserPreferencesUpdate = Partial<Pick<UserPreferences, "theme" | "language" | "displayName" | "autosave" | "defaultTemplateId">>
+export type UserPreferencesUpdate = Partial<
+  Pick<UserPreferences, "theme" | "language" | "displayName" | "autosave" | "defaultTemplateId" | "shortcuts">
+>
 
 // ---------------------------------------------------------------------------
 // 开放接入（C-10）

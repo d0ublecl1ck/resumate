@@ -25,6 +25,15 @@ describe("SettingsForm", () => {
     expect(await screen.findByText("已保存")).toBeInTheDocument()
   })
 
+  it("可编辑快捷键并保存", async () => {
+    renderForm()
+
+    fireEvent.change(screen.getByRole("textbox", { name: "保存 / flush 快捷键" }), { target: { value: "⌘ K" } })
+    fireEvent.click(screen.getByRole("button", { name: "保存偏好" }))
+
+    expect(await screen.findByText("已保存")).toBeInTheDocument()
+  })
+
   it("测试连接展示后端返回结果", async () => {
     renderForm()
 

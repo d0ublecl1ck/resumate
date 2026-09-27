@@ -8,6 +8,9 @@ class Settings(BaseSettings):
 
     app_name: str = "backend"
     database_url: str = "postgresql+psycopg://localhost:5432/resumate"
+    # Derives the Fernet key that encrypts stored model API keys. Override in
+    # every non-local deployment: rotating it makes existing ciphertext unreadable.
+    settings_secret_key: str = "resumate-local-dev-secret"
 
 
 @lru_cache

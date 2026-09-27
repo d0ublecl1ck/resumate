@@ -132,7 +132,9 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - `get_current_user` 为单用户占位依赖，固定返回本地用户；接入真实认证前不得多用户部署。
 - 统一错误契约放在 `app/shared/errors.py`，响应信封为 `ApiError`；`main.py` 注册异常处理器，各模块抛出领域异常而非手工构造状态码。
 - 模板（`app/modules/templates/`）本期只提供只读查询，内置模板由 `app/tasks/seed.py` 幂等写入；模板发布与下架属于后续管理端需求。
-- 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 只写入、不回显（仅返回 `keyConfigured`），连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。
+- 设置按单用户唯一行 `user_settings` 承载：`preferences` / `agent_config` / `model_config` 各为 JSON 列；模型 API Key 由 `SETTINGS_SECRET_KEY` 派生的 Fernet 密钥加密落库、只写入不回显（仅返回 `keyConfigured`），解密失败按未配置处理；连通性测试由后端外呼并记录 `lastTest`，错误信息不含明文密钥。
+- 快捷键映射在写入时做按键冲突校验（同一按键不可绑定多个动作），冲突返回 422 并保留原映射。
+- UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计补充」区块登记暗色令牌与设置页交互态。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
 - 根目录 `archkit inspect .` 当前运行 generic 层门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
