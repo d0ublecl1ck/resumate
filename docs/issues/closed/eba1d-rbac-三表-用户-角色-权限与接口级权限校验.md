@@ -1,14 +1,15 @@
 ---
 id: eba1d
-status: in-progress
+status: closed
 created_at: 2026-09-27T12:20:00.000Z
-updated_at: 2026-09-27T03:50:39.719Z
+updated_at: 2026-09-27T03:54:55.080Z
 priority: high
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-09-27T03:50:39.719Z
+closed_at: 2026-09-27T03:54:55.080Z
 ---
 
 # RBAC 三表：用户-角色-权限与接口级权限校验
