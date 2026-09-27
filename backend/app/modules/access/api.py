@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import require_permission
 
 from . import service
 from .schemas import (
@@ -19,7 +19,7 @@ router = APIRouter(tags=["access"])
 @router.get("/access/tokens", response_model=list[PersonalAccessTokenResponse])
 def get_tokens(
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("access:read")),
 ) -> list[PersonalAccessTokenResponse]:
     return service.list_tokens(db, user)
 
@@ -28,7 +28,7 @@ def get_tokens(
 def create_token(
     payload: PersonalAccessTokenCreate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("access:write")),
 ) -> PersonalAccessTokenResponse:
     return service.create_token(db, user, payload)
 
@@ -37,7 +37,7 @@ def create_token(
 def revoke_token(
     token_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("access:write")),
 ) -> PersonalAccessTokenResponse:
     return service.revoke_token(db, user, token_id)
 
@@ -45,7 +45,7 @@ def revoke_token(
 @router.get("/access/logs", response_model=list[AccessLogResponse])
 def get_logs(
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("access:read")),
 ) -> list[AccessLogResponse]:
     return service.list_logs(db, user)
 

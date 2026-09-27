@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import require_permission
 
 from . import service
 from .schemas import ImportPreviewResponse, ImportResultResponse
@@ -15,7 +15,7 @@ router = APIRouter(tags=["backup"])
 @router.get("/backup/export")
 def export_backup(
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("backup:read")),
 ) -> dict:
     return service.export_backup(db, user.id)
 
@@ -23,7 +23,7 @@ def export_backup(
 @router.get("/backup/export/markdown", response_class=PlainTextResponse)
 def export_markdown(
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("backup:read")),
 ) -> str:
     return service.export_markdown(db, user.id)
 
@@ -32,7 +32,7 @@ def export_markdown(
 def preview_import(
     payload: dict = Body(...),
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("backup:write")),
 ) -> ImportPreviewResponse:
     return service.preview_import(db, user.id, payload)
 
@@ -41,6 +41,6 @@ def preview_import(
 def import_backup(
     payload: dict = Body(...),
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("backup:write")),
 ) -> ImportResultResponse:
     return service.import_backup(db, user.id, payload)

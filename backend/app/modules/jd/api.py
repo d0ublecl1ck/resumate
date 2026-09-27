@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import get_current_user
+from app.modules.auth.deps import require_permission
 
 from . import service
 from .models import JobDescription
@@ -34,7 +34,7 @@ def get_jds(
     query: str | None = None,
     tag: str | None = None,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:read")),
 ) -> list[JobDescriptionResponse]:
     return [_to_response(db, jd) for jd in service.list_jds(db, user.id, query=query, tag=tag)]
 
@@ -43,7 +43,7 @@ def get_jds(
 def create_jd(
     payload: JobDescriptionCreate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.create_jd(db, user.id, payload))
 
@@ -52,7 +52,7 @@ def create_jd(
 def get_jd(
     jd_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:read")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.get_jd(db, user.id, jd_id))
 
@@ -62,7 +62,7 @@ def update_jd(
     jd_id: str,
     payload: JobDescriptionUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.update_jd(db, user.id, jd_id, payload))
 
@@ -71,7 +71,7 @@ def update_jd(
 def delete_jd(
     jd_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> None:
     service.delete_jd(db, user.id, jd_id)
 
@@ -81,7 +81,7 @@ def set_binding(
     jd_id: str,
     payload: BindingUpdate,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.set_binding(db, user.id, jd_id, payload.resume_id))
 
@@ -90,6 +90,6 @@ def set_binding(
 def release_binding(
     jd_id: str,
     db: Session = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.release_binding(db, user.id, jd_id))

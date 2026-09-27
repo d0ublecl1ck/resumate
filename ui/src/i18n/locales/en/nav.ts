@@ -16,6 +16,7 @@ export default {
   role: {
     jobseeker: "Jobseeker",
     admin: "Admin",
+    superAdmin: "Super admin",
     anonymous: "Not signed in",
   },
   actions: {

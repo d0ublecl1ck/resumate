@@ -16,6 +16,7 @@ export default {
   role: {
     jobseeker: "求职者",
     admin: "管理员",
+    superAdmin: "超级管理员",
     anonymous: "未登录",
   },
   actions: {

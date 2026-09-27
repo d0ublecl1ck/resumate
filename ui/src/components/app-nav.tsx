@@ -74,7 +74,14 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
   const navigate = useNavigate()
   const user = useCurrentUser().data
   const displayName = user?.displayName ?? t("nav.role.anonymous")
-  const roleLabel = user?.role === "admin" ? t("nav.role.admin") : t("nav.role.jobseeker")
+  const roleLabel =
+    user?.role === "super_admin"
+      ? t("nav.role.superAdmin")
+      : user?.role === "admin"
+        ? t("nav.role.admin")
+        : t("nav.role.jobseeker")
+  // 管理分区按 RBAC 权限显示，而不是硬编码角色。
+  const canManage = user?.permissions.includes("user:read") ?? false
 
   async function handleLogout() {
     try {
@@ -119,18 +126,22 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
         ))}
       </ul>
 
-      {collapsed ? (
-        <div className="my-3 border-t border-border" />
-      ) : (
-        <div className="mb-2 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("nav.group.admin")}</div>
-      )}
-      <ul className="space-y-1">
-        {ADMIN.map((item) => (
-          <li key={item.href}>
-            <NavItem href={item.href} label={t(item.labelKey)} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
-          </li>
-        ))}
-      </ul>
+      {canManage ? (
+        <>
+          {collapsed ? (
+            <div className="my-3 border-t border-border" />
+          ) : (
+            <div className="mb-2 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("nav.group.admin")}</div>
+          )}
+          <ul className="space-y-1">
+            {ADMIN.map((item) => (
+              <li key={item.href}>
+                <NavItem href={item.href} label={t(item.labelKey)} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
       <div className="mt-auto space-y-2">
         <div
@@ -172,7 +183,8 @@ export function MobileNav() {
   const { t } = useTranslation()
   const pathname = useLocation().pathname
   const [open, setOpen] = useState(false)
-  const links = [...MAIN, ...ADMIN]
+  const user = useCurrentUser().data
+  const links = user?.permissions.includes("user:read") ? [...MAIN, ...ADMIN] : MAIN
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur md:hidden">

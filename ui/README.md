@@ -18,6 +18,10 @@ pnpm dev
 
 测试通过 MSW（`src/test-server.ts`）以 fixtures 驱动真实 fetch 路径，不需要后端进程。
 
+## 角色与权限
+
+后端采用经典 RBAC（`users` / `roles` / `permissions` + `user_roles` / `role_permissions`）。`/auth/me` 返回当前账号的 `role`（最高角色码）、`roles` 与 `permissions`；前端据此按权限显示管理入口（例如拥有 `user:read` 才显示管理员分区），而不是硬编码角色。内置角色为普通用户 `user`、管理员 `admin`、超级管理员 `super_admin`。
+
 ## 国际化（i18n）
 
 界面文案由 i18next + react-i18next 管理，当前支持 `zh-CN` 与 `en`：

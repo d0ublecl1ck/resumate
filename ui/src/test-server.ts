@@ -20,7 +20,9 @@ const AUTH_USER: AuthUser = {
   id: "user_test",
   email: "test@resumate.dev",
   displayName: "测试用户",
-  role: "user",
+  role: "super_admin",
+  roles: ["super_admin"],
+  permissions: ["account:read", "account:write", "user:read", "role:read"],
   isBanned: false,
   createdAt: "2026-01-01T00:00:00+08:00",
 }

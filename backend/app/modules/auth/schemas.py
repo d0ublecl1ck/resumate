@@ -1,11 +1,8 @@
 from datetime import datetime
-from typing import Literal
 
 from pydantic import EmailStr, Field
 
 from app.shared.schemas import ApiModel
-
-UserRole = Literal["user", "admin"]
 
 
 class RegisterRequest(ApiModel):
@@ -28,10 +25,31 @@ class BanRequest(ApiModel):
     reason: str | None = Field(default=None, max_length=500)
 
 
+class RoleUpdateRequest(ApiModel):
+    role: str = Field(min_length=1, max_length=32)
+
+
 class UserResponse(ApiModel):
     id: str
     email: EmailStr
     display_name: str
-    role: UserRole
+    # Highest-ranked role code, kept for display.
+    role: str
+    roles: list[str] = Field(default_factory=list)
+    permissions: list[str] = Field(default_factory=list)
     is_banned: bool
     created_at: datetime
+
+
+class PermissionResponse(ApiModel):
+    code: str
+    group: str
+    name: str
+
+
+class RoleResponse(ApiModel):
+    code: str
+    name: str
+    description: str
+    rank: int
+    permissions: list[str] = Field(default_factory=list)
