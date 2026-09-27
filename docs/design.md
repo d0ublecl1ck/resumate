@@ -128,7 +128,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 当前公共端点（字段与 `ui/src/lib/types.ts` 对齐，JSON 使用 camelCase）：
 
-- 认证：`POST /auth/register`、`POST /auth/login`、`POST /auth/logout`、`GET /auth/me`。会话经 HttpOnly Cookie 承载。
+- 认证：`POST /auth/register`、`POST /auth/login`、`POST /auth/logout`、`POST /auth/password`、`GET /auth/me`、`POST /auth/users/{user_id}/ban`（仅管理员）。会话经 HttpOnly Cookie 承载。
 - 模板：`GET /templates`、`GET /templates/{template_id}`（只读）。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。
 - 岗位：`GET /jds`、`POST /jds`、`GET /jds/{jd_id}`、`PATCH /jds/{jd_id}`、`DELETE /jds/{jd_id}`、`PUT|DELETE /jds/{jd_id}/binding`。

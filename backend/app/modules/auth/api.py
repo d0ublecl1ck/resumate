@@ -8,9 +8,9 @@ from app.core.deps import CurrentUser
 from app.core.redis import get_redis
 
 from . import service
-from .deps import get_current_user
+from .deps import get_current_user, require_admin
 from .models import User
-from .schemas import LoginRequest, RegisterRequest, UserResponse
+from .schemas import BanRequest, ChangePasswordRequest, LoginRequest, RegisterRequest, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -75,6 +75,29 @@ def logout(
 ) -> None:
     service.logout(client, request.cookies.get(get_settings().session_cookie_name))
     _clear_session_cookie(response)
+
+
+@router.post("/password", status_code=status.HTTP_204_NO_CONTENT)
+def change_password(
+    payload: ChangePasswordRequest,
+    response: Response,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+) -> None:
+    service.change_password(db, client, user.id, payload)
+    _clear_session_cookie(response)
+
+
+@router.post("/users/{user_id}/ban", response_model=UserResponse)
+def ban_user(
+    user_id: str,
+    payload: BanRequest,
+    admin: CurrentUser = Depends(require_admin),
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+) -> UserResponse:
+    return _user_response(service.ban_user(db, client, admin.id, user_id, payload.reason))
 
 
 @router.get("/me", response_model=UserResponse)
