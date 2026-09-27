@@ -1,43 +1,37 @@
-"""Read-only model catalog sourced from litellm.
+"""Read-only model catalog sourced from a committed models.dev snapshot.
 
-Providers and models are never hand-maintained in this repository: they come
-from litellm's own model_prices_and_context_window.json, which ships with the
-installed litellm package. litellm is imported lazily so importing the settings
-module (and therefore the app) stays fast, and the bundled cost map is used so
-serving the catalog never reaches the network.
+Providers and models are never hand-maintained in this repository:
+scripts/refresh_model_catalog.py projects https://models.dev/api.json onto the
+local snapshot under data/model_catalog.json, which is committed. Runtime reads
+that file only, so catalog reads are fully offline and deterministic.
 """
 
 from __future__ import annotations
 
-import os
+import json
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-PROBE_TIMEOUT_SECONDS = 5
-# Use the cost map bundled with the installed litellm instead of fetching it
-# from GitHub, keeping catalog reads deterministic and offline. An explicit
-# operator override is preserved.
-LITELLM_LOCAL_COST_MAP_ENV = "LITELLM_LOCAL_MODEL_COST_MAP"
+import httpx
+
+from app.shared.errors import ValidationFailed
+
+SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "model_catalog.json"
+CATALOG_SOURCE = "models.dev"
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
+PROBE_TIMEOUT_SECONDS = 5.0
+CHAT_COMPLETIONS_PATH = "/chat/completions"
 
 
 class ModelCatalogUnavailable(RuntimeError):
-    """Raised when the litellm catalog source cannot be imported."""
-
-
-@lru_cache(maxsize=1)
-def _litellm() -> Any:
-    os.environ.setdefault(LITELLM_LOCAL_COST_MAP_ENV, "True")
-    try:
-        import litellm
-    except ImportError as exc:  # pragma: no cover - litellm is a declared dependency
-        raise ModelCatalogUnavailable("模型目录依赖 litellm，请先安装后端依赖") from exc
-    return litellm
+    """Raised when the committed catalog snapshot cannot be read."""
 
 
 @dataclass(frozen=True, slots=True)
 class CatalogModel:
-    """One provider-scoped model entry from the litellm catalog."""
+    """One projected models.dev model entry."""
 
     id: str
     label: str
@@ -49,7 +43,7 @@ class CatalogModel:
 
 @dataclass(frozen=True, slots=True)
 class CatalogProvider:
-    """A litellm provider together with its catalog models."""
+    """A models.dev provider together with its catalog models."""
 
     id: str
     label: str
@@ -74,43 +68,53 @@ def _as_float(value: Any) -> float | None:
     return None
 
 
-def _per_million(value: Any) -> float | None:
-    per_token = _as_float(value)
-    if per_token is None:
-        return None
-    return round(per_token * 1_000_000, 6)
+def _read_snapshot(path: Path) -> tuple[CatalogProvider, ...]:
+    """Parse the committed snapshot; any failure maps to ModelCatalogUnavailable."""
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ModelCatalogUnavailable(f"模型目录快照缺失：{path}") from exc
+    except OSError as exc:  # pragma: no cover - defensive branch
+        raise ModelCatalogUnavailable("模型目录快照无法读取") from exc
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ModelCatalogUnavailable("模型目录快照不是合法 JSON") from exc
+    providers_raw = data.get("providers") if isinstance(data, dict) else None
+    if not isinstance(providers_raw, list):
+        raise ModelCatalogUnavailable("模型目录快照缺少 providers")
+    providers: list[CatalogProvider] = []
+    for entry in providers_raw:
+        if not isinstance(entry, dict):
+            continue
+        models_raw = entry.get("models")
+        if not isinstance(models_raw, list):
+            continue
+        models = tuple(
+            CatalogModel(
+                id=str(model.get("id") or ""),
+                label=str(model.get("label") or model.get("id") or ""),
+                context_window=_as_int(model.get("contextWindow")),
+                max_output_tokens=_as_int(model.get("maxOutputTokens")),
+                input_cost_per_million=_as_float(model.get("inputCostPerMillion")),
+                output_cost_per_million=_as_float(model.get("outputCostPerMillion")),
+            )
+            for model in models_raw
+            if isinstance(model, dict) and (model.get("id") or model.get("label"))
+        )
+        providers.append(
+            CatalogProvider(
+                id=str(entry.get("id") or ""),
+                label=str(entry.get("label") or entry.get("id") or ""),
+                models=models,
+            )
+        )
+    return tuple(providers)
 
 
 @lru_cache(maxsize=1)
 def _catalog_tree() -> tuple[CatalogProvider, ...]:
-    """Build the provider/model tree once from litellm's maintained catalog."""
-    litellm = _litellm()
-    grouped: dict[str, list[CatalogModel]] = {}
-    for model_id, info in litellm.model_cost.items():
-        if not isinstance(info, dict):
-            continue
-        provider = info.get("litellm_provider")
-        if not isinstance(provider, str) or not provider:
-            continue
-        grouped.setdefault(provider, []).append(
-            CatalogModel(
-                id=str(model_id),
-                # litellm has no separate display name, so its id is the label.
-                label=str(model_id),
-                context_window=_as_int(info.get("max_input_tokens")),
-                max_output_tokens=_as_int(info.get("max_output_tokens")),
-                input_cost_per_million=_per_million(info.get("input_cost_per_token")),
-                output_cost_per_million=_per_million(info.get("output_cost_per_token")),
-            )
-        )
-    return tuple(
-        CatalogProvider(
-            id=provider_id,
-            label=provider_id,
-            models=tuple(sorted(models, key=lambda item: item.id)),
-        )
-        for provider_id, models in sorted(grouped.items())
-    )
+    return _read_snapshot(SNAPSHOT_PATH)
 
 
 def list_catalog(*, provider: str | None = None, query: str | None = None) -> list[CatalogProvider]:
@@ -125,11 +129,25 @@ def list_catalog(*, provider: str | None = None, query: str | None = None) -> li
     for entry in _catalog_tree():
         if provider_filter and entry.id != provider_filter:
             continue
-        models = [model for model in entry.models if not needle or needle in model.id.lower()]
+        models = [
+            model
+            for model in entry.models
+            if not needle or needle in model.id.lower() or needle in model.label.lower()
+        ]
         if not models:
             continue
         result.append(CatalogProvider(id=entry.id, label=entry.label, models=tuple(models)))
     return result
+
+
+def _resolve_base_url(*, provider: str | None, api_base: str | None) -> str:
+    """Configured endpoint, or the OpenAI default for the openai provider."""
+    base = (api_base or "").strip().rstrip("/")
+    if base:
+        return base
+    if (provider or "").strip().lower() == "openai":
+        return DEFAULT_OPENAI_BASE_URL
+    raise ValidationFailed("请先配置模型 Endpoint")
 
 
 _STATUS_MESSAGES = {
@@ -141,16 +159,13 @@ _STATUS_MESSAGES = {
 }
 
 
-def _safe_error_message(exc: Exception) -> str:
-    """Map a litellm failure to a message that never echoes the raw error/key."""
-    status = getattr(exc, "status_code", None)
-    if isinstance(status, int):
-        if status in _STATUS_MESSAGES:
-            return _STATUS_MESSAGES[status]
-        if status >= 500:
-            return "模型服务暂时不可用，请稍后重试"
-        return f"模型连通性测试失败（HTTP {status}）"
-    return f"模型连通性测试失败（{type(exc).__name__}）"
+def _safe_status_message(status: int) -> str:
+    """Map an HTTP status to copy that never echoes the raw response or key."""
+    if status in _STATUS_MESSAGES:
+        return _STATUS_MESSAGES[status]
+    if status >= 500:
+        return "模型服务暂时不可用，请稍后重试"
+    return f"模型连通性测试失败（HTTP {status}）"
 
 
 def probe_connection(
@@ -160,28 +175,33 @@ def probe_connection(
     api_key: str | None = None,
     api_base: str | None = None,
     timeout: float = PROBE_TIMEOUT_SECONDS,
+    client: httpx.Client | None = None,
 ) -> tuple[bool, str]:
-    """Run a minimal litellm call as a connectivity/credential check.
+    """Probe an OpenAI-compatible /chat/completions endpoint.
 
     The caller is responsible for never putting the credential in the result;
     this function additionally maps every failure to a generic message so a
-    provider error can never echo the key back to the client.
+    provider error can never echo the key back to the client. An explicit
+    client (for example an httpx.MockTransport client) is used for tests.
     """
-    litellm = _litellm()
-    kwargs: dict[str, Any] = {
+    base_url = _resolve_base_url(provider=provider, api_base=api_base)
+    url = base_url + CHAT_COMPLETIONS_PATH
+    payload: dict[str, Any] = {
         "model": model,
         "messages": [{"role": "user", "content": "ping"}],
         "max_tokens": 1,
-        "timeout": timeout,
     }
-    if provider:
-        kwargs["custom_llm_provider"] = provider
+    headers = {"Content-Type": "application/json"}
     if api_key:
-        kwargs["api_key"] = api_key
-    if api_base:
-        kwargs["api_base"] = api_base
+        headers["Authorization"] = f"Bearer {api_key}"
     try:
-        litellm.completion(**kwargs)
-    except Exception as exc:  # noqa: BLE001 - deliberately mapped to a safe message
-        return False, _safe_error_message(exc)
+        if client is None:
+            with httpx.Client(timeout=timeout) as owned:
+                response = owned.post(url, json=payload, headers=headers)
+        else:
+            response = client.post(url, json=payload, headers=headers)
+    except httpx.HTTPError:
+        return False, "无法连接模型服务，请检查 Endpoint 与网络"
+    if response.status_code >= 400:
+        return False, _safe_status_message(response.status_code)
     return True, "连接成功"

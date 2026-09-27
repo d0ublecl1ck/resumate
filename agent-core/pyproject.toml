@@ -10,14 +10,9 @@ dependencies = [
     "pydantic>=2.6,<3",
 ]
 
-[project.optional-dependencies]
-# Optional model-provider adapter; the base package stays httpx-only.
-litellm = ["litellm>=1.55,<2"]
-
 [dependency-groups]
 dev = [
     "pytest>=8,<9",
-    "litellm>=1.55,<2",
 ]
 
 [build-system]
