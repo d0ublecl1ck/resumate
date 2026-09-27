@@ -473,7 +473,7 @@ export interface ModelConfigUpdate {
 }
 
 // ---------------------------------------------------------------------------
-// 模型目录（契约 §17 / 9546b）：只读，条目来自后端维护的 litellm 目录。
+// 模型目录（契约 §17 / 9546b）：只读，条目来自后端维护的 models.dev 快照。
 // ---------------------------------------------------------------------------
 
 export interface ModelCatalogModel {
@@ -493,7 +493,7 @@ export interface ModelCatalogProvider {
 }
 
 export interface ModelCatalog {
-  /** 目录来源，固定为 "litellm" */
+  /** 目录来源，固定为 "models.dev" */
   source: string
   providers: ModelCatalogProvider[]
 }
