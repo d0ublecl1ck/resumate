@@ -14,9 +14,7 @@ from .schemas import (
     BanRequest,
     ChangePasswordRequest,
     LoginRequest,
-    PermissionCreate,
     PermissionResponse,
-    PermissionUpdate,
     RegisterRequest,
     RoleCreate,
     RoleResponse,
@@ -63,7 +61,6 @@ def _permission_response(permission) -> PermissionResponse:
         code=permission.code,
         group=permission.group,
         name=permission.name,
-        is_system=permission.is_system,
     )
 
 
@@ -206,34 +203,6 @@ def delete_role(
     db: Session = Depends(get_db),
 ) -> None:
     service.delete_role(db, role_id)
-
-
-@router.post("/permissions", response_model=PermissionResponse, status_code=status.HTTP_201_CREATED)
-def create_permission(
-    payload: PermissionCreate,
-    _: CurrentUser = Depends(require_permission("permission:write")),
-    db: Session = Depends(get_db),
-) -> PermissionResponse:
-    return _permission_response(service.create_permission(db, payload))
-
-
-@router.patch("/permissions/{permission_id}", response_model=PermissionResponse)
-def update_permission(
-    permission_id: str,
-    payload: PermissionUpdate,
-    _: CurrentUser = Depends(require_permission("permission:write")),
-    db: Session = Depends(get_db),
-) -> PermissionResponse:
-    return _permission_response(service.update_permission(db, permission_id, payload))
-
-
-@router.delete("/permissions/{permission_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_permission(
-    permission_id: str,
-    _: CurrentUser = Depends(require_permission("permission:write")),
-    db: Session = Depends(get_db),
-) -> None:
-    service.delete_permission(db, permission_id)
 
 
 @router.post("/users/{user_id}/role", response_model=UserResponse)

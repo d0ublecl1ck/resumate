@@ -86,23 +86,12 @@ export interface RoleUpdateInput {
   permissions?: string[]
 }
 
+/** 权限码由代码目录拥有（端点静态声明），前端只读展示。 */
 export interface Permission {
   id: string
   code: string
   group: string
   name: string
-  isSystem: boolean
-}
-
-export interface PermissionInput {
-  code: string
-  group: string
-  name: string
-}
-
-export interface PermissionUpdateInput {
-  group?: string
-  name?: string
 }
 
 // ---------------------------------------------------------------------------

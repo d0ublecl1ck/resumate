@@ -35,10 +35,9 @@ const RBAC_ROLES: Role[] = [
 ]
 
 const RBAC_PERMISSIONS: Permission[] = [
-  { id: "perm_resume_read", code: "resume:read", group: "resume", name: "读取简历", isSystem: true },
-  { id: "perm_resume_write", code: "resume:write", group: "resume", name: "编辑简历", isSystem: true },
-  { id: "perm_role_write", code: "role:write", group: "role", name: "维护角色", isSystem: true },
-  { id: "perm_permission_write", code: "permission:write", group: "permission", name: "维护权限目录", isSystem: true },
+  { id: "perm_resume_read", code: "resume:read", group: "resume", name: "读取简历" },
+  { id: "perm_resume_write", code: "resume:write", group: "resume", name: "编辑简历" },
+  { id: "perm_role_write", code: "role:write", group: "role", name: "维护角色" },
 ]
 
 function unauthorized(code: string, message: string) {
@@ -92,16 +91,6 @@ export const handlers = [
   }),
   http.delete("/api/auth/roles/:id", () => new HttpResponse(null, { status: 204 })),
   http.get("/api/auth/permissions", () => HttpResponse.json(RBAC_PERMISSIONS)),
-  http.post("/api/auth/permissions", async ({ request }) => {
-    const body = (await request.json()) as Partial<Permission>
-    return HttpResponse.json({ ...RBAC_PERMISSIONS[0], id: "perm_mock_new", isSystem: false, ...body }, { status: 201 })
-  }),
-  http.patch("/api/auth/permissions/:id", async ({ params, request }) => {
-    const body = (await request.json()) as Partial<Permission>
-    const base = RBAC_PERMISSIONS.find((item) => item.id === params.id) ?? RBAC_PERMISSIONS[0]
-    return HttpResponse.json({ ...base, ...body })
-  }),
-  http.delete("/api/auth/permissions/:id", () => new HttpResponse(null, { status: 204 })),
   http.get("/api/profile", () => HttpResponse.json(PROFILE)),
   http.patch("/api/profile/basics", async ({ request }) => {
     const patch = (await request.json()) as Record<string, unknown>

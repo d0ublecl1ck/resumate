@@ -46,18 +46,6 @@ class PermissionResponse(ApiModel):
     code: str
     group: str
     name: str
-    is_system: bool = True
-
-
-class PermissionCreate(ApiModel):
-    code: str = Field(min_length=3, max_length=64)
-    group: str = Field(min_length=1, max_length=32)
-    name: str = Field(min_length=1, max_length=120)
-
-
-class PermissionUpdate(ApiModel):
-    group: str | None = Field(default=None, min_length=1, max_length=32)
-    name: str | None = Field(default=None, min_length=1, max_length=120)
 
 
 class RoleResponse(ApiModel):

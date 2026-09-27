@@ -18,22 +18,8 @@ from app.shared.errors import (
 
 from . import dao, session_store
 from .models import Permission, Role, User
-from .rbac import (
-    BOOTSTRAP_ROLE_CODE,
-    DEFAULT_ROLE_CODE,
-    PERMISSION_CODE_PATTERN,
-    ROLE_CODE_PATTERN,
-    ROLE_RANK,
-)
-from .schemas import (
-    ChangePasswordRequest,
-    LoginRequest,
-    PermissionCreate,
-    PermissionUpdate,
-    RegisterRequest,
-    RoleCreate,
-    RoleUpdate,
-)
+from .rbac import BOOTSTRAP_ROLE_CODE, DEFAULT_ROLE_CODE, ROLE_CODE_PATTERN, ROLE_RANK
+from .schemas import ChangePasswordRequest, LoginRequest, RegisterRequest, RoleCreate, RoleUpdate
 from .security import hash_password, verify_password
 
 
@@ -192,13 +178,6 @@ def _get_role_or_raise(db: Session, role_id: str) -> Role:
     return role
 
 
-def _get_permission_or_raise(db: Session, permission_id: str) -> Permission:
-    permission = dao.get_permission(db, permission_id)
-    if permission is None:
-        raise ResourceNotFound(f"权限 {permission_id} 不存在")
-    return permission
-
-
 def _resolve_permissions(db: Session, codes: list[str]) -> list[Permission]:
     resolved: list[Permission] = []
     seen: set[str] = set()
@@ -267,48 +246,6 @@ def delete_role(db: Session, role_id: str) -> None:
         raise ValidationFailed("仍有用户使用该角色，不能删除")
     dao.clear_role_permissions(db, role.id)
     dao.delete_role(db, role)
-    db.commit()
-
-
-def create_permission(db: Session, payload: PermissionCreate) -> Permission:
-    code = payload.code.strip()
-    if not re.match(PERMISSION_CODE_PATTERN, code):
-        raise ValidationFailed("权限 code 需形如 resource:action（小写字母、数字、下划线）")
-    if dao.get_permission_by_code(db, code) is not None:
-        raise ValidationFailed(f"权限 code {code} 已存在")
-    permission = Permission(
-        id=f"perm_{code.replace(':', '_')}_{uuid4().hex[:4]}",
-        code=code,
-        group=payload.group.strip(),
-        name=payload.name.strip(),
-        is_system=False,
-        created_at=_now(),
-    )
-    dao.add_permission(db, permission)
-    db.commit()
-    db.refresh(permission)
-    return permission
-
-
-def update_permission(db: Session, permission_id: str, payload: PermissionUpdate) -> Permission:
-    permission = _get_permission_or_raise(db, permission_id)
-    if permission.is_system:
-        raise ValidationFailed("系统权限不可修改")
-    if payload.name is not None:
-        permission.name = payload.name.strip()
-    if payload.group is not None:
-        permission.group = payload.group.strip()
-    db.commit()
-    db.refresh(permission)
-    return permission
-
-
-def delete_permission(db: Session, permission_id: str) -> None:
-    permission = _get_permission_or_raise(db, permission_id)
-    if permission.is_system:
-        raise ValidationFailed("系统权限不可删除")
-    dao.remove_permission_links(db, permission.id)
-    dao.delete_permission(db, permission)
     db.commit()
 
 

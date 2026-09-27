@@ -15,11 +15,13 @@ function renderPage() {
 }
 
 describe("RbacPage", () => {
-  it("展示内置角色与权限目录", async () => {
+  it("展示内置角色与只读权限目录", async () => {
     renderPage()
 
     expect(await screen.findByText("super_admin")).toBeInTheDocument()
     expect(screen.getByText("role:write")).toBeInTheDocument()
+    // 权限码与端点绑定，界面不提供在线新建权限。
+    expect(screen.queryByRole("button", { name: /新建权限/ })).not.toBeInTheDocument()
   })
 
   it("新建自定义角色后关闭弹窗", async () => {
