@@ -40,8 +40,8 @@ def test_revoke_is_idempotent_and_audited(client: TestClient) -> None:
     assert second.json()["status"] == "revoked"
 
     purposes = [log["purpose"] for log in client.get("/access/logs").json()]
-    assert purposes.count("创建访问令牌") == 1
-    assert purposes.count("撤销访问令牌") == 1
+    assert purposes.count("token_create") == 1
+    assert purposes.count("token_revoke") == 1
 
 
 def test_unknown_scope_is_rejected(client: TestClient) -> None:

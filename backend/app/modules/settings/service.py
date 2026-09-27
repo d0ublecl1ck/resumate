@@ -32,11 +32,12 @@ from .schemas import (
 DEFAULT_THEME = "paper"
 DEFAULT_LANGUAGE = "zh-CN"
 DEFAULT_AUTOSAVE = True
+# Stable action keys; the UI maps them through settings.preferences.shortcutAction.*.
 DEFAULT_SHORTCUTS: list[dict] = [
-    {"action": "保存 / flush", "keys": "⌘ S"},
-    {"action": "发送对话", "keys": "⌘ ↵"},
-    {"action": "打开版本历史", "keys": "⌘ H"},
-    {"action": "接受全部 Diff", "keys": "⌘ ⇧ A"},
+    {"action": "save_flush", "keys": "⌘ S"},
+    {"action": "send_message", "keys": "⌘ ↵"},
+    {"action": "open_history", "keys": "⌘ H"},
+    {"action": "accept_all_diff", "keys": "⌘ ⇧ A"},
 ]
 DEFAULT_AGENT_CONFIG: dict = {
     "nextRunMode": "approval",
@@ -44,9 +45,10 @@ DEFAULT_AGENT_CONFIG: dict = {
 }
 DEFAULT_MODEL_CONFIG: dict = {"provider": "", "endpoint": "", "model": ""}
 
-# Display-only policy text: what Full Access skips and what still needs confirmation.
-FULL_ACCESS_SCOPES = ["读取、检索、比较、渲染", "普通内容 Patch", "元数据更新与归档"]
-CONFIRM_RETAINED_OPS = ["删除", "历史恢复 / undo / redo", "覆盖已有导出文件", "Profile 选材生成简历", "事实晋升 Profile"]
+# Stable policy keys; the UI maps them through settings.agent.fullAccessScope.* /
+# settings.agent.confirmRetainedOp.* so the copy follows the active locale.
+FULL_ACCESS_SCOPES = ["read_search_compare_render", "content_patch", "metadata_update_archive"]
+CONFIRM_RETAINED_OPS = ["delete", "history_restore", "overwrite_export", "profile_to_resume", "fact_promotion"]
 
 PROBE_TIMEOUT_SECONDS = 5
 # Marks a Fernet ciphertext so keys written before encryption existed still read.

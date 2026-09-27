@@ -122,7 +122,7 @@ def create_token(db: Session, user: CurrentUser, payload: PersonalAccessTokenCre
         client_id=user.display_name,
         scope="access:write",
         resource=payload.name,
-        purpose="创建访问令牌",
+        purpose="token_create",
     )
     db.commit()
     db.refresh(token)
@@ -141,7 +141,7 @@ def revoke_token(db: Session, user: CurrentUser, token_id: str) -> PersonalAcces
             client_id=user.display_name,
             scope="access:write",
             resource=token.name,
-            purpose="撤销访问令牌",
+            purpose="token_revoke",
         )
         db.commit()
         db.refresh(token)

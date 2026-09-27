@@ -1,9 +1,11 @@
 // SCR-010 设置与 Agent 运行配置。
 // 「当前运行」与「后续默认」分区（BR-D02）；凭证不回显（BR-D17）；
-// 测试连接由后端发起，任何响应都不含明文密钥；未冻结的 D-02 参数不在本地硬编码。
+// 测试连接由后端发起，任何响应都不含明文密钥。界面文案统一走 i18n。
 
 import { useState, type ReactNode } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
+import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
 import { testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -25,6 +27,7 @@ export function SettingsForm({
   prefs: UserPreferences
   templates: ResumeTemplate[]
 }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
 
   const [nextMode, setNextMode] = useState<ExecutionMode>(agent.nextRunMode)
@@ -40,12 +43,17 @@ export function SettingsForm({
   const [modelStatus, setModelStatus] = useState<SaveState>("idle")
 
   const [displayName, setDisplayName] = useState(prefs.displayName)
-  const [language, setLanguage] = useState(prefs.language)
   const [theme, setTheme] = useState(prefs.theme)
   const [autosave, setAutosave] = useState(prefs.autosave)
   const [defaultTemplateId, setDefaultTemplateId] = useState(prefs.defaultTemplateId)
   const [shortcuts, setShortcuts] = useState(prefs.shortcuts)
   const [prefsStatus, setPrefsStatus] = useState<SaveState>("idle")
+
+  const activeLocale = currentLocale()
+  const separator = t("common.listSeparator")
+  const scopes = agent.fullAccessScopes.map((scope) => t("settings.agent.fullAccessScope." + scope, { defaultValue: scope })).join(separator)
+  const retained = agent.confirmRetainedOps.map((op) => t("settings.agent.confirmRetainedOp." + op, { defaultValue: op })).join(separator)
+  const modeSource = t("settings.agent.source." + agent.modeSource, { defaultValue: agent.modeSource })
 
   const agentMutation = useMutation({
     mutationFn: () =>
@@ -79,7 +87,7 @@ export function SettingsForm({
   })
 
   const prefsMutation = useMutation({
-    mutationFn: () => updatePreferences({ displayName, language, theme, autosave, defaultTemplateId, shortcuts }),
+    mutationFn: () => updatePreferences({ displayName, theme, autosave, defaultTemplateId, shortcuts }),
     onMutate: () => setPrefsStatus("saving"),
     onSuccess: (data) => {
       queryClient.setQueryData(["preferences"], data)
@@ -87,6 +95,11 @@ export function SettingsForm({
       setPrefsStatus("saved")
     },
     onError: () => setPrefsStatus("error"),
+  })
+
+  const languageMutation = useMutation({
+    mutationFn: (code: string) => updatePreferences({ language: code }),
+    onSuccess: (data) => queryClient.setQueryData(["preferences"], data),
   })
 
   const testMutation = useMutation({
@@ -97,21 +110,20 @@ export function SettingsForm({
     },
   })
 
-  const publishedTemplates = templates.filter((template) => template.status === "published")
+  const publishedTemplates = templates.filter((tpl) => tpl.status === "published")
   const testResult = testMutation.data ?? model.lastTest
 
   return (
     <div className="space-y-6">
-      {/* Agent 模式 */}
-      <Section title="Agent 运行模式" hint="当前运行中的 Run 使用固化模式；这里的更改只对之后创建的 Run 生效。">
+      <Section title={t("settings.agent.title")} hint={t("settings.agent.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">当前运行 Run</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{agent.currentRunMode ?? "无运行中 Run"}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">模式来源：{agent.modeSource}（服务端固化，不可改）</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.currentRun")}</p>
+            <p className="mt-1 text-sm font-semibold text-foreground">{agent.currentRunMode ? t("common.executionMode." + agent.currentRunMode) : t("settings.agent.noCurrentRun")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("settings.agent.modeSource", { source: modeSource })}</p>
           </div>
           <div className="rounded-lg border border-border p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">后续 Run 默认</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.nextRunDefault")}</p>
             <div className="mt-2 flex gap-2">
               {(["approval", "full_access"] as ExecutionMode[]).map((mode) => (
                 <button
@@ -122,12 +134,9 @@ export function SettingsForm({
                     setAgentStatus("idle")
                   }}
                   aria-pressed={nextMode === mode}
-                  className={cn(
-                    "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                    nextMode === mode ? "border-cobalt bg-cobalt/5 text-foreground" : "border-border text-muted-foreground hover:bg-secondary",
-                  )}
+                  className={cn("flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors", nextMode === mode ? "border-cobalt bg-cobalt/5 text-foreground" : "border-border text-muted-foreground hover:bg-secondary")}
                 >
-                  {mode === "approval" ? "Approval 逐项确认" : "Full Access"}
+                  {t("common.executionMode." + mode)}
                 </button>
               ))}
             </div>
@@ -135,15 +144,15 @@ export function SettingsForm({
         </div>
         {nextMode === "full_access" ? (
           <div className="mt-3 rounded-lg border border-gold/60 bg-gold/15 p-3 text-xs leading-5 text-foreground">
-            <p className="font-medium">Full Access 免确认范围：</p>
-            <p className="mt-1">{agent.fullAccessScopes.join("、")}。</p>
-            <p className="mt-1.5 font-medium">仍保留确认的高影响操作：</p>
-            <p className="mt-1">{agent.confirmRetainedOps.join("、")}。</p>
+            <p className="font-medium">{t("settings.agent.fullAccessScopes")}</p>
+            <p className="mt-1">{scopes}。</p>
+            <p className="mt-1.5 font-medium">{t("settings.agent.confirmRetainedOps")}</p>
+            <p className="mt-1">{retained}。</p>
           </div>
         ) : null}
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>Token 预算上限</FieldLabel>
+            <FieldLabel>{t("settings.agent.tokenLimit")}</FieldLabel>
             <input
               type="number"
               min={1}
@@ -156,7 +165,7 @@ export function SettingsForm({
             />
           </label>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>最大轮次</FieldLabel>
+            <FieldLabel>{t("settings.agent.maxTurns")}</FieldLabel>
             <input
               type="number"
               min={1}
@@ -169,7 +178,7 @@ export function SettingsForm({
             />
           </label>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>成本上限（USD）</FieldLabel>
+            <FieldLabel>{t("settings.agent.costLimit")}</FieldLabel>
             <input
               type="number"
               min={0}
@@ -183,24 +192,13 @@ export function SettingsForm({
             />
           </label>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => agentMutation.mutate()}
-            disabled={agentMutation.isPending}
-            className="ml-auto rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            保存 Agent 配置
-          </button>
-          <SaveStatus state={agentStatus} error={agentMutation.error} />
-        </div>
+        <SaveRow label={t("settings.agent.save")} pending={agentMutation.isPending} state={agentStatus} error={agentMutation.error} onSave={() => agentMutation.mutate()} />
       </Section>
 
-      {/* 模型配置 */}
-      <Section title="模型配置" hint="API Key 只写入、不回显；测试连接由后端发起，界面不接触明文密钥。">
+      <Section title={t("settings.model.title")} hint={t("settings.model.hint")}>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>Provider</FieldLabel>
+            <FieldLabel>{t("settings.model.provider")}</FieldLabel>
             <input
               className={INPUT_CLASS}
               value={provider}
@@ -211,10 +209,10 @@ export function SettingsForm({
             />
           </label>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>Endpoint</FieldLabel>
+            <FieldLabel>{t("settings.model.endpoint")}</FieldLabel>
             <input
               className={INPUT_CLASS}
-              placeholder="https://api.example.com/v1"
+              placeholder={t("settings.model.endpointPlaceholder")}
               value={endpoint}
               onChange={(event) => {
                 setEndpoint(event.target.value)
@@ -223,7 +221,7 @@ export function SettingsForm({
             />
           </label>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>Model</FieldLabel>
+            <FieldLabel>{t("settings.model.model")}</FieldLabel>
             <input
               className={INPUT_CLASS}
               value={modelName}
@@ -234,20 +232,20 @@ export function SettingsForm({
             />
           </label>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>API Key</FieldLabel>
+            <FieldLabel>{t("settings.model.apiKey")}</FieldLabel>
             <input
               type="password"
               autoComplete="off"
               className={INPUT_CLASS}
               value={apiKey}
-              placeholder={model.keyConfigured ? "已配置（留空则不修改）" : "未配置"}
+              placeholder={model.keyConfigured ? t("settings.model.keyConfiguredPlaceholder") : t("settings.model.keyMissingPlaceholder")}
               onChange={(event) => {
                 setApiKey(event.target.value)
                 setModelStatus("idle")
               }}
             />
             <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <KeyRound className="size-3.5 text-cobalt" aria-hidden /> {model.keyConfigured ? "已配置（不回显）" : "未配置"}
+              <KeyRound className="size-3.5 text-cobalt" aria-hidden /> {model.keyConfigured ? t("settings.model.keyConfigured") : t("settings.model.keyMissing")}
             </p>
           </label>
         </div>
@@ -258,7 +256,7 @@ export function SettingsForm({
             disabled={modelMutation.isPending}
             className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            保存模型配置
+            {t("settings.model.save")}
           </button>
           <button
             type="button"
@@ -266,13 +264,13 @@ export function SettingsForm({
             disabled={testMutation.isPending}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
           >
-            <RefreshCw className={cn("size-4", testMutation.isPending && "animate-spin")} aria-hidden /> 测试连接
+            <RefreshCw className={cn("size-4", testMutation.isPending && "animate-spin")} aria-hidden /> {t("settings.model.test")}
           </button>
           <SaveStatus state={modelStatus} error={modelMutation.error} />
-          {testMutation.isPending ? <span className="text-xs text-muted-foreground">测试中…</span> : null}
+          {testMutation.isPending ? <span className="text-xs text-muted-foreground">{t("settings.model.testing")}</span> : null}
           {testMutation.isError ? (
             <span className="inline-flex items-center gap-1 text-xs text-coral">
-              <AlertTriangle className="size-3.5" aria-hidden /> {testMutation.error instanceof Error ? testMutation.error.message : "测试失败"}
+              <AlertTriangle className="size-3.5" aria-hidden /> {t("settings.model.testFailed")}
             </span>
           ) : null}
           {!testMutation.isPending && !testMutation.isError && testResult ? (
@@ -284,11 +282,10 @@ export function SettingsForm({
         </div>
       </Section>
 
-      {/* 偏好 */}
-      <Section title="个人偏好" hint="主题、语言、自动保存与默认模板；语言与头像边界依赖 D-02 冻结，这里不做本地硬编码。">
+      <Section title={t("settings.preferences.title")} hint={t("settings.preferences.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel>显示名称</FieldLabel>
+            <FieldLabel>{t("settings.preferences.displayName")}</FieldLabel>
             <input
               className={INPUT_CLASS}
               value={displayName}
@@ -298,19 +295,31 @@ export function SettingsForm({
               }}
             />
           </label>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">{t("settings.preferences.language")}</p>
+            <div className="mt-2 flex gap-2" role="group" aria-label={t("settings.preferences.language")}>
+              {SUPPORTED_LOCALES.map((locale) => (
+                <button
+                  key={locale.code}
+                  type="button"
+                  onClick={() => {
+                    changeLocale(locale.code)
+                    languageMutation.mutate(locale.code)
+                  }}
+                  aria-pressed={activeLocale === locale.code}
+                  className={cn(
+                    "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+                    activeLocale === locale.code ? "border-cobalt bg-cobalt/5 text-foreground" : "border-border text-muted-foreground hover:bg-secondary",
+                  )}
+                >
+                  {t(locale.labelKey)}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">{t("settings.preferences.languageHint")}</p>
+          </div>
           <label className="rounded-lg border border-border p-3">
-            <FieldLabel badge="待冻结 D-02">界面语言</FieldLabel>
-            <input
-              className={INPUT_CLASS}
-              value={language}
-              onChange={(event) => {
-                setLanguage(event.target.value)
-                setPrefsStatus("idle")
-              }}
-            />
-          </label>
-          <label className="rounded-lg border border-border p-3">
-            <FieldLabel>主题</FieldLabel>
+            <FieldLabel>{t("settings.preferences.theme")}</FieldLabel>
             <select
               className={INPUT_CLASS}
               value={theme}
@@ -319,13 +328,13 @@ export function SettingsForm({
                 setPrefsStatus("idle")
               }}
             >
-              <option value="paper">纸感（浅色）</option>
-              <option value="dark">深色</option>
+              <option value="paper">{t("settings.preferences.themePaper")}</option>
+              <option value="dark">{t("settings.preferences.themeDark")}</option>
             </select>
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">深色令牌尚未定义，当前只持久化选择。</p>
+            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{t("settings.preferences.themeHint")}</p>
           </label>
           <label className="flex items-center justify-between rounded-lg border border-border p-3">
-            <span className="text-sm text-foreground">自动保存（30s 静默提交）</span>
+            <span className="text-sm text-foreground">{t("settings.preferences.autosave")}</span>
             <button
               type="button"
               onClick={() => {
@@ -334,14 +343,14 @@ export function SettingsForm({
               }}
               role="switch"
               aria-checked={autosave}
-              aria-label="自动保存"
+              aria-label={t("settings.preferences.autosave")}
               className={cn("relative h-6 w-11 rounded-full transition-colors", autosave ? "bg-cobalt" : "bg-border")}
             >
               <span className={cn("absolute top-0.5 size-5 rounded-full bg-card transition-transform", autosave ? "translate-x-5" : "translate-x-0.5")} />
             </button>
           </label>
           <div className="rounded-lg border border-border p-3">
-            <FieldLabel>默认模板</FieldLabel>
+            <FieldLabel>{t("settings.preferences.defaultTemplate")}</FieldLabel>
             <select
               className={INPUT_CLASS}
               value={defaultTemplateId}
@@ -350,63 +359,74 @@ export function SettingsForm({
                 setPrefsStatus("idle")
               }}
             >
-              <option value="">不设置</option>
-              {prefs.defaultTemplateRetired && defaultTemplateId ? <option value={defaultTemplateId}>（不可用）{defaultTemplateId}</option> : null}
-              {publishedTemplates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.name}
+              <option value="">{t("settings.preferences.defaultTemplateNone")}</option>
+              {prefs.defaultTemplateRetired && defaultTemplateId ? (
+                <option value={defaultTemplateId}>{t("settings.preferences.defaultTemplateUnavailableOption", { id: defaultTemplateId })}</option>
+              ) : null}
+              {publishedTemplates.map((tpl) => (
+                <option key={tpl.id} value={tpl.id}>
+                  {tpl.name}
                 </option>
               ))}
             </select>
             {prefs.defaultTemplateRetired ? (
               <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-coral">
-                <AlertTriangle className="size-3" aria-hidden /> 已保存的默认模板不可用，请重新选择
+                <AlertTriangle className="size-3" aria-hidden /> {t("settings.preferences.defaultTemplateUnavailable")}
               </p>
             ) : null}
           </div>
         </div>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">快捷键</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("settings.preferences.shortcuts")}</p>
           <ul className="grid gap-1.5 sm:grid-cols-2">
-            {shortcuts.map((shortcut, index) => (
-              <li key={shortcut.action} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-1.5 text-sm">
-                <span className="text-foreground">{shortcut.action}</span>
-                <span className="flex items-center gap-2">
-                  <input
-                    aria-label={shortcut.action + " 快捷键"}
-                    value={shortcut.keys}
-                    onChange={(event) => {
-                      const keys = event.target.value
-                      setShortcuts((items) => items.map((item, position) => (position === index ? { ...item, keys } : item)))
-                      setPrefsStatus("idle")
-                    }}
-                    className="w-24 rounded-md border border-input bg-background px-2 py-1 text-center font-mono text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-                  />
-                  {shortcut.conflict ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-coral">
-                      <AlertTriangle className="size-3" aria-hidden /> 冲突
-                    </span>
-                  ) : null}
-                </span>
-              </li>
-            ))}
+            {shortcuts.map((shortcut, index) => {
+              const actionLabel = t("settings.preferences.shortcutAction." + shortcut.action, { defaultValue: shortcut.action })
+              return (
+                <li key={shortcut.action} className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-1.5 text-sm">
+                  <span className="text-foreground">{actionLabel}</span>
+                  <span className="flex items-center gap-2">
+                    <input
+                      aria-label={t("settings.preferences.shortcutEditAria", { action: actionLabel })}
+                      value={shortcut.keys}
+                      onChange={(event) => {
+                        const keys = event.target.value
+                        setShortcuts((items) => items.map((item, position) => (position === index ? { ...item, keys } : item)))
+                        setPrefsStatus("idle")
+                      }}
+                      className="w-24 rounded-md border border-input bg-background px-2 py-1 text-center font-mono text-xs outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    />
+                    {shortcut.conflict ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-coral">
+                        <AlertTriangle className="size-3" aria-hidden /> {t("settings.preferences.shortcutConflict")}
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
-          <p className="mt-2 text-[11px] text-muted-foreground">同一按键不能绑定多个动作；冲突会在保存时被后端拒绝并保留原映射。</p>
+          <p className="mt-2 text-[11px] text-muted-foreground">{t("settings.preferences.shortcutEditHint")}</p>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => prefsMutation.mutate()}
-            disabled={prefsMutation.isPending}
-            className="ml-auto rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-          >
-            保存偏好
-          </button>
-          <SaveStatus state={prefsStatus} error={prefsMutation.error} />
-        </div>
+        <SaveRow label={t("settings.preferences.save")} pending={prefsMutation.isPending} state={prefsStatus} error={prefsMutation.error} onSave={() => prefsMutation.mutate()} />
       </Section>
+    </div>
+  )
+}
+
+function SaveRow({ label, pending, state, error, onSave }: { label: string; pending: boolean; state: SaveState; error: unknown; onSave: () => void }) {
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={pending}
+        className="ml-auto rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+      >
+        {label}
+      </button>
+      <SaveStatus state={state} error={error} />
     </div>
   )
 }
@@ -421,28 +441,24 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
   )
 }
 
-function FieldLabel({ children, badge }: { children: ReactNode; badge?: string }) {
-  return (
-    <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-      {children}
-      {badge ? <span className="rounded bg-gold/20 px-1.5 py-0.5 text-[10px] text-foreground">{badge}</span> : null}
-    </span>
-  )
+function FieldLabel({ children }: { children: ReactNode }) {
+  return <span className="text-xs font-medium text-muted-foreground">{children}</span>
 }
 
 function SaveStatus({ state, error }: { state: SaveState; error: unknown }) {
-  if (state === "saving") return <span className="text-xs text-muted-foreground">保存中…</span>
+  const { t } = useTranslation()
+  if (state === "saving") return <span className="text-xs text-muted-foreground">{t("settings.save.saving")}</span>
   if (state === "saved") {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-cobalt">
-        <CheckCircle2 className="size-3.5" aria-hidden /> 已保存
+        <CheckCircle2 className="size-3.5" aria-hidden /> {t("settings.save.saved")}
       </span>
     )
   }
   if (state === "error") {
     return (
       <span className="inline-flex items-center gap-1 text-xs text-coral">
-        <AlertTriangle className="size-3.5" aria-hidden /> {error instanceof Error ? error.message : "保存失败"}
+        <AlertTriangle className="size-3.5" aria-hidden /> {error instanceof Error ? error.message : t("settings.save.failed")}
       </span>
     )
   }

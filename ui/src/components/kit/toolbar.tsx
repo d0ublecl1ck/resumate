@@ -1,12 +1,13 @@
 // DES-010 筛选与查询工具条：关键词 + 标签/状态过滤，可逐项清除。
 
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { Search, X } from "lucide-react"
 
 export function FilterToolbar({
   query,
   onQuery,
-  placeholder = "搜索…",
+  placeholder,
   chips = [],
   activeChip,
   onChip,
@@ -20,6 +21,8 @@ export function FilterToolbar({
   onChip?: (key: string) => void
   right?: React.ReactNode
 }) {
+  const { t } = useTranslation()
+  const hint = placeholder ?? t("common.search.placeholder")
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative min-w-[220px] flex-1">
@@ -27,12 +30,12 @@ export function FilterToolbar({
         <input
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={hint}
           className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-8 text-sm outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
-          aria-label={placeholder}
+          aria-label={hint}
         />
         {query ? (
-          <button onClick={() => onQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-secondary" aria-label="清除搜索">
+          <button onClick={() => onQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.clearSearch")}>
             <X className="size-3.5" />
           </button>
         ) : null}
