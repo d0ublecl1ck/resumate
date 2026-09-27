@@ -15,6 +15,11 @@ export default {
   },
   role: {
     jobseeker: "Jobseeker",
+    admin: "Admin",
+    anonymous: "Not signed in",
+  },
+  actions: {
+    logout: "Sign out",
   },
   items: {
     workbench: "Workbench",

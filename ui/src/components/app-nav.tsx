@@ -1,15 +1,18 @@
 // DES-001 全局导航与资源上下文条。求职者主导航 + 管理员模板分区。
 // 支持收起（collapsed）：仅显示图标，label 通过 title/aria-label 暴露，键盘可达。
 
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
-import { CURRENT_USER } from "@/lib/content"
+import { logout as logoutRequest } from "@/lib/api"
+import { CURRENT_USER_QUERY_KEY, useCurrentUser } from "@/lib/session"
 import {
   Boxes,
   FileText,
   LayoutDashboard,
+  LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -67,6 +70,21 @@ function NavItem({
 export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; onToggle?: () => void }) {
   const { t } = useTranslation()
   const pathname = useLocation().pathname
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const user = useCurrentUser().data
+  const displayName = user?.displayName ?? t("nav.role.anonymous")
+  const roleLabel = user?.role === "admin" ? t("nav.role.admin") : t("nav.role.jobseeker")
+
+  async function handleLogout() {
+    try {
+      await logoutRequest()
+    } finally {
+      queryClient.removeQueries({ queryKey: CURRENT_USER_QUERY_KEY })
+      navigate("/login", { replace: true })
+    }
+  }
+
   return (
     <nav aria-label={t("nav.aria.main")} className="flex h-full flex-col gap-1 p-3">
       <div className={cn("mb-4", collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between px-1")}>
@@ -114,22 +132,36 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
         ))}
       </ul>
 
-      <div
-        className={cn(
-          "mt-auto flex items-center rounded-lg border border-border bg-card",
-          collapsed ? "justify-center p-2" : "gap-2.5 p-2.5",
-        )}
-        title={collapsed ? CURRENT_USER.displayName : undefined}
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-sm font-bold text-cobalt">
-          {CURRENT_USER.displayName.slice(0, 1)}
-        </span>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">{CURRENT_USER.displayName}</p>
-            <p className="truncate text-xs text-muted-foreground">{t("nav.role.jobseeker")}</p>
-          </div>
-        )}
+      <div className="mt-auto space-y-2">
+        <div
+          className={cn(
+            "flex items-center rounded-lg border border-border bg-card",
+            collapsed ? "justify-center p-2" : "gap-2.5 p-2.5",
+          )}
+          title={collapsed ? displayName : undefined}
+        >
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-sm font-bold text-cobalt">
+            {displayName.slice(0, 1)}
+          </span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+              <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          title={collapsed ? t("nav.actions.logout") : undefined}
+          className={cn(
+            "flex w-full items-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+            collapsed ? "justify-center py-2" : "gap-3 px-3 py-2",
+          )}
+        >
+          <LogOut className="size-5 shrink-0" aria-hidden />
+          {collapsed ? <span className="sr-only">{t("nav.actions.logout")}</span> : t("nav.actions.logout")}
+        </button>
       </div>
     </nav>
   )

@@ -1,6 +1,7 @@
 import os
 from collections.abc import Iterator
 
+import fakeredis
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -8,8 +9,12 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from app.core.db import Base, get_db
+from app.core.deps import CurrentUser
+from app.core.redis import get_redis
 from app.main import app
 from app.modules.access import models as access_models  # noqa: F401
+from app.modules.auth import models as auth_models  # noqa: F401
+from app.modules.auth.deps import get_current_user
 from app.modules.jd import models as jd_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401
@@ -18,6 +23,7 @@ from app.modules.templates import models as templates_models  # noqa: F401
 from app.tasks.seed import seed_templates
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql+psycopg://localhost:5432/resumate_test")
+TEST_USER = CurrentUser(id="user_test", display_name="测试用户", role="user")
 
 
 @pytest.fixture(scope="session")
@@ -48,13 +54,52 @@ def db_session(engine: Engine) -> Iterator[Session]:
 
 
 @pytest.fixture
-def client(db_session: Session) -> Iterator[TestClient]:
+def fake_redis() -> Iterator[fakeredis.FakeRedis]:
+    client = fakeredis.FakeRedis(decode_responses=True)
+    try:
+        yield client
+    finally:
+        client.flushall()
+
+
+def _database_override(db_session: Session):
     def database() -> Iterator[Session]:
         yield db_session
 
-    app.dependency_overrides[get_db] = database
+    return database
+
+
+@pytest.fixture
+def session_clients(db_session: Session, fake_redis: fakeredis.FakeRedis):
+    """Factory for clients that exercise the real cookie + Redis session flow."""
+    app.dependency_overrides[get_db] = _database_override(db_session)
+    app.dependency_overrides[get_redis] = lambda: fake_redis
+    created: list[TestClient] = []
+
+    def make() -> TestClient:
+        client = TestClient(app, raise_server_exceptions=False)
+        created.append(client)
+        return client
+
+    try:
+        yield make
+    finally:
+        for client in created:
+            client.close()
+        app.dependency_overrides.pop(get_db, None)
+        app.dependency_overrides.pop(get_redis, None)
+
+
+@pytest.fixture
+def client(db_session: Session, fake_redis: fakeredis.FakeRedis) -> Iterator[TestClient]:
+    """Business-module client with the current user stubbed; auth is tested separately."""
+    app.dependency_overrides[get_db] = _database_override(db_session)
+    app.dependency_overrides[get_redis] = lambda: fake_redis
+    app.dependency_overrides[get_current_user] = lambda: TEST_USER
     try:
         with TestClient(app, raise_server_exceptions=False) as test_client:
             yield test_client
     finally:
         app.dependency_overrides.pop(get_db, None)
+        app.dependency_overrides.pop(get_redis, None)
+        app.dependency_overrides.pop(get_current_user, None)

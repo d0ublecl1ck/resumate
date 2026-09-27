@@ -3,7 +3,8 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user
+from app.core.deps import CurrentUser
+from app.modules.auth.deps import get_current_user
 
 from . import service
 from .schemas import ImportPreviewResponse, ImportResultResponse
