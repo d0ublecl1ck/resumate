@@ -1,6 +1,6 @@
 // SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
-// 两条维护路径并存：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
-// 以及「对话维护资料」抽屉——AI 整理后由用户显式确认再写入（C-07）。
+// 两条维护路径：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
 // 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
 
 import { Link } from "react-router-dom"
@@ -30,17 +30,9 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
   const [basics, setBasics] = useState<ResumeBasics>(profile.basics)
   const [facts, setFacts] = useState<ProfileFact[]>(profile.facts)
   const [assistantOpen, setAssistantOpen] = useState(false)
-  const [prefill, setPrefill] = useState<{ hint: string } | null>(null)
-  const [defaultType, setDefaultType] = useState<FactType | undefined>()
   const [flashId, setFlashId] = useState<string | null>(null)
   const [editingBasics, setEditingBasics] = useState(false)
   const [factEditor, setFactEditor] = useState<FactEditor | null>(null)
-
-  function openAssistant(opts?: { hint?: string; type?: FactType }) {
-    setPrefill(opts?.hint ? { hint: opts.hint } : null)
-    setDefaultType(opts?.type)
-    setAssistantOpen(true)
-  }
 
   function flash(id: string) {
     setFlashId(id)
@@ -95,7 +87,7 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => openAssistant()}
+            onClick={() => setAssistantOpen(true)}
             className="inline-flex items-center gap-2 rounded-lg border-[1.5px] border-foreground/20 bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
           >
             <MessageSquarePlus className="size-4 text-cobalt" aria-hidden /> 对话维护资料
@@ -106,7 +98,7 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         </div>
       </div>
 
-      {/* 基本信息（像简历表头）：直接编辑与对话编辑并存 */}
+      {/* 基本信息（像简历表头）：直接编辑；对话入口统一在页头 */}
       <section className="card-frame p-6" aria-label="基本信息">
         {editingBasics ? (
           <ProfileBasicsForm initial={basics} onSave={handleSaveBasics} onCancel={() => setEditingBasics(false)} />
@@ -136,19 +128,13 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
                 </div>
               ) : null}
             </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <div className="flex shrink-0">
               <button
                 onClick={() => setEditingBasics(true)}
                 aria-label="编辑基本信息"
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cobalt/40 px-3 py-2 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
               >
                 <Pencil className="size-3.5" aria-hidden /> 编辑
-              </button>
-              <button
-                onClick={() => openAssistant({ hint: "把我的城市改成 " })}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-              >
-                <MessageSquarePlus className="size-3.5" aria-hidden /> 对话编辑
               </button>
             </div>
           </div>
@@ -166,22 +152,13 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
                 {section.title}
                 <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">{items.length}</span>
               </h2>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setFactEditor({ mode: "create", type: section.type })}
-                  aria-label={`手动添加${section.title}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/20 bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-                >
-                  <Plus className="size-3.5" aria-hidden /> 手动添加
-                </button>
-                <button
-                  onClick={() => openAssistant({ hint: `${section.title}：`, type: section.type })}
-                  aria-label={`对话添加${section.title}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-                >
-                  <MessageSquarePlus className="size-3.5 text-cobalt" aria-hidden /> 对话添加
-                </button>
-              </div>
+              <button
+                onClick={() => setFactEditor({ mode: "create", type: section.type })}
+                aria-label={`手动添加${section.title}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/20 bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+              >
+                <Plus className="size-3.5" aria-hidden /> 手动添加
+              </button>
             </div>
 
             {creating ? (
@@ -201,7 +178,6 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
                     onEdit={() => setFactEditor({ mode: "update", fact: f })}
                     onCancelEdit={() => setFactEditor(null)}
                     onSaveEdit={handleSaveFact}
-                    onUpdate={() => openAssistant({ hint: `补充「${f.title}」：` })}
                   />
                 ))}
               </ul>
@@ -223,8 +199,6 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         onClose={() => setAssistantOpen(false)}
         onCommitFact={handleCommitFact}
         onCommitBasics={handleCommitBasics}
-        prefill={prefill}
-        defaultType={defaultType}
       />
     </div>
   )
@@ -237,7 +211,6 @@ function FactRow({
   onEdit,
   onCancelEdit,
   onSaveEdit,
-  onUpdate,
 }: {
   fact: ProfileFact
   flash?: boolean
@@ -245,7 +218,6 @@ function FactRow({
   onEdit: () => void
   onCancelEdit: () => void
   onSaveEdit: (input: ProfileFactInput) => Promise<void>
-  onUpdate: () => void
 }) {
   if (editing) {
     return (
@@ -272,22 +244,13 @@ function FactRow({
             </div>
           ) : null}
         </div>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <button
-            onClick={onEdit}
-            aria-label={`编辑「${fact.title}」`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
-          >
-            <Pencil className="size-3.5" aria-hidden /> 编辑
-          </button>
-          <button
-            onClick={onUpdate}
-            aria-label={`对话更新「${fact.title}」`}
-            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-          >
-            <MessageSquarePlus className="size-3.5" aria-hidden /> 对话更新
-          </button>
-        </div>
+        <button
+          onClick={onEdit}
+          aria-label={`编辑「${fact.title}」`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
+        >
+          <Pencil className="size-3.5" aria-hidden /> 编辑
+        </button>
       </div>
     </li>
   )

@@ -34,27 +34,17 @@ export function ProfileAssistant({
   onClose,
   onCommitFact,
   onCommitBasics,
-  prefill,
-  defaultType,
 }: {
   open: boolean
   onClose: () => void
   onCommitFact: (fact: ProfileFact, operation: "create" | "update") => void
   onCommitBasics: (basics: ResumeBasics) => void
-  prefill?: { hint: string } | null
-  defaultType?: FactType
 }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [thinking, setThinking] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const messageSeq = useRef(0)
-
-  useEffect(() => {
-    // 打开弹窗时用 prefill 覆盖输入框；改成渲染期同步会改变「关闭后用同一 prefill 重开是否清空输入」的既有语义。
-    // oxlint-disable-next-line react/set-state-in-effect -- 保留 effect 的同步语义
-    if (open && prefill?.hint) setInput(prefill.hint)
-  }, [open, prefill])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
@@ -82,11 +72,7 @@ export function ProfileAssistant({
       return
     }
 
-    // fact：若来自某个分区的「添加」，用 defaultType 修正新建类型
-    const change =
-      defaultType && result.change.operation === "create"
-        ? { ...result.change, type: defaultType }
-        : result.change
+    const change = result.change
     setMessages((prev) => [
       ...prev,
       {
