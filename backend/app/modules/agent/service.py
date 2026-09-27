@@ -17,13 +17,14 @@ from app.shared.errors import (
     IdempotencyConflict,
     PendingActionNotApproved,
     PendingActionStale,
+    RebaseConflict,
     ResourceNotFound,
     TurnAlreadyClosed,
     TurnNotOpen,
     ValidationFailed,
 )
 
-from . import dao, patch
+from . import dao, patch, rebase
 from .models import AgentOperation, AgentTurn, PendingAction
 from .schemas import (
     DiffItem,
@@ -96,6 +97,45 @@ def _assert_base(turn: AgentTurn, resume: Resume, requested_base: str | None) ->
         raise BaseVersionStale("Patch 基线版本与轮次基线不一致", latest_version_id=resume.current_version_id)
     if turn.base_version_id != resume.current_version_id:
         raise BaseVersionStale("简历已产生新版本，请重新开始轮次", latest_version_id=resume.current_version_id)
+
+
+def _rebase_if_needed(db: Session, turn: AgentTurn, resume: Resume) -> bool:
+    """Replay this turn's staged delta onto an advanced base (contract section 15).
+
+    Returns True when the base moved and the turn was rebased. A conflict keeps
+    the staged working copy untouched and raises REBASE_CONFLICT instead, which
+    pauses the requested write; reads still expose the queued working document.
+    """
+    if turn.base_version_id == resume.current_version_id:
+        return False
+    if resume.working_turn_id != turn.id:
+        # No staged changes: move the turn onto the new base and continue.
+        turn.base_version_id = resume.current_version_id
+        db.commit()
+        return True
+    old_base = resume_service.get_version_snapshot(db, turn.base_version_id) or {}
+    staged = resume.working_document or {}
+    new_base = resume.document or {}
+    merged, conflict = rebase.merge_documents(old_base, staged, new_base)
+    if conflict or merged is None:
+        raise RebaseConflict(
+            "暂存改动与最新版本冲突，已保留暂存以待重新提案",
+            latest_version_id=resume.current_version_id,
+        )
+    resume_service.stage_working_document(
+        resume,
+        merged,
+        turn_id=turn.id,
+        base_version_id=resume.current_version_id,
+    )
+    turn.base_version_id = resume.current_version_id
+    if turn.execution_mode == "approval":
+        for action in dao.list_actions_for_turn(db, turn.id):
+            if action.state == "approved":
+                action.state = "stale"
+                action.stale_reason = "基线已推进，需重新预览与审批"
+    db.commit()
+    return True
 
 
 # --- idempotency ----------------------------------------------------------------
@@ -180,7 +220,7 @@ def _pending_action_response(action: PendingAction) -> PendingActionResponse:
     )
 
 
-def _turn_result(turn: AgentTurn) -> TurnResult | None:
+def _turn_result(turn: AgentTurn, *, base_rebased: bool = False) -> TurnResult | None:
     if turn.result_state is None:
         return None
     return TurnResult(
@@ -190,10 +230,11 @@ def _turn_result(turn: AgentTurn) -> TurnResult | None:
         change_count=turn.result_change_count or 0,
         affected_sections=list(turn.result_affected_sections or []),
         message=turn.result_message,
+        base_rebased=base_rebased,
     )
 
 
-def _turn_response(db: Session, turn: AgentTurn) -> UserTurnResponse:
+def _turn_response(db: Session, turn: AgentTurn, *, base_rebased: bool = False) -> UserTurnResponse:
     return UserTurnResponse(
         id=turn.id,
         resume_id=turn.resume_id,
@@ -206,7 +247,7 @@ def _turn_response(db: Session, turn: AgentTurn) -> UserTurnResponse:
         message=turn.message,
         created_at=turn.created_at,
         closed_at=turn.closed_at,
-        result=_turn_result(turn),
+        result=_turn_result(turn, base_rebased=base_rebased),
         pending_actions=[_pending_action_response(action) for action in dao.list_actions_for_turn(db, turn.id)],
     )
 
@@ -235,7 +276,16 @@ def _settle_working_changes(
     if turn.base_version_id != resume.current_version_id:
         clear_working_copy_quietly(resume)
         return None
-    return resume_service.commit_working_copy(db, resume, actor_id=actor_id, message=message, source="agent")
+    return resume_service.commit_working_copy(
+        db,
+        resume,
+        actor_id=actor_id,
+        message=message,
+        source="agent",
+        client_id=turn.client_id,
+        user_turn_id=turn.id,
+        execution_mode=turn.execution_mode,
+    )
 
 
 def clear_working_copy_quietly(resume: Resume) -> None:
@@ -248,6 +298,7 @@ def clear_working_copy_quietly(resume: Resume) -> None:
 def _close_open_turn(db: Session, turn: AgentTurn, user: CurrentUser) -> None:
     """C-04: settle and close an open turn before a new one starts."""
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
+    _rebase_if_needed(db, turn, resume)
     message = turn.message or "轮次自动结算"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
     _apply_result(turn, version, message, "finalized")
@@ -264,12 +315,19 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
     if payload.base_version_id is not None and payload.base_version_id != resume.current_version_id:
         raise BaseVersionStale("简历已产生新版本，请基于最新版本重试", latest_version_id=resume.current_version_id)
     mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
-    source = payload.source if payload.source in ("agent", "client") else DEFAULT_SOURCE
+    if user.auth_kind == "pat":
+        # The PAT fixes the client identity and the turn is always agent-sourced;
+        # a request-body clientId/source is untrusted and ignored (contract 13.4).
+        client_id = (user.client_id or user.pat_id or DEFAULT_CLIENT_ID)[:64]
+        source = DEFAULT_SOURCE
+    else:
+        client_id = payload.client_id or DEFAULT_CLIENT_ID
+        source = payload.source if payload.source in ("agent", "client") else DEFAULT_SOURCE
     turn = AgentTurn(
         id=_new_id("turn"),
         owner_id=user.id,
         resume_id=resume.id,
-        client_id=payload.client_id or DEFAULT_CLIENT_ID,
+        client_id=client_id,
         source=source,
         execution_mode=mode,
         mode_source=mode_source,
@@ -298,16 +356,14 @@ def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFin
         return _replayed_turn(operation)
     _require_open(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
-    if turn.base_version_id != resume.current_version_id:
-        raise BaseVersionStale("简历已产生新版本，请重新开始轮次", latest_version_id=resume.current_version_id)
+    base_rebased = _rebase_if_needed(db, turn, resume)
     message = payload.message or turn.message or "Agent 轮次提交"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
     _apply_result(turn, version, message, "finalized")
-    response = _turn_response(db, turn)
+    response = _turn_response(db, turn, base_rebased=base_rebased)
     _store_operation(db, turn, "finalize", payload.idempotency_key, request_hash, response)
     db.commit()
-    db.refresh(turn)
-    return _turn_response(db, turn)
+    return response
 
 
 def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCancelRequest) -> UserTurnResponse:
@@ -319,6 +375,7 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
         return _replayed_turn(operation)
     _require_open(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
+    base_rebased = _rebase_if_needed(db, turn, resume)
     for action in dao.list_actions_for_turn(db, turn.id):
         if action.state == "pending":
             action.state = "stale"
@@ -326,11 +383,10 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
     message = payload.reason or "Agent 轮次取消"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
     _apply_result(turn, version, message, "cancelled")
-    response = _turn_response(db, turn)
+    response = _turn_response(db, turn, base_rebased=base_rebased)
     _store_operation(db, turn, "cancel", payload.idempotency_key, request_hash, response)
     db.commit()
-    db.refresh(turn)
-    return _turn_response(db, turn)
+    return response
 
 
 # --- patch operations -----------------------------------------------------------
@@ -348,6 +404,7 @@ def preview_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRe
     turn = _require_turn(db, user.id, turn_id)
     _require_open(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
+    base_rebased = _rebase_if_needed(db, turn, resume)
     _assert_base(turn, resume, payload.base_version_id)
     document = _candidate_document(turn, resume)
     errors = patch.validate(document, payload.ops)
@@ -361,6 +418,7 @@ def preview_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRe
             diff=[],
             pending_action_id=None,
             requires_confirmation=False,
+            base_rebased=base_rebased,
         )
     after = patch.apply(document, payload.ops)
     diff = patch.build_diff(document, after, payload.reason)
@@ -403,6 +461,7 @@ def preview_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRe
         diff=diff,
         pending_action_id=pending_action_id,
         requires_confirmation=requires_confirmation,
+        base_rebased=base_rebased,
     )
 
 
@@ -435,6 +494,7 @@ def apply_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchAppl
         return _replayed_apply(operation)
     _require_open(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
+    base_rebased = _rebase_if_needed(db, turn, resume)
     _assert_base(turn, resume, payload.base_version_id)
 
     action: PendingAction | None = None
@@ -464,6 +524,7 @@ def apply_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchAppl
         affected_sections=list(affected_sections),
         working_revision=resume.working_revision,
         pending_action_id=action.id if action else None,
+        base_rebased=base_rebased,
     )
     _store_operation(db, turn, "apply", payload.idempotency_key, request_hash, response)
     db.commit()
