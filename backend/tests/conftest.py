@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import Base, get_db
 from app.main import app
+from app.modules.access import models as access_models  # noqa: F401
 from app.modules.jd import models as jd_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401

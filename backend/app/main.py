@@ -3,6 +3,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
+from app.modules.access.api import router as access_router
+from app.modules.backup.api import router as backup_router
 from app.modules.health.api import router as health_router
 from app.modules.jd.api import router as jd_router
 from app.modules.profile.api import router as profile_router
@@ -35,3 +37,5 @@ app.include_router(resume_router)
 app.include_router(jd_router)
 app.include_router(profile_router)
 app.include_router(settings_router)
+app.include_router(access_router)
+app.include_router(backup_router)
