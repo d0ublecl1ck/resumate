@@ -14,6 +14,7 @@ import { SettingsLayout } from "@/pages/settings-layout"
 import { SettingsPage } from "@/pages/settings"
 import { BackupPage } from "@/pages/settings-backup"
 import { AccessPage } from "@/pages/settings-access"
+import { RbacPage } from "@/pages/rbac"
 import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
 import { NotFoundPage } from "@/pages/not-found"
@@ -61,6 +62,7 @@ function App() {
             </Route>
             <Route path="admin/templates" element={<TemplatesPage />} />
             <Route path="admin/templates/:id" element={<TemplateEditorPage />} />
+            <Route path="admin/rbac" element={<RbacPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

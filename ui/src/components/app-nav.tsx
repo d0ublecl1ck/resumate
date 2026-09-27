@@ -17,6 +17,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  ShieldCheck,
   Sparkles,
   UserRound,
   X,
@@ -30,7 +31,10 @@ const MAIN = [
   { href: "/settings", labelKey: "nav.items.settings", icon: Settings },
 ]
 
-const ADMIN = [{ href: "/admin/templates", labelKey: "nav.items.templates", icon: Boxes }]
+const ADMIN = [
+  { href: "/admin/templates", labelKey: "nav.items.templates", icon: Boxes, permission: "user:read" },
+  { href: "/admin/rbac", labelKey: "nav.items.rbac", icon: ShieldCheck, permission: "role:write" },
+]
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/"
@@ -81,7 +85,8 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
         ? t("nav.role.admin")
         : t("nav.role.jobseeker")
   // 管理分区按 RBAC 权限显示，而不是硬编码角色。
-  const canManage = user?.permissions.includes("user:read") ?? false
+  const adminItems = user ? ADMIN.filter((item) => user.permissions.includes(item.permission)) : []
+  const canManage = adminItems.length > 0
 
   async function handleLogout() {
     try {
@@ -134,7 +139,7 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
             <div className="mb-2 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("nav.group.admin")}</div>
           )}
           <ul className="space-y-1">
-            {ADMIN.map((item) => (
+            {adminItems.map((item) => (
               <li key={item.href}>
                 <NavItem href={item.href} label={t(item.labelKey)} Icon={item.icon} active={isActive(pathname, item.href)} collapsed={collapsed} />
               </li>
@@ -184,7 +189,7 @@ export function MobileNav() {
   const pathname = useLocation().pathname
   const [open, setOpen] = useState(false)
   const user = useCurrentUser().data
-  const links = user?.permissions.includes("user:read") ? [...MAIN, ...ADMIN] : MAIN
+  const links = [...MAIN, ...(user ? ADMIN.filter((item) => user.permissions.includes(item.permission)) : [])]
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur md:hidden">

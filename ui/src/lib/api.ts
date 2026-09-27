@@ -19,6 +19,12 @@ import type {
   JobMatchResult,
   MatchGap,
   ModelConfig,
+  Permission,
+  PermissionInput,
+  PermissionUpdateInput,
+  Role,
+  RoleInput,
+  RoleUpdateInput,
   ModelConfigUpdate,
   ModelTestResult,
   PersonalAccessToken,
@@ -462,6 +468,50 @@ export function listAccessLogs(): Promise<AccessLogEntry[]> {
 /** GET /.well-known/resume-agent */
 export function getCapability(): Promise<CapabilityDiscovery> {
   return request<CapabilityDiscovery>("/.well-known/resume-agent")
+}
+
+// ---------------------------------------------------------------------------
+// RBAC 管理：角色 / 权限（role:write / permission:write）
+// ---------------------------------------------------------------------------
+
+/** GET /auth/roles */
+export function listRoles(): Promise<Role[]> {
+  return request<Role[]>("/auth/roles")
+}
+
+/** POST /auth/roles */
+export function createRole(input: RoleInput): Promise<Role> {
+  return request<Role>("/auth/roles", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** PATCH /auth/roles/{id} */
+export function updateRole(id: string, patch: RoleUpdateInput): Promise<Role> {
+  return request<Role>(`/auth/roles/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
+}
+
+/** DELETE /auth/roles/{id} */
+export function deleteRole(id: string): Promise<void> {
+  return request<void>(`/auth/roles/${id}`, { method: "DELETE" })
+}
+
+/** GET /auth/permissions */
+export function listPermissions(): Promise<Permission[]> {
+  return request<Permission[]>("/auth/permissions")
+}
+
+/** POST /auth/permissions */
+export function createPermission(input: PermissionInput): Promise<Permission> {
+  return request<Permission>("/auth/permissions", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** PATCH /auth/permissions/{id} */
+export function updatePermission(id: string, patch: PermissionUpdateInput): Promise<Permission> {
+  return request<Permission>(`/auth/permissions/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
+}
+
+/** DELETE /auth/permissions/{id} */
+export function deletePermission(id: string): Promise<void> {
+  return request<void>(`/auth/permissions/${id}`, { method: "DELETE" })
 }
 
 // ---------------------------------------------------------------------------

@@ -78,6 +78,7 @@ def seed_rbac(db: Session) -> int:
             role.name = spec.name
             role.description = spec.description
             role.rank = spec.rank
+            role.is_system = True
         roles[spec.code] = role
     db.flush()
 
@@ -90,20 +91,28 @@ def seed_rbac(db: Session) -> int:
                 code=spec.code,
                 group=spec.group,
                 name=spec.name,
+                is_system=True,
                 created_at=now,
             )
             dao.add_permission(db, permission)
             created += 1
+        else:
+            permission.group = spec.group
+            permission.name = spec.name
+            permission.is_system = True
         permissions[spec.code] = permission
     db.flush()
 
-    existing = {(link.role_id, link.permission_id) for link in db.scalars(select(RolePermission))}
+    # System roles are owned by rbac.py: reconcile their links exactly so an
+    # out-of-band edit cannot silently widen a built-in role.
     for spec in ROLES:
         role = roles[spec.code]
-        for code in role_permissions(spec.code):
-            permission = permissions[code]
-            if (role.id, permission.id) not in existing:
-                dao.add_role_permission(db, role.id, permission.id)
+        desired = {permissions[code].id for code in role_permissions(spec.code)}
+        current = set(dao.list_role_permission_ids(db, role.id))
+        for permission_id in desired - current:
+            dao.add_role_permission(db, role.id, permission_id)
+        for permission_id in current - desired:
+            dao.remove_role_permission(db, role.id, permission_id)
     db.commit()
     return created
 

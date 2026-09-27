@@ -42,14 +42,42 @@ class UserResponse(ApiModel):
 
 
 class PermissionResponse(ApiModel):
+    id: str
     code: str
     group: str
     name: str
+    is_system: bool = True
+
+
+class PermissionCreate(ApiModel):
+    code: str = Field(min_length=3, max_length=64)
+    group: str = Field(min_length=1, max_length=32)
+    name: str = Field(min_length=1, max_length=120)
+
+
+class PermissionUpdate(ApiModel):
+    group: str | None = Field(default=None, min_length=1, max_length=32)
+    name: str | None = Field(default=None, min_length=1, max_length=120)
 
 
 class RoleResponse(ApiModel):
+    id: str
     code: str
     name: str
     description: str
     rank: int
+    is_system: bool = True
     permissions: list[str] = Field(default_factory=list)
+
+
+class RoleCreate(ApiModel):
+    code: str = Field(min_length=2, max_length=32)
+    name: str = Field(min_length=1, max_length=120)
+    description: str = Field(default="", max_length=500)
+    permissions: list[str] = Field(default_factory=list)
+
+
+class RoleUpdate(ApiModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    permissions: list[str] | None = None
