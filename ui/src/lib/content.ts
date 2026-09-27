@@ -12,6 +12,7 @@ import type {
   JobDescription,
   JobMatchResult,
   MatchGap,
+  ModelCatalog,
   ModelConfig,
   PersonalAccessToken,
   Profile,
@@ -440,11 +441,39 @@ export const AGENT_CONFIG: AgentConfig = {
 }
 
 export const MODEL_CONFIG: ModelConfig = {
-  provider: "OpenAI 兼容",
+  provider: "openai",
   endpoint: "https://api.example-llm.com/v1",
   model: "gpt-4o-mini",
   keyConfigured: true,
   lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" },
+}
+
+// 只读模型目录（契约 §17）：真实数据由后端从 models.dev 快照产出，这里仅作为前端演示 fixture。
+export const MODEL_CATALOG: ModelCatalog = {
+  source: "models.dev",
+  providers: [
+    {
+      id: "openai",
+      label: "OpenAI",
+      models: [
+        { id: "gpt-4o-mini", label: "GPT-4o mini", contextWindow: 128000, maxOutputTokens: 16384, inputCostPerMillion: 0.15, outputCostPerMillion: 0.6 },
+        { id: "gpt-4o", label: "GPT-4o", contextWindow: 128000, maxOutputTokens: 16384, inputCostPerMillion: 2.5, outputCostPerMillion: 10 },
+      ],
+    },
+    {
+      id: "anthropic",
+      label: "Anthropic",
+      models: [
+        { id: "claude-3-5-sonnet", label: "Claude 3.5 Sonnet", contextWindow: 200000, maxOutputTokens: 8192, inputCostPerMillion: 3, outputCostPerMillion: 15 },
+        { id: "claude-3-opus", label: "Claude 3 Opus", contextWindow: 200000, maxOutputTokens: 4096, inputCostPerMillion: 15, outputCostPerMillion: 75 },
+      ],
+    },
+    {
+      id: "deepseek",
+      label: "DeepSeek",
+      models: [{ id: "deepseek-chat", label: "DeepSeek Chat", contextWindow: 64000, maxOutputTokens: 8192, inputCostPerMillion: 0.27, outputCostPerMillion: 1.1 }],
+    },
+  ],
 }
 
 export const USER_PREFERENCES: UserPreferences = {

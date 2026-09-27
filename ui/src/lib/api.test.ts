@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { getModelConfig, getPreferences, getProfile, getResume, updatePreferences } from "@/lib/api"
+import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, updatePreferences } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { server } from "@/test-server"
 
@@ -47,5 +47,23 @@ describe("API 对接", () => {
 
     expect(config.keyConfigured).toBe(true)
     expect("apiKey" in config).toBe(false)
+  })
+
+  it("模型目录返回 provider 与 model 列表", async () => {
+    const catalog = await getModelCatalog()
+
+    expect(catalog.source).toBe("models.dev")
+    const openai = catalog.providers.find((provider) => provider.id === "openai")
+    expect(openai?.models.some((model) => model.id === "gpt-4o-mini")).toBe(true)
+  })
+
+  it("模型目录支持 provider 与 q 过滤", async () => {
+    const filtered = await getModelCatalog({ provider: "anthropic" })
+    expect(filtered.providers.map((provider) => provider.id)).toEqual(["anthropic"])
+
+    const searched = await getModelCatalog({ q: "opus" })
+    const models = searched.providers.flatMap((provider) => provider.models)
+    expect(models.length).toBeGreaterThan(0)
+    expect(models.every((model) => model.id.includes("opus") || model.label.toLowerCase().includes("opus"))).toBe(true)
   })
 })

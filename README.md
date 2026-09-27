@@ -1,6 +1,6 @@
 # Resumate
 
-`ui/`：React 前端。`backend/`：FastAPI 后端。
+`ui/`：React 前端。`backend/`：FastAPI 后端。`agent-core/`：只走公共 API 的 Agent 底座（Python, uv），接口契约见 [Agent 操作 API 契约](docs/agent/agent-operation-api.md)。
 
 ## 启动后端
 
