@@ -55,6 +55,25 @@ def _upsert_section_op() -> dict:
     }
 
 
+def _stage_conflicting_change(client: TestClient, resume: dict) -> dict:
+    """Stage an agent edit, then advance the base so it conflicts on rebase."""
+    turn = _begin(client, resume["id"], executionMode="full_access")
+    agent_section = {
+        "id": "sec_experience",
+        "kind": "experience",
+        "title": "Agent 标题",
+        "entries": [{"id": "entry_1", "title": "高级前端工程师", "bullets": ["负责核心页面"]}],
+    }
+    applied = client.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": [{"op": "upsertSection", "section": agent_section}]},
+    )
+    assert applied.status_code == 200, applied.text
+    manual = client.put(f"/resumes/{resume['id']}/document", json={"document": _document("手动标题")})
+    assert manual.status_code == 200, manual.text
+    return turn
+
+
 def test_full_access_apply_then_finalize_is_idempotent(client: TestClient) -> None:
     resume = _create(client)
     turn = _begin(client, resume["id"], executionMode="full_access")
@@ -290,7 +309,13 @@ def test_conflicting_rebase_keeps_working_document(client: TestClient) -> None:
     again = client.post(f"/turns/{turn['id']}/patches:apply", json={"ops": [_upsert_section_op()]})
     assert again.status_code == 409
     assert again.json()["code"] == "REBASE_CONFLICT"
+
+    preview = client.post(f"/turns/{turn['id']}/patches:preview", json={"ops": [_upsert_section_op()]})
+    assert preview.status_code == 409
+    assert preview.json()["code"] == "REBASE_CONFLICT"
+
     kept = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert kept["dirty"] is True
     assert kept["document"]["sections"][0]["title"] == "Agent 标题"
 
 
@@ -362,6 +387,53 @@ def test_apply_with_stale_explicit_base_returns_base_stale(client: TestClient) -
     assert response.status_code == 409
     assert response.json()["code"] == "BASE_VERSION_STALE"
     assert response.json()["latestVersionId"] == latest
+
+
+def test_conflicting_turn_can_be_cancelled(client: TestClient) -> None:
+    resume = _create(client)
+    turn = _stage_conflicting_change(client, resume)
+
+    conflict = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "REBASE_CONFLICT"
+
+    cancelled = client.post(f"/turns/{turn['id']}/cancel", json={"reason": "放弃本轮"})
+    assert cancelled.status_code == 200, cancelled.text
+    body = cancelled.json()
+    assert body["state"] == "cancelled"
+    assert body["result"]["state"] == "cancelled"
+    assert body["result"]["versionId"] is None
+    assert body["result"]["message"].startswith("放弃本轮")
+    assert "冲突" in body["result"]["message"]
+    assert "丢弃" in body["result"]["message"]
+    assert len(client.get(f"/resumes/{resume['id']}/versions").json()) == 2
+
+    working = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert working["dirty"] is False
+    assert working["workingRevision"] == 0
+    assert client.get(f"/turns/{turn['id']}").json()["state"] == "cancelled"
+
+
+def test_begin_after_conflict_closes_old_turn_and_starts_new(client: TestClient) -> None:
+    resume = _create(client)
+    first = _stage_conflicting_change(client, resume)
+    assert client.post(f"/turns/{first['id']}/finalize", json={}).status_code == 409
+
+    created = client.post(f"/resumes/{resume['id']}/turns", json={"executionMode": "full_access"})
+    assert created.status_code == 201, created.text
+    second = created.json()
+
+    old = client.get(f"/turns/{first['id']}").json()
+    assert old["state"] == "cancelled"
+    assert old["result"]["state"] == "cancelled"
+    assert old["result"]["versionId"] is None
+    assert "基线冲突" in old["result"]["message"]
+    assert second["state"] == "open"
+    assert second["baseVersionId"] == client.get(f"/resumes/{resume['id']}").json()["currentVersionId"]
+
+    working = client.get(f"/resumes/{resume['id']}/working-document").json()
+    assert working["dirty"] is False
+    assert working["workingRevision"] == 0
 
 
 def test_cancel_settles_applied_changes(client: TestClient) -> None:
