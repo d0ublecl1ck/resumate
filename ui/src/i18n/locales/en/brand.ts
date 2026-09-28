@@ -22,6 +22,10 @@ export default {
       title: "This step did not go through",
       description: "Your work is kept. Fix it and try again.",
     },
+    conflict: {
+      title: "Someone changed this first",
+      description: "Your work is kept. Compare with the latest version, then merge.",
+    },
     forbidden: {
       title: "You need higher access here",
       description: "Ask an admin to grant it, or switch to another account.",

@@ -22,6 +22,10 @@ export default {
       title: "这一步没走通",
       description: "内容已保留，改完再试一次。",
     },
+    conflict: {
+      title: "改动和别人撞车了",
+      description: "你的内容已保留，对照最新版本再合并。",
+    },
     forbidden: {
       title: "这里需要更高权限",
       description: "找管理员开通，或换一个账号。",
