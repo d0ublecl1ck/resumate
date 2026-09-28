@@ -16,6 +16,8 @@ export interface ResendState {
   status: ResendStatus
   cooldownSeconds?: number
   errorMessage?: string
+  /** Address the last successful resend actually went to; drives the confirmation line. */
+  sentEmail?: string
 }
 
 function errorKeyForCode(code?: string): string {
@@ -44,6 +46,7 @@ export function verificationErrorMessage(cause: unknown): string {
 export function useVerificationResend() {
   const [status, setStatus] = useState<ResendStatus>("idle")
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const [sentEmail, setSentEmail] = useState<string | undefined>(undefined)
   const [cooldown, setCooldown] = useState(0)
 
   useEffect(() => {
@@ -55,8 +58,10 @@ export function useVerificationResend() {
   async function resend(input: ResendVerificationInput) {
     setStatus("sending")
     setErrorMessage(undefined)
+    setSentEmail(undefined)
     try {
       const accepted = await resendVerification(input)
+      setSentEmail(accepted.email)
       if (accepted.status === "already_verified") {
         setStatus("already_verified")
         return
@@ -73,6 +78,7 @@ export function useVerificationResend() {
     status: cooldown > 0 ? "cooldown" : status,
     cooldownSeconds: cooldown || undefined,
     errorMessage,
+    sentEmail,
   }
   return { resend, resendState }
 }

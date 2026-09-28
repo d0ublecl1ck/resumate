@@ -13,6 +13,7 @@ import {
   RegisterAlreadyVerified,
   RegisterNetworkError,
   RegisterRateLimited,
+  RegisterResendLongEmail,
   RegisterResendPending,
   RegisterResendTooSoon,
   RegisterSent,
@@ -66,6 +67,16 @@ describe("email verification stories", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("无法连接后端服务，请确认服务已启动。")
   })
 
+  it("RegisterResendLongEmail shows the resend target address for wrapping", async () => {
+    const { container } = render(RegisterResendLongEmail.render())
+
+    await RegisterResendLongEmail.play({ canvasElement: container })
+
+    expect(
+      await screen.findByText((content) => content.includes("boundary.check+resumate@subdomain.example-enterprise-mail.test")),
+    ).toBeInTheDocument()
+  })
+
   it("VerifyChecking keeps the pending state", async () => {
     render(VerifyChecking.render())
     expect(await screen.findByText("正在验证邮箱")).toBeInTheDocument()
@@ -97,7 +108,7 @@ describe("email verification stories", () => {
 
     await LoginUnverifiedResent.play({ canvasElement: container })
 
-    expect(await screen.findByText("验证邮件已重新发送，请查收。")).toBeInTheDocument()
+    expect(await screen.findByText("验证邮件已重新发送到 unverified@resumate.dev，请查收。")).toBeInTheDocument()
   })
 
   it("RegisterAlreadyVerified tells the user to sign in", async () => {

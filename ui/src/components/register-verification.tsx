@@ -56,8 +56,8 @@ export function RegisterVerification({ email, resend, onResend, onChangeEmail, o
       ) : null}
 
       {resend.status === "cooldown" ? (
-        <p role="status" className="mt-4 rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
-          {t("auth.verification.resendSent")}
+        <p role="status" className="mt-4 break-all rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
+          {t("auth.verification.resendSentTo", { email: resend.sentEmail ?? "" })}
         </p>
       ) : null}
 
