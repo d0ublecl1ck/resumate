@@ -24,7 +24,7 @@ archkit inspect .
 
 迁移验证使用内存 SQLite。配置与接口行为见 [后端说明](backend/README.md)，架构见 [项目蓝图](docs/design.md)。
 
-首页视觉规范以 [定稿原型](ui/prototypes/index.html) 为准。
+首页视觉规范以 [定稿原型](ui/prototypes/index.html) 为准；品牌资产与用法约束见 [品牌资产](ui/public/brand/README.md) 与 `AGENTS.md` 的 `# 页面开发`。
 
 待实现的业务范围见 [用户故事](docs/user-stories/README.md)，授权、版本与失败处理见 [公共契约](docs/user-stories/contracts.md)，需求覆盖与原编号映射见 [覆盖表](docs/user-stories/coverage.md)。
 
