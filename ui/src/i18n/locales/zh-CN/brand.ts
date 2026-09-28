@@ -3,6 +3,12 @@ export default {
   name: "Resumate",
   markAlt: "Resumate 标志",
   pending: "正在想…",
+  volume: {
+    plain: "现状 · 通用卡片",
+    grammar: "语法 · 贴纸语汇",
+    badge: "语法 + 标志",
+    character: "语法 + 角色",
+  },
   state: {
     empty: {
       title: "这里还是空的",

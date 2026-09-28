@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
-const MARK_SRC = "/brand/mark.png"
+import { BRAND_MARK_SRC } from "./brand-assets"
 
 const MARK_SIZE = { sm: "size-7", md: "size-9", lg: "size-14" } as const
 const WORDMARK_SIZE = { sm: "text-base", md: "text-xl", lg: "text-3xl" } as const
@@ -21,7 +21,7 @@ export function BrandMark({
 }) {
   return (
     <img
-      src={MARK_SRC}
+      src={BRAND_MARK_SRC}
       alt={label ?? ""}
       aria-hidden={label ? undefined : true}
       draggable={false}

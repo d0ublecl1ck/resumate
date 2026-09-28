@@ -37,6 +37,18 @@ export const Loading = {
   ),
 }
 
+function SizeRow() {
+  return (
+    <Stage direction="column">
+      <MascotState kind="empty" size="quiet" className="w-[30rem]" />
+      <MascotState kind="empty" size="default" className="w-[30rem]" />
+      <MascotState kind="empty" size="hero" className="w-[30rem]" />
+    </Stage>
+  )
+}
+
+export const Sizes = { render: () => <SizeRow /> }
+
 function StateErrorWithCode() {
   return (
     <Stage>

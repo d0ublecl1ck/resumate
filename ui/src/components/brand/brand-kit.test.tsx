@@ -112,6 +112,37 @@ describe("MascotNote", () => {
   })
 })
 
+describe("MascotNote volume dial", () => {
+  it("trades the character for the compact badge on calmer surfaces", () => {
+    const { container } = render(<MascotNote mascot="badge">好的</MascotNote>)
+    expect(container.querySelector('img[src="/brand/mark.png"]')).not.toBeNull()
+    expect(container.querySelector('img[src="/brand/mascot.png"]')).toBeNull()
+  })
+
+  it("drops the mascot and its tail entirely when the surface must stay neutral", () => {
+    const { container } = render(<MascotNote mascot="none">好的</MascotNote>)
+    expect(container.querySelector("img")).toBeNull()
+    expect(container.querySelector("[data-tail] [aria-hidden]")).toBeNull()
+  })
+})
+
+describe("MascotState volume dial", () => {
+  it("renders quiet as an inline row for table and panel gaps", () => {
+    const { container } = render(<MascotState kind="empty" size="quiet" />)
+    const root = container.firstElementChild as HTMLElement
+    expect(root.className).toContain("flex-row")
+    expect(root.className).toContain("text-left")
+    expect((container.querySelector("img") as HTMLElement).className).toContain("size-12")
+  })
+
+  it("keeps the centred block by default and can grow to a hero block", () => {
+    const { container, rerender } = render(<MascotState kind="empty" />)
+    expect((container.firstElementChild as HTMLElement).className).toContain("flex-col")
+    rerender(<MascotState kind="empty" size="hero" />)
+    expect((container.querySelector("img") as HTMLElement).className).toContain("size-36")
+  })
+})
+
 describe("MascotState", () => {
   it("falls back to the brand copy for a kind", () => {
     render(<MascotState kind="empty" />)
