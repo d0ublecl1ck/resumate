@@ -17,7 +17,9 @@ export function LoginVerificationNotice({ resend, onResend, disabled = false }: 
 
   return (
     <div className="rounded-md border border-border bg-card px-3 py-2">
-      {cooling ? <p className="mb-1.5 text-xs text-cobalt">{t("auth.verification.resendSent")}</p> : null}
+      {cooling ? (
+        <p className="mb-1.5 break-all text-xs text-cobalt">{t("auth.verification.resendSentTo", { email: resend.sentEmail ?? "" })}</p>
+      ) : null}
       {alreadyVerified ? <p className="mb-1.5 text-xs text-cobalt">{t("auth.verification.alreadyVerified")}</p> : null}
       {resend.status === "error" && resend.errorMessage ? (
         <p role="alert" className="mb-1.5 text-xs text-coral">

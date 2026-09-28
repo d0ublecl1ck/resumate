@@ -30,7 +30,7 @@ export default {
     },
     goToWorkbench: "Go to workbench",
     alreadyVerified: "This email is already verified — you can sign in.",
-    resendSent: "Verification email sent again — check your inbox.",
+    resendSentTo: "Verification email sent again to {{email}} — check your inbox.",
   },
   fields: {
     displayName: "Name",

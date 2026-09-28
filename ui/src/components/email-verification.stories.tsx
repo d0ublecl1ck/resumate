@@ -241,6 +241,14 @@ export const RegisterAlreadyVerified = {
 
 export const RegisterLongEmail = { render: () => <RegisterStory scenario="sent" email={LONG_EMAIL} /> }
 
+/** Resend succeeds for a long address: the confirmation line must wrap inside the card. */
+export const RegisterResendLongEmail = {
+  render: () => <RegisterStory scenario="sent" email={LONG_EMAIL} />,
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    clickButton(canvasElement, i18n.t("auth.verification.resend"))
+  },
+}
+
 export const RegisterDisabled = { render: () => <RegisterStory scenario="sent" disabled /> }
 
 // SCR-000 /verify-email: the token is consumed by the verify endpoint.

@@ -69,6 +69,6 @@ describe("LoginPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("邮箱还未验证，请先完成邮箱验证。")
     fireEvent.click(screen.getByRole("button", { name: "重新发送验证邮件" }))
-    expect(await screen.findByText("验证邮件已重新发送，请查收。")).toBeInTheDocument()
+    expect(await screen.findByText("验证邮件已重新发送到 unverified@resumate.dev，请查收。")).toBeInTheDocument()
   })
 })

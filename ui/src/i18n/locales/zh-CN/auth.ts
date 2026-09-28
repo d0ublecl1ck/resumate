@@ -30,7 +30,7 @@ export default {
     },
     goToWorkbench: "进入工作台",
     alreadyVerified: "该邮箱已完成验证，直接登录即可。",
-    resendSent: "验证邮件已重新发送，请查收。",
+    resendSentTo: "验证邮件已重新发送到 {{email}}，请查收。",
   },
   fields: {
     displayName: "昵称",

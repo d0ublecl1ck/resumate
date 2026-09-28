@@ -39,7 +39,7 @@ describe("VerifyEmailPage", () => {
     expect(screen.getByText("链接已过期。")).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "重新发送验证邮件" }))
-    expect(await screen.findByText("验证邮件已重新发送，请查收。")).toBeInTheDocument()
+    expect(await screen.findByText("验证邮件已重新发送到 test@resumate.dev，请查收。")).toBeInTheDocument()
   })
 
   it("链接没有 token 时提示格式不完整且不提供重发", async () => {
