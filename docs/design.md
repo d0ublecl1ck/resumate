@@ -190,5 +190,6 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计补充」区块登记暗色令牌与设置页交互态。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
-- 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
+- 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n`、`ui-form-contract` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
+- 表单与错误文案在客户端收口：含命名字段的表单必须接入 `useForm` + `zodResolver`，API 错误必须把机器错误码映射为 i18n 文案，不得直出服务端 `message`；由 `quality-gates/gates/ui-form-contract.js` 强制，遗留站点用行内 `form-allow` / `error-message-allow` 豁免标记登记。
 - 前端界面文案由 i18next 管理，支持 `zh-CN` 与 `en`：语言选择持久化在 `localStorage`，启动时按「持久化 → 浏览器 → zh-CN」检测，切换同步 `html[lang]` 与文档标题；组件统一使用 `useTranslation()`，非 React 模块使用 `@/i18n` 单例。简历正文、JD 正文、事实内容与 Diff 原文属于用户内容，不随界面语言变化（US-13.4）。
