@@ -168,3 +168,15 @@ def test_admin_cannot_ban_self(session_clients, db_session) -> None:
 
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_invalid_email_returns_localized_validation_error(session_clients) -> None:
+    client = session_clients()
+
+    response = client.post("/auth/register", json={"email": "abc", "password": "password123", "displayName": "张沐"})
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "VALIDATION_FAILED"
+    assert "email address" not in body["message"]
+    assert "请求参数校验失败" in body["message"]
