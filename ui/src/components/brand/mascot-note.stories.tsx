@@ -53,6 +53,25 @@ function PoseRow() {
 
 export const Poses = { render: () => <PoseRow /> }
 
+function VolumeRow() {
+  const { t } = useTranslation()
+  return (
+    <Stage direction="column">
+      <MascotNote mascot="full" className="w-[26rem]">
+        {t("brand.state.empty.description")}
+      </MascotNote>
+      <MascotNote mascot="badge" className="w-[26rem]">
+        {t("brand.state.empty.description")}
+      </MascotNote>
+      <MascotNote mascot="none" className="w-[26rem]">
+        {t("brand.state.empty.description")}
+      </MascotNote>
+    </Stage>
+  )
+}
+
+export const Volume = { render: () => <VolumeRow /> }
+
 function EndTail() {
   const { t } = useTranslation()
   return (

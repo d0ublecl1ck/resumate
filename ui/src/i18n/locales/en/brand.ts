@@ -3,6 +3,12 @@ export default {
   name: "Resumate",
   markAlt: "Resumate logo",
   pending: "Thinking…",
+  volume: {
+    plain: "Baseline · generic cards",
+    grammar: "Grammar · sticker surfaces",
+    badge: "Grammar + mark",
+    character: "Grammar + character",
+  },
   state: {
     empty: {
       title: "Nothing here yet",
