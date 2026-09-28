@@ -10,7 +10,7 @@ export default {
   },
   verification: {
     sentTitle: "去邮箱查收验证链接",
-    sentDescription: "验证链接已发送到 {{email}}，24 小时内有效。点击邮件中的链接即可完成注册。",
+    sentDescription: "验证链接已发送到 {{email}}，30 分钟内有效。点击邮件中的链接即可完成注册。",
     sentHint: "没收到？检查垃圾邮件文件夹，或稍后点击下方按钮重新发送。",
     resend: "重新发送验证邮件",
     resending: "正在发送…",
@@ -22,14 +22,15 @@ export default {
     verifiedTitle: "邮箱验证成功",
     verifiedDescription: "账号已激活，现在可以开始整理你的职业资料。",
     invalidTitle: "验证链接已失效",
-    invalidDescription: "链接可能已过期、已被使用或格式不完整。输入注册邮箱，我们会重新发送一封。",
+    invalidDescription: "链接可能已过期、已被使用或格式不完整。你可以重新发送一封验证邮件，或返回登录页重新登录。",
     invalidReason: {
       expired: "链接已过期。",
       used: "链接已被使用。",
       malformed: "链接不完整或格式不正确。",
     },
     goToWorkbench: "进入工作台",
-    emailLabel: "注册邮箱",
+    alreadyVerified: "该邮箱已完成验证，直接登录即可。",
+    resendSent: "验证邮件已重新发送，请查收。",
   },
   fields: {
     displayName: "昵称",
@@ -39,7 +40,7 @@ export default {
   },
   actions: {
     login: "登录",
-    register: "注册并登录",
+    register: "注册",
     submitting: "处理中…",
     switchToRegister: "去注册",
     switchToLogin: "去登录",

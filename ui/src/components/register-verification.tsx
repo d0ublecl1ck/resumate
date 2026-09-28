@@ -1,19 +1,12 @@
 // SCR-000 注册成功：提示用户去邮箱查收验证链接。
-// 纯展示组件：重发状态与动作由调用方注入，Storybook 用 MSW 覆盖响应。
+// 纯展示组件：重发状态与动作由调用方注入，页面与 Storybook 共用 lib/verification 的真实重发实现。
 // 视觉沿用登录页既有令牌（card-soft / primary / coral / cobalt），不新增页面视觉规则。
 
 import { useTranslation } from "react-i18next"
 import { Loader2, MailCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AuthShell } from "@/components/auth-shell"
-
-export type ResendStatus = "idle" | "sending" | "cooldown" | "error"
-
-export interface ResendState {
-  status: ResendStatus
-  cooldownSeconds?: number
-  errorMessage?: string
-}
+import type { ResendState } from "@/lib/verification"
 
 export interface RegisterVerificationProps {
   email: string
@@ -33,7 +26,8 @@ export function RegisterVerification({ email, resend, onResend, onChangeEmail, o
   const { t } = useTranslation()
   const sending = resend.status === "sending"
   const cooling = resend.status === "cooldown" && (resend.cooldownSeconds ?? 0) > 0
-  const resendDisabled = disabled || sending || cooling
+  const alreadyVerified = resend.status === "already_verified"
+  const resendDisabled = disabled || sending || cooling || alreadyVerified
   const resendLabel = sending
     ? t("auth.verification.resending")
     : cooling
@@ -52,6 +46,18 @@ export function RegisterVerification({ email, resend, onResend, onChangeEmail, o
       {resend.status === "error" && resend.errorMessage ? (
         <p role="alert" className="mt-4 rounded-md border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral">
           {resend.errorMessage}
+        </p>
+      ) : null}
+
+      {alreadyVerified ? (
+        <p role="status" className="mt-4 rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
+          {t("auth.verification.alreadyVerified")}
+        </p>
+      ) : null}
+
+      {resend.status === "cooldown" ? (
+        <p role="status" className="mt-4 rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
+          {t("auth.verification.resendSent")}
         </p>
       ) : null}
 

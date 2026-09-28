@@ -19,6 +19,7 @@ import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
 import { NotFoundPage } from "@/pages/not-found"
 import { LoginPage } from "@/pages/login"
+import { VerifyEmailPage } from "@/pages/verify-email"
 import { RequireAuth } from "@/components/require-auth"
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="login" element={<LoginPage />} />
+          <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route
             element={
               <RequireAuth>

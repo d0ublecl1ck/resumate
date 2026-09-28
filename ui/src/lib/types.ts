@@ -38,6 +38,10 @@ export type MachineErrorCode =
   | "ACCOUNT_BANNED" // 403
   | "FORBIDDEN" // 403
   | "EMAIL_ALREADY_REGISTERED" // 409
+  | "EMAIL_NOT_VERIFIED" // 403（d7b99）
+  | "VERIFICATION_TOKEN_INVALID" // 400（d7b99）
+  | "RESEND_TOO_SOON" // 429（d7b99）
+  | "RATE_LIMITED" // 429（d7b99）
 
 export interface ApiError {
   code: MachineErrorCode
@@ -61,6 +65,21 @@ export interface AuthUser {
   permissions: string[]
   isBanned: boolean
   createdAt: ISODate
+}
+
+/** 邮箱验证投递结果（d7b99）：202 中性响应，两种情况都不代表已登录。 */
+export type VerificationSendStatus = "verification_sent" | "already_verified"
+
+/** POST /auth/register 与 POST /auth/verification/resend 的响应体。 */
+export interface VerificationAccepted {
+  status: VerificationSendStatus
+  email: string
+}
+
+/** 重发验证邮件：email（注册成功页）与 token（失效链接页）二选一，由后端校验。 */
+export interface ResendVerificationInput {
+  email?: string
+  token?: string
 }
 
 export interface Role {

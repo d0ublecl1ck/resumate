@@ -46,4 +46,29 @@ describe("LoginPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("邮箱或密码不正确。")
   })
+
+  it("注册成功后进入查收邮件状态，不再直接登录", async () => {
+    renderLogin()
+
+    fireEvent.click(await screen.findByRole("button", { name: "去注册" }))
+    fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "张沐" } })
+    fireEvent.change(screen.getByLabelText("邮箱"), { target: { value: "new@resumate.dev" } })
+    fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: "注册" }))
+
+    expect(await screen.findByText("去邮箱查收验证链接")).toBeInTheDocument()
+    expect(screen.getByText(/new@resumate\.dev/)).toBeInTheDocument()
+  })
+
+  it("未验证邮箱被拒时提供内联重发并反馈结果", async () => {
+    renderLogin()
+
+    fireEvent.change(await screen.findByLabelText("邮箱"), { target: { value: "unverified@resumate.dev" } })
+    fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: "登录" }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("邮箱还未验证，请先完成邮箱验证。")
+    fireEvent.click(screen.getByRole("button", { name: "重新发送验证邮件" }))
+    expect(await screen.findByText("验证邮件已重新发送，请查收。")).toBeInTheDocument()
+  })
 })

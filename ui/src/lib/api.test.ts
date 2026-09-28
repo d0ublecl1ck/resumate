@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, updatePreferences } from "@/lib/api"
+import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, register, resendVerification, updatePreferences, verifyEmail } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { server } from "@/test-server"
 
@@ -65,5 +65,39 @@ describe("API 对接", () => {
     const models = searched.providers.flatMap((provider) => provider.models)
     expect(models.length).toBeGreaterThan(0)
     expect(models.every((model) => model.id.includes("opus") || model.label.toLowerCase().includes("opus"))).toBe(true)
+  })
+
+  it("register 返回 202 中性响应且不含用户资料", async () => {
+    const accepted = await register({ email: "new@resumate.dev", password: "password123", displayName: "张沐" })
+
+    expect(accepted).toEqual({ status: "verification_sent", email: "new@resumate.dev" })
+    expect("permissions" in accepted).toBe(false)
+  })
+
+  it("resendVerification 支持 email 与 token 两种入参", async () => {
+    const byEmail = await resendVerification({ email: "new@resumate.dev" })
+    expect(byEmail.status).toBe("verification_sent")
+    expect(byEmail.email).toBe("new@resumate.dev")
+
+    const byToken = await resendVerification({ token: "valid-token" })
+    expect(byToken.email).toBe("test@resumate.dev")
+  })
+
+  it("resendVerification 已激活邮箱返回 already_verified", async () => {
+    server.use(
+      http.post("/api/auth/verification/resend", () => HttpResponse.json({ status: "already_verified", email: "test@resumate.dev" }, { status: 202 })),
+    )
+
+    const accepted = await resendVerification({ token: "valid-token" })
+    expect(accepted.status).toBe("already_verified")
+  })
+
+  it("verifyEmail 消费令牌并返回会话用户", async () => {
+    const user = await verifyEmail("valid-token")
+    expect(user.email).toBe("test@resumate.dev")
+  })
+
+  it("verifyEmail 无效令牌映射为 VERIFICATION_TOKEN_INVALID", async () => {
+    await expect(verifyEmail("expired-token")).rejects.toMatchObject({ code: "VERIFICATION_TOKEN_INVALID", status: 400 })
   })
 })

@@ -1,14 +1,15 @@
 ---
 id: d7b99
-status: in-progress
+status: closed
 created_at: 2026-09-28T03:39:52.163Z
-updated_at: 2026-09-28T03:40:03.433Z
+updated_at: 2026-09-28T03:57:09.779Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 核心实体接口
 started_at: 2026-09-28T03:40:03.433Z
+closed_at: 2026-09-28T03:57:09.779Z
 ---
 
 # 邮箱验证注册：验证令牌、SMTP 发信与登录门禁
@@ -58,8 +59,8 @@ started_at: 2026-09-28T03:40:03.433Z
 - [x] 重发端点遵守冷却时间，注册与重发超过限流阈值返回 `RATE_LIMITED`。
 - [x] 迁移后存量用户的 `email_verified_at` 等于其 `created_at`，可正常登录。
 - [x] 后端测试覆盖上述行为并全部通过。
-- [ ] 前端注册成功进入「查收邮件」状态，新增错误码全部经 i18n 渲染，无硬编码中文。
-- [ ] `archkit inspect .` 与 `pnpm -C ui test` 通过。
+- [x] 前端注册成功进入「查收邮件」状态，新增错误码全部经 i18n 渲染，无硬编码中文。
+- [x] `archkit inspect .` 与 `pnpm -C ui test` 通过。
 
 ## Implementation
 
@@ -75,7 +76,15 @@ started_at: 2026-09-28T03:40:03.433Z
 - `app/tasks/seed.py`：引导管理员创建时直接置为已验证，避免新库管理员被门禁拦住。
 - 测试：新增 `tests/support.py` 假 mailer 与 `tests/test_email_verification.py` 9 个用例；把 4 个依赖「注册即登录」的测试 helper 改为「注册 + 验证」；`tests/test_migrations.py` 增加列存在与回填断言。
 
-前端：待原型与 Storybook 确认后实现。
+前端（已完成，Storybook 确认后对接）：
+
+- `ui/prototypes/index.html#auth-email-verification`：补登记注册成功、验证失效、未验证登录三态，复用既有令牌，未新增视觉规则。
+- `ui/src/lib/verification.ts`：`useVerificationResend` 状态机（60s 冷却、`already_verified`、错误码→i18n，不直出后端 message）。
+- `ui/src/lib/api.ts` / `types.ts`：`register` 改 202 中性体，新增 `resendVerification({email?|token?})` 与 `verifyEmail(token)`，补齐 4 个机器错误码。
+- `ui/src/pages/verify-email.tsx` + `/verify-email` 公开路由：consumes 邮件令牌、成功写会话缓存、失效态按 token 重发。
+- `ui/src/components/register-verification.tsx` / `verify-email-result.tsx` / `login-verification-notice.tsx`：注册成功、验证结果、登录被拒内联重发。
+- `ui/src/components/login-form.tsx`：additive `notice` prop，既有用法不变。
+- 文案全部走 `auth.verification.*` 与 `auth.errors.*`，zh-CN 与 en 键结构一致。
 
 ## Verification
 
@@ -84,7 +93,9 @@ started_at: 2026-09-28T03:40:03.433Z
 - 真实 SMTP 投递：`SmtpMailer().send_verification_email('d0ublecl1ckhpx@gmail.com', ...)` 成功（Gmail 应用专用密码，凭据只存未跟踪的 `backend/.env`）。
 - 迁移：`cd backend && .venv/bin/alembic upgrade head`；`users.email_verified_at` 存在，存量 5 个用户全部 `email_verified_at = created_at`。
 
-前端验证待实现后补齐。
+- `pnpm -C ui test` → `14 files / 93 passed`。
+- `ui/node_modules/.bin/tsc -b` → exit 0；`pnpm -C ui build` 与 `pnpm -C ui build-storybook` 成功。
+- Storybook `Pages/EmailVerification` 23 态由用户确认后进入真实对接；story 驱动真实 `lib/api` + `lib/verification`。
 
 ## Related ADRs
 

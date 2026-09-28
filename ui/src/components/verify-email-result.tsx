@@ -1,13 +1,12 @@
 // SCR-000 /verify-email：验证中 / 验证成功 / 链接失效三态。
-// 纯展示组件：三态与重发状态由调用方注入，Storybook 用 MSW 覆盖 verify 与 resend 响应。
+// 纯展示组件：三态与重发状态由调用方注入；失效态按 token 重发，不再让用户输入邮箱（d7b99）。
 // 视觉沿用登录页既有令牌（card-soft / primary / coral / cobalt），不新增页面视觉规则。
 
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CircleCheck, Loader2, TriangleAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AuthShell } from "@/components/auth-shell"
-import type { ResendState } from "@/components/register-verification"
+import type { ResendState } from "@/lib/verification"
 
 export type VerifyState = "verifying" | "success" | "invalid"
 export type VerifyInvalidReason = "expired" | "used" | "malformed"
@@ -15,19 +14,16 @@ export type VerifyInvalidReason = "expired" | "used" | "malformed"
 export interface VerifyEmailResultProps {
   state: VerifyState
   reason?: VerifyInvalidReason
-  email?: string
   resend: ResendState
-  onResend: (email: string) => void
+  /** false 时链接本身不可用于重发（例如地址里没有 token），只保留返回登录。 */
+  resendAvailable?: boolean
+  onResend: () => void
   onGoToWorkbench?: () => void
   onBackToSignIn?: () => void
   disabled?: boolean
 }
 
-const inputClass =
-  "w-full rounded-md border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
-
-function useResendLabel(resend: ResendState): string {
-  const { t } = useTranslation()
+function resendLabel(resend: ResendState, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (resend.status === "sending") return t("auth.verification.resending")
   if (resend.status === "cooldown" && (resend.cooldownSeconds ?? 0) > 0) {
     return t("auth.verification.resendCooldown", { seconds: resend.cooldownSeconds })
@@ -38,19 +34,18 @@ function useResendLabel(resend: ResendState): string {
 export function VerifyEmailResult({
   state,
   reason,
-  email = "",
   resend,
+  resendAvailable = true,
   onResend,
   onGoToWorkbench,
   onBackToSignIn,
   disabled = false,
 }: VerifyEmailResultProps) {
   const { t } = useTranslation()
-  const [value, setValue] = useState(email)
   const sending = resend.status === "sending"
   const cooling = resend.status === "cooldown" && (resend.cooldownSeconds ?? 0) > 0
-  const resendLabel = useResendLabel(resend)
-  const canResend = value.trim().length > 0 && !disabled && !sending && !cooling
+  const alreadyVerified = resend.status === "already_verified"
+  const canResend = resendAvailable && !disabled && !sending && !cooling && !alreadyVerified
   const tone = state === "invalid" ? "bg-coral/10 text-coral" : "bg-cobalt/10 text-cobalt"
 
   return (
@@ -95,29 +90,30 @@ export function VerifyEmailResult({
             </p>
           ) : null}
 
-          <label className="mt-5 block" htmlFor="verify-email">
-            <span className="mb-1 block text-xs text-muted-foreground">{t("auth.verification.emailLabel")}</span>
-            <input
-              id="verify-email"
-              type="email"
-              autoComplete="email"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              disabled={disabled || sending}
-              className={inputClass}
-            />
-          </label>
+          {cooling ? (
+            <p role="status" className="mt-4 rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
+              {t("auth.verification.resendSent")}
+            </p>
+          ) : null}
 
-          <button
-            type="button"
-            onClick={() => onResend(value.trim())}
-            disabled={!canResend}
-            aria-busy={sending}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
-          >
-            {sending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-            {resendLabel}
-          </button>
+          {alreadyVerified ? (
+            <p role="status" className="mt-4 rounded-md border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-cobalt">
+              {t("auth.verification.alreadyVerified")}
+            </p>
+          ) : null}
+
+          {resendAvailable ? (
+            <button
+              type="button"
+              onClick={onResend}
+              disabled={!canResend}
+              aria-busy={sending}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
+            >
+              {sending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              {resendLabel(resend, t)}
+            </button>
+          ) : null}
         </>
       ) : null}
 

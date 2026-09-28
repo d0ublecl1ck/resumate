@@ -84,7 +84,11 @@ export const handlers = [
     const body = (await request.json()) as { email: string }
     return HttpResponse.json({ status: "verification_sent", email: body.email }, { status: 202 })
   }),
-  http.post("/api/auth/verification/resend", () => HttpResponse.json({ status: "verification_sent" }, { status: 202 })),
+  // 重发支持 email（注册成功页）或 token（失效链接页）二选一（d7b99）。
+  http.post("/api/auth/verification/resend", async ({ request }) => {
+    const body = (await request.json()) as { email?: string; token?: string }
+    return HttpResponse.json({ status: "verification_sent", email: body.email ?? AUTH_USER.email }, { status: 202 })
+  }),
   http.post("/api/auth/verification/verify", async ({ request }) => {
     const body = (await request.json()) as { token: string }
     if (body.token !== VERIFICATION_TOKEN) {

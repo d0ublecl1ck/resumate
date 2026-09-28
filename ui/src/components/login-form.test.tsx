@@ -23,7 +23,7 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "张沐" } })
     fireEvent.change(screen.getByLabelText("邮箱"), { target: { value: "a@b.com" } })
     fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
-    fireEvent.click(screen.getByRole("button", { name: "注册并登录" }))
+    fireEvent.click(screen.getByRole("button", { name: "注册" }))
 
     expect(onSubmit).toHaveBeenCalledWith({ email: "a@b.com", password: "password123", displayName: "张沐" })
   })
@@ -33,6 +33,21 @@ describe("LoginForm", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("邮箱或密码不正确。")
     expect(screen.getByRole("button", { name: /处理中/ })).toBeDisabled()
+  })
+
+  it("错误下方的内联 notice 与错误文案同时展示", () => {
+    render(
+      <LoginForm
+        mode="login"
+        onModeChange={() => {}}
+        onSubmit={() => {}}
+        error="邮箱还未验证，请先完成邮箱验证。"
+        notice={<button type="button">重新发送验证邮件</button>}
+      />,
+    )
+
+    expect(screen.getByRole("alert")).toHaveTextContent("邮箱还未验证，请先完成邮箱验证。")
+    expect(screen.getByRole("button", { name: "重新发送验证邮件" })).toBeInTheDocument()
   })
 
   it("可切换到注册模式", () => {
