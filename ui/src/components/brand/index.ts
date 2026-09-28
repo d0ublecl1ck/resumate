@@ -1,0 +1,13 @@
+// 品牌语法组件：标志、贴纸卡片、盖章状态、吉祥物对话与品牌空态。
+export { BRAND_MARK_SRC, MASCOT_POSE_SRC } from "./brand-assets"
+export type { MascotPose } from "./brand-assets"
+export { BrandLockup, BrandMark } from "./brand-mark"
+export type { BrandSize } from "./brand-mark"
+export { MascotNote } from "./mascot-note"
+export type { MascotNoteMascot, MascotNoteTone } from "./mascot-note"
+export { MascotState } from "./mascot-state"
+export type { MascotStateKind, MascotStateMascot, MascotStateSize } from "./mascot-state"
+export { StampBadge } from "./stamp-badge"
+export type { StampTone } from "./stamp-badge"
+export { StickerCard } from "./sticker-card"
+export type { StickerLift, StickerTone } from "./sticker-card"

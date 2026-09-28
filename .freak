@@ -9,3 +9,4 @@
 - [x] `ui/src/components/verify-email-result.tsx` — 失效态按 token 重发后丢失的超长邮箱边界已由 a7eb5 补回：重发成功态显示目标邮箱（`resendSentTo`）并恢复 `RegisterResendLongEmail` story。记录：2026-09-28；处理：2026-09-28
 - [x] `ui/src/components/login-form.tsx` — 已由 efa88 迁移到 `react-hook-form` + `zodResolver`，`form-allow` 豁免已删除。记录：2026-09-28；处理：2026-09-28
 - [x] `ui/src/pages/login.tsx` — 已由 efa88 补齐 `VALIDATION_FAILED` 等映射并删除 `cause.message` 兜底与 `error-message-allow` 豁免。记录：2026-09-28；处理：2026-09-28
+- [ ] `ui/prototypes/index.html` — 未覆盖品牌语法组件的视觉状态（`ui/src/components/brand/`：库内标志 / 贴纸卡片 / 盖章状态 / 吉祥物对话 / 品牌空态）；组件仅复用原型既有令牌，未新增表外颜色；「音量档 + 吉祥物配额」约定已写入 `AGENTS.md` 的 `# 页面开发`，待原型补登记并在合并前复核。记录：2026-09-28
