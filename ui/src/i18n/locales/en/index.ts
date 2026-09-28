@@ -1,5 +1,6 @@
 import api from "./api"
 import auth from "./auth"
+import brand from "./brand"
 import common from "./common"
 import jd from "./jd"
 import nav from "./nav"
@@ -11,6 +12,7 @@ import templates from "./templates"
 import workbench from "./workbench"
 
 export default {
+  brand,
   common,
   nav,
   settings,

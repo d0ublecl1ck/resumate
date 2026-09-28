@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { BrandMark } from "@/components/brand"
 import { cn } from "@/lib/utils"
 import { logout as logoutRequest } from "@/lib/api"
 import { CURRENT_USER_QUERY_KEY, useCurrentUser } from "@/lib/session"
@@ -101,9 +102,7 @@ export function AppNav({ collapsed = false, onToggle }: { collapsed?: boolean; o
     <nav aria-label={t("nav.aria.main")} className="flex h-full flex-col gap-1 p-3">
       <div className={cn("mb-4", collapsed ? "flex flex-col items-center gap-2" : "flex items-center justify-between px-1")}>
         <Link to="/" className="flex items-center gap-2.5" title={t("nav.brand.name")}>
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="size-5" aria-hidden />
-          </span>
+          <BrandMark size="md" />
           {!collapsed && (
             <span>
               <span className="block font-serif text-lg font-bold leading-none text-foreground">{t("nav.brand.name")}</span>
