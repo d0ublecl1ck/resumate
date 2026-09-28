@@ -49,6 +49,7 @@ curl -sS http://localhost:8000/.well-known/resume-agent
 
 本期 11 个端点沿用现有 **HttpOnly 会话 Cookie**（`resumate_session`），**不带 Bearer**。PAT Bearer 与 Scope 强制不在本期，属后续工单。
 
+- 登录前提：账号邮箱已完成验证，否则 `POST /auth/login` 返回 403 `EMAIL_NOT_VERIFIED`；`POST /auth/register` 只建未验证账号并发验证邮件（202、不下发会话），需由用户在邮件里点验证链接。
 - 登录：`POST /auth/login`，body `{ "email": "...", "password": "..." }`；服务端通过 `Set-Cookie` 下发 `resumate_session`。
 - 之后每个请求都带上该 Cookie（curl 用 `-b cookies.txt`，httpx 用持久 `Client`）。
 - 权限码：读端点需要 `resume:read`，写端点需要 `resume:write`；每个端点恰好声明一个权限码。
@@ -66,6 +67,7 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
 | --- | --- | --- |
 | 401 | `UNAUTHENTICATED` | 会话缺失或过期：重新 `POST /auth/login` 刷新 Cookie，然后用**新的** Cookie 重试原请求。不要伪造身份或改用未授权凭证。 |
 | 401 | `INVALID_CREDENTIALS` | 邮箱或密码错误：停止并反馈用户，不要暴力重试。 |
+| 403 | `EMAIL_NOT_VERIFIED` | 账号邮箱尚未验证：停止重试，提示用户完成邮件验证或调用 `POST /auth/verification/resend` 重发，不要尝试绕过。 |
 | 403 | `FORBIDDEN` | 账号缺少 `resume:read` / `resume:write`：停止写入，向用户说明缺少权限，不得尝试绕过确认或提权。 |
 | 403 | `SCOPE_INSUFFICIENT` | Scope 不足（PAT 启用后的语义）：停止并报告，不得扩大 Scope。 |
 

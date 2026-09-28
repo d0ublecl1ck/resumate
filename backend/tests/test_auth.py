@@ -2,21 +2,25 @@ from fastapi.testclient import TestClient
 
 from app.tasks.seed import seed_admin
 
+import support
+
 
 def _register(client: TestClient, email: str = "zhang@example.com", password: str = "password123", name: str = "张沐"):
-    return client.post("/auth/register", json={"email": email, "password": password, "displayName": name})
+    """Register and complete email verification, leaving the client logged in."""
+    return support.register_verified(client, email=email, password=password, name=name)
 
 
 def _login(client: TestClient, email: str, password: str):
     return client.post("/auth/login", json={"email": email, "password": password})
 
 
-def test_register_creates_session_and_httponly_cookie(session_clients) -> None:
+def test_verify_email_sets_httponly_cookie_and_returns_profile(session_clients) -> None:
     client = session_clients()
+    support.register(client)
 
-    response = _register(client)
+    response = support.verify(client, support.MAILER.latest_token())
 
-    assert response.status_code == 201, response.text
+    assert response.status_code == 200, response.text
     body = response.json()
     assert body["email"] == "zhang@example.com"
     assert body["role"] == "user"
@@ -28,11 +32,11 @@ def test_register_creates_session_and_httponly_cookie(session_clients) -> None:
     assert client.get("/auth/me").status_code == 200
 
 
-def test_duplicate_email_returns_conflict(session_clients) -> None:
+def test_duplicate_verified_email_returns_conflict(session_clients) -> None:
     client = session_clients()
     _register(client)
 
-    response = _register(client, name="另一个人")
+    response = support.register(client, name="另一个人")
 
     assert response.status_code == 409
     assert response.json()["code"] == "EMAIL_ALREADY_REGISTERED"

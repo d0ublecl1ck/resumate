@@ -8,12 +8,16 @@ from app.modules.auth.rbac import PERMISSION_CODES
 from app.shared.errors import ValidationFailed
 from app.tasks.seed import seed_admin
 
+import support
+
 # Endpoints that intentionally require no login and therefore no permission.
 PUBLIC_ROUTES = {
     ("GET", "/health/"),
     ("POST", "/auth/register"),
     ("POST", "/auth/login"),
     ("POST", "/auth/logout"),
+    ("POST", "/auth/verification/resend"),
+    ("POST", "/auth/verification/verify"),
     ("GET", "/templates"),
     ("GET", "/templates/{template_id}"),
     ("GET", "/.well-known/resume-agent"),
@@ -69,7 +73,7 @@ def test_declared_permissions_exist_in_catalogue() -> None:
 
 
 def _register(client, email: str = "user@example.com", password: str = "password123", name: str = "普通用户"):
-    return client.post("/auth/register", json={"email": email, "password": password, "displayName": name})
+    return support.register_verified(client, email=email, password=password, name=name)
 
 
 def _login(client, email: str, password: str):

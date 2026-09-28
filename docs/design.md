@@ -149,7 +149,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 
 当前公共端点（字段与 `ui/src/lib/types.ts` 对齐，JSON 使用 camelCase）：
 
-- 认证与权限：`POST /auth/register|login|logout`、`POST /auth/password`、`GET /auth/me`；用户：`GET /auth/users`（user:read）、`POST /auth/users/{id}/ban|unban`（user:ban/unban）、`POST /auth/users/{id}/role`（role:assign）。
+- 认证与权限：`POST /auth/register`（202，建未验证账号并发验证邮件，不下发会话）、`POST /auth/verification/resend`、`POST /auth/verification/verify`（验证邮箱后才下发会话）、`POST /auth/login`（未验证邮箱返回 403 `EMAIL_NOT_VERIFIED`）、`POST /auth/logout`、`POST /auth/password`、`GET /auth/me`；用户：`GET /auth/users`（user:read）、`POST /auth/users/{id}/ban|unban`（user:ban/unban）、`POST /auth/users/{id}/role`（role:assign）。
 - 角色目录：`GET|POST /auth/roles`、`PATCH|DELETE /auth/roles/{id}`（role:write）；权限目录只读：`GET /auth/permissions`。会话经 HttpOnly Cookie 承载。
 - 模板：`GET /templates`、`GET /templates/{template_id}`（只读）。
 - 简历：`GET /resumes`、`POST /resumes`、`GET /resumes/{resume_id}`、`PATCH /resumes/{resume_id}`、`DELETE /resumes/{resume_id}`、`POST /resumes/{resume_id}/archive`、`POST /resumes/{resume_id}/restore`、`POST /resumes/{resume_id}/duplicate`、`GET|PUT /resumes/{resume_id}/document`、`GET /resumes/{resume_id}/versions`。

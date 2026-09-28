@@ -25,6 +25,10 @@ class ErrorCode(StrEnum):
     ACCOUNT_BANNED = "ACCOUNT_BANNED"
     FORBIDDEN = "FORBIDDEN"
     EMAIL_ALREADY_REGISTERED = "EMAIL_ALREADY_REGISTERED"
+    EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
+    VERIFICATION_TOKEN_INVALID = "VERIFICATION_TOKEN_INVALID"
+    RESEND_TOO_SOON = "RESEND_TOO_SOON"
+    RATE_LIMITED = "RATE_LIMITED"
 
 
 class ApiError(ApiModel):
@@ -124,3 +128,23 @@ class ScopeInsufficient(ApiException):
 class EmailAlreadyRegistered(ApiException):
     status_code = 409
     code = ErrorCode.EMAIL_ALREADY_REGISTERED
+
+
+class EmailNotVerified(ApiException):
+    status_code = 403
+    code = ErrorCode.EMAIL_NOT_VERIFIED
+
+
+class VerificationTokenInvalid(ApiException):
+    status_code = 400
+    code = ErrorCode.VERIFICATION_TOKEN_INVALID
+
+
+class ResendTooSoon(ApiException):
+    status_code = 429
+    code = ErrorCode.RESEND_TOO_SOON
+
+
+class RateLimited(ApiException):
+    status_code = 429
+    code = ErrorCode.RATE_LIMITED

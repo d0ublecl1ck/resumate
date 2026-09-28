@@ -1,5 +1,5 @@
 import redis
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -9,18 +9,22 @@ from app.core.redis import get_redis
 
 from . import dao, service
 from .deps import require_permission
+from .mailer import Mailer, get_mailer
 from .models import User
 from .schemas import (
     BanRequest,
     ChangePasswordRequest,
     LoginRequest,
     PermissionResponse,
+    RegisterAccepted,
     RegisterRequest,
+    ResendVerificationRequest,
     RoleCreate,
     RoleResponse,
     RoleUpdate,
     RoleUpdateRequest,
     UserResponse,
+    VerifyEmailRequest,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -79,14 +83,42 @@ def _user_response(db: Session, user: User) -> UserResponse:
     )
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=RegisterAccepted, status_code=status.HTTP_202_ACCEPTED)
 def register(
     payload: RegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+    mailer: Mailer = Depends(get_mailer),
+) -> RegisterAccepted:
+    pending = service.register(db, client, payload)
+    if pending.link is not None:
+        background_tasks.add_task(mailer.send_verification_email, pending.email, pending.link)
+    return RegisterAccepted(email=pending.email)
+
+
+@router.post("/verification/resend", response_model=RegisterAccepted, status_code=status.HTTP_202_ACCEPTED)
+def resend_verification(
+    payload: ResendVerificationRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+    mailer: Mailer = Depends(get_mailer),
+) -> RegisterAccepted:
+    pending = service.resend_verification(db, client, payload)
+    if pending.link is not None:
+        background_tasks.add_task(mailer.send_verification_email, pending.email, pending.link)
+    return RegisterAccepted(email=pending.email)
+
+
+@router.post("/verification/verify", response_model=UserResponse)
+def verify_email(
+    payload: VerifyEmailRequest,
     response: Response,
     db: Session = Depends(get_db),
     client: redis.Redis = Depends(get_redis),
 ) -> UserResponse:
-    user, token = service.register(db, client, payload)
+    user, token = service.verify_email(db, client, payload)
     _set_session_cookie(response, token)
     return _user_response(db, user)
 

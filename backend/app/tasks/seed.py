@@ -146,6 +146,7 @@ def seed_admin(db: Session) -> bool:
         display_name=settings.bootstrap_admin_name,
         password_hash=hash_password(settings.bootstrap_admin_password),
         is_banned=False,
+        email_verified_at=now,
         created_at=now,
         updated_at=now,
     )
