@@ -47,6 +47,7 @@ export function LoginForm({
     onSubmit({ email: email.trim(), password, ...(isRegister ? { displayName: displayName.trim() } : {}) })
   }
 
+  // form-allow: 遗留登录表单尚未接入 useForm/zod 客户端校验，仍由后端 EmailStr 兜底；迁移前显式豁免（Issue 6a58a）。
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
       <div className="w-full max-w-sm">

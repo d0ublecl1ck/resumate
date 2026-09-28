@@ -63,7 +63,7 @@ function messageFor(cause: unknown): string {
     if (cause.code === "INVALID_CREDENTIALS") return i18n.t("auth.errors.invalidCredentials")
     if (cause.code === "EMAIL_ALREADY_REGISTERED") return i18n.t("auth.errors.emailRegistered")
     if (cause.code === "NETWORK_ERROR") return i18n.t("auth.errors.network")
-    return cause.message
+    return cause.message // error-message-allow: 遗留兜底，待把机器错误码映射到 i18n 文案（Issue 6a58a）
   }
   return i18n.t("auth.errors.generic")
 }
