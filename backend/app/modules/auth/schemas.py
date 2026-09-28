@@ -11,6 +11,21 @@ class RegisterRequest(ApiModel):
     display_name: str = Field(min_length=1, max_length=200)
 
 
+class RegisterAccepted(ApiModel):
+    """Registration is accepted, but no session exists until the mail link is used."""
+
+    status: str = "verification_sent"
+    email: EmailStr
+
+
+class ResendVerificationRequest(ApiModel):
+    email: EmailStr
+
+
+class VerifyEmailRequest(ApiModel):
+    token: str = Field(min_length=1, max_length=512)
+
+
 class LoginRequest(ApiModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=128)

@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -10,16 +11,28 @@ from app.core.deps import CurrentUser
 from app.shared.errors import (
     AccountBanned,
     EmailAlreadyRegistered,
+    EmailNotVerified,
     Forbidden,
     InvalidCredentials,
+    RateLimited,
     ResourceNotFound,
+    ResendTooSoon,
     ValidationFailed,
+    VerificationTokenInvalid,
 )
 
-from . import dao, session_store
+from . import dao, session_store, verification_store
 from .models import Permission, Role, User
 from .rbac import BOOTSTRAP_ROLE_CODE, DEFAULT_ROLE_CODE, ROLE_CODE_PATTERN, ROLE_RANK
-from .schemas import ChangePasswordRequest, LoginRequest, RegisterRequest, RoleCreate, RoleUpdate
+from .schemas import (
+    ChangePasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResendVerificationRequest,
+    RoleCreate,
+    RoleUpdate,
+    VerifyEmailRequest,
+)
 from .security import hash_password, verify_password
 
 
@@ -53,28 +66,98 @@ def _require_actor_outranks(db: Session, actor: CurrentUser, target_id: str, act
     return target
 
 
-def register(db: Session, client: redis.Redis, payload: RegisterRequest) -> tuple[User, str]:
-    email = payload.email.strip().lower()
-    if dao.get_user_by_email(db, email) is not None:
-        raise EmailAlreadyRegistered("该邮箱已注册")
-    default_role = dao.get_role_by_code(db, DEFAULT_ROLE_CODE)
-    if default_role is None:
-        raise RuntimeError("缺少内置角色 user，请先运行 app.tasks.seed")
-    now = _now()
-    user = User(
-        id=_new_id(),
-        email=email,
-        display_name=payload.display_name.strip(),
-        password_hash=hash_password(payload.password),
-        is_banned=False,
-        created_at=now,
-        updated_at=now,
+@dataclass(frozen=True)
+class PendingVerification:
+    """Who to mail and which link to send.
+
+    ``link`` is None when a resend has nothing to do (unknown or already
+    verified address); the HTTP response stays neutral in that case.
+    """
+
+    email: str
+    link: str | None
+
+
+def _verification_link(token: str) -> str:
+    return f"{get_settings().public_web_base_url.rstrip('/')}/verify-email?token={token}"
+
+
+def _issue_verification_mail(client: redis.Redis, user: User) -> PendingVerification:
+    settings = get_settings()
+    if verification_store.in_resend_cooldown(client, user.email):
+        raise ResendTooSoon("验证邮件刚刚发送，请稍后再试")
+    if not verification_store.is_within_send_quota(
+        client,
+        user.email,
+        limit=settings.email_verification_max_sends_per_hour,
+    ):
+        raise RateLimited("验证邮件发送过于频繁，请稍后再试")
+    token = verification_store.issue_verification(
+        client,
+        user.id,
+        ttl_seconds=settings.email_verification_token_ttl_seconds,
     )
-    dao.add_user(db, user)
-    db.flush()
-    _assign_role(db, user.id, default_role)
-    db.commit()
-    db.refresh(user)
+    verification_store.start_resend_cooldown(
+        client,
+        user.email,
+        seconds=settings.email_verification_resend_cooldown_seconds,
+    )
+    return PendingVerification(user.email, _verification_link(token))
+
+
+def register(db: Session, client: redis.Redis, payload: RegisterRequest) -> PendingVerification:
+    """Create an unverified account and issue a verification link, never a session."""
+    email = payload.email.strip().lower()
+    user = dao.get_user_by_email(db, email)
+    if user is not None and user.email_verified_at is not None:
+        raise EmailAlreadyRegistered("该邮箱已注册")
+    if user is None:
+        default_role = dao.get_role_by_code(db, DEFAULT_ROLE_CODE)
+        if default_role is None:
+            raise RuntimeError("缺少内置角色 user，请先运行 app.tasks.seed")
+        now = _now()
+        user = User(
+            id=_new_id(),
+            email=email,
+            display_name=payload.display_name.strip(),
+            password_hash=hash_password(payload.password),
+            is_banned=False,
+            email_verified_at=None,
+            created_at=now,
+            updated_at=now,
+        )
+        dao.add_user(db, user)
+        db.flush()
+        _assign_role(db, user.id, default_role)
+        db.commit()
+        db.refresh(user)
+    return _issue_verification_mail(client, user)
+
+
+def resend_verification(
+    db: Session,
+    client: redis.Redis,
+    payload: ResendVerificationRequest,
+) -> PendingVerification:
+    email = payload.email.strip().lower()
+    user = dao.get_user_by_email(db, email)
+    if user is None or user.email_verified_at is not None:
+        return PendingVerification(email, None)
+    return _issue_verification_mail(client, user)
+
+
+def verify_email(db: Session, client: redis.Redis, payload: VerifyEmailRequest) -> tuple[User, str]:
+    """Consume the one-time token, mark the mailbox verified, and start a session."""
+    user_id = verification_store.consume_verification(client, payload.token)
+    user = dao.get_user(db, user_id) if user_id is not None else None
+    if user is None:
+        raise VerificationTokenInvalid("验证链接无效或已过期，请重新获取")
+    if user.email_verified_at is None:
+        now = _now()
+        user.email_verified_at = now
+        user.updated_at = now
+        db.commit()
+        db.refresh(user)
     return user, _issue_session(client, user.id)
 
 
@@ -84,6 +167,8 @@ def login(db: Session, client: redis.Redis, payload: LoginRequest) -> tuple[User
         raise InvalidCredentials("邮箱或密码不正确")
     if user.is_banned:
         raise AccountBanned("账号已被封禁，请联系管理员")
+    if user.email_verified_at is None:
+        raise EmailNotVerified("邮箱尚未验证，请先完成邮箱验证")
     return user, _issue_session(client, user.id)
 
 

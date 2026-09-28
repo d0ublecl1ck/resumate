@@ -22,6 +22,21 @@ class Settings(BaseSettings):
     bootstrap_admin_password: str = "resumate-admin"
     bootstrap_admin_name: str = "管理员"
 
+    # Email verification: registration proves mailbox ownership before any session
+    # is issued, so these knobs govern the token lifetime and sending pressure.
+    email_verification_token_ttl_seconds: int = 30 * 60
+    email_verification_resend_cooldown_seconds: int = 60
+    email_verification_max_sends_per_hour: int = 5
+    # SMTP relay for verification mail. An empty SMTP_HOST disables real sending.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_starttls: bool = True
+    # Base URL used to build the verification link that goes into the mail.
+    public_web_base_url: str = "http://localhost:5173"
+
 
 @lru_cache
 def get_settings() -> Settings:

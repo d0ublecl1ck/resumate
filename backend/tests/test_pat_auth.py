@@ -11,13 +11,12 @@ from sqlalchemy.orm import Session
 
 from app.modules.access.models import PersonalAccessToken
 
+import support
+
 
 def _register(client: TestClient, email: str = "pat@example.com") -> None:
-    response = client.post(
-        "/auth/register",
-        json={"email": email, "password": "password123", "displayName": "PAT 用户"},
-    )
-    assert response.status_code == 201, response.text
+    response = support.register_verified(client, email=email, password="password123", name="PAT 用户")
+    assert response.status_code == 200, response.text
 
 
 def _document() -> dict:

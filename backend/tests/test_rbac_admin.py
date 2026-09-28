@@ -3,13 +3,15 @@ from fastapi.testclient import TestClient
 from app.modules.auth.rbac import PERMISSION_CODES
 from app.tasks.seed import seed_admin
 
+import support
+
 
 def _login_bootstrap(client: TestClient):
     return client.post("/auth/login", json={"email": "admin@resumate.dev", "password": "resumate-admin"})
 
 
 def _register(client: TestClient, email: str = "member@example.com"):
-    return client.post("/auth/register", json={"email": email, "password": "password123", "displayName": "成员"})
+    return support.register_verified(client, email=email, password="password123", name="成员")
 
 
 def _superclient(session_clients, db_session):
