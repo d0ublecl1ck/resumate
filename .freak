@@ -5,6 +5,7 @@
 - [ ] `ui/prototypes/index.html` — 定稿原型未覆盖设置页的语言切换控件（US-13.4 入口）；本次复用 SCR-010 已有的分段选择控件视觉（`border-cobalt bg-cobalt/5` 选中态），未新增页面视觉规则，待原型补该状态。记录：2026-09-27
 - [ ] `ui/prototypes/index.html` — 定稿原型未覆盖 RBAC 页的左树右表两栏布局（a08ef）；本次仅复用既有设计令牌与组件（`card-soft` / `primary` 等），未新增页面视觉规则，待原型补充该状态。记录：2026-09-27
 - [x] `ui/prototypes/index.html` — 未覆盖邮箱验证注册的三个状态（注册成功待查收邮件、验证链接失效、未验证登录被拒）；已由 d7b99 在 `#auth-email-verification` 章节补登记（SCR-000，复用既有令牌，未新增页面视觉规则），Storybook `Pages/EmailVerification` 18 态已由用户确认。记录：2026-09-28；处理：2026-09-28
-- [ ] `ui/src/lib/types.ts` — `MachineErrorCode` 未加入 `EMAIL_NOT_VERIFIED` / `VERIFICATION_TOKEN_INVALID` / `RESEND_TOO_SOON` / `RATE_LIMITED`；后端 `/auth/verification/resend` 现支持 email / token 二选一且可能返回 `status: already_verified`。d7b99 第 2 步对接时补齐类型并同步 `ui/src/pages/login.tsx` 的 `messageFor` 映射。记录：2026-09-28
+- [x] `ui/src/lib/types.ts` — 4 个机器错误码已补齐，`messageFor` 与 `lib/verification.ts` 均已做键映射；`/auth/verification/resend` 的 email / token 与 `already_verified` 已在前端处理。记录：2026-09-28；处理：2026-09-28
+- [ ] `ui/src/components/verify-email-result.tsx` — 失效态改为按 token 重发后，原 `verify-long-email`（超长邮箱）视觉边界被移除；若要保留需在重发成功态显示「已发送到 <email>」，待用户决定。记录：2026-09-28
 - [ ] `ui/src/components/login-form.tsx` — 带 `form-allow` 豁免：尚未接入 `useForm` + `zodResolver`，校验仍由后端 `EmailStr` 兜底；下次核对是否已迁移并删除豁免。记录：2026-09-28
 - [ ] `ui/src/pages/login.tsx` — 带 `error-message-allow` 豁免：`messageFor` 仍兜底直出 `cause.message`；下次核对是否已补齐机器错误码到 i18n 的映射并删除豁免。记录：2026-09-28

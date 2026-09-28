@@ -10,7 +10,7 @@ export default {
   },
   verification: {
     sentTitle: "Check your inbox for the verification link",
-    sentDescription: "We sent a verification link to {{email}}. It stays valid for 24 hours — open the email and click the link to finish signing up.",
+    sentDescription: "We sent a verification link to {{email}}. It stays valid for 30 minutes — open the email and click the link to finish signing up.",
     sentHint: "Didn't get it? Check your spam folder, or resend it below in a moment.",
     resend: "Resend verification email",
     resending: "Sending…",
@@ -22,14 +22,15 @@ export default {
     verifiedTitle: "Email verified",
     verifiedDescription: "Your account is active. You can start organizing your career facts now.",
     invalidTitle: "This verification link no longer works",
-    invalidDescription: "The link may have expired, already been used, or be incomplete. Enter your sign-up email and we will send a new one.",
+    invalidDescription: "The link may have expired, already been used, or be incomplete. You can send a new verification email, or go back and sign in again.",
     invalidReason: {
       expired: "The link has expired.",
       used: "The link has already been used.",
       malformed: "The link is incomplete or malformed.",
     },
     goToWorkbench: "Go to workbench",
-    emailLabel: "Sign-up email",
+    alreadyVerified: "This email is already verified — you can sign in.",
+    resendSent: "Verification email sent again — check your inbox.",
   },
   fields: {
     displayName: "Name",
@@ -39,7 +40,7 @@ export default {
   },
   actions: {
     login: "Sign in",
-    register: "Register and sign in",
+    register: "Register",
     submitting: "Working…",
     switchToRegister: "Register",
     switchToLogin: "Sign in",

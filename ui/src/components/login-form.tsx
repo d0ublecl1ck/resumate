@@ -23,6 +23,7 @@ export function LoginForm({
   onSubmit,
   submitting = false,
   error = null,
+  notice = null,
   initialEmail = "",
   initialPassword = "",
   initialDisplayName = "",
@@ -32,6 +33,8 @@ export function LoginForm({
   onSubmit: (credentials: LoginCredentials) => void
   submitting?: boolean
   error?: string | null
+  /** 附加在错误下方的内联提示/动作（例如 EMAIL_NOT_VERIFIED 的重发入口）。 */
+  notice?: React.ReactNode
   initialEmail?: string
   initialPassword?: string
   initialDisplayName?: string
@@ -70,6 +73,8 @@ export function LoginForm({
               {error}
             </p>
           ) : null}
+
+          {notice ? <div className="mt-3">{notice}</div> : null}
 
           <div className="mt-5 space-y-4">
             {isRegister ? (

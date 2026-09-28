@@ -42,6 +42,8 @@ import type {
   ResumeVersion,
   UserPreferences,
   UserPreferencesUpdate,
+  ResendVerificationInput,
+  VerificationAccepted,
   WorkbenchSummary,
 } from "./types"
 import { request, requestText } from "./api-client"
@@ -67,9 +69,19 @@ export function login(email: string, password: string): Promise<AuthUser> {
   return request<AuthUser>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) })
 }
 
-/** POST /auth/register —— 注册成功即登录（后端下发 HttpOnly Cookie） */
-export function register(input: { email: string; password: string; displayName: string }): Promise<AuthUser> {
-  return request<AuthUser>("/auth/register", { method: "POST", body: JSON.stringify(input) })
+/** POST /auth/register —— 202 中性响应，不下发会话；登录态只能由邮箱验证或 login 产生（d7b99）。 */
+export function register(input: { email: string; password: string; displayName: string }): Promise<VerificationAccepted> {
+  return request<VerificationAccepted>("/auth/register", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** POST /auth/verification/resend —— email 或 token 二选一（d7b99）。 */
+export function resendVerification(input: ResendVerificationInput): Promise<VerificationAccepted> {
+  return request<VerificationAccepted>("/auth/verification/resend", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** POST /auth/verification/verify —— 消费一次性令牌，成功时下发 HttpOnly 会话 Cookie。 */
+export function verifyEmail(token: string): Promise<AuthUser> {
+  return request<AuthUser>("/auth/verification/verify", { method: "POST", body: JSON.stringify({ token }) })
 }
 
 /** POST /auth/logout —— 服务端删除 Redis 会话 key 并清 Cookie */

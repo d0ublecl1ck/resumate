@@ -9,14 +9,18 @@ vi.mock("@/mocks/browser", async () => {
 
 import {
   LoginUnverified,
+  LoginUnverifiedResent,
+  RegisterAlreadyVerified,
   RegisterNetworkError,
   RegisterRateLimited,
   RegisterResendPending,
   RegisterResendTooSoon,
   RegisterSent,
+  VerifyAlreadyVerified,
   VerifyChecking,
   VerifyInvalidToken,
   VerifyLinkExpired,
+  VerifyMalformedLink,
   VerifySuccess,
 } from "@/components/email-verification.stories"
 
@@ -86,5 +90,36 @@ describe("email verification stories", () => {
   it("LoginUnverified warns that the email is not verified", async () => {
     render(LoginUnverified.render())
     expect(await screen.findByRole("alert")).toHaveTextContent("邮箱还未验证，请先完成邮箱验证。")
+  })
+
+  it("LoginUnverifiedResent reports the resend", async () => {
+    const { container } = render(LoginUnverifiedResent.render())
+
+    await LoginUnverifiedResent.play({ canvasElement: container })
+
+    expect(await screen.findByText("验证邮件已重新发送，请查收。")).toBeInTheDocument()
+  })
+
+  it("RegisterAlreadyVerified tells the user to sign in", async () => {
+    const { container } = render(RegisterAlreadyVerified.render())
+
+    await RegisterAlreadyVerified.play({ canvasElement: container })
+
+    expect(await screen.findByText("该邮箱已完成验证，直接登录即可。")).toBeInTheDocument()
+  })
+
+  it("VerifyAlreadyVerified tells the user to sign in after resend", async () => {
+    const { container } = render(VerifyAlreadyVerified.render())
+
+    await VerifyAlreadyVerified.play({ canvasElement: container })
+
+    expect(await screen.findByText("该邮箱已完成验证，直接登录即可。")).toBeInTheDocument()
+  })
+
+  it("VerifyMalformedLink offers no token resend action", async () => {
+    render(VerifyMalformedLink.render())
+
+    expect(await screen.findByText("验证链接已失效")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "重新发送验证邮件" })).not.toBeInTheDocument()
   })
 })
