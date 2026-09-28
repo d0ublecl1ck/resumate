@@ -373,6 +373,37 @@
           </p>
         </div>
       </section>
+
+      <section class="panel" id="auth-email-verification" aria-label="设计补充：认证与邮箱验证状态" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · 认证与邮箱验证状态（SCR-000）</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            登录 / 注册（SCR-000）与 /verify-email 不在首页原型范围内：三态在此登记，视觉沿用登录页既有令牌
+            （card-soft 卡片 / primary 主按钮 / coral 错误色 / cobalt 强调色 / font-serif 标题 / rounded-lg / 48px 触控高度），
+            不新增页面视觉规则。
+          </p>
+
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 注册：待查收邮件状态">
+            <li class="check-item done"><span class="label">注册成功：提示「验证邮件已发送到 {{email}}」+ 去邮箱说明</span><span class="tag">202 · 不下发会话</span></li>
+            <li class="check-item"><span class="label">重新发送验证邮件：发送中（禁用按钮 + spinner）→ 发送后 60s 冷却</span><span class="tag">202</span></li>
+            <li class="check-item"><span class="label">重发过频：行内错误提示，按钮保持可用</span><span class="tag">RESEND_TOO_SOON / RATE_LIMITED</span></li>
+            <li class="check-item"><span class="label">换一个邮箱注册 / 返回登录</span><span class="tag">次级动作</span></li>
+            <li class="check-item"><span class="label">超长邮箱：正文折行不溢出卡片</span><span class="tag">边界</span></li>
+          </ul>
+
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 /verify-email：验证结果状态">
+            <li class="check-item"><span class="label">验证中：只读加载态，不展示操作按钮</span><span class="tag">loading</span></li>
+            <li class="check-item done"><span class="label">验证成功：提示已激活 +「进入工作台」主按钮</span><span class="tag">UserResponse + Cookie</span></li>
+            <li class="check-item"><span class="label">链接失效 / 已过期 / 已使用：写明原因，输入注册邮箱重发</span><span class="tag">VERIFICATION_TOKEN_INVALID</span></li>
+            <li class="check-item"><span class="label">重发过频：行内错误提示</span><span class="tag">RESEND_TOO_SOON / RATE_LIMITED</span></li>
+            <li class="check-item"><span class="label">返回登录</span><span class="tag">次级动作</span></li>
+          </ul>
+
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 登录：未验证被拒状态">
+            <li class="check-item"><span class="label">登录被拒：「邮箱还未验证」+ 去验证 / 重发验证邮件提示</span><span class="tag">403 · EMAIL_NOT_VERIFIED</span></li>
+          </ul>
+        </div>
+      </section>
     </main>
   </div>
 

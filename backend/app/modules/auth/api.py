@@ -94,7 +94,7 @@ def register(
     pending = service.register(db, client, payload)
     if pending.link is not None:
         background_tasks.add_task(mailer.send_verification_email, pending.email, pending.link)
-    return RegisterAccepted(email=pending.email)
+    return RegisterAccepted(status=pending.status, email=pending.email)
 
 
 @router.post("/verification/resend", response_model=RegisterAccepted, status_code=status.HTTP_202_ACCEPTED)
@@ -108,7 +108,7 @@ def resend_verification(
     pending = service.resend_verification(db, client, payload)
     if pending.link is not None:
         background_tasks.add_task(mailer.send_verification_email, pending.email, pending.link)
-    return RegisterAccepted(email=pending.email)
+    return RegisterAccepted(status=pending.status, email=pending.email)
 
 
 @router.post("/verification/verify", response_model=UserResponse)
