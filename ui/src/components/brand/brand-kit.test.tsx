@@ -162,6 +162,22 @@ describe("MascotState", () => {
     expect(container.querySelector('img[src="/brand/mascot.png"]')).not.toBeNull()
   })
 
+  it("swaps the character for the brand badge at the calmer volume", () => {
+    const { container } = render(<MascotState kind="empty" mascot="badge" />)
+    expect(container.querySelector('img[src="/brand/mark.png"]')).not.toBeNull()
+    expect(container.querySelector('img[src="/brand/mascot-wave.png"]')).toBeNull()
+  })
+
+  it("mutes the badge for forbidden and frozen so state semantics survive", () => {
+    const { container } = render(<MascotState kind="frozen" mascot="badge" />)
+    expect((container.querySelector("img") as HTMLElement).className).toContain("grayscale")
+  })
+
+  it("treats a conflict as an alert with brand copy", () => {
+    render(<MascotState kind="conflict" />)
+    expect(screen.getByRole("alert")).toHaveTextContent("改动和别人撞车了")
+  })
+
   it("announces failures as alerts and surfaces the machine error code", () => {
     render(<MascotState kind="error" errorCode="RESUME_NOT_FOUND" />)
     expect(screen.getByRole("alert")).toHaveTextContent("错误码：RESUME_NOT_FOUND")
