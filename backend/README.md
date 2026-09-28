@@ -28,14 +28,14 @@ uv run uvicorn app.main:app --reload
 
 会话相关配置：`SESSION_TTL_SECONDS`（默认 7 天）、`SESSION_COOKIE_NAME`、`SESSION_COOKIE_SECURE`（生产 HTTPS 必须为 `true`）、`SESSION_COOKIE_SAMESITE`。bootstrap 管理员由 `BOOTSTRAP_ADMIN_EMAIL / BOOTSTRAP_ADMIN_PASSWORD / BOOTSTRAP_ADMIN_NAME` 控制，仅在账号不存在时创建，并直接置为已验证。
 
-邮箱验证配置：`EMAIL_VERIFICATION_TOKEN_TTL_SECONDS`（默认 30 分钟）、`EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS`（默认 60 秒）、`EMAIL_VERIFICATION_MAX_SENDS_PER_HOUR`（默认 5 次），以及 SMTP 通道 `SMTP_HOST / SMTP_PORT / SMTP_USERNAME / SMTP_PASSWORD / SMTP_FROM_EMAIL / SMTP_STARTTLS` 与拼链接用的 `PUBLIC_WEB_BASE_URL`；`SMTP_HOST` 为空时禁用真实发信，凭据只放未跟踪的 `backend/.env`。
+邮箱验证配置：`EMAIL_VERIFICATION_TOKEN_TTL_SECONDS`（默认 30 分钟）、`EMAIL_VERIFICATION_LOOKUP_TTL_SECONDS`（默认 7 天，token 过期或已消费后仍可用它申请重发）、`EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS`（默认 60 秒）、`EMAIL_VERIFICATION_MAX_SENDS_PER_HOUR`（默认 5 次），以及 SMTP 通道 `SMTP_HOST / SMTP_PORT / SMTP_USERNAME / SMTP_PASSWORD / SMTP_FROM_EMAIL / SMTP_STARTTLS` 与拼链接用的 `PUBLIC_WEB_BASE_URL`；`SMTP_HOST` 为空时禁用真实发信，凭据只放未跟踪的 `backend/.env`。
 
 ## 架构
 
 - `app/main.py`：显式导入和注册模块 router，并注册统一异常处理器。
 - `app/core/`：Settings、数据库引擎与请求会话、Redis 客户端、同步探活依赖、分页参数与 `CurrentUser` 类型。
 - `app/modules/<domain>/`：业务域按 `api → service → dao → models` 分层，schemas 定义接口契约。
-- `app/modules/auth/`：账号与 Opaque Token 会话；`session_store.py` 封装 Redis session key 与撤销，`verification_store.py` 封装邮箱验证令牌（只存 SHA-256、一次性、带 TTL）、重发冷却与发送配额，`mailer.py` 用 SMTP 发验证邮件且可被依赖覆盖，`security.py` 负责 argon2 哈希，`deps.py` 提供 `get_current_user` / `require_admin`。端点：`POST /auth/register`（202，不发会话）、`POST /auth/verification/resend|verify`、`POST /auth/login|logout|password`、`GET /auth/me`、`POST /auth/users/{user_id}/ban`（仅管理员；改密码与封号会删除该用户全部会话 key）。
+- `app/modules/auth/`：账号与 Opaque Token 会话；`session_store.py` 封装 Redis session key 与撤销，`verification_store.py` 封装邮箱验证令牌（只存 SHA-256、一次性、带 TTL）+ 更长寿命的 lookup 记录（供失效链接免输邮箱重发）、重发冷却与发送配额，`mailer.py` 用 SMTP 发验证邮件且可被依赖覆盖，`security.py` 负责 argon2 哈希，`deps.py` 提供 `get_current_user` / `require_admin`。端点：`POST /auth/register`（202，不发会话）、`POST /auth/verification/resend|verify`、`POST /auth/login|logout|password`、`GET /auth/me`、`POST /auth/users/{user_id}/ban`（仅管理员；改密码与封号会删除该用户全部会话 key）。
 - `app/modules/templates/`：模板只读查询，当前不含管理端写接口。
 - `app/modules/resume/`：简历元数据 CRUD、软删除/归档/恢复/复制、文档提交与版本列表。
 - `app/modules/jd/`：岗位 CRUD 与到简历的 0..1 软绑定。

@@ -136,3 +136,60 @@ def test_register_does_not_duplicate_unverified_user(session_clients, db_session
 
     count = db_session.scalar(select(func.count()).select_from(User).where(User.email == "verify@example.com"))
     assert count == 1
+
+
+def test_resend_by_token_after_expiry_sends_a_new_link(session_clients, fake_redis, monkeypatch) -> None:
+    from app.modules.auth import service
+
+    # The register call starts the resend cooldown; this case is about the expired
+    # link, not about how fast a second mail may be requested.
+    settings = service.get_settings().model_copy(update={"email_verification_resend_cooldown_seconds": 0})
+    monkeypatch.setattr(service, "get_settings", lambda: settings)
+
+    client = session_clients()
+    _register(client)
+    token = support.MAILER.latest_token()
+
+    keys = list(fake_redis.scan_iter("auth:email_verify:*"))
+    assert len(keys) == 1
+    fake_redis.pexpire(keys[0], 1)
+    time.sleep(0.02)
+    assert support.verify(client, token).status_code == 400
+
+    response = client.post("/auth/verification/resend", json={"token": token})
+    assert response.status_code == 202, response.text
+    assert response.json()["status"] == "verification_sent"
+    assert response.json()["email"] == "verify@example.com"
+    assert len(support.MAILER.sent) == 2
+
+
+def test_resend_by_token_reports_already_verified(session_clients) -> None:
+    client = session_clients()
+    _register(client)
+    token = support.MAILER.latest_token()
+    assert support.verify(client, token).status_code == 200
+
+    response = client.post("/auth/verification/resend", json={"token": token})
+
+    assert response.status_code == 202, response.text
+    assert response.json()["status"] == "already_verified"
+    assert len(support.MAILER.sent) == 1
+
+
+def test_resend_by_unknown_token_is_invalid(session_clients) -> None:
+    client = session_clients()
+
+    response = client.post("/auth/verification/resend", json={"token": "not-a-real-token"})
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "VERIFICATION_TOKEN_INVALID"
+
+
+def test_resend_requires_exactly_one_credential(session_clients) -> None:
+    client = session_clients()
+
+    both = client.post("/auth/verification/resend", json={"email": "a@b.com", "token": "x"})
+    neither = client.post("/auth/verification/resend", json={})
+
+    assert both.status_code == 422
+    assert neither.status_code == 422

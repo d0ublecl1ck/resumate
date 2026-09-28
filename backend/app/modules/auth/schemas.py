@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import EmailStr, Field
+from pydantic import EmailStr, Field, model_validator
 
 from app.shared.schemas import ApiModel
 
@@ -19,7 +19,16 @@ class RegisterAccepted(ApiModel):
 
 
 class ResendVerificationRequest(ApiModel):
-    email: EmailStr
+    """Resend by address (register success page) or by token (dead-link page)."""
+
+    email: EmailStr | None = None
+    token: str | None = Field(default=None, min_length=1, max_length=512)
+
+    @model_validator(mode="after")
+    def _require_exactly_one(self) -> "ResendVerificationRequest":
+        if (self.email is None) == (self.token is None):
+            raise ValueError("email 与 token 必须二选一")
+        return self
 
 
 class VerifyEmailRequest(ApiModel):

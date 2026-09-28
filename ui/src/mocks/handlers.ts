@@ -29,6 +29,10 @@ const AUTH_USER: AuthUser = {
 
 const AUTH_ACCOUNTS: Record<string, string> = { "test@resumate.dev": "password123" }
 
+// d7b99 契约：未验证邮箱登录被拒；验证令牌由 verify 端点消费。
+const UNVERIFIED_EMAIL = "unverified@resumate.dev"
+const VERIFICATION_TOKEN = "valid-token"
+
 const RBAC_ROLES: Role[] = [
   { id: "role_user", code: "user", name: "普通用户", description: "", rank: 1, isSystem: true, permissions: ["resume:read"] },
   { id: "role_super_admin", code: "super_admin", name: "超级管理员", description: "", rank: 3, isSystem: true, permissions: ["resume:read", "resume:write", "role:write"] },
@@ -70,13 +74,23 @@ export const handlers = [
   http.get("/api/auth/me", () => HttpResponse.json(AUTH_USER)),
   http.post("/api/auth/login", async ({ request }) => {
     const body = (await request.json()) as { email: string; password: string }
+    if (body.email === UNVERIFIED_EMAIL) return HttpResponse.json({ code: "EMAIL_NOT_VERIFIED", message: "邮箱还未验证" }, { status: 403 })
     const expected = AUTH_ACCOUNTS[body.email]
     if (!expected || expected !== body.password) return unauthorized("INVALID_CREDENTIALS", "邮箱或密码不正确")
     return HttpResponse.json(AUTH_USER)
   }),
+  // 注册改为邮箱验证（d7b99）：202 + 中性响应体，不下发会话 Cookie。
   http.post("/api/auth/register", async ({ request }) => {
-    const body = (await request.json()) as { email: string; displayName: string }
-    return HttpResponse.json({ ...AUTH_USER, id: "user_mock_new", email: body.email, displayName: body.displayName }, { status: 201 })
+    const body = (await request.json()) as { email: string }
+    return HttpResponse.json({ status: "verification_sent", email: body.email }, { status: 202 })
+  }),
+  http.post("/api/auth/verification/resend", () => HttpResponse.json({ status: "verification_sent" }, { status: 202 })),
+  http.post("/api/auth/verification/verify", async ({ request }) => {
+    const body = (await request.json()) as { token: string }
+    if (body.token !== VERIFICATION_TOKEN) {
+      return HttpResponse.json({ code: "VERIFICATION_TOKEN_INVALID", message: "验证链接无效" }, { status: 400 })
+    }
+    return HttpResponse.json(AUTH_USER, { headers: { "Set-Cookie": "resumate_session=mock; HttpOnly; Path=/" } })
   }),
   http.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
   http.get("/api/auth/roles", () => HttpResponse.json(RBAC_ROLES)),

@@ -67,9 +67,9 @@ started_at: 2026-09-28T03:40:03.433Z
 
 - `app/core/config.py`：新增 `email_verification_*`、`smtp_*` 与 `public_web_base_url` 配置，SMTP 凭据只从环境读取。
 - `app/modules/auth/models.py` + 迁移 `c4a7e2b9f1d3`：新增 `users.email_verified_at`，升级时把存量行回填为 `created_at`。
-- `app/modules/auth/verification_store.py`：Redis 一次性验证令牌（只存 SHA-256）、重发冷却与按邮箱的发送配额。
+- `app/modules/auth/verification_store.py`：Redis 一次性验证令牌（只存 SHA-256）+ 更长寿命的 lookup 记录（token 失效/已用后仍可免输邮箱重发）、重发冷却与按邮箱的发送配额。
 - `app/modules/auth/mailer.py`：`Mailer` Protocol + `SmtpMailer`，`get_mailer` 作为依赖注入点。
-- `app/modules/auth/service.py`：`register` 建未验证账号并返回待发邮件；新增 `resend_verification`、`verify_email`；`login` 增加未验证门禁。
+- `app/modules/auth/service.py`：`register` 建未验证账号并返回待发邮件；新增 `resend_verification`（支持 email / token 二选一，token 路径查 lookup 记录，已激活返回 `already_verified`）、`verify_email`；`login` 增加未验证门禁。
 - `app/modules/auth/api.py`：`POST /auth/register` 改为 202 且不下发 Cookie；新增 `POST /auth/verification/resend`、`POST /auth/verification/verify`。
 - `app/shared/errors.py`：新增 `EMAIL_NOT_VERIFIED`、`VERIFICATION_TOKEN_INVALID`、`RESEND_TOO_SOON`、`RATE_LIMITED`。
 - `app/tasks/seed.py`：引导管理员创建时直接置为已验证，避免新库管理员被门禁拦住。
@@ -79,7 +79,7 @@ started_at: 2026-09-28T03:40:03.433Z
 
 ## Verification
 
-- `cd backend && .venv/bin/python -m pytest -q` → `152 passed`（含新增 9 个邮箱验证用例与 2 个迁移用例）。
+- `cd backend && .venv/bin/python -m pytest -q` → `156 passed`（含 13 个邮箱验证用例与 2 个迁移用例；token 重发路径先红后绿）。
 - `archkit inspect .` → `Quality gates passed.`
 - 真实 SMTP 投递：`SmtpMailer().send_verification_email('d0ublecl1ckhpx@gmail.com', ...)` 成功（Gmail 应用专用密码，凭据只存未跟踪的 `backend/.env`）。
 - 迁移：`cd backend && .venv/bin/alembic upgrade head`；`users.email_verified_at` 存在，存量 5 个用户全部 `email_verified_at = created_at`。

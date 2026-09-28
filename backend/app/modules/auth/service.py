@@ -76,6 +76,7 @@ class PendingVerification:
 
     email: str
     link: str | None
+    status: str = "verification_sent"
 
 
 def _verification_link(token: str) -> str:
@@ -96,6 +97,7 @@ def _issue_verification_mail(client: redis.Redis, user: User) -> PendingVerifica
         client,
         user.id,
         ttl_seconds=settings.email_verification_token_ttl_seconds,
+        lookup_ttl_seconds=settings.email_verification_lookup_ttl_seconds,
     )
     verification_store.start_resend_cooldown(
         client,
@@ -139,10 +141,21 @@ def resend_verification(
     client: redis.Redis,
     payload: ResendVerificationRequest,
 ) -> PendingVerification:
-    email = payload.email.strip().lower()
+    if payload.token is not None:
+        user_id = verification_store.lookup_verification(client, payload.token)
+        user = dao.get_user(db, user_id) if user_id is not None else None
+        if user is None:
+            raise VerificationTokenInvalid("验证链接无效，请返回登录页重新登录或重新注册")
+        if user.email_verified_at is not None:
+            return PendingVerification(user.email, None, "already_verified")
+        return _issue_verification_mail(client, user)
+    email = (payload.email or "").strip().lower()
     user = dao.get_user_by_email(db, email)
-    if user is None or user.email_verified_at is not None:
+    if user is None:
+        # Unknown address stays neutral so resend cannot be used to enumerate accounts.
         return PendingVerification(email, None)
+    if user.email_verified_at is not None:
+        return PendingVerification(email, None, "already_verified")
     return _issue_verification_mail(client, user)
 
 
