@@ -71,4 +71,19 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "重新发送验证邮件" }))
     expect(await screen.findByText("验证邮件已重新发送到 unverified@resumate.dev，请查收。")).toBeInTheDocument()
   })
+
+  it("后端校验失败时展示中文提示而不是英文原文", async () => {
+    server.use(
+      http.post("/api/auth/login", () =>
+        HttpResponse.json({ code: "VALIDATION_FAILED", message: "value is not a valid email address" }, { status: 422 }),
+      ),
+    )
+    renderLogin()
+
+    fireEvent.change(await screen.findByLabelText("邮箱"), { target: { value: "test@resumate.dev" } })
+    fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
+    fireEvent.click(screen.getByRole("button", { name: "登录" }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("请检查邮箱和密码格式后重试。")
+  })
 })

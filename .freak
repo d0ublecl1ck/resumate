@@ -7,5 +7,5 @@
 - [x] `ui/prototypes/index.html` — 未覆盖邮箱验证注册的三个状态（注册成功待查收邮件、验证链接失效、未验证登录被拒）；已由 d7b99 在 `#auth-email-verification` 章节补登记（SCR-000，复用既有令牌，未新增页面视觉规则），Storybook `Pages/EmailVerification` 18 态已由用户确认。记录：2026-09-28；处理：2026-09-28
 - [x] `ui/src/lib/types.ts` — 4 个机器错误码已补齐，`messageFor` 与 `lib/verification.ts` 均已做键映射；`/auth/verification/resend` 的 email / token 与 `already_verified` 已在前端处理。记录：2026-09-28；处理：2026-09-28
 - [x] `ui/src/components/verify-email-result.tsx` — 失效态按 token 重发后丢失的超长邮箱边界已由 a7eb5 补回：重发成功态显示目标邮箱（`resendSentTo`）并恢复 `RegisterResendLongEmail` story。记录：2026-09-28；处理：2026-09-28
-- [ ] `ui/src/components/login-form.tsx` — 带 `form-allow` 豁免：尚未接入 `useForm` + `zodResolver`，校验仍由后端 `EmailStr` 兜底；下次核对是否已迁移并删除豁免。记录：2026-09-28
-- [ ] `ui/src/pages/login.tsx` — 带 `error-message-allow` 豁免：`messageFor` 仍兜底直出 `cause.message`；下次核对是否已补齐机器错误码到 i18n 的映射并删除豁免。记录：2026-09-28
+- [x] `ui/src/components/login-form.tsx` — 已由 efa88 迁移到 `react-hook-form` + `zodResolver`，`form-allow` 豁免已删除。记录：2026-09-28；处理：2026-09-28
+- [x] `ui/src/pages/login.tsx` — 已由 efa88 补齐 `VALIDATION_FAILED` 等映射并删除 `cause.message` 兜底与 `error-message-allow` 豁免。记录：2026-09-28；处理：2026-09-28

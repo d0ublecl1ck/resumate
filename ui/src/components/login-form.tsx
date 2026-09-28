@@ -1,10 +1,14 @@
 // 登录 / 注册表单（表现层）。
 // 视觉对齐现有应用（card-soft / bg-primary / font-serif / coral 错误色），
 // 文案全部经 i18n 的 auth 命名空间读取；原型 ui/prototypes/index.html 未覆盖登录页，待原型确认。
+// 校验前移：react-hook-form + zod 在提交前拦截非法输入，不再依赖后端 EmailStr 兜底。
 
-import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Sparkles } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
 export type LoginMode = "login" | "register"
 
@@ -13,6 +17,8 @@ export interface LoginCredentials {
   password: string
   displayName?: string
 }
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const inputClass =
   "w-full rounded-md border border-input bg-card px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
@@ -40,17 +46,36 @@ export function LoginForm({
   initialDisplayName?: string
 }) {
   const { t } = useTranslation()
-  const [email, setEmail] = useState(initialEmail)
-  const [password, setPassword] = useState(initialPassword)
-  const [displayName, setDisplayName] = useState(initialDisplayName)
   const isRegister = mode === "register"
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    onSubmit({ email: email.trim(), password, ...(isRegister ? { displayName: displayName.trim() } : {}) })
-  }
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().regex(EMAIL_PATTERN, t("auth.errors.invalidEmail")),
+        password: z
+          .string()
+          .min(isRegister ? 8 : 1, isRegister ? t("auth.errors.shortPassword") : t("auth.errors.requiredPassword")),
+        displayName: isRegister ? z.string().min(1, t("auth.errors.requiredName")) : z.string().optional(),
+      }),
+    [isRegister, t],
+  )
 
-  // form-allow: 遗留登录表单尚未接入 useForm/zod 客户端校验，仍由后端 EmailStr 兜底；迁移前显式豁免（Issue 6a58a）。
+  const { register, handleSubmit, formState } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { email: initialEmail, password: initialPassword, displayName: initialDisplayName },
+  })
+
+  const fieldError =
+    formState.errors.email?.message ?? formState.errors.password?.message ?? formState.errors.displayName?.message
+
+  const submit = handleSubmit((values) => {
+    onSubmit({
+      email: values.email.trim(),
+      password: values.password,
+      ...(isRegister ? { displayName: (values.displayName ?? "").trim() } : {}),
+    })
+  })
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5 py-10">
       <div className="w-full max-w-sm">
@@ -82,12 +107,10 @@ export function LoginForm({
                 <span className="mb-1 block text-xs text-muted-foreground">{t("auth.fields.displayName")}</span>
                 <input
                   id="login-name"
-                  name="displayName"
                   autoComplete="name"
-                  value={displayName}
-                  onChange={(event) => setDisplayName(event.target.value)}
                   disabled={submitting}
                   className={inputClass}
+                  {...register("displayName")}
                 />
               </label>
             ) : null}
@@ -96,13 +119,11 @@ export function LoginForm({
               <span className="mb-1 block text-xs text-muted-foreground">{t("auth.fields.email")}</span>
               <input
                 id="login-email"
-                name="email"
                 type="email"
                 autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
                 disabled={submitting}
                 className={inputClass}
+                {...register("email")}
               />
             </label>
 
@@ -111,14 +132,12 @@ export function LoginForm({
                 <span className="mb-1 block text-xs text-muted-foreground">{t("auth.fields.password")}</span>
                 <input
                   id="login-password"
-                  name="password"
                   type="password"
                   autoComplete={isRegister ? "new-password" : "current-password"}
                   aria-describedby={isRegister ? "login-password-hint" : undefined}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
                   disabled={submitting}
                   className={inputClass}
+                  {...register("password")}
                 />
               </label>
               {isRegister ? (
@@ -128,6 +147,12 @@ export function LoginForm({
               ) : null}
             </div>
           </div>
+
+          {fieldError ? (
+            <p role="alert" className="mt-4 rounded-md border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral">
+              {fieldError}
+            </p>
+          ) : null}
 
           <button
             type="submit"

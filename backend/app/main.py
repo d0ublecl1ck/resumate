@@ -27,9 +27,16 @@ async def handle_api_exception(request: Request, exc: ApiException) -> JSONRespo
 
 @app.exception_handler(RequestValidationError)
 async def handle_request_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Map schema validation failures onto the shared machine error contract."""
-    details = "; ".join(str(error.get("msg", "请求校验失败")) for error in exc.errors())
-    body = ApiError(code=ErrorCode.VALIDATION_FAILED, message=details or "请求校验失败")
+    """Map schema validation failures onto the shared machine error contract.
+
+    Pydantic messages are English and expose internal wording, so report a stable
+    Chinese message naming the offending fields instead of the raw text.
+    """
+    fields = sorted({str(error["loc"][-1]) for error in exc.errors() if error.get("loc")})
+    details = "请求参数校验失败"
+    if fields:
+        details = f"{details}：{'、'.join(fields)}"
+    body = ApiError(code=ErrorCode.VALIDATION_FAILED, message=details)
     return JSONResponse(status_code=422, content=body.model_dump(by_alias=True, exclude_none=True))
 
 

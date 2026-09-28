@@ -107,7 +107,8 @@ function messageFor(cause: unknown): string {
     if (cause.code === "RESEND_TOO_SOON") return i18n.t("auth.errors.resendTooSoon")
     if (cause.code === "RATE_LIMITED") return i18n.t("auth.errors.rateLimited")
     if (cause.code === "NETWORK_ERROR") return i18n.t("auth.errors.network")
-    return cause.message // error-message-allow: 遗留兜底，待把机器错误码映射到 i18n 文案（Issue 6a58a）
+    if (cause.code === "VALIDATION_FAILED") return i18n.t("auth.errors.invalidInput")
+    return i18n.t("auth.errors.generic")
   }
   return i18n.t("auth.errors.generic")
 }
