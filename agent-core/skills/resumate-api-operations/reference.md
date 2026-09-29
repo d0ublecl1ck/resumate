@@ -10,7 +10,7 @@
 | JSON 命名 | 请求/响应一律 camelCase（后端 snake_case + alias） |
 | 错误信封 | `{ code, message, latestVersionId? }` |
 | ID 前缀 | 轮次 `turn_`、待办 `pa_`、简历 `res_`、版本 `ver_` |
-| 鉴权（本期） | HttpOnly 会话 Cookie `resumate_session`；PAT Bearer 为后续工单 |
+| 鉴权 | `Authorization: Bearer rsm_pat_...` 优先；未命中回落 HttpOnly 会话 Cookie `resumate_session`；PAT 的 scope 必须包含端点权限码 |
 | 权限码 | 读 `resume:read`；写 `resume:write` |
 | base URL | 服务根路径（无 `/api` 前缀），本地 `http://localhost:8000` |
 
@@ -309,6 +309,7 @@ Provenance：`kind`（见 §5 枚举）、`label`、`detail`（string \| null）
 | code | HTTP | 说明 | 恢复动作 |
 | --- | --- | --- | --- |
 | `BASE_VERSION_STALE` | 409 | 基线过期；带 `latestVersionId` | 重读 document + 重新 preview |
+| `REBASE_CONFLICT` | 409 | 暂存改动与最新基线冲突；带 `latestVersionId`，暂存保留 | 读 working-document 后在新底座上重新提案 |
 | `TURN_ALREADY_CLOSED` | 409 | 对已关闭轮次写 | 开新轮次 |
 | `PENDING_ACTION_NOT_APPROVED` | 409 | approval 下 apply 缺已批准待办 | 先 approve |
 | `IDEMPOTENCY_CONFLICT` | 409 | 同 key 不同负载 | 换新 key |
@@ -319,9 +320,10 @@ Provenance：`kind`（见 §5 枚举）、`label`、`detail`（string \| null）
 | `RESOURCE_NOT_FOUND` | 404 | `resume_id` / `turn_id` / `action_id` 不存在或无权 | 校验 ID 与所有权 |
 | `UNAUTHENTICATED` | 401 | 未登录或会话过期 | 重新登录 |
 | `INVALID_CREDENTIALS` | 401 | 凭证错误 | 停止并反馈用户 |
+| `TOKEN_REVOKED` | 401 | PAT 已撤销 | 重新签发令牌 |
 | `ACCOUNT_BANNED` | 403 | 账号被封禁 | 停止 |
 | `FORBIDDEN` | 403 | 缺少权限码 | 停止并报告 |
-| `SCOPE_INSUFFICIENT` | 403 | Scope 不足（PAT 语义） | 停止，不得扩权 |
+| `SCOPE_INSUFFICIENT` | 403 | PAT 的 scope 不含端点权限码 | 停止，不得扩权；补 `resume:read` / `resume:write` |
 
 ## 7. 幂等键速查
 

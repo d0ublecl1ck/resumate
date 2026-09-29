@@ -44,16 +44,19 @@ curl -sS http://localhost:8000/.well-known/resume-agent
 
 - 若 `capabilities` 中没有 `agent.*`：说明服务端尚未就绪，**停止写入**；不要退化为直连数据库或改用其它写接口。
 - 能力发现只用于"能不能用、怎么连"，**不能作为授权依据**。
+- `mcpUrl` 当前是占位：服务端尚未提供 MCP server，实测 `GET /mcp` 返回 `404`。不要因为发现响应里给了这个地址就认为可以直接连 MCP。
+- `contractVersion` 由**服务端**返回（当前取值 `v0.4`），与冻结契约文档的版本号（v1 P0）不是同一套编号。判断契约是否变化时以字段与错误码的实际行为为准，不要用等值比较把自己卡住。
 
-### 1.2 鉴权：本期用会话 Cookie，PAT 规划中
+### 1.2 鉴权：外部 Agent 走 PAT Bearer，浏览器走会话 Cookie
 
-本期 11 个端点沿用现有 **HttpOnly 会话 Cookie**（`resumate_session`），**不带 Bearer**。PAT Bearer 与 Scope 强制不在本期，属后续工单。
+服务端**先解析 `Authorization: Bearer <PAT>`，未命中才回落到 HttpOnly 会话 Cookie**（`resumate_session`）。两条路径对全部 11 个端点都有效。
 
-- 登录前提：账号邮箱已完成验证，否则 `POST /auth/login` 返回 403 `EMAIL_NOT_VERIFIED`；`POST /auth/register` 只建未验证账号并发验证邮件（202、不下发会话），需由用户在邮件里点验证链接。
-- 登录：`POST /auth/login`，body `{ "email": "...", "password": "..." }`；服务端通过 `Set-Cookie` 下发 `resumate_session`。
-- 之后每个请求都带上该 Cookie（curl 用 `-b cookies.txt`，httpx 用持久 `Client`）。
-- 权限码：读端点需要 `resume:read`，写端点需要 `resume:write`；每个端点恰好声明一个权限码。
-- 能力发现的 `authMethods` 可能仍列出 PAT 占位值；**本期调用这 11 个端点不要尝试 Bearer**，以实际端点行为为准。
+- **外部 Agent 首选 PAT。** 会话 Cookie 要求账号邮箱已验证并完成一次浏览器登录，Agent 侧通常拿不到；PAT 就是为这种场景提供的长期凭据。
+- 建令牌：用一次会话身份调 `POST /access/tokens`，body `{ "name": "...", "scopes": ["resume:read", "resume:write"], "expiresInDays": 30 }`。响应里的 `secretOnce` 是明文令牌（`rsm_pat_` 前缀），**只会返回这一次**，必须当场保存。
+- 可申请的 scope 只有 `profile:read`、`resume:read`、`resume:write`、`jd:read`、`jd:write`；这 11 个端点只用到 `resume:read` 与 `resume:write`。
+- 之后每个请求带 `Authorization: Bearer rsm_pat_...`（curl 用 `-H`，httpx 用 `headers=`）。
+- 若确实要走会话：`POST /auth/login`，body `{ "email": "...", "password": "..." }`，服务端通过 `Set-Cookie` 下发 `resumate_session`；之后 `curl -b cookies.txt` 或 httpx 持久 `Client`。登录前提是账号邮箱已完成验证，否则 403 `EMAIL_NOT_VERIFIED`；`POST /auth/register` 只建未验证账号并发验证邮件（202、不下发会话），需由用户在邮件里点验证链接。
+- 权限码：读端点需要 `resume:read`，写端点需要 `resume:write`；每个端点恰好声明一个权限码。PAT 的 scope 必须包含该权限码，否则 403 `SCOPE_INSUFFICIENT`。
 
 ```bash
 curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
@@ -65,11 +68,13 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
 
 | 现象 | 错误码 | 处理 |
 | --- | --- | --- |
-| 401 | `UNAUTHENTICATED` | 会话缺失或过期：重新 `POST /auth/login` 刷新 Cookie，然后用**新的** Cookie 重试原请求。不要伪造身份或改用未授权凭证。 |
+| 401 | `UNAUTHENTICATED` | 凭据缺失、令牌无效或令牌过期（会话场景为 Cookie 缺失/失效）：会话场景重新 `POST /auth/login` 换新 Cookie；PAT 场景请用户重新签发令牌。不要伪造身份或改用未授权凭证。 |
+| 401 | `TOKEN_REVOKED` | 令牌已被撤销：停止重试，请用户重新签发。 |
 | 401 | `INVALID_CREDENTIALS` | 邮箱或密码错误：停止并反馈用户，不要暴力重试。 |
-| 403 | `EMAIL_NOT_VERIFIED` | 账号邮箱尚未验证：停止重试，提示用户完成邮件验证或调用 `POST /auth/verification/resend` 重发，不要尝试绕过。 |
-| 403 | `FORBIDDEN` | 账号缺少 `resume:read` / `resume:write`：停止写入，向用户说明缺少权限，不得尝试绕过确认或提权。 |
-| 403 | `SCOPE_INSUFFICIENT` | Scope 不足（PAT 启用后的语义）：停止并报告，不得扩大 Scope。 |
+| 403 | `ACCOUNT_BANNED` | 账号已被封禁：停止并报告，不要尝试其它身份。 |
+| 403 | `EMAIL_NOT_VERIFIED` | 账号邮箱尚未验证（仅会话登录路径）：停止重试，提示用户完成邮件验证或调用 `POST /auth/verification/resend` 重发，不要尝试绕过。 |
+| 403 | `FORBIDDEN` | 账号的 RBAC 投影缺少 `resume:read` / `resume:write`：停止写入，向用户说明缺少权限，不得尝试绕过确认或提权。 |
+| 403 | `SCOPE_INSUFFICIENT` | PAT 的 scope 不包含该端点要求的权限码：停止并报告，不得扩大 Scope；请用户为令牌补上 `resume:read` / `resume:write`。 |
 
 原则：**鉴权失败不改变业务流程**。重新鉴权成功后，先读取服务端状态（`GET /turns/{turn_id}`、`GET /resumes/{resume_id}/working-document`），再从该状态继续；不要盲目重放写请求。
 
@@ -91,6 +96,7 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
   - 两种模式下服务端都强制校验身份、资源所有权、Patch Schema 与 `baseVersionId`；
   - 伪造 `source=manual` 不会获得额外权限（见 §9）。
 - **决策建议**：除非用户明确开启了 Full Access，否则保持默认 `approval` 并走审批闭环；不要为了省掉确认而请求 `full_access`。
+- **PAT 请求的例外**：PAT 调用时请求体 `executionMode` **被忽略**，模式只从账户 Agent 配置（`modeSource` = `agent`）或账户默认（`modeSource` = `account`）解析；`clientId` 也由服务端固化为令牌名。上表第 1 行只对会话调用成立。想让 PAT 调用换模式，只能让用户在账户里改 Agent 配置，Agent 自己无法通过请求体切换。
 
 ## 3. 最小闭环
 
@@ -144,7 +150,7 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
 
 - **何时使用**：每次外部编辑任务的开始；也是外部 Agent 声明 begin/finalize 边界的入口。
 - **必需参数**：path `resume_id`。
-- **可选参数**（body，全部可选）：`baseVersionId`、`executionMode`、`clientId`（默认 `"external"`）、`source`（默认 `"agent"`）、`message`。
+- **可选参数**（body，全部可选）：`baseVersionId`、`executionMode`、`clientId`（默认 `"external"`）、`source`（默认 `"agent"`）、`message`。PAT 调用下 `executionMode` 与 `clientId` 由服务端决定，请求体中的这两个字段无效（见 §2）。
 - **用户确认**：无（本步不写内容）。若该简历已有未关闭轮次，服务端会先按 C-04 finalize 旧轮，再创建新轮。
 - **返回**：`201` + `UserTurnResponse`。
 - **idempotencyKey 约定**：本端点不接受幂等键。若网络超时后不确定是否创建成功，保留原 `turn_id` 并调用 `GET /turns/{turn_id}` 核对，不要无脑重复创建（重复创建会再关闭一次旧轮）。
@@ -406,13 +412,18 @@ Patch 是**领域 Patch**（非 RFC 6902）。请求体 `PatchRequest`：
 {
   "ops": [
     { "op": "setBasics", "basics": { "fullName": "张三", "headline": "高级前端工程师", "email": "", "phone": "", "location": "", "links": [] } },
-    { "op": "upsertEntry", "sectionId": "sec_experience", "entry": { "id": "exp_acme_2022", "title": "高级前端工程师", "bullets": ["主导性能优化"] } },
-    { "op": "removeEntry", "sectionId": "sec_projects", "entryId": "proj_legacy" }
+    { "op": "upsertSection", "section": { "id": "sec_experience", "kind": "experience", "title": "工作经历", "entries": [], "text": null } },
+    { "op": "upsertEntry", "sectionId": "sec_experience", "entry": { "id": "exp_acme_2022", "title": "高级前端工程师", "subtitle": "Acme", "period": "2022.03 - 至今", "bullets": ["主导性能优化，LCP 降低 38%"] } },
+    { "op": "upsertSection", "section": { "id": "sec_summary", "kind": "summary", "title": "个人简介", "entries": [], "text": "五年前端，聚焦性能与工程化。" } }
   ],
-  "reason": "对齐目标岗位，弱化过时项目",
+  "reason": "对齐目标岗位，突出性能优化成果",
   "baseVersionId": null
 }
 ```
+
+同一组 op 里可以混合多种操作。上面这组 op 在空白简历上直接可用：先建章节再写条目。
+
+删除类 op（`removeSection` / `removeEntry`）要求目标已存在，否则整组返回 `SECTION_NOT_FOUND`。要删东西时先读 Working Copy 拿到稳定的 `section.id` / `entry.id` 再构造 op，不要凭记忆猜 ID。
 
 ## 6. 错误码与恢复动作
 
@@ -425,6 +436,7 @@ Patch 是**领域 Patch**（非 RFC 6902）。请求体 `PatchRequest`：
 | `PENDING_ACTION_NOT_APPROVED` | 409 | approval 下 apply 时缺失或未 approved 的 `pendingActionId` | 先 `GET /turns/{turn_id}/pending-actions` 找到 `pending` 待办；用户确认后 `POST .../approve`，再带该 `pendingActionId` apply。 |
 | `IDEMPOTENCY_CONFLICT` | 409 | 同一轮次 + 操作类型用相同 key 但负载不同 | **换新 key**（`apply-{turn_id}-{n}` / `finalize-{turn_id}-{n}`）；仅相同负载才可复用 key 重放。 |
 | `VALIDATION_FAILED` | 422 | 请求体/Schema 非法，或对已非 `pending` 的待办 approve/reject | 按 `message` 修正 payload；待办场景先刷新待办状态，不要重复审批。 |
+| `REBASE_CONFLICT` | 409 | 轮次已有暂存改动，且用户在此期间手动提交把基线推进了 | **暂存不会丢**：读 `GET /resumes/{resume_id}/working-document`，在最新 document 之上重新提案；不要重开轮次，也不要原样重发同一 payload。 |
 
 补充（同样以契约错误信封返回）：
 
@@ -435,6 +447,16 @@ Patch 是**领域 Patch**（非 RFC 6902）。请求体 `PatchRequest`：
 | `PENDING_ACTION_STALE` | 待办对应的基线或负载已变化，确认失效 | 重新 `preview` 生成新待办，重新走 approve。 |
 | `RESOURCE_NOT_FOUND` | `resume_id` / `turn_id` / `action_id` 不存在或无权访问 | 校验 ID 与资源所有权；无权时**不要**猜测或泄露资源内容。 |
 | `UNAUTHENTICATED` / `FORBIDDEN` / `SCOPE_INSUFFICIENT` | 鉴权/授权失败 | 见 §1.3：重新登录或停止并报告，不得绕过确认。 |
+
+### 6.1 基线重排（C-04）
+
+`preview` / `apply` / `finalize` / `cancel` 都会先比对轮次 `baseVersionId` 与简历当前 `current_version_id`：
+
+- **没有暂存改动**：服务端直接把轮次基线刷新到最新版本并继续，不报错；响应置 `baseRebased = true`。Agent 不需要做任何事。
+- **有暂存改动、能自动三方合并**：服务端把暂存增量重新应用到最新底座之上，`workingRevision` 递增，响应同样置 `baseRebased = true`。approval 场景下原有已批准待办会因 Diff 变化而置 `stale`，必须重新 preview + approve。
+- **有暂存改动、无法合并**：返回 409 `REBASE_CONFLICT`（带 `latestVersionId`），暂存原样保留。按上表恢复。
+
+`baseRebased` 出现在 `PatchPreviewResponse`、`PatchApplyResponse` 与 `TurnResult` 上；看到它为 `true` 时，之前缓存的 `baseVersionId` 与 Diff 都已作废。
 
 ## 7. 端到端示例
 
@@ -577,22 +599,22 @@ with httpx.Client(base_url=BASE) as client:
 
 ## 8. MCP 工具映射（工具名 → HTTP 方法 + 路径）
 
-通用 MCP / 工具型 Agent 把下列工具名映射到对应端点；工具实现的参数就是端点参数，语义完全一致，不额外放行确认。
+下表是 `agent-core` 的 `TOOLS` 注册表（`agent-core/src/resumate_agent_core/tools.py`）。宿主若自行封装工具，请沿用同一套工具名与参数——工具参数就是端点参数，语义完全一致，不额外放行确认。服务端本身尚未提供 MCP server，能力发现里的 `mcpUrl` 只是占位。
 
 | 工具名 | 方法 + 路径 | 权限 |
 | --- | --- | --- |
-| `resumate_discover_capabilities` | `GET /.well-known/resume-agent` | 公开 |
-| `resumate_create_turn` | `POST /resumes/{resume_id}/turns` | `resume:write` |
-| `resumate_get_turn` | `GET /turns/{turn_id}` | `resume:read` |
-| `resumate_finalize_turn` | `POST /turns/{turn_id}/finalize` | `resume:write` |
-| `resumate_cancel_turn` | `POST /turns/{turn_id}/cancel` | `resume:write` |
-| `resumate_validate_patches` | `POST /turns/{turn_id}/patches:validate` | `resume:write` |
-| `resumate_preview_patches` | `POST /turns/{turn_id}/patches:preview` | `resume:write` |
-| `resumate_apply_patches` | `POST /turns/{turn_id}/patches:apply` | `resume:write` |
-| `resumate_list_pending_actions` | `GET /turns/{turn_id}/pending-actions` | `resume:read` |
-| `resumate_get_working_document` | `GET /resumes/{resume_id}/working-document` | `resume:read` |
-| `resumate_approve_pending_action` | `POST /pending-actions/{action_id}/approve` | `resume:write` |
-| `resumate_reject_pending_action` | `POST /pending-actions/{action_id}/reject` | `resume:write` |
+| `capability` | `GET /.well-known/resume-agent` | 公开 |
+| `create_turn` | `POST /resumes/{resume_id}/turns` | `resume:write` |
+| `get_turn` | `GET /turns/{turn_id}` | `resume:read` |
+| `finalize_turn` | `POST /turns/{turn_id}/finalize` | `resume:write` |
+| `cancel_turn` | `POST /turns/{turn_id}/cancel` | `resume:write` |
+| `validate_patch` | `POST /turns/{turn_id}/patches:validate` | `resume:write` |
+| `preview_patch` | `POST /turns/{turn_id}/patches:preview` | `resume:write` |
+| `apply_patch` | `POST /turns/{turn_id}/patches:apply` | `resume:write` |
+| `list_pending_actions` | `GET /turns/{turn_id}/pending-actions` | `resume:read` |
+| `get_working_document` | `GET /resumes/{resume_id}/working-document` | `resume:read` |
+| `approve_action` | `POST /pending-actions/{action_id}/approve` | `resume:write` |
+| `reject_action` | `POST /pending-actions/{action_id}/reject` | `resume:write` |
 
 ## 9. 信任边界
 
