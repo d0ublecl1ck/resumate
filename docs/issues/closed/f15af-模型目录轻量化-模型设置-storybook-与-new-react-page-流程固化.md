@@ -23,7 +23,7 @@ closed_at: 2026-09-27T17:23:13.905Z
 - **目录轻量化**：后端模型目录改读开源目录 models.dev 的快照（刷新脚本把上游 api.json 投影为 id / name / limit / cost 字段写入本地快照），运行时离线读取；移除 litellm 依赖。
 - **provider 轻量化**：模型连通性探活与 agent-core 的 provider 改为 httpx 的 OpenAI 兼容 /chat/completions 实现（OpenAICompatibleProvider）；移除 LiteLLMProvider 与 litellm 可选 extra。
 - **模型设置 Storybook**：为 catalog 选择器补 stories，覆盖默认 / 加载中 / 错误 / 目录未命中 / 无 provider 等状态，MSW 驱动，`pnpm -C ui build-storybook` 通过。
-- **流程固化**：新增系统 skill `new-react-page`（安装在 `~/.agents/skills/`，原型 → **Storybook 先给用户确认** → 确认后真实对接），并在 `AGENTS.md` 登记触发场景。
+- **流程固化**：新增系统 skill `new-react-page`（安装为宿主 skill，原型 → **Storybook 先给用户确认** → 确认后真实对接），并在 `AGENTS.md` 登记触发场景。
 
 ## Non-goals
 
@@ -36,7 +36,7 @@ closed_at: 2026-09-27T17:23:13.905Z
 - [x] `POST /models/config:test` 与 agent-core provider 走 httpx OpenAI 兼容实现；旧 LiteLLMProvider 已移除。
 - [x] 后端 pytest / agent-core pytest / `archkit inspect .` 通过。
 - [x] 模型设置 catalog 各状态有 Storybook story，`pnpm -C ui build-storybook` 与 `pnpm -C ui test` 通过。
-- [x] `new-react-page` 作为系统 skill 落位于 `~/.agents/skills/`（含 Storybook 先行停止点），并在 `AGENTS.md` 登记。
+- [x] `new-react-page` 作为系统 skill 落位于宿主 skill 目录（含 Storybook 先行停止点），并在 `AGENTS.md` 登记。
 
 ## Implementation
 
@@ -44,7 +44,7 @@ closed_at: 2026-09-27T17:23:13.905Z
 
 - **目录与 provider 轻量化**（`worktree-agent-core-pkg` → `bd28795`，合并 `aca5471`）：新增 `backend/scripts/refresh_model_catalog.py`，从 models.dev 拉取并投影为本地快照 `backend/app/modules/settings/data/model_catalog.json`（2.06MB，223 providers / 8170 models，全部保留不裁剪）；`catalog.py` 只读本地快照，`GET /models/catalog` 的 `source="models.dev"`、provider/q 过滤与 §17 形状不变；探活改为 httpx OpenAI 兼容 `/chat/completions`（endpoint 为空且 provider=openai 时用官方默认 base_url，否则 422）；移除 litellm 依赖与 `LiteLLMProvider`，新增 `OpenAICompatibleProvider`（httpx、可注入 client、tools/usage 映射、best-effort cost）；httpx 提升为后端运行时依赖。
 - **模型设置 Storybook**（`worktree-agent-models-ui` → `82d38cf` + `883a79d`，合并 `50a6fd7` + `49526b7`）：新增 `settings-form.stories.tsx` 覆盖 6 个状态（Default / CatalogLoading / CatalogError / ModelNotInCatalog / ProviderNotInCatalog / NoProviderSelected），每 story 通过 MSW 覆盖 + 独立 QueryClient；配套 `settings-form.stories.test.tsx`；并把 UI 内 12 处 litellm 引用对齐为 models.dev。
-- **流程固化**：系统 skill `new-react-page` 安装到 `~/.agents/skills/` 并软链到 `~/.claude/skills`，在 `AGENTS.md` 登记（原型 → **Storybook 先行确认停止点** → 真实对接）。
+- **流程固化**：系统 skill `new-react-page` 安装到宿主 skill 目录，在 `AGENTS.md` 登记（原型 → **Storybook 先行确认停止点** → 真实对接）。
 
 ## Verification
 

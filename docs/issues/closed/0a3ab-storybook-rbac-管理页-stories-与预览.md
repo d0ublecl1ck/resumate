@@ -51,7 +51,7 @@ closed_at: 2026-09-27T04:13:23.607Z
 - `storybook dev` 在 **http://localhost:6010/** 启动，`index.json` 含 `pages-rbac--default`、`pages-rbac--with-custom-entries` 与 5 个 `pages-login--*`。
 - 前端 `pnpm -C ui test` → 11 文件 51 passed；`build` 成功；`lint` 0 warnings / 0 errors。
 - `archkit inspect .` → Quality gates passed。
-- 说明：默认端口 6006 被 `~/wisequest` 的 Storybook 占用，故本实例使用 6010；未影响对方进程。
+- 说明：默认端口 6006 被本机另一个项目的 Storybook 占用，故本实例使用 6010；未影响对方进程。
 
 ## Related ADRs
 

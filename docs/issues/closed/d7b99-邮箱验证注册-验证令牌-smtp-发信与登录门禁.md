@@ -90,7 +90,7 @@ closed_at: 2026-09-28T03:57:09.779Z
 
 - `cd backend && .venv/bin/python -m pytest -q` → `156 passed`（含 13 个邮箱验证用例与 2 个迁移用例；token 重发路径先红后绿）。
 - `archkit inspect .` → `Quality gates passed.`
-- 真实 SMTP 投递：`SmtpMailer().send_verification_email('d0ublecl1ckhpx@gmail.com', ...)` 成功（Gmail 应用专用密码，凭据只存未跟踪的 `backend/.env`）。
+- 真实 SMTP 投递：`SmtpMailer().send_verification_email('<接收方邮箱>', ...)` 成功（SMTP 授权码，凭据只存未跟踪的 `backend/.env`）。
 - 迁移：`cd backend && .venv/bin/alembic upgrade head`；`users.email_verified_at` 存在，存量 5 个用户全部 `email_verified_at = created_at`。
 
 - `pnpm -C ui test` → `14 files / 93 passed`。
