@@ -115,6 +115,23 @@ export function listResumes(params?: { lifecycle?: Resume["lifecycle"]; query?: 
   return request<Resume[]>(`/resumes${suffix ? `?${suffix}` : ""}`)
 }
 
+/**
+ * POST /resumes —— 表单创建空草稿：显式提交即授权（C-01）。
+ * chat / profile 的 Agent 创建链路后端尚未提供，本函数只承载服务端已实现的表单创建契约。
+ */
+export function createResume(input: { title: string; templateId: string; targetRole?: string; tags?: string[]; profileId?: string }): Promise<Resume> {
+  return request<Resume>("/resumes", {
+    method: "POST",
+    body: JSON.stringify({
+      title: input.title,
+      templateId: input.templateId,
+      targetRole: input.targetRole ?? "",
+      tags: input.tags ?? [],
+      profileId: input.profileId,
+    }),
+  })
+}
+
 /** GET /resumes/{id} */
 export function getResume(id: string): Promise<Resume | undefined> {
   return request<Resume>(`/resumes/${id}`)
