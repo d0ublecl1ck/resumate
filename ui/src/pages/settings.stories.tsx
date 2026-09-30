@@ -1,30 +1,23 @@
-import type { ReactNode } from "react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { AppShell } from "@/components/app-shell"
 import { StoryProviders } from "@/storybook/screen"
 import { SettingsLayout } from "./settings-layout"
-import { SettingsPage } from "./settings"
-import { BackupPage } from "./settings-backup"
-import { AccessPage } from "./settings-access"
 
 export default { title: "Pages/Settings" }
 
-function SettingsScreen({ path, child }: { path: string; child: ReactNode }) {
-  const childPath = path.replace("/settings", "").replace(/^\//, "")
+function SettingsScreen({ path }: { path: string }) {
   return (
     <StoryProviders>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route
-            path="/settings"
+            path="/settings/*"
             element={
               <AppShell>
                 <SettingsLayout />
               </AppShell>
             }
-          >
-            {childPath ? <Route path={childPath} element={child} /> : <Route index element={child} />}
-          </Route>
+          />
         </Routes>
       </MemoryRouter>
     </StoryProviders>
@@ -32,13 +25,13 @@ function SettingsScreen({ path, child }: { path: string; child: ReactNode }) {
 }
 
 export const Default = {
-  render: () => <SettingsScreen path="/settings" child={<SettingsPage />} />,
+  render: () => <SettingsScreen path="/settings" />,
 }
 
 export const Backup = {
-  render: () => <SettingsScreen path="/settings/backup" child={<BackupPage />} />,
+  render: () => <SettingsScreen path="/settings/backup" />,
 }
 
 export const Access = {
-  render: () => <SettingsScreen path="/settings/access" child={<AccessPage />} />,
+  render: () => <SettingsScreen path="/settings/access" />,
 }
