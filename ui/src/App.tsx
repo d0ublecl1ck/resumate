@@ -19,6 +19,8 @@ import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
 import { NotFoundPage } from "@/pages/not-found"
 import { LoginPage } from "@/pages/login"
+import { ForgotPasswordPage } from "@/pages/forgot-password"
+import { ResetPasswordPage } from "@/pages/reset-password"
 import { VerifyEmailPage } from "@/pages/verify-email"
 import { RequireAuth } from "@/components/require-auth"
 
@@ -40,6 +42,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="login" element={<LoginPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="verify-email" element={<VerifyEmailPage />} />
           <Route
             element={

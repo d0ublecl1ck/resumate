@@ -1,16 +1,19 @@
-// Storybook confirmation artifact for the b5586 forgotten-password front-end states.
-// Stories drive the real lib/api + lib/password-reset code against MSW, so the artifact
-// exercises the same request contract as the pages; no demo-only data branch remains.
-import { StrictMode, useState } from "react"
+// Storybook confirmation artifact for the b5586 forgotten-password pages.
+// The form/reset stories render the real pages from ui/src/pages and drive the real
+// lib/api + lib/password-reset code against MSW, so the artifact exercises the same
+// request contract as production instead of a lookalike container.
+// The sent / resend harnesses stay presentational, mirroring Pages/EmailVerification.
+import type { ReactElement } from "react"
+import { StrictMode } from "react"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { delay, http, HttpResponse } from "msw"
-import { ForgotPasswordForm } from "@/components/forgot-password-form"
 import { ForgotPasswordSent } from "@/components/forgot-password-sent"
 import { ResetPasswordForm } from "@/components/reset-password-form"
 import { ResetPasswordResult, type ResetInvalidReason } from "@/components/reset-password-result"
+import { ForgotPasswordPage } from "@/pages/forgot-password"
+import { ResetPasswordPage } from "@/pages/reset-password"
 import i18n from "@/i18n"
-import { resetPassword } from "@/lib/api"
-import { ApiRequestError } from "@/lib/api-client"
-import { passwordResetSubmitErrorMessage, usePasswordResetResend } from "@/lib/password-reset"
+import { usePasswordResetResend } from "@/lib/password-reset"
 import { worker } from "@/mocks/browser"
 
 const EMAIL = "zhang@example.com"
@@ -67,30 +70,37 @@ function resetHandlers(scenario: ResetScenario) {
   }
 }
 
-function ForgotFormStory({
-  scenario = "sent",
-  initialEmail = "",
-  disabled = false,
-  strict = false,
-}: {
-  scenario?: ForgotScenario
-  initialEmail?: string
-  disabled?: boolean
-  strict?: boolean
-}) {
-  forgotHandlers(scenario)
-  const { resend, resendState } = usePasswordResetResend()
-  const form = (
-    <ForgotPasswordForm
-      onSubmit={(values) => void resend(values)}
-      submitting={resendState.status === "sending"}
-      error={resendState.status === "error" ? (resendState.errorMessage ?? null) : null}
-      initialEmail={initialEmail}
-      onBackToLogin={() => {}}
-      disabled={disabled}
-    />
+/** Mounts the real page on its own route and stubs the pages it can navigate to. */
+function PageFrame({ entry, path, element }: { entry: string; path: string; element: ReactElement }) {
+  const elsewhere = ["/forgot-password", "/reset-password", "/login"].filter((candidate) => candidate !== path)
+  return (
+    <MemoryRouter initialEntries={[entry]}>
+      <Routes>
+        <Route path={path} element={element} />
+        {elsewhere.map((candidate) => (
+          <Route key={candidate} path={candidate} element={<></>} />
+        ))}
+      </Routes>
+    </MemoryRouter>
   )
-  return strict ? <StrictMode>{form}</StrictMode> : form
+}
+
+function ForgotFormStory({ scenario = "sent", strict = false }: { scenario?: ForgotScenario; strict?: boolean }) {
+  forgotHandlers(scenario)
+  const page = <PageFrame entry="/forgot-password" path="/forgot-password" element={<ForgotPasswordPage />} />
+  return strict ? <StrictMode>{page}</StrictMode> : page
+}
+
+function ResetPageStory({ scenario = "success", token = RESET_TOKEN, strict = false }: { scenario?: ResetScenario; token?: string; strict?: boolean }) {
+  resetHandlers(scenario)
+  const page = <PageFrame entry={"/reset-password?token=" + token} path="/reset-password" element={<ResetPasswordPage />} />
+  return strict ? <StrictMode>{page}</StrictMode> : page
+}
+
+/** Dead-link state reached without a token: the page renders it straight from the URL. */
+function ResetNoTokenStory() {
+  resetHandlers("success")
+  return <PageFrame entry="/reset-password" path="/reset-password" element={<ResetPasswordPage />} />
 }
 
 function ForgotSentStory({ scenario = "sent", email = EMAIL, disabled = false }: { scenario?: ForgotScenario; email?: string; disabled?: boolean }) {
@@ -119,52 +129,6 @@ function StaticForgotSent({ email = EMAIL, disabled = false }: { email?: string;
       disabled={disabled}
     />
   )
-}
-
-function ResetStory({
-  scenario = "success",
-  token = RESET_TOKEN,
-  disabled = false,
-  strict = false,
-}: {
-  scenario?: ResetScenario
-  token?: string
-  disabled?: boolean
-  strict?: boolean
-}) {
-  resetHandlers(scenario)
-  const [state, setState] = useState<"form" | "success" | "invalid">("form")
-  const [error, setError] = useState<string | null>(null)
-  const [invalidError, setInvalidError] = useState<string | undefined>(undefined)
-  const [submitting, setSubmitting] = useState(false)
-
-  async function submit(values: { password: string }) {
-    setError(null)
-    setSubmitting(true)
-    try {
-      await resetPassword({ token, newPassword: values.password })
-      setState("success")
-    } catch (cause) {
-      if (cause instanceof ApiRequestError && cause.code === "PASSWORD_RESET_TOKEN_INVALID") {
-        setInvalidError(passwordResetSubmitErrorMessage(cause))
-        setState("invalid")
-        return
-      }
-      setError(passwordResetSubmitErrorMessage(cause))
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const view =
-    state === "success" ? (
-      <ResetPasswordResult state="success" onGoToLogin={() => {}} disabled={disabled} />
-    ) : state === "invalid" ? (
-      <ResetPasswordResult state="invalid" error={invalidError} onRequestNewLink={() => {}} onGoToLogin={() => {}} disabled={disabled} />
-    ) : (
-      <ResetPasswordForm onSubmit={submit} submitting={submitting} error={error} onBackToLogin={() => {}} disabled={disabled} />
-    )
-  return strict ? <StrictMode>{view}</StrictMode> : view
 }
 
 function StaticResetResult({
@@ -207,8 +171,9 @@ export default {
 export const ForgotFormDefault = { render: () => <ForgotFormStory /> }
 
 export const ForgotFormSubmitting = {
-  render: () => <ForgotFormStory scenario="pending" initialEmail={EMAIL} />,
+  render: () => <ForgotFormStory scenario="pending" />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    fillInput(canvasElement, "forgot-email", EMAIL)
     clickButton(canvasElement, i18n.t("auth.passwordReset.forgotSubmit"))
   },
 }
@@ -249,31 +214,31 @@ export const ForgotResendNetworkError = {
 export const ForgotDisabled = { render: () => <StaticForgotSent disabled /> }
 
 // SCR-000 /reset-password: the token is consumed by the reset endpoint.
-export const ResetFormDefault = { render: () => <ResetStory /> }
+export const ResetFormDefault = { render: () => <ResetPageStory /> }
 
 export const ResetFormSubmitting = {
-  render: () => <ResetStory scenario="pending" />,
+  render: () => <ResetPageStory scenario="pending" />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "new-password-2")
   },
 }
 
 export const ResetFormShortPassword = {
-  render: () => <ResetStory />,
+  render: () => <ResetPageStory />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "short", "short")
   },
 }
 
 export const ResetFormMismatch = {
-  render: () => <ResetStory />,
+  render: () => <ResetPageStory />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "other-password-3")
   },
 }
 
 export const ResetSuccess = {
-  render: () => <ResetStory scenario="success" />,
+  render: () => <ResetPageStory scenario="success" />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "new-password-2")
   },
@@ -281,18 +246,21 @@ export const ResetSuccess = {
 
 /** The server rejected the one-time token: the machine code drives the copy. */
 export const ResetInvalidToken = {
-  render: () => <ResetStory scenario="invalidToken" token={DEAD_TOKEN} />,
+  render: () => <ResetPageStory scenario="invalidToken" token={DEAD_TOKEN} />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "new-password-2")
   },
 }
 
 export const ResetNetworkError = {
-  render: () => <ResetStory scenario="networkError" />,
+  render: () => <ResetPageStory scenario="networkError" />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "new-password-2")
   },
 }
+
+/** The address carries no token at all, so the page never even offers the form. */
+export const ResetMissingToken = { render: () => <ResetNoTokenStory /> }
 
 export const ResetInvalidExpired = { render: () => <StaticResetResult state="invalid" reason="expired" /> }
 
@@ -300,14 +268,16 @@ export const ResetInvalidUsed = { render: () => <StaticResetResult state="invali
 
 export const ResetInvalidMalformed = { render: () => <StaticResetResult state="invalid" reason="malformed" /> }
 
-export const ResetDisabled = { render: () => <ResetStory disabled /> }
+export const ResetDisabled = {
+  render: () => <ResetPasswordForm onSubmit={() => {}} disabled onBackToLogin={() => {}} />,
+}
 
 /**
  * Regression guard for the 62adb shape: a one-time token must be sent exactly once under
  * StrictMode's mount -> cleanup -> mount, and the result must still be committed.
  */
 export const ResetStrictMode = {
-  render: () => <ResetStory scenario="success" strict />,
+  render: () => <ResetPageStory scenario="success" strict />,
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     submitReset(canvasElement, "new-password-2", "new-password-2")
   },

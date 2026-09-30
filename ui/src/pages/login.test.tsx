@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { server } from "@/test-server"
+import { ForgotPasswordPage } from "./forgot-password"
 import { LoginPage } from "./login"
 
 afterEach(cleanup)
@@ -19,6 +20,7 @@ function renderLogin() {
       <MemoryRouter initialEntries={["/login"]}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/" element={<p>工作台首页</p>} />
         </Routes>
       </MemoryRouter>
@@ -35,6 +37,14 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "登录" }))
 
     expect(await screen.findByText("工作台首页")).toBeInTheDocument()
+  })
+
+  it("提供忘记密码入口并可跳转到找回密码页", async () => {
+    renderLogin()
+
+    fireEvent.click(await screen.findByRole("button", { name: "忘记密码？" }))
+
+    expect(await screen.findByText("找回密码")).toBeInTheDocument()
   })
 
   it("凭据错误时展示统一提示", async () => {

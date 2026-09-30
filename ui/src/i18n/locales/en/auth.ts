@@ -77,6 +77,7 @@ export default {
     submitting: "Working…",
     switchToRegister: "Register",
     switchToLogin: "Sign in",
+    forgotPassword: "Forgot password?",
     haveAccount: "Already have an account?",
     noAccount: "No account yet?",
   },

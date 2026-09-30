@@ -33,6 +33,7 @@ export function LoginForm({
   initialEmail = "",
   initialPassword = "",
   initialDisplayName = "",
+  onForgotPassword,
 }: {
   mode: LoginMode
   onModeChange: (mode: LoginMode) => void
@@ -44,6 +45,8 @@ export function LoginForm({
   initialEmail?: string
   initialPassword?: string
   initialDisplayName?: string
+  /** 登录态下的「忘记密码？」入口；注册态不展示。 */
+  onForgotPassword?: () => void
 }) {
   const { t } = useTranslation()
   const isRegister = mode === "register"
@@ -147,6 +150,19 @@ export function LoginForm({
               ) : null}
             </div>
           </div>
+
+          {!isRegister && onForgotPassword ? (
+            <p className="mt-2 text-right">
+              <button
+                type="button"
+                onClick={onForgotPassword}
+                disabled={submitting}
+                className="text-xs font-semibold text-cobalt hover:underline disabled:opacity-40"
+              >
+                {t("auth.actions.forgotPassword")}
+              </button>
+            </p>
+          ) : null}
 
           {fieldError ? (
             <p role="alert" className="mt-4 rounded-md border border-coral/40 bg-coral/10 px-3 py-2 text-sm text-coral">

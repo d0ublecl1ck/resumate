@@ -24,6 +24,7 @@ import {
   ResetInvalidExpired,
   ResetInvalidMalformed,
   ResetInvalidToken,
+  ResetMissingToken,
   ResetNetworkError,
   ResetStrictMode,
   ResetSuccess,
@@ -120,6 +121,13 @@ describe("password reset stories", () => {
     await play(ResetInvalidExpired)
     expect(await screen.findByText("重置链接已失效")).toBeInTheDocument()
     expect(screen.getByText("链接已过期。")).toBeInTheDocument()
+  })
+
+  it("ResetMissingToken shows the malformed dead-link state without a form", async () => {
+    await play(ResetMissingToken)
+    expect(await screen.findByText("重置链接已失效")).toBeInTheDocument()
+    expect(screen.getByText("链接不完整或格式不正确。")).toBeInTheDocument()
+    expect(screen.queryByLabelText("新密码")).not.toBeInTheDocument()
   })
 
   it("ResetInvalidMalformed offers a fresh link request", async () => {
