@@ -399,6 +399,22 @@
             <li class="check-item"><span class="label">返回登录</span><span class="tag">次级动作</span></li>
           </ul>
 
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 /forgot-password：忘记密码状态">
+            <li class="check-item"><span class="label">输入注册邮箱：客户端校验通过后提交，中性「已发送」提示</span><span class="tag">202 · 不泄露账号是否存在</span></li>
+            <li class="check-item"><span class="label">已发送：提示去邮箱查收重置链接；重发（禁用按钮 + spinner）→ 发送后 60s 冷却</span><span class="tag">60s</span></li>
+            <li class="check-item"><span class="label">换一个邮箱 / 返回登录</span><span class="tag">次级动作</span></li>
+            <li class="check-item"><span class="label">超长邮箱：正文折行不溢出卡片</span><span class="tag">边界</span></li>
+            <li class="check-item"><span class="label">网络错误 / 重发过频：行内错误提示，按钮保持可用</span><span class="tag">NETWORK_ERROR / RESEND_TOO_SOON / RATE_LIMITED</span></li>
+          </ul>
+
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 /reset-password：重置密码状态">
+            <li class="check-item"><span class="label">设置新密码：新密码 + 确认密码；两次不一致与短密码在提交前拦截</span><span class="tag">客户端校验</span></li>
+            <li class="check-item"><span class="label">提交中：禁用按钮 + spinner</span><span class="tag">loading</span></li>
+            <li class="check-item done"><span class="label">重置成功：提示密码已重置 +「去登录」主按钮</span><span class="tag">204 · 全部旧会话撤销</span></li>
+            <li class="check-item"><span class="label">链接失效 / 已过期 / 已使用：写明原因，可重新申请重置邮件或返回登录</span><span class="tag">PASSWORD_RESET_TOKEN_INVALID</span></li>
+            <li class="check-item"><span class="label">网络错误：行内错误提示，表单保持可重试</span><span class="tag">NETWORK_ERROR</span></li>
+          </ul>
+
           <ul class="checklist" style="margin-top:16px" aria-label="SCR-000 登录：未验证被拒状态">
             <li class="check-item"><span class="label">登录被拒：「邮箱还未验证」+ 去验证 / 重发验证邮件提示</span><span class="tag">403 · EMAIL_NOT_VERIFIED</span></li>
           </ul>

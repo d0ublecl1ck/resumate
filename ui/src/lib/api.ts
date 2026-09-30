@@ -42,6 +42,8 @@ import type {
   ResumeVersion,
   UserPreferences,
   UserPreferencesUpdate,
+  PasswordResetAccepted,
+  PasswordResetInput,
   ResendVerificationInput,
   VerificationAccepted,
   WorkbenchSummary,
@@ -82,6 +84,16 @@ export function resendVerification(input: ResendVerificationInput): Promise<Veri
 /** POST /auth/verification/verify —— 消费一次性令牌，成功时下发 HttpOnly 会话 Cookie。 */
 export function verifyEmail(token: string): Promise<AuthUser> {
   return request<AuthUser>("/auth/verification/verify", { method: "POST", body: JSON.stringify({ token }) })
+}
+
+/** POST /auth/password/forgot —— 202 中性响应，命中账号才发一次性重置链接（b5586）。 */
+export function forgotPassword(input: { email: string }): Promise<PasswordResetAccepted> {
+  return request<PasswordResetAccepted>("/auth/password/forgot", { method: "POST", body: JSON.stringify(input) })
+}
+
+/** POST /auth/password/reset —— 消费一次性重置令牌并换密，成功后需重新登录。 */
+export function resetPassword(input: PasswordResetInput): Promise<void> {
+  return request<void>("/auth/password/reset", { method: "POST", body: JSON.stringify(input) })
 }
 
 /** POST /auth/logout —— 服务端删除 Redis 会话 key 并清 Cookie */
