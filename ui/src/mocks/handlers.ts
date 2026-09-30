@@ -32,6 +32,8 @@ const AUTH_ACCOUNTS: Record<string, string> = { "test@resumate.dev": "password12
 // d7b99 契约：未验证邮箱登录被拒；验证令牌由 verify 端点消费。
 const UNVERIFIED_EMAIL = "unverified@resumate.dev"
 const VERIFICATION_TOKEN = "valid-token"
+// b5586：忘记密码与重置密码的一次性令牌。
+const PASSWORD_RESET_TOKEN = "valid-reset-token"
 
 const RBAC_ROLES: Role[] = [
   { id: "role_user", code: "user", name: "普通用户", description: "", rank: 1, isSystem: true, permissions: ["resume:read"] },
@@ -95,6 +97,18 @@ export const handlers = [
       return HttpResponse.json({ code: "VERIFICATION_TOKEN_INVALID", message: "验证链接无效" }, { status: 400 })
     }
     return HttpResponse.json(AUTH_USER, { headers: { "Set-Cookie": "resumate_session=mock; HttpOnly; Path=/" } })
+  }),
+  // 忘记密码（b5586）：forgot 始终 202 中性，命中账号才发信；reset 消费一次性令牌。
+  http.post("/api/auth/password/forgot", async ({ request }) => {
+    const body = (await request.json()) as { email: string }
+    return HttpResponse.json({ status: "reset_sent", email: body.email }, { status: 202 })
+  }),
+  http.post("/api/auth/password/reset", async ({ request }) => {
+    const body = (await request.json()) as { token: string; newPassword: string }
+    if (body.token !== PASSWORD_RESET_TOKEN) {
+      return HttpResponse.json({ code: "PASSWORD_RESET_TOKEN_INVALID", message: "reset link invalid" }, { status: 400 })
+    }
+    return new HttpResponse(null, { status: 204 })
   }),
   http.post("/api/auth/logout", () => new HttpResponse(null, { status: 204 })),
   http.get("/api/auth/roles", () => HttpResponse.json(RBAC_ROLES)),

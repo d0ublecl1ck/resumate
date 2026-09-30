@@ -42,6 +42,7 @@ export type MachineErrorCode =
   | "VERIFICATION_TOKEN_INVALID" // 400（d7b99）
   | "RESEND_TOO_SOON" // 429（d7b99）
   | "RATE_LIMITED" // 429（d7b99）
+  | "PASSWORD_RESET_TOKEN_INVALID" // 400（b5586）
 
 export interface ApiError {
   code: MachineErrorCode
@@ -80,6 +81,21 @@ export interface VerificationAccepted {
 export interface ResendVerificationInput {
   email?: string
   token?: string
+}
+
+/** 忘记密码投递结果（b5586）：202 中性响应，无论邮箱是否存在都返回同一形状。 */
+export type PasswordResetSendStatus = "reset_sent"
+
+/** POST /auth/password/forgot 的响应体。 */
+export interface PasswordResetAccepted {
+  status: PasswordResetSendStatus
+  email: string
+}
+
+/** 重置密码：一次性令牌 + 新密码；成功为 204，无需下发会话。 */
+export interface PasswordResetInput {
+  token: string
+  newPassword: string
 }
 
 export interface Role {
