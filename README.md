@@ -154,7 +154,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 .
 ├── ui/          # React 19 + TypeScript + Vite 前端（PNPM workspace 唯一成员）
 ├── backend/     # FastAPI + SQLAlchemy 2 + PostgreSQL；模块按 api → service → dao → models 分层
-├── agent-core/  # Agent 底座（Python, uv）：公共 API 客户端、轮次会话、工具表、模型无关 Runtime
+├── agent-core/  # Agent 底座（Python, uv）：公共 API 客户端、轮次会话、工具表、模型无关 Runtime、resumate-agent CLI
 │   └── skills/resumate-api-operations/   # 给外部 Agent 的装载契约（SKILL.md + reference.md + README.md）
 ├── docs/        # design.md 蓝图、prd/、user-stories/ 公共契约、issues/ Issues-as-Code
 ├── quality-gates/  # 项目自有质量门禁（archkit inspect 执行的就是这里）
@@ -167,7 +167,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 
 ```bash
 uv run --directory backend pytest        # → 171 passed
-cd agent-core && uv run pytest -q        # → 70 passed
+cd agent-core && uv run pytest -q        # → 78 passed
 cd ui && pnpm test                       # → 22 files / 171 passed
 archkit inspect .                        # → Quality gates passed.
 
