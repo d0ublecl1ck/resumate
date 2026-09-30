@@ -130,6 +130,14 @@ export default {
     notFilled: "(not filled)",
     approvalNotice: "Approval mode: Agent creation shows a creation summary and requires your confirmation before creating.",
     formNotice: "Form creation: clicking “Create” counts as authorization and creates an empty draft right away.",
+    submitting: "Creating…",
+    agentNotAvailable: "Chat and Profile creation are not connected to the backend Agent service yet, so they cannot create a resume. Please use Form creation for now.",
+    errors: {
+      validation: "The title or template is invalid. Check and try again.",
+      permission: "Your account does not have permission to create a resume.",
+      network: "Cannot reach the backend service. Check your network and try again.",
+      generic: "Could not create the resume. Please try again later.",
+    },
     previewSummary: "Preview creation summary",
   },
 }

@@ -1,11 +1,15 @@
 // SCR-101 创建简历 Modal。三种创建方式：对话创建 / 表单创建 / Profile 生成。
 // C-01：approval 模式下 Agent 创建需二次确认；表单显式提交视为授权。
-// 选材确认不等于首版文案确认。此处为前端演示：提交后跳转到编辑工作台。
+// 表单创建走真实 POST /resumes；对话 / Profile 走 Agent 流程，后端能力未就绪时明确提示未接入。
 
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import i18n from "@/i18n"
 import { cn } from "@/lib/utils"
+import { createResume } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
 import type { JobDescription, ResumeTemplate } from "@/lib/types"
 import { MessageSquare, PenLine, Sparkles, X } from "lucide-react"
 
@@ -16,6 +20,16 @@ const METHODS: { key: Method; labelKey: string; descKey: string; icon: React.Ele
   { key: "chat", labelKey: "resume.create.method.chat.label", descKey: "resume.create.method.chat.desc", icon: MessageSquare },
   { key: "profile", labelKey: "resume.create.method.profile.label", descKey: "resume.create.method.profile.desc", icon: Sparkles },
 ]
+
+/** 机器错误码 → i18n 文案；禁止把后端 message 直出为界面文案（C-06）。 */
+function createErrorMessage(cause: unknown): string {
+  if (cause instanceof ApiRequestError) {
+    if (cause.code === "VALIDATION_FAILED") return i18n.t("resume.create.errors.validation")
+    if (cause.code === "FORBIDDEN" || cause.code === "UNAUTHENTICATED") return i18n.t("resume.create.errors.permission")
+    if (cause.code === "NETWORK_ERROR") return i18n.t("resume.create.errors.network")
+  }
+  return i18n.t("resume.create.errors.generic")
+}
 
 export function CreateResumeModal({
   open,
@@ -30,11 +44,15 @@ export function CreateResumeModal({
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [method, setMethod] = useState<Method>("form")
   const [title, setTitle] = useState("")
   const [role, setRole] = useState("")
   const [templateId, setTemplateId] = useState(templates.find((t) => t.status === "published")?.id ?? "")
   const [jdId, setJdId] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   if (!open) return null
 
@@ -43,10 +61,29 @@ export function CreateResumeModal({
   const methodMeta = METHODS.find((m) => m.key === method)
   const selectedTemplate = usableTemplates.find((tpl) => tpl.id === templateId)
 
-  function submit() {
-    // 前端演示：真实实现会调用 POST /resumes 或发起 Agent 创建任务。
-    navigate("/resumes/res_fe_lead")
-    onClose()
+  async function submit() {
+    if (submitting) return
+    setError(null)
+    setNotice(null)
+
+    // 对话 / Profile 走 Agent 创建，后端尚无对应端点：明确告知未接入，不伪造成功跳转。
+    if (needsConfirm) {
+      setNotice(t("resume.create.agentNotAvailable"))
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const created = await createResume({ title, templateId, targetRole: role })
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+      await queryClient.invalidateQueries({ queryKey: ["workbench-summary"] })
+      onClose()
+      navigate(`/resumes/${created.id}`)
+    } catch (cause) {
+      setError(createErrorMessage(cause))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -72,7 +109,11 @@ export function CreateResumeModal({
               return (
                 <button
                   key={m.key}
-                  onClick={() => setMethod(m.key)}
+                  onClick={() => {
+                    setMethod(m.key)
+                    setError(null)
+                    setNotice(null)
+                  }}
                   aria-pressed={active}
                   className={cn("flex items-start gap-3 rounded-lg border p-3 text-left transition-colors", active ? "border-cobalt bg-cobalt/5" : "border-border hover:bg-secondary")}
                 >
@@ -127,14 +168,18 @@ export function CreateResumeModal({
           {needsConfirm ? <p className="mt-1 text-coral">{t("resume.create.approvalNotice")}</p> : <p className="mt-1">{t("resume.create.formNotice")}</p>}
         </div>
 
+        {error ? <p role="alert" className="mt-4 text-sm text-coral">{error}</p> : null}
+        {notice ? <p role="status" className="mt-4 text-sm text-coral">{notice}</p> : null}
+
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">{t("common.actions.cancel")}</button>
           <button
             onClick={submit}
-            disabled={!title || !role}
+            disabled={!title || !role || submitting}
+            aria-busy={method === "form" && submitting}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {needsConfirm ? t("resume.create.previewSummary") : t("common.actions.create")}
+            {method === "form" && submitting ? t("resume.create.submitting") : needsConfirm ? t("resume.create.previewSummary") : t("common.actions.create")}
           </button>
         </div>
       </div>

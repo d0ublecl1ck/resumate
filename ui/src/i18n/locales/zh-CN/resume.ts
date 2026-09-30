@@ -130,6 +130,14 @@ export default {
     notFilled: "（未填写）",
     approvalNotice: "approval 模式：Agent 创建将展示创建摘要，需你二次确认后才会创建。",
     formNotice: "表单创建：点击「创建」即视为授权，直接创建空草稿。",
+    submitting: "创建中…",
+    agentNotAvailable: "对话创建与 Profile 生成尚未接入后端 Agent 服务，暂时无法创建；请先改用表单创建。",
+    errors: {
+      validation: "标题或模板不合法，请检查后重试。",
+      permission: "当前账号没有创建简历的权限。",
+      network: "无法连接后端服务，请检查网络后重试。",
+      generic: "创建失败，请稍后重试。",
+    },
     previewSummary: "预览创建摘要",
   },
 }
