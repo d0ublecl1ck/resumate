@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser
 from app.modules.auth.deps import require_human_session, require_permission
 
-from . import service
+from . import events, service
 from .schemas import (
     PatchApplyRequest,
     PatchApplyResponse,
@@ -109,6 +111,33 @@ def get_working_document(
     user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> WorkingDocumentResponse:
     return service.get_working_document(db, user, resume_id)
+
+
+@router.get("/turns/{turn_id}/events")
+def stream_turn_events(
+    turn_id: str,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> StreamingResponse:
+    """Subscribe to one turn as Server-Sent Events (contract section 18).
+
+    The snapshot is resolved before the stream opens so an unknown or foreign
+    turn still returns a normal 404 instead of a 200 that errors mid-stream.
+    """
+    settings = get_settings()
+    snapshot = service.get_turn(db, user, turn_id)
+    return StreamingResponse(
+        events.turn_event_stream(
+            db,
+            user,
+            turn_id,
+            initial=snapshot,
+            poll_interval=settings.sse_poll_interval_seconds,
+            heartbeat_interval=settings.sse_heartbeat_interval_seconds,
+        ),
+        media_type=events.SSE_MEDIA_TYPE,
+        headers=events.SSE_HEADERS,
+    )
 
 
 @router.post("/pending-actions/{action_id}/approve", response_model=PendingActionResponse)

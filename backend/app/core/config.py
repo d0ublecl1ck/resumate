@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     # Base URL used to build the verification link that goes into the mail.
     public_web_base_url: str = "http://localhost:5173"
 
+    # SSE turn subscription: poll the persisted turn + pending-action state and
+    # keep the stream warm. Infrastructure knobs, not run-loop settings.
+    sse_poll_interval_seconds: float = 1.0
+    sse_heartbeat_interval_seconds: float = 15.0
+
 
 @lru_cache
 def get_settings() -> Settings:

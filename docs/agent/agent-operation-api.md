@@ -144,6 +144,7 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 | POST | /turns/{turn_id}/patches:apply | resume:write | 写入 Working Copy；approval 需已 approved 的 pendingActionId |
 | GET | /turns/{turn_id}/pending-actions | resume:read | 列出轮次待办 |
 | GET | /resumes/{resume_id}/working-document | resume:read | 读取 Working Copy 状态 |
+| GET | /turns/{turn_id}/events | resume:read | 轮次状态 SSE 订阅（第 18 节） |
 | POST | /pending-actions/{action_id}/approve | resume:write + 人类会话 | pending → approved；PAT 403 FORBIDDEN |
 | POST | /pending-actions/{action_id}/reject | resume:write + 人类会话 | pending → rejected；PAT 403 FORBIDDEN |
 
@@ -303,3 +304,73 @@ agent-core/
 
 前端：模型设置表单的 provider / model 来自 catalog，使用既有开源组件（@base-ui/react 等），文案走 i18n 双语。
 
+
+## 18. 轮次事件订阅（SSE，b75c6）
+
+> 本节是 `ui/src/lib/api.ts:149` 那条「SSE 在真实实现中用 EventSource」注释的落地契约：
+> 真实实现不返回一份 AgentRun 快照，而是订阅某个轮次的状态流。
+
+### 18.1 端点
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| GET | /turns/{turn_id}/events | resume:read | 订阅该轮次的 Server-Sent Events 流 |
+
+- 路径挂在既有 `/turns/{turn_id}` 家族下（与 §6 其余端点一致），不另开 `/agent` 命名空间。
+- 流建立前先解析轮次归属：未知或不属于当前用户的 turn 返回 404 `RESOURCE_NOT_FOUND`（正常 JSON 错误信封），不会先返回 200 再中途报错。
+- 认证与会话 Cookie / PAT 一致（§13）：PAT 的 `resume:read` scope 即可订阅。本端点只读，不提供任何 approve/reject 能力，`require_human_session` 语义不受影响。
+
+### 18.2 响应头与帧格式
+
+- `Content-Type: text/event-stream; charset=utf-8`
+- `Cache-Control: no-cache`
+- `Connection: keep-alive`
+- `X-Accel-Buffering: no`（禁用 nginx 反代缓冲）
+
+帧字段：`id:`（每连接递增序号）、`event:`、`data:`（单行 JSON）；连接建立后先发 `retry: 3000`。
+心跳是注释行 `: heartbeat`：EventSource 不会为它触发事件，仅用于保活并穿透代理。
+
+### 18.3 事件类型
+
+| event | 何时推送 | data |
+| --- | --- | --- |
+| snapshot | 每次建立连接的首帧 | 与 `GET /turns/{turn_id}` 完全同构的 UserTurnResponse |
+| turn.updated | 轮次或其待办状态相对上一帧真的发生变化时 | 新的 UserTurnResponse 投影 |
+| （注释）: heartbeat | 空闲超过心跳间隔 | 无（注释行） |
+
+- 变化检测基于轮询持久化状态（`SSE_POLL_INTERVAL_SECONDS`，默认 1s），用规范化 JSON 比较；无变化不会重复推送 `snapshot` / `turn.updated`。
+- 心跳间隔 `SSE_HEARTBEAT_INTERVAL_SECONDS`（默认 15s）。
+- **没有假事件**：进度、token、步骤、run 状态这类事件需要 Agent run loop，本期未实现，因此一条都不推；等 run loop 落地后再新增。
+- 断连语义：客户端断开时 Starlette 关闭生成器，`get_db` 依赖随后关闭请求会话（事务回滚、连接归还连接池）；轮次消失（删除或归属变化）时生成器也自行结束。
+
+### 18.4 客户端
+
+`ui/src/lib/turn-events.ts` 的 `subscribeTurnEvents(turnId, handlers)` 封装 `EventSource`（`withCredentials`），
+解析 `snapshot` / `turn.updated` 并返回退订函数；重连交给 EventSource 自身（首帧 `retry`）。
+注释心跳不会触发 EventSource 事件，所以没有 `onHeartbeat`：连接状态由 `onOpen` / `onError` 与数据帧到达体现。
+
+### 18.5 代理层验证（可复现）
+
+分别启动后端与前端，用带时间戳的 `curl -N --no-buffer` 观察帧是否分块即时到达：
+
+```bash
+# 1) 后端（短心跳便于观察）
+DATABASE_URL=postgresql+psycopg://localhost:5432/resumate \
+SSE_POLL_INTERVAL_SECONDS=0.2 SSE_HEARTBEAT_INTERVAL_SECONDS=2 \
+uv run --directory backend uvicorn app.main:app --port 8011
+
+# 2) 前端 dev server，代理指向该后端
+cd ui && API_PROXY_TARGET=http://127.0.0.1:8011 pnpm dev --port 5174
+
+# 3) 直连与经代理各订阅一次，逐行打印相对到达时间
+TID=turn_xxx
+curl -sS -N --no-buffer -b cookies.txt "http://127.0.0.1:8011/turns/$TID/events" \
+  | python3 -u -c 'import sys,time; t=time.time()
+for line in sys.stdin: print(f"{time.time()-t:7.3f}s {line.rstrip()}")'
+curl -sS -N --no-buffer -b cookies.txt "http://127.0.0.1:5174/api/turns/$TID/events" \
+  | python3 -u -c 'import sys,time; t=time.time()
+for line in sys.stdin: print(f"{time.time()-t:7.3f}s {line.rstrip()}")'
+```
+
+实测（issue b75c6）：直连与经 Vite proxy 两条链路的 `snapshot` 都在 0.000s 到达，真实状态变化在亚秒级推出 `turn.updated`，空闲心跳按配置间隔持续到达，证明是分块流而不是一次性响应。
+Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite.config.ts`。
