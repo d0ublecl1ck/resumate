@@ -1,14 +1,15 @@
 ---
 id: 3eaa0
-status: in-progress
+status: closed
 created_at: 2026-09-30T14:25:43.841Z
-updated_at: 2026-09-30T14:25:56.400Z
+updated_at: 2026-09-30T14:31:00.921Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-09-30T14:25:56.400Z
+closed_at: 2026-09-30T14:31:00.921Z
 ---
 
 # 修复切换 tab 后表单输入被清空
@@ -33,10 +34,10 @@ started_at: 2026-09-30T14:25:56.400Z
 
 ## Acceptance Criteria
 
-- [ ] 先新增失败测试：在 `/settings` 填写输入框后切到「开放接入与审计」再切回 `/settings`，输入值仍在；实现前该测试为红。
-- [ ] 窗口聚焦触发的 refetch 不会把已填写的表单替换为 PageLoading（回归护栏）。
-- [ ] `pnpm -C ui test` 全绿，现有 163 条前端测试不退化。
-- [ ] `archkit inspect .` 通过。
+- [x] 先新增失败测试：在 `/settings` 填写输入框后切到「开放接入与审计」再切回 `/settings`，输入值仍在；实现前该测试为红。
+- [x] 窗口聚焦触发的 refetch 不会把已填写的表单替换为 PageLoading（回归护栏）。
+- [x] `pnpm -C ui test` 全绿，现有 163 条前端测试不退化。
+- [x] `archkit inspect .` 通过。
 
 ## Implementation
 
