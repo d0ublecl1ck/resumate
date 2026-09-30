@@ -11,9 +11,6 @@ import { JdsPage } from "@/pages/jds"
 import { JdDetailPage } from "@/pages/jd-detail"
 import { ProfilePage } from "@/pages/profile"
 import { SettingsLayout } from "@/pages/settings-layout"
-import { SettingsPage } from "@/pages/settings"
-import { BackupPage } from "@/pages/settings-backup"
-import { AccessPage } from "@/pages/settings-access"
 import { RbacPage } from "@/pages/rbac"
 import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
@@ -61,11 +58,7 @@ function App() {
             <Route path="jds" element={<JdsPage />} />
             <Route path="jds/:id" element={<JdDetailPage />} />
             <Route path="profile" element={<ProfilePage />} />
-            <Route path="settings" element={<SettingsLayout />}>
-              <Route index element={<SettingsPage />} />
-              <Route path="backup" element={<BackupPage />} />
-              <Route path="access" element={<AccessPage />} />
-            </Route>
+            <Route path="settings/*" element={<SettingsLayout />} />
             <Route path="admin/templates" element={<TemplatesPage />} />
             <Route path="admin/templates/:id" element={<TemplateEditorPage />} />
             <Route path="admin/rbac" element={<RbacPage />} />
