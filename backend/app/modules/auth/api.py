@@ -14,7 +14,10 @@ from .models import User
 from .schemas import (
     BanRequest,
     ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
+    PasswordResetAccepted,
+    PasswordResetRequest,
     PermissionResponse,
     RegisterAccepted,
     RegisterRequest,
@@ -155,6 +158,29 @@ def change_password(
 ) -> None:
     service.change_password(db, client, user.id, payload)
     _clear_session_cookie(response)
+
+
+@router.post("/password/forgot", response_model=PasswordResetAccepted, status_code=status.HTTP_202_ACCEPTED)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+    mailer: Mailer = Depends(get_mailer),
+) -> PasswordResetAccepted:
+    pending = service.forgot_password(db, client, payload)
+    if pending.link is not None:
+        background_tasks.add_task(mailer.send_password_reset_email, pending.email, pending.link)
+    return PasswordResetAccepted(status=pending.status, email=pending.email)
+
+
+@router.post("/password/reset", status_code=status.HTTP_204_NO_CONTENT)
+def reset_password(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+) -> None:
+    service.reset_password(db, client, payload)
 
 
 @router.get("/me", response_model=UserResponse)

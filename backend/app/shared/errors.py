@@ -27,6 +27,7 @@ class ErrorCode(StrEnum):
     EMAIL_ALREADY_REGISTERED = "EMAIL_ALREADY_REGISTERED"
     EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED"
     VERIFICATION_TOKEN_INVALID = "VERIFICATION_TOKEN_INVALID"
+    PASSWORD_RESET_TOKEN_INVALID = "PASSWORD_RESET_TOKEN_INVALID"
     RESEND_TOO_SOON = "RESEND_TOO_SOON"
     RATE_LIMITED = "RATE_LIMITED"
 
@@ -138,6 +139,11 @@ class EmailNotVerified(ApiException):
 class VerificationTokenInvalid(ApiException):
     status_code = 400
     code = ErrorCode.VERIFICATION_TOKEN_INVALID
+
+
+class PasswordResetTokenInvalid(ApiException):
+    status_code = 400
+    code = ErrorCode.PASSWORD_RESET_TOKEN_INVALID
 
 
 class ResendTooSoon(ApiException):

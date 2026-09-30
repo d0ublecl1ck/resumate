@@ -30,6 +30,15 @@ class Settings(BaseSettings):
     email_verification_lookup_ttl_seconds: int = 7 * 24 * 60 * 60
     email_verification_resend_cooldown_seconds: int = 60
     email_verification_max_sends_per_hour: int = 5
+
+    # Password reset by emailed one-time link; mirrors the verification knobs.
+    # The token is shorter-lived because it can change the credential, while the
+    # lookup record still lets the API tell a dead link apart from a wrong new
+    # password without consuming anything.
+    password_reset_token_ttl_seconds: int = 30 * 60
+    password_reset_lookup_ttl_seconds: int = 7 * 24 * 60 * 60
+    password_reset_resend_cooldown_seconds: int = 60
+    password_reset_max_sends_per_hour: int = 5
     # SMTP relay for verification mail. An empty SMTP_HOST disables real sending.
     smtp_host: str = ""
     smtp_port: int = 587

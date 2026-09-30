@@ -45,6 +45,24 @@ class ChangePasswordRequest(ApiModel):
     new_password: str = Field(min_length=8, max_length=128)
 
 
+class ForgotPasswordRequest(ApiModel):
+    """Only the address is needed; a wrong address is answered neutrally."""
+
+    email: EmailStr
+
+
+class PasswordResetRequest(ApiModel):
+    token: str = Field(min_length=1, max_length=512)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class PasswordResetAccepted(ApiModel):
+    """Neutral 202: identical whether or not the address has an account."""
+
+    status: str = "reset_sent"
+    email: EmailStr
+
+
 class BanRequest(ApiModel):
     reason: str | None = Field(default=None, max_length=500)
 
