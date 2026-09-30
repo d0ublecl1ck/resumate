@@ -15,4 +15,5 @@
 - [ ] `agent-core/skills/resumate-api-operations/SKILL.md` 与 `docs/agent/agent-operation-api.md` — **没有任何门禁校验两者一致**；2026-09-28 的契约 §13/§15 漂移曾潜伏一天才被实测发现。下次契约变更时必须手工复核 SKILL.md 的鉴权段、失败码表与 §8 工具名，并考虑补一致性测试。记录：2026-09-29
 - [ ] `agent-core/skills/resumate-api-operations/reference.md` — 对运行时不可达：`SkillLoader` 只读 SKILL.md，字段字典拿不到。宿主需要精确字段时必须额外投喂该文件；若要改进，需改装载器而不是改文档。记录：2026-09-29
 - [ ] `README.md` — 已承担公开首屏职责；其中的数字口径（后端 157 / 底座 69 / 前端 128 测试、72 端点、18 页面组件）会随开发漂移，每次改动后按 README「验证与测试」段给出的命令复核并同步。记录：2026-09-29
+- [ ] `ui/src/components/email-verification.stories.tsx` — `VerifyStory` 仍用「cleanup 里把 `active` 置 false 丢弃结果」的写法（与 62adb 同源）。当前 `.storybook/preview.ts` 未启用 StrictMode，所以未暴露；一旦 preview 引入 StrictMode，成功态 story 会退化成失效态，且同一 token 会被请求两次。下次改 Storybook 配置时一并核对。记录：2026-09-30
 - [ ] GitHub 仓库描述与 topics 仍为空（`gh api repos/d0ublecl1ck/resumate --jq .description` → `null`）——首屏信任只剩这一件；属远端变更，执行前需授权。记录：2026-09-29

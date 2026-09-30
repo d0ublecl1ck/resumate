@@ -21,22 +21,19 @@ export function VerifyEmailPage() {
 
   useEffect(() => {
     if (!token || attempted.current) return
+    // StrictMode 在开发模式会 mount → cleanup → mount。令牌是一次性的，重复请求会让
+    // 第二次落到 400，所以这里用 ref 保证只发一次；同时又不能在 cleanup 中把这一次的
+    // 结果丢弃，否则页面会永远停在「正在验证邮箱」（62adb）。
     attempted.current = true
-    let active = true
     verifyEmail(token)
       .then((user) => {
-        if (!active) return
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, user)
         setState("success")
       })
       .catch((cause) => {
-        if (!active) return
         setReason(cause instanceof ApiRequestError && cause.code === "VERIFICATION_TOKEN_INVALID" ? "expired" : undefined)
         setState("invalid")
       })
-    return () => {
-      active = false
-    }
   }, [token, queryClient])
 
   return (
