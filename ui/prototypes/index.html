@@ -420,6 +420,26 @@
           </ul>
         </div>
       </section>
+
+      <section class="panel" id="agent-onboarding" aria-label="设计补充：Agent 未接入与模型未配置的引导" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · Agent 未接入与模型未配置（SCR-004 助手 / SCR-010 设置入口）</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            Agent 能力当前事实上不可用：后端没有 spawn 运行体进程。三态在此登记，视觉沿用既有令牌
+            （card-soft 卡片 / primary 主按钮 / coral 错误色 / cobalt 强调色 / font-serif 标题 / rounded-lg / 48px 触控高度），
+            品牌只到语法层 + mascot="badge"（C 档），不新增页面视觉规则，不使用吉祥物角色层。
+          </p>
+          <ul class="checklist" style="margin-top:16px" aria-label="Agent 可用性三态">
+            <li class="check-item"><span class="label">模型未配置：GET /models/config 返回 keyConfigured=false →「先配置一个模型」+「去设置模型」</span><span class="tag">gold 盖章 · 可解除</span></li>
+            <li class="check-item done"><span class="label">运行体未接入（当前真实态）：如实说明尚未接入，不给可用对话输入、不给假装能跑的主操作</span><span class="tag">neutral 盖章 · 降饱和</span></li>
+            <li class="check-item"><span class="label">正常可用态：占位说明接入后的对话与「确认后写入」流程</span><span class="tag">cobalt 盖章 · 占位</span></li>
+          </ul>
+          <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            落点（Storybook 先行，尚未接线）：个人资料助手抽屉正文（ui/src/components/profile-assistant.tsx，panel 档）与设置页
+            Agent 与模型分区入口（ui/src/components/settings-form.tsx，entry 档）。本轮只收敛视觉与文案，不改真实页面渲染。
+          </p>
+        </div>
+      </section>
     </main>
   </div>
 

@@ -1,3 +1,4 @@
+import agentOnboarding from "./agentOnboarding"
 import api from "./api"
 import auth from "./auth"
 import brand from "./brand"
@@ -12,6 +13,7 @@ import templates from "./templates"
 import workbench from "./workbench"
 
 export default {
+  agentOnboarding,
   brand,
   common,
   nav,
