@@ -21,8 +21,9 @@ model-agnostic runtime loop.
 - **Approval is human-only.** Deciding a `PendingAction` is a user action: the
   server rejects PAT/agent callers with `403 FORBIDDEN`, and the model tool
   registry never exposes `approve_action` / `reject_action`.
-- **Credentials** are supplied by the caller (session cookie now, PAT later).
-  Nothing here logs, stores, or derives credentials.
+- **Credentials** are supplied by the caller: either the web session cookie or a
+  personal access token sent as `Authorization: Bearer`. Both paths are
+  implemented end to end. Nothing here logs, stores, or derives credentials.
 
 ## Install
 
@@ -87,8 +88,56 @@ Configuration is environment aware; every value can be supplied without code:
 | `RESUME_AGENT_CORE_TIMEOUT_SECONDS` | request timeout | `30` |
 | `RESUME_AGENT_CORE_SESSION_COOKIE_NAME` | cookie name | `resumate_session` |
 | `RESUME_AGENT_CORE_SESSION_COOKIE` | cookie value | unset |
-| `RESUME_AGENT_CORE_TOKEN` | bearer token (future PAT) | unset |
+| `RESUME_AGENT_CORE_TOKEN` | PAT bearer token | unset |
 | `RESUME_AGENT_CORE_VERIFY_SSL` | TLS verification | `true` |
+| `RESUME_AGENT_CORE_CLIENT_ID` | client id recorded on created turns | `external` |
+| `RESUME_AGENT_CORE_MODEL` | CLI model id | unset |
+| `RESUME_AGENT_CORE_API_KEY` | CLI model API key | unset |
+| `RESUME_AGENT_CORE_PROVIDER_BASE_URL` | CLI provider base url | `https://api.openai.com/v1` |
+| `RESUME_AGENT_CORE_EXECUTION_MODE` | CLI default execution mode | `approval` |
+| `RESUME_AGENT_CORE_STATE` | CLI state snapshot path | unset |
+| `RESUME_AGENT_CORE_EVENTS` | CLI stdout format (`json` / `text`) | `json` |
+
+## CLI runner
+
+The package ships one executable entry point, `resumate-agent`, plus
+`python -m resumate_agent_core`. It runs a single turn end to end through the
+same `AgentRuntime` loop the library exposes, so there is no second
+orchestration path to keep in sync.
+
+```bash
+export RESUME_AGENT_CORE_BASE_URL=http://127.0.0.1:8000
+export RESUME_AGENT_CORE_SESSION_COOKIE=<session-cookie-value>
+
+uv run resumate-agent \
+  --resume-id res_abc \
+  --prompt "Tighten the experience bullets" \
+  --model gpt-4o-mini --api-key "$OPENAI_API_KEY"
+```
+
+Events go to stdout, one JSON object per line (the `--mode json` shape). Every
+line carries a `type` of `message`, `tool_progress`, `pending_action`,
+`finalize`, or `error` plus that event's camelCase payload, so a caller can
+stream and parse the run without a second protocol. `--events text` renders the
+same events for a human, and `--token <PAT>` switches authentication from the
+session cookie to a personal access token.
+
+Exit codes: `0` when the turn finalized, `1` when the run reported an `error`
+event or never finalized, `2` for a usage/configuration mistake. Credentials are
+never echoed to stdout or stderr.
+
+### Run state today, and what is deliberately missing
+
+`--state <path>` writes a minimal snapshot when the run starts (`phase:
+started`) and overwrites it when the run ends (`phase: finished` or
+`failed`, with `startedAt` / `endedAt`). It is a **latest snapshot, not a
+checkpoint**: a restart cannot resume from it.
+
+That is intentional scaffolding. The runner is meant to checkpoint after every
+model call, so a later `/step` can advance to the next breakpoint, and this flag
+keeps the seam for that work. Per-turn checkpointing, resume, and the persistent
+session/message store are the next issue; until then the file only answers
+"which run is in flight".
 
 ## Layout
 
@@ -102,6 +151,8 @@ src/resumate_agent_core/
   turn.py      # TurnSession + idempotency-key helper
   tools.py     # TOOLS registry: name -> schema + client callable
   runtime.py   # C-09 loop skeleton (ModelProvider Protocol, budget, cancel, events)
+  cli.py       # resumate-agent: one run as a standalone process (JSONL events, --state)
+  __main__.py  # python -m resumate_agent_core -> cli.main
   openai_provider.py   # OpenAI-compatible ModelProvider over httpx
   skills.py    # SKILL.md loader for a skills directory
 ```
