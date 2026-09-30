@@ -1,6 +1,6 @@
 ---
 name: resumate-api-operations
-description: 通过 Resumate 公共 REST API 以 UserTurn 轮次为单位操作简历，覆盖能力发现、会话鉴权、approval 与 full_access 两条最小闭环、11 个端点、领域 Patch、PendingAction 审批、幂等键与错误码恢复。适用于 Hermes、Codex 或通用 MCP Agent 接入 Resumate 的场景。
+description: 通过 Resumate 公共 REST API 以 UserTurn 轮次为单位操作简历，覆盖能力发现、会话鉴权、approval 与 full_access 两条最小闭环、12 个端点、领域 Patch、PendingAction 审批、幂等键与错误码恢复。适用于 Hermes、Codex 或通用 MCP Agent 接入 Resumate 的场景。
 ---
 
 # Resumate API 操作指南
@@ -19,7 +19,7 @@ description: 通过 Resumate 公共 REST API 以 UserTurn 轮次为单位操作�
 - 处理 `BASE_VERSION_STALE`、`TURN_ALREADY_CLOSED`、`PENDING_ACTION_NOT_APPROVED`、`IDEMPOTENCY_CONFLICT` 等冲突；
 - 查询能力发现、轮次待办或 Working Copy 状态。
 
-不适用：Profile 选材生成、JD 微调、导出、模板管理等本期未纳入的链路——它们不属于本 Skill 的 11 个端点。
+不适用：Profile 选材生成、JD 微调、导出、模板管理等本期未纳入的链路——它们不属于本 Skill 的 12 个端点。
 
 ## 1. 能力发现与鉴权
 
@@ -49,11 +49,11 @@ curl -sS http://localhost:8000/.well-known/resume-agent
 
 ### 1.2 鉴权：外部 Agent 走 PAT Bearer，浏览器走会话 Cookie
 
-服务端**先解析 `Authorization: Bearer <PAT>`，未命中才回落到 HttpOnly 会话 Cookie**（`resumate_session`）。两条路径对全部 11 个端点都有效。
+服务端**先解析 `Authorization: Bearer <PAT>`，未命中才回落到 HttpOnly 会话 Cookie**（`resumate_session`）。两条路径对全部 12 个端点都有效。
 
 - **外部 Agent 首选 PAT。** 会话 Cookie 要求账号邮箱已验证并完成一次浏览器登录，Agent 侧通常拿不到；PAT 就是为这种场景提供的长期凭据。
 - 建令牌：用一次会话身份调 `POST /access/tokens`，body `{ "name": "...", "scopes": ["resume:read", "resume:write"], "expiresInDays": 30 }`。响应里的 `secretOnce` 是明文令牌（`rsm_pat_` 前缀），**只会返回这一次**，必须当场保存。
-- 可申请的 scope 只有 `profile:read`、`resume:read`、`resume:write`、`jd:read`、`jd:write`；这 11 个端点只用到 `resume:read` 与 `resume:write`。
+- 可申请的 scope 只有 `profile:read`、`resume:read`、`resume:write`、`jd:read`、`jd:write`；这 12 个端点只用到 `resume:read` 与 `resume:write`。
 - 之后每个请求带 `Authorization: Bearer rsm_pat_...`（curl 用 `-H`，httpx 用 `headers=`）。
 - 若确实要走会话：`POST /auth/login`，body `{ "email": "...", "password": "..." }`，服务端通过 `Set-Cookie` 下发 `resumate_session`；之后 `curl -b cookies.txt` 或 httpx 持久 `Client`。登录前提是账号邮箱已完成验证，否则 403 `EMAIL_NOT_VERIFIED`；`POST /auth/register` 只建未验证账号并发验证邮件（202、不下发会话），需由用户在邮件里点验证链接。
 - 权限码：读端点需要 `resume:read`，写端点需要 `resume:write`；每个端点恰好声明一个权限码。PAT 的 scope 必须包含该权限码，否则 403 `SCOPE_INSUFFICIENT`。
@@ -135,7 +135,7 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
 | apply | 必须带 approved `pendingActionId` | 直接 apply |
 | finalize | 必须 | 必须 |
 
-## 4. 端点参考（11）
+## 4. 端点参考（12）
 
 - 权限：读需 `resume:read`，写需 `resume:write`。
 - `GET` 类端点可在任意轮次步骤调用，用于重试/断线前同步服务端状态。
@@ -306,6 +306,21 @@ curl -sS -c cookies.txt -X POST http://localhost:8000/auth/login \
 - **行为**：`pending → rejected`；被拒绝的负载不会 apply。若用户想换一版内容，重新 `preview` 生成新待办，再走 approve。
 - **返回**：`PendingActionResponse`。
 - **idempotencyKey 约定**：不接受幂等键。
+
+### 4.12 `GET /turns/{turn_id}/events`
+
+| 项 | 值 |
+| --- | --- |
+| 权限 | `resume:read` |
+| 轮次步骤 | 任意（订阅状态） |
+| 幂等 | 只读；断线交给 EventSource 自动重连（首帧带 `retry`） |
+
+- **何时使用**：不想轮询 `GET /turns/{turn_id}` 时，订阅该轮次的状态流。
+- **必需参数**：path `turn_id`。**无 body。**
+- **返回**：`text/event-stream` 流。首帧 `event: snapshot`（与 `GET /turns/{turn_id}` 同构），真实状态变化推 `event: turn.updated`，空闲发注释心跳 `: heartbeat`；响应头含 `Cache-Control: no-cache`、`X-Accel-Buffering: no`。
+- **用户确认**：无（只读）。本端点**不能**用于 approve / reject；审批仍是用户动作。
+- **工具映射**：不注册为模型工具（长连接流，不是一次函数调用）。
+- **idempotencyKey 约定**：不适用。
 
 ## 5. 领域 Patch 参考
 
@@ -614,7 +629,7 @@ with httpx.Client(base_url=BASE) as client:
 | `list_pending_actions` | `GET /turns/{turn_id}/pending-actions` | `resume:read` |
 | `get_working_document` | `GET /resumes/{resume_id}/working-document` | `resume:read` |
 
-approve / reject **不注册为工具**：它们是用户动作，必须由用户在自己的浏览器会话里调用对应端点；PAT / Agent 来源调用返回 403 `FORBIDDEN`。
+approve / reject **不注册为工具**：它们是用户动作，必须由用户在自己的浏览器会话里调用对应端点；PAT / Agent 来源调用返回 403 `FORBIDDEN`。`GET /turns/{turn_id}/events` 同理不注册为工具——它是长连接流，不是一次函数调用。
 
 ## 9. 信任边界
 

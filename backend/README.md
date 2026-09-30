@@ -54,3 +54,30 @@ uv run alembic upgrade head
 ```
 
 测试连接 `TEST_DATABASE_URL`（默认 `resumate_test`），会重建 schema、写入内置模板，并在每个测试后回滚；会话测试用 `fakeredis` 覆盖 `get_redis`，不依赖真实 Redis。创建业务模型时继承 `app.core.db.Base`，在 `migrations/env.py` 显式导入模型模块，再运行 `uv run alembic revision --autogenerate -m '描述变更'`；审核生成的迁移后执行升级。
+
+## SSE 轮次事件订阅
+
+`GET /turns/{turn_id}/events`（权限 `resume:read`）按 Server-Sent Events 推送某个轮次的状态：
+首帧 `snapshot`（与 `GET /turns/{turn_id}` 同构），轮次或待办真实变化时推 `turn.updated`，
+空闲时发注释心跳 `: heartbeat`。响应头含 `Cache-Control: no-cache` 与 `X-Accel-Buffering: no`。
+生成器在客户端断开时结束，请求会话由 `get_db` 关闭（事务回滚、连接归还连接池）。
+实现见 `app/modules/agent/events.py`；完整契约见 `docs/agent/agent-operation-api.md` 第 18 节。
+
+轮询与心跳间隔由 `SSE_POLL_INTERVAL_SECONDS`（默认 1）与 `SSE_HEARTBEAT_INTERVAL_SECONDS`（默认 15）控制。
+
+本机验证「分块即时」而不是一次性响应：
+
+```bash
+# 后端（短心跳便于观察）
+DATABASE_URL=postgresql+psycopg://localhost:5432/resumate \
+SSE_POLL_INTERVAL_SECONDS=0.2 SSE_HEARTBEAT_INTERVAL_SECONDS=2 \
+uv run uvicorn app.main:app --port 8011
+
+# 直连：逐行打印相对到达时间
+curl -sS -N --no-buffer -b cookies.txt "http://127.0.0.1:8011/turns/$TURN_ID/events" \
+  | python3 -u -c 'import sys,time; t=time.time()
+for line in sys.stdin: print(f"{time.time()-t:7.3f}s {line.rstrip()}")'
+```
+
+经 Vite dev proxy 时把 URL 换成 `http://127.0.0.1:5174/api/turns/$TURN_ID/events`（`/api` 由 `ui/vite.config.ts` 代理并剥前缀）。
+实测两条链路都分块即时到达；http-proxy 默认流式，无需额外配置。

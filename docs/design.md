@@ -158,7 +158,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 设置：`GET|PATCH /settings`（偏好）、`GET|PATCH /agent/config`、`GET|PUT /models/config`、`POST /models/config:test`、`GET /models/catalog`（models.dev 模型目录快照）。偏好中的 `fullAccessScopes`、`confirmRetainedOps`、`shortcuts[].action` 返回稳定 i18n 键而非展示文案。
 - 开放接入：`GET|POST /access/tokens`、`POST /access/tokens/{token_id}/revoke`、`GET /access/logs`、`GET /.well-known/resume-agent`；令牌明文只在创建响应返回一次（`secretOnce`），库中只存 SHA-256 哈希。
 - 备份：`GET /backup/export`、`GET /backup/export/markdown`、`POST /backup/import:preview`、`POST /backup/import`。
-- Agent 操作：`POST /resumes/{resume_id}/turns`、`GET /turns/{turn_id}`、`POST /turns/{turn_id}/finalize|cancel`、`POST /turns/{turn_id}/patches:validate|preview|apply`、`GET /turns/{turn_id}/pending-actions`、`GET /resumes/{resume_id}/working-document`、`POST /pending-actions/{action_id}/approve|reject`；每个端点声明 `resume:read`（读）或 `resume:write`（写）。
+- Agent 操作：`POST /resumes/{resume_id}/turns`、`GET /turns/{turn_id}`、`POST /turns/{turn_id}/finalize|cancel`、`POST /turns/{turn_id}/patches:validate|preview|apply`、`GET /turns/{turn_id}/pending-actions`、`GET /resumes/{resume_id}/working-document`、`POST /pending-actions/{action_id}/approve|reject`、`GET /turns/{turn_id}/events`（SSE 轮次状态订阅，契约 §18：首帧 `snapshot`、真实变化推 `turn.updated`、注释心跳，反缓冲 header，断连即结束生成器）；每个端点声明 `resume:read`（读）或 `resume:write`（写）。
 
 ## 关键决策
 

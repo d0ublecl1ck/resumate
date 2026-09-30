@@ -16,7 +16,7 @@
 
 直接往数据库写，或者直接调 `PUT /resumes/{id}/document`。两条都很爽，直到用户问「你刚才到底改了什么」「我想回到上一版」「谁授权你动我简历的」。
 
-这个 Skill 走第三条路：**只走公共 REST API**，并且把 11 个端点组织成固定节拍——
+这个 Skill 走第三条路：**只走公共 REST API**，并且把 12 个端点组织成固定节拍——
 
 `begin` 开轮次 → `validate` 校验 → `preview` 生成 Diff 和待办 → **用户点批准** → `apply` 写进 Working Copy → `finalize` 结算成一个可追溯版本。
 
@@ -78,7 +78,7 @@ HTTP 403  { "code": "SCOPE_INSUFFICIENT" }
 from resumate_agent_core import SkillLoader
 
 skill = SkillLoader().load("resumate-api-operations")
-prompt = skill.to_prompt()   # 21.8k 字符，含触发条件、两条闭环、11 个端点与错误码
+prompt = skill.to_prompt()   # 21.8k 字符，含触发条件、两条闭环、12 个端点与错误码
 ```
 
 默认从 `agent-core/skills/` 下发现；换目录用环境变量 `RESUME_AGENT_CORE_SKILLS_DIR`。
@@ -150,7 +150,7 @@ prompt = skill.to_prompt()   # 21.8k 字符，含触发条件、两条闭环、1
 
 ```text
 agent-core/skills/resumate-api-operations/
-├── SKILL.md      # 装载主体：触发条件、两条闭环、11 个端点、错误码与恢复动作、端到端示例
+├── SKILL.md      # 装载主体：触发条件、两条闭环、12 个端点、错误码与恢复动作、端到端示例
 ├── reference.md  # 字段字典：请求/响应模型逐字段表、幂等键速查、错误码速查
 └── README.md     # 你正在读的这份：给安装方看的入口
 ```

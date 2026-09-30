@@ -119,6 +119,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 章节 / 条目级结构化编辑与领域 Patch | 已实现（5 个 op，非 RFC 6902） |
 | **UserTurn + Working Copy + 审批闭环** | 已实现：`begin → validate → preview → approve → apply → finalize` |
 | **PendingAction 人工审批、幂等键、基线重排** | 已实现并覆盖测试（含 `REBASE_CONFLICT`） |
+| **Agent 轮次 SSE 事件订阅** | 已实现：`GET /turns/{turn_id}/events` 推 snapshot / turn.updated / 心跳，前端 `subscribeTurnEvents` |
 | Profile 职业事实库、事实反向引用 | 已实现 |
 | JD 管理、岗位匹配、简历软绑定（每 JD 0 或 1 份） | 已实现 |
 | RBAC（角色 / 权限 / 在线维护）、PAT 与访问审计 | 已实现 |
@@ -127,7 +128,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 界面 i18n（`zh-CN` / `en`） | 已实现，键结构有测试校验 |
 | 内置对话流、自然语言解析、岗位匹配界面 | **未实现，前端仍走 mock**（见 [已知边界](#已知边界)） |
 
-后端现有 **11 个业务模块、74 个 HTTP 端点**；前端 **20 个页面组件、16 个 Storybook story 文件**。
+后端现有 **11 个业务模块、75 个 HTTP 端点**；前端 **20 个页面组件、16 个 Storybook story 文件**。
 
 ## 它和同类有什么不同
 
@@ -166,9 +167,9 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 171 passed
+uv run --directory backend pytest        # → 176 passed
 cd agent-core && uv run pytest -q        # → 70 passed
-cd ui && pnpm test                       # → 22 files / 171 passed
+cd ui && pnpm test                       # → 23 files / 177 passed
 archkit inspect .                        # → Quality gates passed.
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
@@ -177,7 +178,7 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 统计口径：
 
 ```bash
-grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 74 个端点
+grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 75 个端点
 ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
 ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 16 个 story 文件
 ```
@@ -187,6 +188,7 @@ ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # 
 诚实清单——这些还没做，或需要你先准备好：
 
 - **内置对话流尚未接通界面。** 版本与审批链路已经在后端和 `agent-core` 落地并有测试，但前端的 Agent Run、自然语言解析、岗位匹配与工作台统计仍读取本地 mock（[ui/README.md](ui/README.md)）。
+- **Agent 轮次 SSE 只推真实状态。** `GET /turns/{turn_id}/events` 目前只推轮次/待办的 `snapshot` 与 `turn.updated`，空闲发心跳；模型进度 / token / 步骤事件需要 Agent run loop 与队列，尚未实现（见 [契约 §18](docs/agent/agent-operation-api.md)）。
 - **没有 MCP server。** 能力发现返回的 `mcpUrl` 是占位，实测 `GET /mcp` 返回 404；外部接入目前走 REST 与 PAT。
 - **模板管理端写接口未开放**，模板当前只读。
 - **Webhook 与题库/面试扩展属 P1/EXT**，未实现，见 [用户故事索引](docs/user-stories/README.md)。
