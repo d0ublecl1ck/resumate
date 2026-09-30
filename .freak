@@ -18,4 +18,5 @@
 - [ ] `ui/src/components/email-verification.stories.tsx` — `VerifyStory` 仍用「cleanup 里把 `active` 置 false 丢弃结果」的写法（与 62adb 同源）。当前 `.storybook/preview.ts` 未启用 StrictMode，所以未暴露；一旦 preview 引入 StrictMode，成功态 story 会退化成失效态，且同一 token 会被请求两次。下次改 Storybook 配置时一并核对。记录：2026-09-30
 - [ ] `backend/app/modules/auth/password_reset_store.py` — `password_reset_lookup` 只服务「消费前解析账号」，没有按 token 重发的 consumer；若后续给失效链接页加「重发重置邮件」，直接复用 lookup 即可，不要再新建一套 key。记录：2026-09-30
 - [ ] `ui/src/components/settings-nav.tsx` 与 `ui/src/pages/settings-layout.tsx` — 设置分区导航列表（`TABS`）与面板注册表（`PANELS`）分居两处，新增、改名或删除分区时必须同时改，当前没有门禁或测试校验两者一致。记录：2026-09-30
+- [ ] `ui/src/components/agent-onboarding.tsx` — Storybook 先行件，尚未接入任何真实页面；`agentAvailabilityFromModelConfig()` 现在把 `keyConfigured=true` 直接当作 `runtime_offline`，运行体就绪信号落地后必须改这里，并把组件接进 `profile-assistant.tsx` 与 `settings-form.tsx`。记录：2026-09-30
 - [ ] GitHub 仓库描述与 topics 仍为空（`gh api repos/d0ublecl1ck/resumate --jq .description` → `null`）——首屏信任只剩这一件；属远端变更，执行前需授权。记录：2026-09-29
