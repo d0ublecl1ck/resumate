@@ -13,18 +13,25 @@ DEFAULT_PASSWORD = "password123"
 
 
 class FakeMailer:
-    """Collects verification mails instead of contacting SMTP."""
+    """Collects verification and password-reset mails instead of contacting SMTP."""
 
     def __init__(self) -> None:
         self.sent: list[dict[str, str]] = []
 
     def send_verification_email(self, to: str, link: str) -> None:
-        self.sent.append({"to": to, "link": link})
+        self.sent.append({"kind": "verification", "to": to, "link": link})
 
-    def latest_token(self) -> str:
-        if not self.sent:
-            raise AssertionError("没有捕获到任何验证邮件")
-        return parse_qs(urlparse(self.sent[-1]["link"]).query)["token"][0]
+    def send_password_reset_email(self, to: str, link: str) -> None:
+        self.sent.append({"kind": "password_reset", "to": to, "link": link})
+
+    def latest_token(self, kind: str = "verification") -> str:
+        for item in reversed(self.sent):
+            if item["kind"] == kind:
+                return parse_qs(urlparse(item["link"]).query)["token"][0]
+        raise AssertionError(f"没有捕获到任何 {kind} 邮件")
+
+    def mails(self, kind: str) -> list[dict[str, str]]:
+        return [item for item in self.sent if item["kind"] == kind]
 
 
 MAILER = FakeMailer()
@@ -49,6 +56,18 @@ def register(
 
 def verify(client: TestClient, token: str):
     return client.post("/auth/verification/verify", json={"token": token})
+
+
+def login(client: TestClient, email: str = "zhang@example.com", password: str = DEFAULT_PASSWORD):
+    return client.post("/auth/login", json={"email": email, "password": password})
+
+
+def forgot_password(client: TestClient, email: str = "zhang@example.com"):
+    return client.post("/auth/password/forgot", json={"email": email})
+
+
+def reset_password(client: TestClient, token: str, new_password: str):
+    return client.post("/auth/password/reset", json={"token": token, "newPassword": new_password})
 
 
 def register_verified(

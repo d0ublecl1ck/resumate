@@ -14,6 +14,7 @@ from app.shared.errors import (
     EmailNotVerified,
     Forbidden,
     InvalidCredentials,
+    PasswordResetTokenInvalid,
     RateLimited,
     ResourceNotFound,
     ResendTooSoon,
@@ -21,12 +22,14 @@ from app.shared.errors import (
     VerificationTokenInvalid,
 )
 
-from . import dao, session_store, verification_store
+from . import dao, password_reset_store, session_store, verification_store
 from .models import Permission, Role, User
 from .rbac import BOOTSTRAP_ROLE_CODE, DEFAULT_ROLE_CODE, ROLE_CODE_PATTERN, ROLE_RANK
 from .schemas import (
     ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
+    PasswordResetRequest,
     RegisterRequest,
     ResendVerificationRequest,
     RoleCreate,
@@ -200,6 +203,74 @@ def change_password(db: Session, client: redis.Redis, user_id: str, payload: Cha
     user.updated_at = _now()
     db.commit()
     # Changing the credential must invalidate every session issued under the old one.
+    session_store.revoke_all_sessions(client, user.id)
+
+
+@dataclass(frozen=True)
+class PendingPasswordReset:
+    """Who to mail and which reset link to send.
+
+    ``link`` is None whenever nothing should be mailed (unknown address, resend
+    cooldown or hourly quota); the HTTP response stays neutral in every case.
+    """
+
+    email: str
+    link: str | None
+    status: str = "reset_sent"
+
+
+def _password_reset_link(token: str) -> str:
+    return f"{get_settings().public_web_base_url.rstrip('/')}/reset-password?token={token}"
+
+
+def forgot_password(db: Session, client: redis.Redis, payload: ForgotPasswordRequest) -> PendingPasswordReset:
+    """Issue a reset link for a known address, staying neutral for every other case.
+
+    Unknown addresses, the resend cooldown and the hourly quota all return the
+    same 202 body so the endpoint cannot be used to enumerate accounts. Refusing
+    to send is the whole response; the caller never learns which branch ran.
+    """
+    settings = get_settings()
+    email = payload.email.strip().lower()
+    user = dao.get_user_by_email(db, email)
+    if user is None:
+        return PendingPasswordReset(email, None)
+    if password_reset_store.in_resend_cooldown(client, email):
+        return PendingPasswordReset(email, None)
+    if not password_reset_store.is_within_send_quota(client, email, limit=settings.password_reset_max_sends_per_hour):
+        return PendingPasswordReset(email, None)
+    token = password_reset_store.issue_reset(
+        client,
+        user.id,
+        ttl_seconds=settings.password_reset_token_ttl_seconds,
+        lookup_ttl_seconds=settings.password_reset_lookup_ttl_seconds,
+    )
+    password_reset_store.start_resend_cooldown(
+        client,
+        email,
+        seconds=settings.password_reset_resend_cooldown_seconds,
+    )
+    return PendingPasswordReset(email, _password_reset_link(token))
+
+
+def reset_password(db: Session, client: redis.Redis, payload: PasswordResetRequest) -> None:
+    """Consume the one-time link, set the new credential and drop every session.
+
+    The account is resolved through the lookup record first, so rejecting a new
+    password that equals the current one leaves the link usable for a retry.
+    """
+    user_id = password_reset_store.lookup_reset(client, payload.token)
+    user = dao.get_user(db, user_id) if user_id is not None else None
+    if user is None:
+        raise PasswordResetTokenInvalid("重置链接无效或已过期，请重新获取")
+    if verify_password(payload.new_password, user.password_hash):
+        raise ValidationFailed("新密码不能与当前密码相同")
+    if password_reset_store.consume_reset(client, payload.token) is None:
+        raise PasswordResetTokenInvalid("重置链接无效或已过期，请重新获取")
+    user.password_hash = hash_password(payload.new_password)
+    user.updated_at = _now()
+    db.commit()
+    # A reset link proves mailbox ownership, not identity: drop every old session.
     session_store.revoke_all_sessions(client, user.id)
 
 
