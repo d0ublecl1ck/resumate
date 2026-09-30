@@ -271,6 +271,8 @@ Provenance：`kind`（见 §5 枚举）、`label`、`detail`（string \| null）
 
 ### 4.10 POST /pending-actions/{action_id}/approve
 
+审批是人类动作，仅接受浏览器会话；PAT / Agent 来源返回 403 `FORBIDDEN`。
+
 | 位置 | 字段 | 必填 | 类型 | 说明 |
 | --- | --- | --- | --- | --- |
 | path | `action_id` | 是 | string | `pa_` 前缀 |
@@ -280,7 +282,7 @@ Provenance：`kind`（见 §5 枚举）、`label`、`detail`（string \| null）
 
 ### 4.11 POST /pending-actions/{action_id}/reject
 
-请求同 4.10。响应：PendingActionResponse（`pending → rejected`）。
+请求同 4.10；同样仅接受浏览器会话，PAT / Agent 来源返回 403 `FORBIDDEN`。响应：PendingActionResponse（`pending → rejected`）。
 
 ## 5. 枚举参考
 
@@ -322,7 +324,7 @@ Provenance：`kind`（见 §5 枚举）、`label`、`detail`（string \| null）
 | `INVALID_CREDENTIALS` | 401 | 凭证错误 | 停止并反馈用户 |
 | `TOKEN_REVOKED` | 401 | PAT 已撤销 | 重新签发令牌 |
 | `ACCOUNT_BANNED` | 403 | 账号被封禁 | 停止 |
-| `FORBIDDEN` | 403 | 缺少权限码 | 停止并报告 |
+| `FORBIDDEN` | 403 | 缺少权限码；或 PAT / Agent 来源调用 approve / reject | 停止并报告；审批请用户在自己的浏览器会话完成 |
 | `SCOPE_INSUFFICIENT` | 403 | PAT 的 scope 不含端点权限码 | 停止，不得扩权；补 `resume:read` / `resume:write` |
 
 ## 7. 幂等键速查

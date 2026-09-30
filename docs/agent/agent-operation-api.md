@@ -17,12 +17,12 @@ P0 让外部 Agent 通过公共 REST API 完成一次最小闭环：创建轮次
 5. **服务端固化执行模式**（approval / full_access）。
 6. **能力发现**补充 agent.* 能力。
 
-不包含（后续工单）：PAT Bearer 鉴权与 Scope 强制、MCP Server、TS/Python SDK、Webhook、manual-edits、SSE 流式事件、Profile 选材生成。
+不包含（后续工单）：MCP Server、TS/Python SDK、Webhook、manual-edits、SSE 流式事件、Profile 选材生成（PAT Bearer 鉴权与 Scope 强制已并入 §13）。
 
 ## 2. 传输约定
 
 - 请求与响应 JSON 一律 camelCase；后端 Pydantic 用 snake_case 字段 + ApiModel 别名。
-- 鉴权沿用现有 HttpOnly 会话 Cookie（本期不引入 Bearer）。
+- 鉴权支持 HttpOnly 会话 Cookie 与 `Authorization: Bearer rsm_pat_...`（PAT）两条路径，Bearer 优先；见 §13。
 - 业务失败统一返回错误信封 **{ code, message, latestVersionId? }**。
 - 资源标识前缀：**turn_**、**pa_**（PendingAction）、**res_**、**ver_**。
 
@@ -131,7 +131,7 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 
 ## 6. 端点
 
-所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。
+所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。approve / reject 另要求人类会话：PAT / agent 来源一律 403 **FORBIDDEN**（见 §9）。
 
 | 方法 | 路径 | 权限 | 说明 |
 | --- | --- | --- | --- |
@@ -144,8 +144,8 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 | POST | /turns/{turn_id}/patches:apply | resume:write | 写入 Working Copy；approval 需已 approved 的 pendingActionId |
 | GET | /turns/{turn_id}/pending-actions | resume:read | 列出轮次待办 |
 | GET | /resumes/{resume_id}/working-document | resume:read | 读取 Working Copy 状态 |
-| POST | /pending-actions/{action_id}/approve | resume:write | pending → approved |
-| POST | /pending-actions/{action_id}/reject | resume:write | pending → rejected |
+| POST | /pending-actions/{action_id}/approve | resume:write + 人类会话 | pending → approved；PAT 403 FORBIDDEN |
+| POST | /pending-actions/{action_id}/reject | resume:write + 人类会话 | pending → rejected；PAT 403 FORBIDDEN |
 
 请求/响应体：
 
@@ -173,9 +173,11 @@ Working Copy：首个 apply 时以轮次 baseVersionId 从正式 document 派生
 - finalize 原子提交聚合 Patch + Snapshot + Version + current_version_id；无内容差异不创建版本（C-03）。
 - 同轮次多份 Resume：本期轮次绑定单份 Resume，每轮每份最多一个版本。
 
-## 9. 信任边界（本期限制，必须写进 README/工单）
+## 9. 信任边界
 
-PAT Bearer 鉴权与 Scope 强制不在本期，所有端点使用会话身份 + RBAC。**source、executionMode 由服务端解析**，客户端不能凭参数字段绕过确认：approval 下没有已 approved 的 PendingAction 就不可能 apply。PAT 接入后必须复用同一服务端解析路径。
+PAT Bearer 鉴权与 Scope 强制已实现并并入 §13，所有来源复用同一服务端解析路径，不存在 PAT 旁路。**source、executionMode 由服务端解析**，客户端不能凭参数字段绕过确认：approval 下没有已 approved 的 PendingAction 就不可能 apply。
+
+**审批是人类动作。** approve / reject 只接受人类会话（HttpOnly Cookie）；PAT / agent 来源调用一律 403 `FORBIDDEN`，并按 PAT 审计约定写一条 `purpose=pat_human_session` 的 `denied`。Agent 可以建轮次、预览并读出待办，但必须由用户在自己的浏览器会话里批准或拒绝；`agent-core` 也不再向模型暴露 approve / reject 工具。
 
 ## 10. 后端实现职责（backend/）
 
@@ -238,6 +240,8 @@ agent-core/
 
 审计条数：认证成功先写 allowed；若随后因 scope 被拒再写 denied。即 scope 拒绝的请求共两行（allowed + denied），保留更完整信息。
 
+审批端点附加约束：`POST /pending-actions/{action_id}/approve|reject` 在 scope 通过后仍要求人类会话，PAT 来源 403 `FORBIDDEN` 并写一条 `purpose=pat_human_session` 的 denied，因此 PAT 无法自行批准自己的待办（§9）。
+
 ### 13.3 Scope 与权限
 
 - 允许的 scope 集合为 access/service.py 的 ALLOWED_SCOPES；端点权限码与 scope 同名，按集合成员判断。
@@ -281,7 +285,7 @@ agent-core/
 ## 16. 审计落点（C-10）
 
 - Agent 写操作的审计事实源为「版本 + 轮次」记录：ResumeVersion 经第 14 节补齐 client_id / user_turn_id / execution_mode 后，可从版本追到轮次、客户端与模式；Turn 记录 finalize / cancel 与结果。
-- access_logs 只承载鉴权语义（PAT 认证允许 / 拒绝、Scope 拒绝），不承载业务操作审计。
+- access_logs 只承载鉴权语义（PAT 认证允许 / 拒绝、Scope 拒绝、人类动作来源拒绝），不承载业务操作审计。
 - 不新增独立业务审计表。
 
 ## 17. 模型目录与配置 API（9546b）

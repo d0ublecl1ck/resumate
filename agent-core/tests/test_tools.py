@@ -29,8 +29,6 @@ EXPECTED = {
     "preview_patch",
     "apply_patch",
     "list_pending_actions",
-    "approve_action",
-    "reject_action",
     "get_working_document",
 }
 
@@ -38,6 +36,16 @@ EXPECTED = {
 def test_registry_covers_every_endpoint_tool():
     assert set(TOOLS) == EXPECTED
     assert len(list_tools()) == len(EXPECTED)
+
+
+def test_human_approval_is_not_exposed_as_a_model_tool():
+    """批准与拒绝是用户动作，不能成为模型可调用的工具。"""
+    assert "approve_action" not in TOOLS
+    assert "reject_action" not in TOOLS
+    with pytest.raises(UnknownToolError):
+        get_tool("approve_action")
+    with pytest.raises(UnknownToolError):
+        get_tool("reject_action")
 
 
 def test_every_spec_is_json_serializable_with_object_schema():
