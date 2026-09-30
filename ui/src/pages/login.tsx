@@ -93,6 +93,7 @@ export function LoginPage() {
           <LoginVerificationNotice resend={resendState} onResend={() => void resend({ email: unverifiedEmail })} disabled={submitting} />
         ) : null
       }
+      onForgotPassword={() => navigate("/forgot-password")}
     />
   )
 }

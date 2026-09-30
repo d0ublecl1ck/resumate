@@ -32,6 +32,16 @@ describe("App", () => {
     expect(current[0]).toHaveAccessibleName(/简历库/)
   })
 
+  it("忘记密码路由在未登录时可达", async () => {
+    renderAt("/forgot-password")
+    expect(await screen.findByText("找回密码")).toBeInTheDocument()
+  })
+
+  it("重置密码路由在缺少 token 时展示失效态", async () => {
+    renderAt("/reset-password")
+    expect(await screen.findByText("重置链接已失效")).toBeInTheDocument()
+  })
+
   it("未知路由显示 404 状态块", async () => {
     renderAt("/not-a-route")
     expect(await screen.findByText("未找到该页面")).toBeInTheDocument()

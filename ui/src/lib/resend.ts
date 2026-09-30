@@ -85,11 +85,19 @@ export function useResendMachine<TInput>(
     }
   }
 
+  /** Back to the initial form: used by "use another email" before the machine is reused. */
+  function reset() {
+    setStatus("idle")
+    setErrorText(undefined)
+    setSentEmail(undefined)
+    setCooldown(0)
+  }
+
   const resendState: ResendState = {
     status: cooldown > 0 ? "cooldown" : status,
     cooldownSeconds: cooldown || undefined,
     errorMessage: errorText,
     sentEmail,
   }
-  return { resend, resendState }
+  return { resend, resendState, reset }
 }

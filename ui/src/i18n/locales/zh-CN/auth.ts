@@ -77,6 +77,7 @@ export default {
     submitting: "处理中…",
     switchToRegister: "去注册",
     switchToLogin: "去登录",
+    forgotPassword: "忘记密码？",
     haveAccount: "已经有账号？",
     noAccount: "还没有账号？",
   },
