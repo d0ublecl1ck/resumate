@@ -6,6 +6,7 @@ the PAT itself on the agent operation endpoints.
 
 from datetime import datetime, timedelta, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -83,7 +84,8 @@ def _logs(session_client: TestClient) -> list[dict]:
     return response.json()
 
 
-def test_resume_write_pat_can_create_turn_and_apply_patch(session_clients) -> None:
+def test_resume_write_pat_can_create_turn_but_cannot_self_approve(session_clients) -> None:
+    """审批是人类动作：PAT 能建轮次、能预览，但不能批准自己的待办后落库。"""
     session = session_clients()
     _register(session)
     resume = _create_resume(session)
@@ -103,13 +105,86 @@ def test_resume_write_pat_can_create_turn_and_apply_patch(session_clients) -> No
     pending_id = preview.json()["pendingActionId"]
     assert pending_id.startswith("pa_")
 
-    approved = pat.post(f"/pending-actions/{pending_id}/approve", json={}, headers=headers)
-    assert approved.status_code == 200, approved.text
+    denied = pat.post(f"/pending-actions/{pending_id}/approve", json={}, headers=headers)
+    assert denied.status_code == 403, denied.text
+    assert denied.json()["code"] == "FORBIDDEN"
 
+    # 待办仍是 pending，没有被模型自行批准
+    actions = session.get(f"/turns/{turn['id']}/pending-actions").json()
+    assert [a["state"] for a in actions if a["id"] == pending_id] == ["pending"]
+
+    # 未批准的待办不能 apply
     applied = pat.post(
         f"/turns/{turn['id']}/patches:apply",
         json={"ops": ops, "pendingActionId": pending_id},
         headers=headers,
+    )
+    assert applied.status_code == 409, applied.text
+    assert applied.json()["code"] == "PENDING_ACTION_NOT_APPROVED"
+
+    # 审计：写入 denied，且不写 allowed
+    human_logs = [log for log in _logs(session) if log["purpose"] == "pat_human_session"]
+    assert len(human_logs) == 1
+    assert human_logs[0]["result"] == "denied"
+    assert human_logs[0]["errorCode"] == "FORBIDDEN"
+    assert human_logs[0]["resource"].endswith(f"/pending-actions/{pending_id}/approve")
+    assert not [log for log in human_logs if log["result"] == "allowed"]
+
+
+@pytest.mark.parametrize("decision", ["approve", "reject"])
+def test_pat_cannot_decide_own_pending_action(session_clients, decision: str) -> None:
+    """approve 与 reject 都是人类动作：PAT 来源一律 403，待办保持 pending。"""
+    session = session_clients()
+    _register(session)
+    resume = _create_resume(session)
+    token = _issue(session, ["resume:write"])
+    headers = _bearer(token["secretOnce"])
+    pat = session_clients()
+
+    created = pat.post(f"/resumes/{resume['id']}/turns", json={}, headers=headers)
+    assert created.status_code == 201, created.text
+    turn = created.json()
+    ops = [_upsert_section_op()]
+    preview = pat.post(f"/turns/{turn['id']}/patches:preview", json={"ops": ops}, headers=headers)
+    assert preview.status_code == 200, preview.text
+    pending_id = preview.json()["pendingActionId"]
+
+    denied = pat.post(f"/pending-actions/{pending_id}/{decision}", json={}, headers=headers)
+    assert denied.status_code == 403, denied.text
+    assert denied.json()["code"] == "FORBIDDEN"
+
+    actions = session.get(f"/turns/{turn['id']}/pending-actions").json()
+    assert [a["state"] for a in actions if a["id"] == pending_id] == ["pending"]
+
+    human_logs = [log for log in _logs(session) if log["purpose"] == "pat_human_session"]
+    assert len(human_logs) == 1
+    assert human_logs[0]["result"] == "denied"
+    assert human_logs[0]["errorCode"] == "FORBIDDEN"
+    assert human_logs[0]["resource"].endswith(f"/pending-actions/{pending_id}/{decision}")
+    assert not [log for log in human_logs if log["result"] == "allowed"]
+
+
+def test_cookie_session_can_still_approve_pending_action(session_clients) -> None:
+    """正向：浏览器 cookie 会话的用户审批不受影响，仍能 approve 并 apply。"""
+    session = session_clients()
+    _register(session)
+    resume = _create_resume(session)
+    created = session.post(f"/resumes/{resume['id']}/turns", json={})
+    assert created.status_code == 201, created.text
+    turn = created.json()
+
+    ops = [_upsert_section_op()]
+    preview = session.post(f"/turns/{turn['id']}/patches:preview", json={"ops": ops})
+    assert preview.status_code == 200, preview.text
+    pending_id = preview.json()["pendingActionId"]
+
+    approved = session.post(f"/pending-actions/{pending_id}/approve", json={})
+    assert approved.status_code == 200, approved.text
+    assert approved.json()["state"] == "approved"
+
+    applied = session.post(
+        f"/turns/{turn['id']}/patches:apply",
+        json={"ops": ops, "pendingActionId": pending_id},
     )
     assert applied.status_code == 200, applied.text
     assert applied.json()["applied"] is True

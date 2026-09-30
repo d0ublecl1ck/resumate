@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser
-from app.modules.auth.deps import require_permission
+from app.modules.auth.deps import require_human_session, require_permission
 
 from . import service
 from .schemas import (
@@ -117,6 +117,7 @@ def approve_action(
     payload: PendingActionDecision | None = None,
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_permission("resume:write")),
+    _human: CurrentUser = Depends(require_human_session),
 ) -> PendingActionResponse:
     return service.decide_action(db, user, action_id, approve=True)
 
@@ -127,5 +128,6 @@ def reject_action(
     payload: PendingActionDecision | None = None,
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_permission("resume:write")),
+    _human: CurrentUser = Depends(require_human_session),
 ) -> PendingActionResponse:
     return service.decide_action(db, user, action_id, approve=False)

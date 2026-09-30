@@ -24,6 +24,7 @@ from .rbac import PERMISSION_CODES
 
 PAT_AUTH_PURPOSE = "pat_auth"
 PAT_SCOPE_PURPOSE = "pat_scope"
+PAT_HUMAN_SESSION_PURPOSE = "pat_human_session"
 _UNKNOWN_OWNER = "unknown"
 _UNKNOWN_CLIENT = "unknown"
 
@@ -253,3 +254,30 @@ def require_permission(code: str) -> Callable[..., CurrentUser]:
     dependency.__required_permission__ = code  # type: ignore[attr-defined]
     dependency.__name__ = "require_" + code.replace(":", "_")
     return dependency
+
+
+def require_human_session(
+    request: Request,
+    user: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CurrentUser:
+    """Dependency: only a browser (cookie) session may pass.
+
+    Approval and rejection are human actions that close the confirmation loop.
+    A PAT is a delegated, long-lived credential an Agent can hold, so a PAT
+    caller must never decide its own pending action. The request is denied and
+    audited instead of being silently accepted.
+    """
+    if user.auth_kind == "pat":
+        _record_pat_log(
+            db,
+            owner_id=user.id,
+            client_id=user.pat_id or _UNKNOWN_CLIENT,
+            scope="",
+            resource=request.url.path,
+            purpose=PAT_HUMAN_SESSION_PURPOSE,
+            result="denied",
+            error_code=ErrorCode.FORBIDDEN,
+        )
+        raise Forbidden("审批动作仅限人类会话，Agent 令牌不可调用")
+    return user

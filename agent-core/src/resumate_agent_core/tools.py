@@ -207,14 +207,6 @@ def _list_pending_actions(client: ResumateClient, args: Mapping[str, Any]) -> An
     return _wire(client.list_pending_actions(_require(args, "turn_id")))
 
 
-def _approve_action(client: ResumateClient, args: Mapping[str, Any]) -> Any:
-    return _wire(client.approve_action(_require(args, "action_id")))
-
-
-def _reject_action(client: ResumateClient, args: Mapping[str, Any]) -> Any:
-    return _wire(client.reject_action(_require(args, "action_id")))
-
-
 def _get_working_document(client: ResumateClient, args: Mapping[str, Any]) -> Any:
     return _wire(client.get_working_document(_require(args, "resume_id")))
 
@@ -344,28 +336,6 @@ TOOLS: dict[str, Tool] = {
             "additionalProperties": False,
         },
         handler=_list_pending_actions,
-    ),
-    "approve_action": Tool(
-        name="approve_action",
-        description="Move a pending action from pending to approved.",
-        input_schema={
-            "type": "object",
-            "properties": {"action_id": _ACTION_ID},
-            "required": ["action_id"],
-            "additionalProperties": False,
-        },
-        handler=_approve_action,
-    ),
-    "reject_action": Tool(
-        name="reject_action",
-        description="Reject a pending action.",
-        input_schema={
-            "type": "object",
-            "properties": {"action_id": _ACTION_ID},
-            "required": ["action_id"],
-            "additionalProperties": False,
-        },
-        handler=_reject_action,
     ),
     "get_working_document": Tool(
         name="get_working_document",

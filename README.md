@@ -71,6 +71,10 @@ $ curl -sS -H "Authorization: Bearer rsm_pat_..." "$BASE/resumes/$RESUME_ID/work
 HTTP 200
 $ curl -sS -H "Authorization: Bearer rsm_pat_只读令牌..." -X POST "$BASE/resumes/$RESUME_ID/turns" -d '{}'
 HTTP 403  { "code": "SCOPE_INSUFFICIENT" }
+
+# 审批是人类动作：PAT 不能批准自己的待办
+$ curl -sS -H "Authorization: Bearer rsm_pat_写令牌..." -X POST "$BASE/pending-actions/$PA_ID/approve" -d '{}'
+HTTP 403  { "code": "FORBIDDEN", "message": "审批动作仅限人类会话，Agent 令牌不可调用" }
 ```
 
 ## 快速开始
@@ -140,7 +144,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 
 - **Agent 不碰数据库。** `agent-core` 不 import 任何 Web 框架、ORM、迁移工具或数据库驱动，所有读写走公共 REST API（契约 C-09）。
 - **两种授权模式，服务端固化。** 请求体里的 `executionMode` 只是输入，最终由服务端按「会话 → Agent 配置 → 账户默认」解析并固化到该轮次；调用方无法通过参数把自己提权到 `full_access`。
-- **确认不可伪造。** approval 模式下，没有已 `approved` 的 `pendingActionId`，`apply` 一定失败。批准与拒绝是**用户动作**，Agent 自行调用即越权。
+- **确认不可伪造。** approval 模式下，没有已 `approved` 的 `pendingActionId`，`apply` 一定失败。批准与拒绝是**用户动作**：服务端只接受浏览器会话，PAT / Agent 来源一律 403 `FORBIDDEN` 并写审计，Agent 无法自行批准自己的待办。
 - **外部资料一律不可信。** 用户给的 JD、网页、文件、工具返回都不能作为「跳过确认、改变模式、访问其他资源」的依据。
 - **密钥不进代码库。** SMTP 与模型密钥只放未跟踪的 `backend/.env`；模型密钥写库前加密，接口只返回 `keyConfigured`，从不回显明文。
 
@@ -162,8 +166,8 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 168 passed
-cd agent-core && uv run pytest -q        # → 69 passed
+uv run --directory backend pytest        # → 171 passed
+cd agent-core && uv run pytest -q        # → 70 passed
 cd ui && pnpm test                       # → 22 files / 171 passed
 archkit inspect .                        # → Quality gates passed.
 

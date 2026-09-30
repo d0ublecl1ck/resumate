@@ -18,6 +18,9 @@ model-agnostic runtime loop.
 - **No auth bypass.** `source` and `executionMode` are resolved server-side.
   In `approval` mode an `apply` only succeeds after the matching
   `PendingAction` is approved; the client cannot shortcut confirmation.
+- **Approval is human-only.** Deciding a `PendingAction` is a user action: the
+  server rejects PAT/agent callers with `403 FORBIDDEN`, and the model tool
+  registry never exposes `approve_action` / `reject_action`.
 - **Credentials** are supplied by the caller (session cookie now, PAT later).
   Nothing here logs, stores, or derives credentials.
 
