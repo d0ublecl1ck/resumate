@@ -4,15 +4,16 @@ import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it } from "vitest"
 import { SettingsForm } from "@/components/settings-form"
 import { AGENT_CONFIG, MODEL_CONFIG, TEMPLATES, USER_PREFERENCES } from "@/lib/content"
+import type { ModelConfig } from "@/lib/types"
 import { server } from "@/test-server"
 
 afterEach(cleanup)
 
-function renderForm() {
+function renderForm(model: ModelConfig = MODEL_CONFIG) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <SettingsForm agent={AGENT_CONFIG} model={MODEL_CONFIG} prefs={USER_PREFERENCES} templates={TEMPLATES} />
+      <SettingsForm agent={AGENT_CONFIG} model={model} prefs={USER_PREFERENCES} templates={TEMPLATES} />
     </QueryClientProvider>,
   )
 }
@@ -50,6 +51,22 @@ describe("SettingsForm", () => {
     expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
+  })
+
+  it("模型未配置时在 Agent 分区引导去配置模型", async () => {
+    renderForm({ ...MODEL_CONFIG, keyConfigured: false })
+
+    expect(await screen.findByText("先配置一个模型")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "去设置模型" })).toBeInTheDocument()
+  })
+
+  it("运行体未接入时在 Agent 分区如实说明", async () => {
+    renderForm()
+
+    expect(await screen.findByText("AI 能力尚未接入")).toBeInTheDocument()
+    expect(
+      screen.getByText("模型已经配置好，但还没有任何运行体进程在处理 Agent 请求。在你看到这条状态期间，对话与 Run 都不会执行。"),
+    ).toBeInTheDocument()
   })
 
   it("切换 provider 后从对应目录选择 model 并保存", async () => {

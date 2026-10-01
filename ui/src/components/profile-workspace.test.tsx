@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { MemoryRouter } from "react-router-dom"
@@ -7,10 +8,13 @@ import { PROFILE } from "@/lib/content"
 afterEach(cleanup)
 
 function renderProfile() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter>
-      <ProfileWorkspace profile={PROFILE} />
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <ProfileWorkspace profile={PROFILE} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
