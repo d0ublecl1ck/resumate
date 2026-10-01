@@ -440,6 +440,37 @@
           </p>
         </div>
       </section>
+      <section class="panel" id="session-history" aria-label="设计补充：历史会话列表与详情" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · 历史会话（SCR-004 侧栏入口）</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            历史会话不在首页原型范围内：列表与详情两态在此登记，视觉沿用既有令牌
+            （card-soft 卡片 / primary 主按钮 / coral 错误色 / cobalt 强调色 / font-serif 标题 / rounded-lg / 48px 触控高度），
+            品牌只到语法层 + mascot="badge"（C 档），不新增页面视觉规则，不使用吉祥物角色层。
+          </p>
+          <p style="margin:12px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            已知限制：会话表没有 title / summary 字段，列表项拿不到标题，因此用「最近活跃时间 + 短 ID」代替标题，
+            并在详情页如实写明这个口径；不编造后端没有的字段。
+          </p>
+          <ul class="checklist" style="margin-top:16px" aria-label="历史会话：列表状态">
+            <li class="check-item done"><span class="label">有会话：每行「最近活跃时间 · 短 ID」，当前项 cobalt 高亮，整行可点（48px 触控高度）</span><span class="tag">GET /sessions</span></li>
+            <li class="check-item"><span class="label">空态：没有任何会话，说明运行体跑过一次之后才会出现</span><span class="tag">empty · badge</span></li>
+            <li class="check-item"><span class="label">加载中：只读加载态，不展示操作</span><span class="tag">loading · badge</span></li>
+            <li class="check-item"><span class="label">出错：说明失败原因 + 可重试的下一步</span><span class="tag">error · coral · alert</span></li>
+          </ul>
+          <ul class="checklist" style="margin-top:16px" aria-label="历史会话：详情状态">
+            <li class="check-item done"><span class="label">消息流：system / user / assistant / tool 四类角色可见，tool 调用单独一行标注</span><span class="tag">GET /sessions/{id}/messages</span></li>
+            <li class="check-item done"><span class="label">压缩摘要：以 [compacted-history] 开头的 system 消息渲染成独立的「已压缩的历史」块（cobalt 边框 + 说明），不与普通消息混淆，也不暴露原始标记</span><span class="tag">compaction</span></li>
+            <li class="check-item"><span class="label">空会话：该会话还没有消息</span><span class="tag">empty · badge</span></li>
+            <li class="check-item"><span class="label">加载中 / 出错：同列表两态</span><span class="tag">loading / error</span></li>
+            <li class="check-item"><span class="label">seq 只作为元信息展示，不当连续计数（压缩会重锚 base，留下空档）</span><span class="tag">已知语义</span></li>
+          </ul>
+          <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            落点（Storybook 先行，尚未接线）：ui/src/components/session-history.tsx（SessionList / SessionDetail），
+            故事 Pages/SessionHistory 共 9 个。本轮不动 App.tsx、路由与 lib/api.ts 的真实调用。
+          </p>
+        </div>
+      </section>
     </main>
   </div>
 
