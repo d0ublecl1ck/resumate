@@ -62,15 +62,18 @@ started_at: 2026-10-01T01:37:55.995Z
 
 ## Verification
 
-```
-pnpm -C ui test
-→ Test Files 28 passed (28) / Tests 215 passed (215)
+在 worktree `resumate-wt-history` 实际执行，输出原样摘录：
 
-pnpm -C ui build-storybook
-→ Storybook build completed successfully
+- `pnpm -C ui test`：`Test Files 28 passed (28)` / `Tests 215 passed (215)`。
+- `pnpm -C ui build-storybook`：`Storybook build completed successfully`（输出目录 `ui/storybook-static`）。
+- `archkit inspect .`：`Quality gates passed.`；首轮曾报 5 处 ui-i18n 硬编码中文，全部是会话消息与后端错误详情（用户内容，按 US-13.4 不翻译），逐行加 `i18n-allow` 豁免后通过。
+- story 测试首轮：`1 failed | 9 passed`，失败原因是本地时区（UTC+8）下两个会话落在同一天导致 `getByText` 命中多处；改为 `getAllByText` 后 `10 passed`。
+- 影响面：只新增 `ui/src/components/session-history.tsx`、`session-history.stories.tsx`、`session-history.stories.test.tsx`、`ui/src/i18n/locales/{zh-CN,en}/sessionHistory.ts` 与两个 locale index 注册、原型面板、README 口径；未改 `App.tsx` / 路由 / `lib/api.ts` / `run-panel` / `agent-onboarding`。
 
-archkit inspect .
-→ Quality gates passed.
+```bash
+pnpm -C ui test            # → 28 files / 215 passed
+pnpm -C ui build-storybook # → Storybook build completed successfully
+archkit inspect .          # → Quality gates passed.
 ```
 
 ## Related ADRs
