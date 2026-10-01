@@ -16,10 +16,11 @@ crash re-sends the same seq values and the server absorbs them on
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from .client import ResumateClient
+from .compaction import SUMMARY_ROLE
 from .errors import ApiClientError
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only import avoids a cycle
@@ -65,6 +66,32 @@ class SessionJournal:
         """Continue after the session's current last seq, or start at zero."""
         rows = self._client.list_session_messages(session_id)
         return rows[-1].seq if rows else 0
+
+    def record_compaction(self, marker_wire: Mapping[str, Any], *, context_length: int) -> int | None:
+        """Append the compaction marker and re-anchor the seq cursor.
+
+        Compaction shrinks the context, so the old base/recorded pair no longer
+        describes it: the marker takes the next seq and becomes the new base,
+        while recorded counts the compacted context. The resulting gap in seq is
+        intentional — seq stays strictly increasing and never reuses a stored row.
+        Appends stay best-effort: a failure still moves the cursor so later
+        history is never written into an existing slot.
+        """
+        if self.session_id is None:
+            return None
+        seq = self._base + self._recorded + 1
+        self._base = seq
+        self._recorded = max(0, context_length)
+        try:
+            self._client.append_session_message(
+                self.session_id,
+                seq=seq,
+                role=SUMMARY_ROLE,
+                content=dict(marker_wire),
+            )
+        except ApiClientError:
+            return None
+        return seq
 
     def record(self, messages: Sequence[Message]) -> int:
         """Mirror messages the session does not have yet; return the new count.

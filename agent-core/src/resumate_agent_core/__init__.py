@@ -6,6 +6,7 @@ never touches the business database (contract C-09).
 """
 
 from .checkpoint import CheckpointStore, build_run_state, messages_from_run_state
+from .compaction import CompactionPolicy, estimate_context_tokens, should_compact
 from .client import ResumateClient
 from .config import AgentCoreSettings
 from .errors import ApiClientError, ErrorCode, MalformedResponseError, TransportError
@@ -48,6 +49,7 @@ from .runtime import (
     AgentRuntime,
     BudgetExceeded,
     CancellationToken,
+    CompactionEvent,
     ErrorEvent,
     FinalizeEvent,
     Message,
@@ -85,6 +87,8 @@ __all__ = [
     "CancellationToken",
     "CapabilityResponse",
     "CheckpointStore",
+    "CompactionEvent",
+    "CompactionPolicy",
     "DiffItem",
     "ErrorCode",
     "ErrorEvent",
@@ -135,6 +139,7 @@ __all__ = [
     "build_patch",
     "build_run_state",
     "call_tool",
+    "estimate_context_tokens",
     "get_tool",
     "list_tools",
     "make_idempotency_key",
@@ -144,6 +149,7 @@ __all__ = [
     "remove_entry",
     "remove_section",
     "set_basics",
+    "should_compact",
     "tool_specs",
     "upsert_entry",
     "upsert_section",
