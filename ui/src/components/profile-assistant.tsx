@@ -14,6 +14,7 @@ import type {
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "react-router-dom"
 import { getModelConfig, parseProfileInput, createFact, updateFact, updateBasics } from "@/lib/api"
+import { useRuntimeStatus } from "@/lib/runtime"
 import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
 import { FACT_TYPE_ORDER, factTypeLabel } from "@/lib/profile"
 import { EvidenceBadge } from "@/components/kit/badges"
@@ -47,7 +48,12 @@ export function ProfileAssistant({
   const { t } = useTranslation()
   const navigate = useNavigate()
   const modelQuery = useQuery({ queryKey: ["model-config"], queryFn: getModelConfig, enabled: open })
-  const availability = agentAvailabilityFromModelConfig(modelQuery.data ?? { keyConfigured: false })
+  const runtimeQuery = useRuntimeStatus(open)
+  const availability = agentAvailabilityFromModelConfig(
+    modelQuery.data ?? { keyConfigured: false },
+    runtimeQuery.data,
+  )
+  const checkingAvailability = open && (modelQuery.isPending || runtimeQuery.isPending)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [thinking, setThinking] = useState(false)
@@ -168,7 +174,7 @@ export function ProfileAssistant({
           </button>
         </div>
 
-        {availability !== "available" ? (
+        {checkingAvailability ? null : availability !== "available" ? (
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <AgentAvailabilityNotice state={availability} placement="panel" onAction={() => navigate("/settings")} />
           </div>

@@ -1,5 +1,5 @@
-// 个人资料助手抽屉的 Agent 可用性引导：还差一步 / 暂不可用。
-// 状态来源：GET /models/config 的 keyConfigured；就绪信号尚不存在。
+// 个人资料助手抽屉的 Agent 可用性引导：还差一步 / 暂不可用 / 可以开始。
+// 状态来源：GET /models/config 的 keyConfigured + GET /agent/runtime 的 available。
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen } from "@testing-library/react"
@@ -34,7 +34,8 @@ describe("ProfileAssistant 的 Agent 可用性引导", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
-  it("模型已配置但暂不可用时如实说明，且不提供对话输入", async () => {
+  it("模型已配置但后端无法启动时如实说明，且不提供对话输入", async () => {
+    server.use(http.get("/api/agent/runtime", () => HttpResponse.json({ command: "resumate-agent", available: false })))
     renderAssistant()
 
     expect(await screen.findByText("助手暂时不可用")).toBeInTheDocument()
@@ -44,5 +45,12 @@ describe("ProfileAssistant 的 Agent 可用性引导", () => {
     expect(screen.queryByText(/界面不会假装能跑/)).not.toBeInTheDocument()
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "开始聊聊" })).not.toBeInTheDocument()
+  })
+
+  it("模型已配置且后端可启动时显示对话输入，不再说暂不可用", async () => {
+    renderAssistant()
+
+    expect(await screen.findByRole("textbox")).toBeInTheDocument()
+    expect(screen.queryByText("助手暂时不可用")).not.toBeInTheDocument()
   })
 })

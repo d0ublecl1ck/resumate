@@ -543,6 +543,12 @@ export interface ModelConfig {
   lastTest?: ModelTestResult
 }
 
+/** 运行体就绪探测（GET /agent/runtime）：available=false 时无法在需要时启动运行体。 */
+export interface RuntimeStatus {
+  command: string
+  available: boolean
+}
+
 export interface ModelConfigUpdate {
   provider?: string
   endpoint?: string

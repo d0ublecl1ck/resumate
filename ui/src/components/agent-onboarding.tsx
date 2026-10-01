@@ -4,7 +4,7 @@
 
 import { useTranslation } from "react-i18next"
 import { MascotState, StampBadge, type MascotStateKind, type StampTone } from "@/components/brand"
-import type { ModelConfig } from "@/lib/types"
+import type { ModelConfig, RuntimeStatus } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export type AgentAvailability = "model_missing" | "runtime_offline" | "available"
@@ -69,7 +69,14 @@ export function AgentAvailabilityNotice({
   )
 }
 
-/** 当前只有模型凭证这一个可用信号；运行体就绪信号落地后在这里合并。 */
-export function agentAvailabilityFromModelConfig(config: Pick<ModelConfig, "keyConfigured">): AgentAvailability {
-  return config.keyConfigured ? "runtime_offline" : "model_missing"
+/**
+ * 把模型凭证与运行体就绪信号合并成三态。
+ * runtime 缺失（尚未探测到）按未就绪处理；available 只表示「需要时能启动」，不代表已有常驻进程。
+ */
+export function agentAvailabilityFromModelConfig(
+  config: Pick<ModelConfig, "keyConfigured">,
+  runtime?: Pick<RuntimeStatus, "available">,
+): AgentAvailability {
+  if (!config.keyConfigured) return "model_missing"
+  return runtime?.available ? "available" : "runtime_offline"
 }

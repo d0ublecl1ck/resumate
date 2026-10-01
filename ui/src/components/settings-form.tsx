@@ -10,6 +10,7 @@ import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelCon
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
+import { useRuntimeStatus } from "@/lib/runtime"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
 
@@ -117,6 +118,7 @@ export function SettingsForm({
 
   // 模型目录（契约 §17）：provider / model 只从只读目录选择；目录失败时保留已保存值。
   const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: () => getModelCatalog() })
+  const runtimeQuery = useRuntimeStatus()
   const catalogProviders = catalogQuery.data?.providers ?? []
   const catalogSource = catalogQuery.data?.source
   const selectedProvider = catalogProviders.find((item) => item.id === provider)
@@ -145,12 +147,14 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <Section title={t("settings.agent.title")} hint={t("settings.agent.hint")}>
-        <AgentAvailabilityNotice
-          state={agentAvailabilityFromModelConfig(model)}
-          placement="entry"
-          className="mb-4"
-          onAction={() => document.getElementById("settings-model-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-        />
+        {model.keyConfigured && runtimeQuery.isPending ? null : (
+          <AgentAvailabilityNotice
+            state={agentAvailabilityFromModelConfig(model, runtimeQuery.data)}
+            placement="entry"
+            className="mb-4"
+            onAction={() => document.getElementById("settings-model-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          />
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.currentRun")}</p>

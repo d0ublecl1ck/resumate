@@ -244,6 +244,7 @@ export const handlers = [
     return HttpResponse.json({ ...USER_PREFERENCES, ...patch })
   }),
   http.get("/api/agent/config", () => HttpResponse.json(AGENT_CONFIG)),
+  http.get("/api/agent/runtime", () => HttpResponse.json({ command: "resumate-agent", available: true })),
   http.patch("/api/agent/config", async ({ request }) => {
     const patch = (await request.json()) as Record<string, unknown>
     return HttpResponse.json({ ...AGENT_CONFIG, ...patch })
