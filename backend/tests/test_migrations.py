@@ -19,7 +19,14 @@ import app.core.db as core_db
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 MIGRATIONS_DIR = BACKEND_DIR / "migrations"
-AGENT_TABLES = ("agent_turns", "agent_pending_actions", "agent_operations")
+AGENT_TABLES = (
+    "agent_turns",
+    "agent_pending_actions",
+    "agent_operations",
+    "agent_sessions",
+    "agent_session_messages",
+)
+AGENT_TURN_COLUMNS = ("session_id", "run_state", "state_version")
 WORKING_COPY_COLUMNS = (
     "working_document",
     "working_base_version_id",
@@ -50,6 +57,8 @@ def test_alembic_upgrade_head_on_sqlite(tmp_path: Path, monkeypatch: pytest.Monk
     assert set(AGENT_TABLES) <= tables
     resume_columns = {column["name"] for column in inspector.get_columns("resumes")}
     assert set(WORKING_COPY_COLUMNS) <= resume_columns
+    turn_columns = {column["name"] for column in inspector.get_columns("agent_turns")}
+    assert set(AGENT_TURN_COLUMNS) <= turn_columns
 
     # Resolve the latest revision from migrations/versions instead of hardcoding it.
     expected_head = ScriptDirectory.from_config(config).get_current_head()

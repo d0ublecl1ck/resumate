@@ -19,13 +19,14 @@ from app.shared.errors import (
     PendingActionStale,
     RebaseConflict,
     ResourceNotFound,
+    RunStateConflict,
     TurnAlreadyClosed,
     TurnNotOpen,
     ValidationFailed,
 )
 
 from . import dao, patch, rebase
-from .models import AgentOperation, AgentTurn, PendingAction
+from .models import AgentOperation, AgentSession, AgentSessionMessage, AgentTurn, PendingAction
 from .schemas import (
     DiffItem,
     PatchApplyRequest,
@@ -34,6 +35,11 @@ from .schemas import (
     PatchRequest,
     PatchValidationResponse,
     PendingActionResponse,
+    RunStateResponse,
+    RunStateUpdateRequest,
+    SessionMessageCreateRequest,
+    SessionMessageResponse,
+    SessionResponse,
     TurnCancelRequest,
     TurnCreateRequest,
     TurnFinalizeRequest,
@@ -66,6 +72,19 @@ def _require_turn(db: Session, owner_id: str, turn_id: str) -> AgentTurn:
 def _require_open(turn: AgentTurn) -> None:
     if turn.state != "open":
         raise TurnAlreadyClosed("轮次已关闭，不能再修改")
+
+
+def _require_session(db: Session, owner_id: str, session_id: str) -> AgentSession:
+    session = dao.get_session(db, session_id)
+    if session is None or session.owner_id != owner_id:
+        raise ResourceNotFound(f"会话 {session_id} 不存在")
+    return session
+
+
+def _touch_session(session: AgentSession) -> None:
+    now = _now()
+    session.updated_at = now
+    session.last_active_at = now
 
 
 def _resolve_mode(db: Session, user: CurrentUser, requested: str | None) -> tuple[str, str]:
@@ -260,6 +279,7 @@ def _turn_response(db: Session, turn: AgentTurn, *, base_rebased: bool = False) 
         mode_source=turn.mode_source,
         state=turn.state,
         base_version_id=turn.base_version_id,
+        session_id=turn.session_id,
         message=turn.message,
         created_at=turn.created_at,
         closed_at=turn.closed_at,
@@ -343,6 +363,7 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         _close_open_turn(db, open_turn, user)
     if payload.base_version_id is not None and payload.base_version_id != resume.current_version_id:
         raise BaseVersionStale("简历已产生新版本，请基于最新版本重试", latest_version_id=resume.current_version_id)
+    session = _require_session(db, user.id, payload.session_id) if payload.session_id else None
     mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
     if user.auth_kind == "pat":
         # The PAT fixes the client identity and the turn is always agent-sourced;
@@ -362,10 +383,13 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         mode_source=mode_source,
         state="open",
         base_version_id=resume.current_version_id,
+        session_id=session.id if session is not None else None,
         message=payload.message,
         result_message="",
         created_at=_now(),
     )
+    if session is not None:
+        _touch_session(session)
     dao.add_turn(db, turn)
     db.commit()
     db.refresh(turn)
@@ -601,3 +625,114 @@ def get_working_document(db: Session, user: CurrentUser, resume_id: str) -> Work
         working_revision=resume.working_revision or 0,
         dirty=resume_service.working_copy_is_dirty(resume),
     )
+
+
+# --- sessions, messages and run checkpoints (issue 9d29a) -----------------------
+
+
+def _session_response(session: AgentSession) -> SessionResponse:
+    return SessionResponse(
+        id=session.id,
+        created_at=session.created_at,
+        updated_at=session.updated_at,
+        last_active_at=session.last_active_at,
+    )
+
+
+def _message_response(message: AgentSessionMessage) -> SessionMessageResponse:
+    return SessionMessageResponse(
+        id=message.id,
+        session_id=message.session_id,
+        seq=message.seq,
+        role=message.role,
+        content=message.content,
+        created_at=message.created_at,
+    )
+
+
+def _run_state_response(turn: AgentTurn) -> RunStateResponse:
+    return RunStateResponse(
+        turn_id=turn.id,
+        run_state=turn.run_state or {},
+        state_version=turn.state_version or 0,
+    )
+
+
+def create_session(db: Session, user: CurrentUser) -> SessionResponse:
+    now = _now()
+    session = AgentSession(
+        id=_new_id("sess"),
+        owner_id=user.id,
+        created_at=now,
+        updated_at=now,
+        last_active_at=now,
+    )
+    dao.add_session(db, session)
+    db.commit()
+    db.refresh(session)
+    return _session_response(session)
+
+
+def list_sessions(db: Session, user: CurrentUser) -> list[SessionResponse]:
+    return [_session_response(session) for session in dao.list_sessions(db, user.id)]
+
+
+def list_session_messages(
+    db: Session, user: CurrentUser, session_id: str, after_seq: int = 0
+) -> list[SessionMessageResponse]:
+    session = _require_session(db, user.id, session_id)
+    return [_message_response(message) for message in dao.list_messages(db, session.id, after_seq)]
+
+
+def append_session_message(
+    db: Session, user: CurrentUser, session_id: str, payload: SessionMessageCreateRequest
+) -> SessionMessageResponse:
+    """Append a message, idempotent on (session_id, seq).
+
+    The seq is the identity of a message inside a session, so a repeat of the
+    same seq returns the stored row instead of creating a duplicate; a client
+    that re-sends its checkpoint cannot corrupt the ordered history.
+    """
+    session = _require_session(db, user.id, session_id)
+    existing = dao.get_message_by_seq(db, session.id, payload.seq)
+    if existing is not None:
+        return _message_response(existing)
+    message = AgentSessionMessage(
+        id=_new_id("msg"),
+        session_id=session.id,
+        seq=payload.seq,
+        role=payload.role,
+        content=payload.content,
+        created_at=_now(),
+    )
+    dao.add_message(db, message)
+    _touch_session(session)
+    db.commit()
+    db.refresh(message)
+    return _message_response(message)
+
+
+def get_turn_state(db: Session, user: CurrentUser, turn_id: str) -> RunStateResponse:
+    return _run_state_response(_require_turn(db, user.id, turn_id))
+
+
+def update_turn_state(
+    db: Session, user: CurrentUser, turn_id: str, payload: RunStateUpdateRequest
+) -> RunStateResponse:
+    """Write the run checkpoint with an optimistic-lock version check.
+
+    The client passes the state_version it last read; a mismatch means another
+    writer advanced the checkpoint, so the write is rejected instead of
+    silently overwriting newer state.
+    """
+    turn = _require_turn(db, user.id, turn_id)
+    current = turn.state_version or 0
+    if payload.state_version != current:
+        raise RunStateConflict(
+            f"run 状态版本不匹配：当前 {current}，收到 {payload.state_version}"
+        )
+    turn.run_state = payload.run_state
+    turn.state_version = current + 1
+    db.commit()
+    db.refresh(turn)
+    return _run_state_response(turn)

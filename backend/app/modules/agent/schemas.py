@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Literal, Union
+from typing import Annotated, Any, Literal, Union
 
 from pydantic import Field
 
@@ -146,6 +146,7 @@ class UserTurnResponse(ApiModel):
     mode_source: ModeSource
     state: TurnState
     base_version_id: str | None
+    session_id: str | None = None
     message: str
     created_at: datetime
     closed_at: datetime | None = None
@@ -170,6 +171,7 @@ class TurnCreateRequest(ApiModel):
     execution_mode: ExecutionMode | None = None
     client_id: str | None = Field(default=None, max_length=64)
     source: TurnSource | None = None
+    session_id: str | None = Field(default=None, max_length=36)
     message: str = Field(default="", max_length=1000)
 
 
@@ -181,6 +183,49 @@ class TurnFinalizeRequest(ApiModel):
 class TurnCancelRequest(ApiModel):
     idempotency_key: str | None = Field(default=None, max_length=200)
     reason: str = Field(default="", max_length=500)
+
+
+# --- sessions, messages and run checkpoints (issue 9d29a) ----------------------
+
+
+MessageRole = Literal["system", "user", "assistant", "tool"]
+
+
+class SessionCreateRequest(ApiModel):
+    """POST /sessions accepts an optional empty object body."""
+
+
+class SessionResponse(ApiModel):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    last_active_at: datetime
+
+
+class SessionMessageCreateRequest(ApiModel):
+    seq: int = Field(ge=0)
+    role: MessageRole
+    content: Any
+
+
+class SessionMessageResponse(ApiModel):
+    id: str
+    session_id: str
+    seq: int
+    role: MessageRole
+    content: Any
+    created_at: datetime
+
+
+class RunStateResponse(ApiModel):
+    turn_id: str
+    run_state: dict[str, Any]
+    state_version: int
+
+
+class RunStateUpdateRequest(ApiModel):
+    state_version: int = Field(ge=0)
+    run_state: dict[str, Any]
 
 
 class PendingActionDecision(ApiModel):
