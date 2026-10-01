@@ -1,8 +1,9 @@
 // Storybook confirmation artifact for the agent onboarding guide (issue 2792f).
 // Three availability states at their intended placements: the profile assistant
-// drawer body and the settings page agent section entry. Both blocked states are
-// derived from GET /models/config through MSW; the "available" state is a future
-// placeholder because no runtime-ready signal exists yet. No page is wired here.
+// drawer body and the settings page agent section entry. The blocked states are
+// derived from GET /models/config through MSW; since e122a the real pages combine it
+// with GET /agent/runtime, while this story still renders the "available" state
+// explicitly for visual review. No page is wired here.
 
 import { useQuery } from "@tanstack/react-query"
 import type { ReactNode } from "react"
