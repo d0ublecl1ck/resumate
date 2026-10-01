@@ -1,0 +1,34 @@
+// 历史会话（SCR-004 侧栏入口）：会话列表与会话详情（消息流）文案。
+export default {
+  title: "历史会话",
+  subtitle: "运行体写下的会话记录，按最近活跃时间排序。",
+  derivedLabel: "会话 {{time}}",
+  derivedHint: "后端暂未保存会话标题，这里用最近活跃时间代替。",
+  idLabel: "ID {{id}}",
+  list: {
+    loading: "正在加载会话…",
+    emptyTitle: "还没有历史会话",
+    emptyDescription: "运行体跑过一次之后，这里会出现它的会话记录。",
+    errorTitle: "会话加载失败",
+    errorDescription: "请稍后重试，或确认后端服务可用。",
+    open: "查看会话",
+  },
+  detail: {
+    loading: "正在加载消息…",
+    emptyTitle: "这个会话还没有消息",
+    emptyDescription: "运行体还没有往这个会话写入内容。",
+    errorTitle: "消息加载失败",
+    errorDescription: "请稍后重试。",
+    back: "返回列表",
+    compactedTitle: "已压缩的历史",
+    compactedHint: "这段内容由旧轮次摘要而来，不是原始消息。",
+    toolCall: "工具调用：{{name}}",
+    seqHint: "seq {{seq}}",
+    role: {
+      system: "系统",
+      user: "用户",
+      assistant: "助手",
+      tool: "工具",
+    },
+  },
+}

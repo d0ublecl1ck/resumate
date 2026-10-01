@@ -8,6 +8,7 @@ import nav from "./nav"
 import profile from "./profile"
 import rbac from "./rbac"
 import resume from "./resume"
+import sessionHistory from "./sessionHistory"
 import settings from "./settings"
 import templates from "./templates"
 import workbench from "./workbench"
@@ -26,4 +27,5 @@ export default {
   templates,
   api,
   auth,
+  sessionHistory,
 }
