@@ -6,10 +6,12 @@ journal holds the conversation that history — and later summarisation — read
 This module mirrors every model message that enters the runtime context into
 agent_session_messages.
 
-The seq of a message is its index in the context list plus one. That makes a
-replay deterministic: a run that died before writing its checkpoint re-sends the
-same seq values, and the server absorbs them on (session_id, seq) instead of
-appending duplicates.
+The seq of a message is "session base + its index in the context + 1". A run
+that starts in a brand-new session has base 0; a run that appends to an existing
+session starts after that session's last seq, so reusing a session never
+overwrites older history. The base is deterministic input, so a replay after a
+crash re-sends the same seq values and the server absorbs them on
+(session_id, seq) instead of appending duplicates.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ class SessionJournal:
     def __init__(self, client: ResumateClient, session_id: str | None = None) -> None:
         self._client = client
         self.session_id = session_id
+        self._base = 0
         self._recorded = 0
 
     @property
@@ -37,15 +40,31 @@ class SessionJournal:
         """How many context messages are already known to the session."""
         return self._recorded
 
-    def start(self, session_id: str | None = None, *, recorded: int = 0) -> str:
+    @property
+    def base(self) -> int:
+        """The seq offset this run appends after."""
+        return self._base
+
+    def start(self, session_id: str | None = None, *, base: int | None = None, recorded: int = 0) -> str:
         """Adopt a session id, or create a new session when none is given.
 
-        recorded is the prefix length a resumed run already mirrored, so the
-        journal continues the seq counter instead of replaying the prefix.
+        base is the seq offset; None means "derive it": a new session starts at
+        zero, an existing one continues after its last seq. recorded is how many
+        context messages a resumed run already mirrored.
         """
-        self.session_id = session_id or self._client.create_session().id
+        if session_id is None:
+            self.session_id = self._client.create_session().id
+            self._base = 0 if base is None else max(0, base)
+        else:
+            self.session_id = session_id
+            self._base = self._latest_seq(session_id) if base is None else max(0, base)
         self._recorded = max(0, recorded)
         return self.session_id
+
+    def _latest_seq(self, session_id: str) -> int:
+        """Continue after the session's current last seq, or start at zero."""
+        rows = self._client.list_session_messages(session_id)
+        return rows[-1].seq if rows else 0
 
     def record(self, messages: Sequence[Message]) -> int:
         """Mirror messages the session does not have yet; return the new count.
@@ -61,7 +80,7 @@ class SessionJournal:
             try:
                 self._client.append_session_message(
                     self.session_id,
-                    seq=index + 1,
+                    seq=self._base + index + 1,
                     role=message.role,
                     content=message.to_wire(),
                 )

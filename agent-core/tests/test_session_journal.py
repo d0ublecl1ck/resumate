@@ -192,13 +192,33 @@ def test_journal_replay_reuses_the_same_seq_and_the_server_absorbs_it(make_clien
         session_id = journal.start()
         assert journal.record(messages) == 2
 
-        # A crash before the checkpoint rewinds the counter; the replay must
-        # reuse seq 1..2 instead of inventing seq 3..4.
-        journal.start(session_id)
+        # The checkpoint stores the base, so a replay after a crash reuses the
+        # same seq 1..2 instead of inventing seq 3..4.
+        journal.start(session_id, base=0)
         assert journal.record(messages) == 2
 
     assert fake.append_calls == [(session_id, 1), (session_id, 2), (session_id, 1), (session_id, 2)]
     assert [row["seq"] for row in fake.stored(session_id)] == [1, 2]
+
+
+def test_journal_continues_an_existing_session_at_the_next_seq(make_client) -> None:
+    fake = FakeSessionApi()
+    with make_client(fake.handler) as client:
+        first = SessionJournal(client)
+        session_id = first.start()
+        first.record([Message(role="system", content="s1"), Message(role="user", content="u1")])
+
+        # A later run pointed at the same session must append after the stored
+        # history, not overwrite seq 1 and 2 with different content.
+        second = SessionJournal(client)
+        assert second.start(session_id) == session_id
+        second.record([Message(role="system", content="s2")])
+
+    assert [(row["seq"], row["role"], row["content"]["content"]) for row in fake.stored(session_id)] == [
+        (1, "system", "s1"),
+        (2, "user", "u1"),
+        (3, "system", "s2"),
+    ]
 
 
 def test_journal_creates_a_session_once_and_reuses_a_given_one(make_client) -> None:

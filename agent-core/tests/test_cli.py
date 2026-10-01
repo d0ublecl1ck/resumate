@@ -72,6 +72,9 @@ def shortest_path_router(*, turns_status: int = 201):
                 201,
                 json={"id": "ses_1", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z", "lastActiveAt": "2026-01-01T00:00:00Z"},
             )
+        if path.startswith("/sessions/") and path.endswith("/messages") and request.method == "GET":
+            rows = [row for row in session_rows.values() if row["sessionId"] == path.split("/")[2]]
+            return httpx.Response(200, json=sorted(rows, key=lambda row: row["seq"]))
         if path.startswith("/sessions/") and path.endswith("/messages") and request.method == "POST":
             key = (path.split("/")[2], body["seq"])
             row = session_rows.setdefault(
