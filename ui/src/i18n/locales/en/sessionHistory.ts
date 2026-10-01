@@ -1,0 +1,34 @@
+// Session history (SCR-004 sidebar entry): list and detail copy.
+export default {
+  title: "Session history",
+  subtitle: "Sessions the runner has written, most recently active first.",
+  derivedLabel: "Session {{time}}",
+  derivedHint: "The backend does not store a session title yet, so the last active time stands in for it.",
+  idLabel: "ID {{id}}",
+  list: {
+    loading: "Loading sessions…",
+    emptyTitle: "No sessions yet",
+    emptyDescription: "Once the runner finishes a run, its session shows up here.",
+    errorTitle: "Could not load sessions",
+    errorDescription: "Try again in a moment, or check that the backend is reachable.",
+    open: "Open session",
+  },
+  detail: {
+    loading: "Loading messages…",
+    errorTitle: "Could not load messages",
+    errorDescription: "Try again in a moment.",
+    emptyTitle: "This session has no messages yet",
+    emptyDescription: "The runner has not written anything into this session.",
+    back: "Back to list",
+    compactedTitle: "Compacted history",
+    compactedHint: "This text is a summary of older turns, not the original messages.",
+    toolCall: "Tool call: {{name}}",
+    seqHint: "seq {{seq}}",
+    role: {
+      system: "System",
+      user: "User",
+      assistant: "Assistant",
+      tool: "Tool",
+    },
+  },
+}
