@@ -189,7 +189,7 @@ describe("RunPanel 审批接线", () => {
     render(
       <StrictMode>
         <QueryClientProvider client={newClient()}>
-          <RunPanel run={RUN} mode="approval" />
+          <RunPanel resumeId="res_1" run={RUN} mode="approval" />
         </QueryClientProvider>
       </StrictMode>,
     )
