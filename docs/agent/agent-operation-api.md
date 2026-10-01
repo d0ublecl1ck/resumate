@@ -131,7 +131,7 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 
 ## 6. 端点
 
-所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。approve / reject 另要求人类会话：PAT / agent 来源一律 403 **FORBIDDEN**（见 §9）。
+所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。approve / reject 另要求人类会话：PAT / agent 来源一律 403 **FORBIDDEN**（见 §9）。会话层与 run checkpoint 的端点见 §19（本表只列最初的 11 个轮次端点）。
 
 | 方法 | 路径 | 权限 | 说明 |
 | --- | --- | --- | --- |
@@ -374,3 +374,45 @@ for line in sys.stdin: print(f"{time.time()-t:7.3f}s {line.rstrip()}")'
 
 实测（issue b75c6）：直连与经 Vite proxy 两条链路的 `snapshot` 都在 0.000s 到达，真实状态变化在亚秒级推出 `turn.updated`，空闲心跳按配置间隔持续到达，证明是分块流而不是一次性响应。
 Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite.config.ts`。
+
+## 19. 会话层与 run checkpoint（9d29a）
+
+### 19.1 资源模型
+
+| 实体 | 字段 | 说明 |
+| --- | --- | --- |
+| agent_sessions | id, owner_id, created_at, updated_at, last_active_at | 会话身份只绑 owner；**不含 resume_id**（一个会话可跨多份简历） |
+| agent_session_messages | id, session_id, seq, role, content(JSON), created_at | role ∈ system\|user\|assistant\|tool；唯一约束 (session_id, seq) |
+| agent_turns（扩展） | session_id(可空), run_state(JSON 默认 {}), state_version(int 默认 0) | 轮次挂会话；run_state 是该轮次的 checkpoint |
+
+### 19.2 端点
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| POST | /sessions | resume:write | 建会话；body 可省略 |
+| GET | /sessions | resume:read | 当前用户的会话，最近活跃优先（last_active_at desc） |
+| GET | /sessions/{session_id}/messages | resume:read | 列出消息；`afterSeq=N` 只返回 seq > N |
+| POST | /sessions/{session_id}/messages | resume:write | 追加消息；同一 (session_id, seq) 幂等 |
+| GET | /turns/{turn_id}/state | resume:read | 读 run checkpoint |
+| PUT | /turns/{turn_id}/state | resume:write | 写 run checkpoint，stateVersion 乐观锁 |
+
+- owner 隔离：未知或不属于当前用户的 session / turn 一律 404 `RESOURCE_NOT_FOUND`（在返回响应体之前判定，与 §18 一致，不会先 200 再报错）。
+- `POST /resumes/{resume_id}/turns` 新增可选 `sessionId`：未知会话 404；挂载成功后刷新该会话的 `updated_at` / `last_active_at`。`UserTurnResponse` 回显 `sessionId`。
+- 权限码沿用 `resume:read` / `resume:write`：这些端点只服务于 Agent 操作层，且这两个码可被 PAT scope 覆盖，不新增权限目录条目。
+
+### 19.3 消息幂等
+
+- `(session_id, seq)` 是消息身份：重复 POST 返回既有那条，不产生重复行；`seq` 由调用方分配，必须 >= 0。
+- `GET .../messages` 默认返回全部；`afterSeq=N` 用于断线后的增量拉取。
+
+### 19.4 run checkpoint 与乐观锁
+
+- GET 返回 `{ turnId, runState, stateVersion }`；`runState` 是不透明 JSON，契约只约定客户端可写 `version` 字段（agent-core 写 `version: 1`）。
+- PUT body `{ stateVersion, runState }`：`stateVersion` 必须等于服务端当前值，否则 409 `RUN_STATE_CONFLICT` 且**不写入**；成功后服务端 `stateVersion += 1` 并返回新值。
+- 语义为「单写者 / 轮次」：agent-core 在每轮模型调用后写入消息上下文、budget 计数、turn_id、pending_action_id 与 phase，`--resume <turnId>` 据此恢复。
+
+### 19.5 新错误码
+
+| code | HTTP | 触发 | 恢复动作 |
+| --- | --- | --- | --- |
+| `RUN_STATE_CONFLICT` | 409 | PUT state 的 `stateVersion` 与服务端当前值不一致 | 重新 `GET /turns/{turn_id}/state`，基于新版本重写 |
