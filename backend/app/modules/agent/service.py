@@ -400,6 +400,20 @@ def get_turn(db: Session, user: CurrentUser, turn_id: str) -> UserTurnResponse:
     return _turn_response(db, _require_turn(db, user.id, turn_id))
 
 
+def list_turns(
+    db: Session, user: CurrentUser, resume_id: str, state: str | None = None
+) -> list[UserTurnResponse]:
+    """List this resume's turns (newest first), including preview-only open ones.
+
+    Turn discovery must not depend on the working copy: in approval mode a
+    preview creates a PendingAction without staging anything, so
+    resume.working_turn_id stays empty until apply. The resume ownership check
+    keeps the listing owner-isolated.
+    """
+    resume_service.get_resume(db, user.id, resume_id)
+    return [_turn_response(db, turn) for turn in dao.list_turns(db, resume_id, user.id, state)]
+
+
 def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFinalizeRequest) -> UserTurnResponse:
     turn = _require_turn(db, user.id, turn_id)
     request_hash = _canonical_hash({"message": payload.message or ""})

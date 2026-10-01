@@ -17,6 +17,24 @@ def get_open_turn(db: Session, resume_id: str) -> AgentTurn | None:
     return db.scalars(statement).first()
 
 
+def list_turns(
+    db: Session,
+    resume_id: str,
+    owner_id: str,
+    state: str | None = None,
+    limit: int = 100,
+) -> list[AgentTurn]:
+    """List one resume's turns newest-first, optionally filtered by state."""
+    statement = select(AgentTurn).where(
+        AgentTurn.resume_id == resume_id,
+        AgentTurn.owner_id == owner_id,
+    )
+    if state is not None:
+        statement = statement.where(AgentTurn.state == state)
+    statement = statement.order_by(AgentTurn.created_at.desc(), AgentTurn.id.desc()).limit(limit)
+    return list(db.scalars(statement))
+
+
 def add_turn(db: Session, turn: AgentTurn) -> None:
     db.add(turn)
 
