@@ -45,6 +45,7 @@ from .runtime import (
     RunEvent,
     ToolProgressEvent,
 )
+from .session import SessionJournal
 
 PROGRAM = "resumate-agent"
 EXIT_OK = 0
@@ -58,6 +59,7 @@ ENV_MODEL = f"{ENV_PREFIX}MODEL"
 ENV_API_KEY = f"{ENV_PREFIX}API_KEY"
 ENV_PROVIDER_BASE_URL = f"{ENV_PREFIX}PROVIDER_BASE_URL"
 ENV_EXECUTION_MODE = f"{ENV_PREFIX}EXECUTION_MODE"
+ENV_SESSION = f"{ENV_PREFIX}SESSION"
 ENV_STATE = f"{ENV_PREFIX}STATE"
 ENV_EVENTS = f"{ENV_PREFIX}EVENTS"
 
@@ -100,6 +102,14 @@ def build_parser(env: Mapping[str, str] | None = None) -> argparse.ArgumentParse
     parser.add_argument("--base-version-id", default=None, help="optimistic-lock base version id")
     parser.add_argument("--turn-id", default=None, help="adopt an existing open turn instead of creating one")
     parser.add_argument("--turn-message", default=None, help="message stored on the created turn")
+    parser.add_argument(
+        "--session",
+        default=source.get(ENV_SESSION),
+        help=(
+            f"session id the conversation history is appended to (env {ENV_SESSION}); "
+            "a new session is created when omitted"
+        ),
+    )
 
     parser.add_argument("--base-url", default=None, help=f"API root (env {ENV_PREFIX}BASE_URL)")
     parser.add_argument("--session-cookie", default=None, help=f"session cookie value (env {ENV_PREFIX}SESSION_COOKIE)")
@@ -251,6 +261,7 @@ def state_payload(
     *,
     ended_at: datetime | None = None,
     last_event_type: str | None = None,
+    session_id: str | None = None,
 ) -> dict[str, Any]:
     """Build the minimal snapshot written at the start and the end of a run."""
     payload: dict[str, Any] = {
@@ -265,6 +276,8 @@ def state_payload(
         payload["endedAt"] = ended_at.isoformat()
     if last_event_type is not None:
         payload["lastEventType"] = last_event_type
+    if session_id is not None:
+        payload["sessionId"] = session_id
     return payload
 
 
@@ -315,6 +328,7 @@ def main(
         write_state(args.state, state_payload(args, "started", started_at))
 
     last_event_type: str | None = None
+    resolved_session: str | None = None
     saw_error = False
     saw_finalize = False
     try:
@@ -324,6 +338,7 @@ def main(
                 provider,
                 budget=_build_budget(args),
                 checkpoint=CheckpointStore(client),
+                sessions=SessionJournal(client),
             )
             if args.resume:
                 stream = runtime.resume(args.resume)
@@ -336,6 +351,7 @@ def main(
                     client_id=args.client_id,
                     turn_id=args.turn_id,
                     turn_message=args.turn_message,
+                    session_id=args.session,
                 )
             for event in stream:
                 last_event_type = event.type
@@ -346,6 +362,18 @@ def main(
                 else:
                     line = json.dumps(event_to_wire(event), ensure_ascii=False)
                 print(line, file=out)
+                out.flush()
+            resolved_session = runtime.session_id
+            if resolved_session:
+                # Print the session id last: it is the handle for the stored
+                # history, and a caller can capture it without parsing the run.
+                if args.events == "text":
+                    print(f"[session] {resolved_session}", file=out)
+                else:
+                    print(
+                        json.dumps({"type": "session", "sessionId": resolved_session}, ensure_ascii=False),
+                        file=out,
+                    )
                 out.flush()
     finally:
         if owns_provider:
@@ -362,6 +390,7 @@ def main(
                 started_at,
                 ended_at=clock(),
                 last_event_type=last_event_type,
+                session_id=resolved_session,
             ),
         )
 

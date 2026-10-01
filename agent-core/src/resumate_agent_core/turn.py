@@ -60,6 +60,7 @@ class TurnSession:
         source: str | None = None,
         message: str | None = None,
         turn_id: str | None = None,
+        session_id: str | None = None,
     ) -> None:
         self.client = client
         self.resume_id = resume_id
@@ -68,6 +69,7 @@ class TurnSession:
         self.client_id = client_id
         self.source = source
         self.turn_message = message
+        self.session_id = session_id
         self._turn: UserTurn | None = None
         self._pending_action_id: str | None = None
         if turn_id is not None:
@@ -115,6 +117,7 @@ class TurnSession:
             execution_mode=self.execution_mode,
             client_id=self.client_id,
             source=self.source,
+            session_id=self.session_id,
             message=self.turn_message,
         )
         self._pending_action_id = self._latest_pending_id(self._turn)
