@@ -13,8 +13,8 @@ export default {
     },
     available: {
       stamp: "已接入",
-      title: "助手已就绪",
-      description: "运行体在线且模型可用。描述你的经历，助手给出待确认的改动，你确认后才写入主档。",
+      title: "随时可以开始",
+      description: "直接说你的经历就行，助手会先给出一版改法，你确认之后才会写进主档。",
       action: "开始对话",
     },
   },

@@ -44,7 +44,7 @@ describe("agent onboarding stories", () => {
     render(ProfileAssistantAvailable.render())
 
     expect(await screen.findByText("已接入")).toBeInTheDocument()
-    expect(screen.getByText("助手已就绪")).toBeInTheDocument()
+    expect(screen.getByText("随时可以开始")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "开始对话" })).toBeInTheDocument()
   })
 
@@ -62,6 +62,6 @@ describe("agent onboarding stories", () => {
 
     expect(await screen.findByText("先配置一个模型")).toBeInTheDocument()
     expect(screen.getByText("AI 能力尚未接入")).toBeInTheDocument()
-    expect(screen.getByText("助手已就绪")).toBeInTheDocument()
+    expect(screen.getByText("随时可以开始")).toBeInTheDocument()
   })
 })
