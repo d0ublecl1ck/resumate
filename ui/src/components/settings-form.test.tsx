@@ -53,19 +53,19 @@ describe("SettingsForm", () => {
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
   })
 
-  it("模型未配置时在 Agent 分区引导去配置模型", async () => {
+  it("还差一步时在 Agent 分区引导去配置模型", async () => {
     renderForm({ ...MODEL_CONFIG, keyConfigured: false })
 
-    expect(await screen.findByText("先配置一个模型")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "去设置模型" })).toBeInTheDocument()
+    expect(await screen.findByText("先把助手开起来")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "去设置" })).toBeInTheDocument()
   })
 
-  it("运行体未接入时在 Agent 分区如实说明", async () => {
+  it("暂不可用时在 Agent 分区如实说明", async () => {
     renderForm()
 
-    expect(await screen.findByText("AI 能力尚未接入")).toBeInTheDocument()
+    expect(await screen.findByText("助手暂时不可用")).toBeInTheDocument()
     expect(
-      screen.getByText("模型已经配置好，但还没有任何运行体进程在处理 Agent 请求。在你看到这条状态期间，对话与 Run 都不会执行。"),
+      screen.getByText("助手现在还不能聊天，请稍后再试。"),
     ).toBeInTheDocument()
   })
 
