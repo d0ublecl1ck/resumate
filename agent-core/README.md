@@ -160,6 +160,28 @@ server absorbs them on `(session_id, seq)` instead of duplicating history.
 History is browsable with `GET /sessions/{id}/messages`; it is **not** the
 resume source — `--resume` still reads only the checkpoint.
 
+### Context compaction
+
+A long run no longer stops at the token wall. Before every model call the runtime
+estimates the context size and, when it is over the threshold, asks the *same
+injected provider* (with no tools) to summarise the older turns. Those turns are
+replaced in the request by one `system` message prefixed with
+`[compacted-history]`; only the most recent turns stay verbatim.
+
+There is no tokenizer in this package, so the estimate is a documented character
+heuristic: `tokens ≈ 4 + ceil(chars / 3)` per message. English is nearer 4
+characters per token and Chinese nearer 1, so 3 deliberately over-estimates
+English and triggers compaction a little early — the conservative direction for
+budget safety. The default trigger is `max(256, max_tokens // 2)`; override it
+with `--compact-above-tokens <n>` and choose how much stays verbatim with
+`--keep-recent-turns <n>` (default 4).
+
+Compaction is durable: the compacted context is written to the checkpoint, so
+`--resume` restores the summary instead of the full history, and the session
+history gains one `system` row marked `"compactedHistory": true`. A failed
+summary never kills the run — the runtime keeps the full context and lets the
+ordinary budget guard decide.
+
 ## Layout
 
 ```text
@@ -172,6 +194,7 @@ src/resumate_agent_core/
   turn.py      # TurnSession + idempotency-key helper
   checkpoint.py # per-turn run checkpoint over GET|PUT /turns/{turn_id}/state
   session.py   # SessionJournal: mirror the run context into agent_session_messages
+  compaction.py # CompactionPolicy + character-heuristic context size estimate
   tools.py     # TOOLS registry: name -> schema + client callable
   runtime.py   # C-09 loop skeleton (ModelProvider Protocol, budget, cancel, events)
   cli.py       # resumate-agent: one run as a standalone process (JSONL events, --resume)
