@@ -241,5 +241,17 @@ class RunStartResponse(ApiModel):
     status: str
 
 
+class RuntimeStatusResponse(ApiModel):
+    """Runner readiness probe (GET /agent/runtime).
+
+    available means the backend can spawn the runner when a run is requested:
+    it is a PATH resolution check on the configured command, not a resident
+    process check, and nothing is executed to produce it.
+    """
+
+    command: str
+    available: bool
+
+
 class PendingActionDecision(ApiModel):
     """Approve / reject accept an optional empty body."""

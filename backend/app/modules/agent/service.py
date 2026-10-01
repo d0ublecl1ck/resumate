@@ -3,11 +3,13 @@
 import copy
 import hashlib
 import json
+import shutil
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.deps import CurrentUser
 from app.modules.resume import service as resume_service
 from app.modules.resume.models import Resume, ResumeVersion
@@ -37,6 +39,7 @@ from .schemas import (
     PendingActionResponse,
     RunStateResponse,
     RunStateUpdateRequest,
+    RuntimeStatusResponse,
     SessionMessageCreateRequest,
     SessionMessageResponse,
     SessionResponse,
@@ -641,6 +644,17 @@ def get_working_document(db: Session, user: CurrentUser, resume_id: str) -> Work
         working_revision=resume.working_revision or 0,
         dirty=resume_service.working_copy_is_dirty(resume),
     )
+
+
+def runtime_status() -> RuntimeStatusResponse:
+    """Probe whether the backend can start the runner on demand.
+
+    Only checks that the configured command resolves on PATH. The command is
+    never executed here, and the response carries no credentials: the runner's
+    model key and run token are minted later, per run, by the spawn endpoint.
+    """
+    command = get_settings().agent_runner_command
+    return RuntimeStatusResponse(command=command, available=shutil.which(command) is not None)
 
 
 # --- sessions, messages and run checkpoints (issue 9d29a) -----------------------

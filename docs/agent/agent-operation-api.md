@@ -138,6 +138,7 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 | POST | /resumes/{resume_id}/turns | resume:write | 创建轮次；若有未关闭轮次，先按 C-04 finalize 旧轮 |
 | GET | /resumes/{resume_id}/turns | resume:read | 列出该简历的轮次；`state` 可选（open\|finalized\|cancelled），创建时间倒序，最多 100 条 |
 | POST | /resumes/{resume_id}/runs | resume:write + 人类会话 | spawn 运行体（第 20 节）；未配置模型 409 MODEL_NOT_CONFIGURED |
+| GET | /agent/runtime | resume:read | 运行体就绪探测（第 20.5 节）：`available` 表示后端能在需要时启动运行体，不是常驻进程 |
 | GET | /turns/{turn_id} | resume:read | 读取轮次与待办 |
 | POST | /turns/{turn_id}/finalize | resume:write | 聚合提交并关闭；幂等 |
 | POST | /turns/{turn_id}/cancel | resume:write | 失效未决待办、按 C-04 结算已应用修改并关闭 |
@@ -461,3 +462,12 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 - 已处理（83c41 的残余风险）：曾经注入完整会话 cookie 的做法已由 §20.2 的 run 凭据替换。
 - 剩余风险：凭据在有效期内仍可读写它绑定的 resume（这是运行体的本职工；审批动作已由 `require_human_session` 挡住）；多 worker 部署下撤销依赖共享 Redis，未实现分布式强制终止。
 - 模型密钥不会跨用户使用：后端始终读取**调用者本人**的 `user_settings.model_config`。
+
+### 20.5 就绪探测
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| GET | /agent/runtime | resume:read | 就绪探测：`available` 表示后端能在需要时启动运行体，不是已有常驻进程 |
+
+- `available` 由 `shutil.which(AGENT_RUNNER_COMMAND)` 判定：命令能在 PATH 上解析即为 true。**探测不执行命令**，响应只含 `command` 与 `available`，不含任何密钥。
+- 语义边界：`available=true` 只承诺「`POST /resumes/{id}/runs` 有机会 spawn 成功」，**不承诺**模型可用、也**不承诺**已有常驻运行体进程。前端据此把可用性派生为 model_missing / runtime_offline / available 三态。
