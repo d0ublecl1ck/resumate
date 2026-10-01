@@ -27,8 +27,9 @@ from .models import PatchPreviewResponse, TurnResult, UserTurn
 from .tools import TOOLS, Tool, UnknownToolError
 from .turn import TurnSession
 
-if TYPE_CHECKING:  # pragma: no cover - typing-only import avoids a cycle
+if TYPE_CHECKING:  # pragma: no cover - typing-only imports avoid a cycle
     from .checkpoint import CheckpointStore
+    from .session import SessionJournal
 
 DEFAULT_SYSTEM_PROMPT = (
     "You operate a Resumate resume through the public API. Work inside one turn: "
@@ -295,6 +296,7 @@ class AgentRuntime:
         auto_finalize: bool = True,
         max_tool_result_chars: int = MAX_TOOL_RESULT_CHARS,
         checkpoint: CheckpointStore | None = None,
+        sessions: SessionJournal | None = None,
     ) -> None:
         self.client = client
         self.provider = provider
@@ -305,6 +307,10 @@ class AgentRuntime:
         self.auto_finalize = auto_finalize
         self.max_tool_result_chars = max_tool_result_chars
         self.checkpoint = checkpoint
+        self.sessions = sessions
+        # Resolved by run()/resume(); exposed so a caller can report where the
+        # conversation history was written (issue d2e4a).
+        self.session_id: str | None = None
 
     # --- helpers ------------------------------------------------------------
 
@@ -325,6 +331,18 @@ class AgentRuntime:
         if "resume_id" in required and not args.get("resume_id"):
             args["resume_id"] = session.resume_id
         return tool.invoke(self.client, args)
+
+    def _open_session(self, session_id: str | None, *, recorded: int = 0) -> None:
+        """Ensure the run has a session before the turn is created (d2e4a)."""
+        if self.sessions is None:
+            self.session_id = session_id
+            return
+        self.session_id = self.sessions.start(session_id, recorded=recorded)
+
+    def _record_session(self, messages: Sequence[Message]) -> None:
+        """Mirror the current context into the session; best-effort by design."""
+        if self.sessions is not None:
+            self.sessions.record(messages)
 
     def _stringify(self, payload: Any) -> str:
         try:
@@ -369,8 +387,14 @@ class AgentRuntime:
         source: str | None = None,
         turn_message: str | None = None,
         turn_id: str | None = None,
+        session_id: str | None = None,
     ) -> Iterator[RunEvent]:
         """Drive the loop, yielding typed events until the turn settles."""
+        try:
+            self._open_session(session_id)
+        except ApiClientError as exc:
+            yield ErrorEvent(code=exc.code, message=str(exc), detail="session failed")
+            return
         session = TurnSession(
             self.client,
             resume_id,
@@ -380,6 +404,7 @@ class AgentRuntime:
             source=source,
             message=turn_message,
             turn_id=turn_id,
+            session_id=self.session_id,
         )
         try:
             session.begin()
@@ -394,6 +419,9 @@ class AgentRuntime:
             Message(role="system", content=self.system_prompt),
             Message(role="user", content=prompt),
         ]
+        # The opening context is journalled before the first model call, so the
+        # session reflects the run even if that call fails.
+        self._record_session(messages)
         yield from self._drive(session, messages)
 
     def resume(self, turn_id: str) -> Iterator[RunEvent]:
@@ -406,7 +434,21 @@ class AgentRuntime:
         except ApiClientError as exc:
             yield ErrorEvent(code=exc.code, message=str(exc), detail="resume failed")
             return
-        session = TurnSession(self.client, turn.resume_id, turn_id=turn_id)
+        state = self.checkpoint.load(turn_id)
+        run_state = state.run_state or {}
+        # The turn carries the session it belongs to; an older turn created
+        # before the session layer simply has none, and then nothing is journalled.
+        journal_session_id = getattr(turn, "session_id", None)
+        if journal_session_id:
+            self._open_session(journal_session_id, recorded=int(run_state.get("sessionSeq") or 0))
+        else:
+            self.session_id = None
+        session = TurnSession(
+            self.client,
+            turn.resume_id,
+            turn_id=turn_id,
+            session_id=self.session_id,
+        )
         try:
             session.begin()
         except ApiClientError as exc:
@@ -416,8 +458,6 @@ class AgentRuntime:
             yield FinalizeEvent(turn=session.turn, result=session.turn.result)
             return
 
-        state = self.checkpoint.load(turn_id)
-        run_state = state.run_state or {}
         restored = [
             Message.from_wire(item) for item in (run_state.get("messages") or []) if isinstance(item, Mapping)
         ]
@@ -425,6 +465,7 @@ class AgentRuntime:
         budget_snapshot = run_state.get("budget")
         if isinstance(budget_snapshot, Mapping):
             self.budget = RunBudget.from_snapshot(budget_snapshot)
+        self._record_session(messages)
         yield from self._drive(session, messages)
 
     def _save_checkpoint(
@@ -435,6 +476,7 @@ class AgentRuntime:
         pending_action_id: str | None = None,
     ) -> None:
         """Best-effort checkpoint write; a failure must not kill a live run."""
+        self._record_session(messages)
         if self.checkpoint is None:
             return
         try:
@@ -444,7 +486,11 @@ class AgentRuntime:
                 budget=self.budget,
                 phase=phase,
                 pending_action_id=pending_action_id,
-                extra={"resumeId": session.resume_id},
+                extra={
+                    "resumeId": session.resume_id,
+                    "sessionId": self.session_id,
+                    "sessionSeq": self.sessions.recorded if self.sessions is not None else 0,
+                },
             )
         except ApiClientError:
             # The next model turn writes again; a lost checkpoint only costs the

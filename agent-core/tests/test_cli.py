@@ -55,12 +55,37 @@ def done_response() -> ModelResponse:
 
 
 def shortest_path_router(*, turns_status: int = 201):
-    """Turn creation -> one tool call -> finalize, over the frozen contract paths."""
+    """Turn creation -> one tool call -> finalize, over the frozen contract paths.
+
+    The session endpoints are part of the run now (issue d2e4a): the CLI creates
+    or reuses a session and mirrors every context message into it.
+    """
     calls: list[dict] = []
+    session_rows: dict[tuple[str, int], dict] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
         path = request.url.path
-        calls.append({"method": request.method, "path": path, "headers": dict(request.headers)})
+        body = json.loads(request.content) if request.content else None
+        calls.append({"method": request.method, "path": path, "headers": dict(request.headers), "body": body})
+        if path == "/sessions" and request.method == "POST":
+            return httpx.Response(
+                201,
+                json={"id": "ses_1", "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z", "lastActiveAt": "2026-01-01T00:00:00Z"},
+            )
+        if path.startswith("/sessions/") and path.endswith("/messages") and request.method == "POST":
+            key = (path.split("/")[2], body["seq"])
+            row = session_rows.setdefault(
+                key,
+                {
+                    "id": f"msg_{len(session_rows) + 1}",
+                    "sessionId": key[0],
+                    "seq": key[1],
+                    "role": body["role"],
+                    "content": body["content"],
+                    "createdAt": "2026-01-01T00:00:00Z",
+                },
+            )
+            return httpx.Response(201, json=row)
         if path == "/resumes/res_1/turns" and request.method == "POST":
             if turns_status != 201:
                 return httpx.Response(turns_status, json={"code": "FORBIDDEN", "message": "审批动作仅限人类会话"})
@@ -100,7 +125,7 @@ def json_events(stdout: str) -> list[dict]:
 
 
 def test_cli_runs_shortest_turn_and_emits_jsonl_events() -> None:
-    handler, _ = shortest_path_router()
+    handler, calls = shortest_path_router()
     provider = ScriptedProvider([inspect_response(), done_response()])
 
     code, stdout, stderr = run_cli(
@@ -124,14 +149,21 @@ def test_cli_runs_shortest_turn_and_emits_jsonl_events() -> None:
         "tool_progress",
         "message",
         "finalize",
+        "session",
     ]
     assert events[0]["text"] == "Inspecting the working copy"
     tool_events = [event for event in events if event["type"] == "tool_progress"]
     assert [event["phase"] for event in tool_events] == ["started", "completed"]
     assert tool_events[0]["name"] == "get_working_document"
     assert tool_events[1]["result"]["resumeId"] == "res_1"
-    assert events[-1]["turn"]["state"] == "finalized"
-    assert events[-1]["result"]["versionId"] == "ver_1"
+    finalize = next(event for event in events if event["type"] == "finalize")
+    assert finalize["turn"]["state"] == "finalized"
+    assert finalize["result"]["versionId"] == "ver_1"
+    # The trailing session event tells the operator where the history landed, and
+    # the turn was opened inside that same session.
+    assert events[-1] == {"type": "session", "sessionId": "ses_1"}
+    turn_call = next(call for call in calls if call["path"] == "/resumes/res_1/turns")
+    assert turn_call["body"]["sessionId"] == "ses_1"
 
 
 def test_cli_writes_start_snapshot_before_the_first_model_call_and_finishes_it(tmp_path: Path) -> None:
@@ -184,7 +216,9 @@ def test_cli_reports_error_event_and_failed_state_on_rejected_turn(tmp_path: Pat
 
     assert code == 1, stderr
     events = json_events(stdout)
-    assert [event["type"] for event in events] == ["error"]
+    # The session is created before the turn, so it is still announced after
+    # the rejected turn; the failure itself stays the first event.
+    assert [event["type"] for event in events] == ["error", "session"]
     assert events[0]["code"] == "FORBIDDEN"
     assert events[0]["message"]
     assert json.loads(state_path.read_text(encoding="utf-8"))["phase"] == "failed"
@@ -260,7 +294,7 @@ def test_cli_reads_connection_and_model_defaults_from_the_environment() -> None:
     assert captured[0]["base_url"] == "http://env-provider.test/v1"
     turn_call = next(call for call in calls if call["path"] == "/resumes/res_1/turns")
     assert turn_call["headers"]["authorization"] == "Bearer pat-from-env"
-    body = json.loads(turn_call["body"]) if "body" in turn_call else None
+    body = turn_call.get("body")
     assert body is None or body.get("executionMode") == "full_access"
 
 
@@ -283,7 +317,8 @@ def test_cli_text_mode_is_human_readable() -> None:
         except ValueError:
             continue
         raise AssertionError(f"text mode must not emit JSON lines: {line!r}")
-    assert "finalize" in lines[-1]
+    assert any("finalize" in line for line in lines)
+    assert lines[-1] == "[session] ses_1"
     assert "get_working_document" in stdout
 
 
@@ -335,6 +370,36 @@ def test_cli_resume_continues_from_the_stored_checkpoint() -> None:
     events = json_events(stdout)
     assert events[-1]["type"] == "finalize"
     assert any(call["path"] == "/turns/turn_9/state" and call["method"] == "GET" for call in calls)
+
+
+def test_cli_creates_a_session_when_none_is_given() -> None:
+    handler, calls = shortest_path_router()
+
+    code, stdout, stderr = run_cli(
+        ["--resume-id", "res_1", "--prompt", "tighten bullets"],
+        transport=httpx.MockTransport(handler),
+        provider=ScriptedProvider([inspect_response(), done_response()]),
+    )
+
+    assert code == 0, stderr
+    assert [call["path"] for call in calls if call["method"] == "POST" and call["path"] == "/sessions"] == ["/sessions"]
+    assert json_events(stdout)[-1] == {"type": "session", "sessionId": "ses_1"}
+
+
+def test_cli_reuses_the_given_session() -> None:
+    handler, calls = shortest_path_router()
+
+    code, stdout, stderr = run_cli(
+        ["--resume-id", "res_1", "--prompt", "tighten bullets", "--session", "ses_given"],
+        transport=httpx.MockTransport(handler),
+        provider=ScriptedProvider([inspect_response(), done_response()]),
+    )
+
+    assert code == 0, stderr
+    assert not [call for call in calls if call["method"] == "POST" and call["path"] == "/sessions"]
+    turn_call = next(call for call in calls if call["path"] == "/resumes/res_1/turns")
+    assert turn_call["body"]["sessionId"] == "ses_given"
+    assert json_events(stdout)[-1] == {"type": "session", "sessionId": "ses_given"}
 
 
 def test_cli_requires_a_model_when_it_must_build_the_provider() -> None:

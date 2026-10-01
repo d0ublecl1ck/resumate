@@ -95,6 +95,7 @@ Configuration is environment aware; every value can be supplied without code:
 | `RESUME_AGENT_CORE_API_KEY` | CLI model API key | unset |
 | `RESUME_AGENT_CORE_PROVIDER_BASE_URL` | CLI provider base url | `https://api.openai.com/v1` |
 | `RESUME_AGENT_CORE_EXECUTION_MODE` | CLI default execution mode | `approval` |
+| `RESUME_AGENT_CORE_SESSION` | CLI session id to append history to | unset (created per run) |
 | `RESUME_AGENT_CORE_STATE` | CLI state snapshot path | unset |
 | `RESUME_AGENT_CORE_EVENTS` | CLI stdout format (`json` / `text`) | `json` |
 
@@ -120,7 +121,8 @@ line carries a `type` of `message`, `tool_progress`, `pending_action`,
 `finalize`, or `error` plus that event's camelCase payload, so a caller can
 stream and parse the run without a second protocol. `--events text` renders the
 same events for a human, and `--token <PAT>` switches authentication from the
-session cookie to a personal access token.
+session cookie to a personal access token. A final `{"type": "session",
+"sessionId": "..."}` line reports where the conversation history was written.
 
 Exit codes: `0` when the turn finalized, `1` when the run reported an `error`
 event or never finalized, `2` for a usage/configuration mistake. Credentials are
@@ -143,6 +145,21 @@ uv run resumate-agent --resume turn_abc123 \
 process), not the source of truth: a restart resumes from the server checkpoint
 via `--resume`, never from that file.
 
+### Session history
+
+Every run also writes its conversation to a server-side session. The runtime
+adopts the session it is given (`--session <sessionId>`, or
+`RESUME_AGENT_CORE_SESSION`) and creates one when none is supplied; the turn is
+opened inside that session, and every model message that enters the context —
+`system`, `user`, `assistant`, `tool` — is appended to
+`agent_session_messages` with a monotonically increasing `seq`.
+
+`seq` is the message's index in the context plus one, so it is deterministic:
+a run that died before its checkpoint re-sends the same `seq` values and the
+server absorbs them on `(session_id, seq)` instead of duplicating history.
+History is browsable with `GET /sessions/{id}/messages`; it is **not** the
+resume source — `--resume` still reads only the checkpoint.
+
 ## Layout
 
 ```text
@@ -154,6 +171,7 @@ src/resumate_agent_core/
   client.py    # ResumateClient: the agent-operation public endpoints
   turn.py      # TurnSession + idempotency-key helper
   checkpoint.py # per-turn run checkpoint over GET|PUT /turns/{turn_id}/state
+  session.py   # SessionJournal: mirror the run context into agent_session_messages
   tools.py     # TOOLS registry: name -> schema + client callable
   runtime.py   # C-09 loop skeleton (ModelProvider Protocol, budget, cancel, events)
   cli.py       # resumate-agent: one run as a standalone process (JSONL events, --resume)

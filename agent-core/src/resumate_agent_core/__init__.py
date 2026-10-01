@@ -60,6 +60,7 @@ from .runtime import (
     ToolCall,
     ToolProgressEvent,
 )
+from .session import SessionJournal
 from .skills import Skill, SkillLoader, SkillNotFoundError, parse_frontmatter
 from .tools import (
     TOOLS,
@@ -112,6 +113,7 @@ __all__ = [
     "ResumateClient",
     "RunBudget",
     "RunEvent",
+    "SessionJournal",
     "TurnState",
     "Skill",
     "SkillLoader",
