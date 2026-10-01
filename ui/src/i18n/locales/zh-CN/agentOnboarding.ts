@@ -9,7 +9,7 @@ export default {
     runtime_offline: {
       stamp: "运行体未接入",
       title: "AI 能力尚未接入",
-      description: "模型已经配置好，但还没有任何运行体进程在处理 Agent 请求。在你看到这条状态期间，对话与 Run 都不会执行——界面不会假装能跑。",
+      description: "模型已经配置好，但还没有任何运行体进程在处理 Agent 请求。在你看到这条状态期间，对话与 Run 都不会执行。",
     },
     available: {
       stamp: "已接入",

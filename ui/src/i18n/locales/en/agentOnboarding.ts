@@ -9,7 +9,7 @@ export default {
     runtime_offline: {
       stamp: "Runtime not connected",
       title: "AI capabilities are not connected yet",
-      description: "A model is configured, but no runtime process is handling agent requests. Until that changes, chat and runs will not execute — this screen will not pretend otherwise.",
+      description: "A model is configured, but no runtime process is handling agent requests. Until that changes, chat and runs will not execute.",
     },
     available: {
       stamp: "Connected",

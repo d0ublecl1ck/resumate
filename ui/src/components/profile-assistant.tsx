@@ -11,7 +11,10 @@ import type {
   ProposedFactChange,
   ResumeBasics,
 } from "@/lib/types"
-import { parseProfileInput, createFact, updateFact, updateBasics } from "@/lib/api"
+import { useQuery } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
+import { getModelConfig, parseProfileInput, createFact, updateFact, updateBasics } from "@/lib/api"
+import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
 import { FACT_TYPE_ORDER, factTypeLabel } from "@/lib/profile"
 import { EvidenceBadge } from "@/components/kit/badges"
 import { cn } from "@/lib/utils"
@@ -42,6 +45,9 @@ export function ProfileAssistant({
   onCommitBasics: (basics: ResumeBasics) => void
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const modelQuery = useQuery({ queryKey: ["model-config"], queryFn: getModelConfig, enabled: open })
+  const availability = agentAvailabilityFromModelConfig(modelQuery.data ?? { keyConfigured: false })
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [thinking, setThinking] = useState(false)
@@ -162,6 +168,12 @@ export function ProfileAssistant({
           </button>
         </div>
 
+        {availability !== "available" ? (
+          <div className="flex-1 overflow-y-auto px-4 py-6">
+            <AgentAvailabilityNotice state={availability} placement="panel" onAction={() => navigate("/settings")} />
+          </div>
+        ) : (
+          <>
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
           {messages.length === 0 ? (
             <div className="space-y-4">
@@ -246,6 +258,8 @@ export function ProfileAssistant({
             </button>
           </div>
         </form>
+          </>
+        )}
       </div>
     </div>
   )

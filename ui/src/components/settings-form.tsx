@@ -9,6 +9,7 @@ import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
 import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
 
@@ -144,6 +145,12 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <Section title={t("settings.agent.title")} hint={t("settings.agent.hint")}>
+        <AgentAvailabilityNotice
+          state={agentAvailabilityFromModelConfig(model)}
+          placement="entry"
+          className="mb-4"
+          onAction={() => document.getElementById("settings-model-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-muted/40 p-3">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("settings.agent.currentRun")}</p>
@@ -223,7 +230,7 @@ export function SettingsForm({
         <SaveRow label={t("settings.agent.save")} pending={agentMutation.isPending} state={agentStatus} error={agentMutation.error} onSave={() => agentMutation.mutate()} />
       </Section>
 
-      <Section title={t("settings.model.title")} hint={t("settings.model.hint")}>
+      <Section id="settings-model-section" title={t("settings.model.title")} hint={t("settings.model.hint")}>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.model.provider")}</FieldLabel>
@@ -507,9 +514,9 @@ function SaveRow({ label, pending, state, error, onSave }: { label: string; pend
   )
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+function Section({ id, title, hint, children }: { id?: string; title: string; hint?: string; children: ReactNode }) {
   return (
-    <section className="card-soft p-5">
+    <section id={id} className="card-soft p-5">
       <h2 className="text-sm font-bold text-foreground">{title}</h2>
       {hint ? <p className="mt-1 mb-4 text-xs leading-5 text-muted-foreground">{hint}</p> : <div className="mb-4" />}
       {children}
