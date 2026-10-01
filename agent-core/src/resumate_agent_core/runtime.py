@@ -332,12 +332,18 @@ class AgentRuntime:
             args["resume_id"] = session.resume_id
         return tool.invoke(self.client, args)
 
-    def _open_session(self, session_id: str | None, *, recorded: int = 0) -> None:
+    def _open_session(
+        self,
+        session_id: str | None,
+        *,
+        base: int | None = None,
+        recorded: int = 0,
+    ) -> None:
         """Ensure the run has a session before the turn is created (d2e4a)."""
         if self.sessions is None:
             self.session_id = session_id
             return
-        self.session_id = self.sessions.start(session_id, recorded=recorded)
+        self.session_id = self.sessions.start(session_id, base=base, recorded=recorded)
 
     def _record_session(self, messages: Sequence[Message]) -> None:
         """Mirror the current context into the session; best-effort by design."""
@@ -440,7 +446,12 @@ class AgentRuntime:
         # before the session layer simply has none, and then nothing is journalled.
         journal_session_id = getattr(turn, "session_id", None)
         if journal_session_id:
-            self._open_session(journal_session_id, recorded=int(run_state.get("sessionSeq") or 0))
+            stored_base = run_state.get("sessionBase")
+            self._open_session(
+                journal_session_id,
+                base=int(stored_base) if stored_base is not None else None,
+                recorded=int(run_state.get("sessionSeq") or 0),
+            )
         else:
             self.session_id = None
         session = TurnSession(
@@ -489,6 +500,7 @@ class AgentRuntime:
                 extra={
                     "resumeId": session.resume_id,
                     "sessionId": self.session_id,
+                    "sessionBase": self.sessions.base if self.sessions is not None else 0,
                     "sessionSeq": self.sessions.recorded if self.sessions is not None else 0,
                 },
             )
