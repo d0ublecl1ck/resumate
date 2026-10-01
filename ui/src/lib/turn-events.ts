@@ -68,14 +68,19 @@ export function parseTurnEvent(data: unknown): TurnStreamState | null {
  * （服务端首帧下发 retry）。注释心跳不会触发 EventSource 事件，因此没有
  * onHeartbeat：存活状态由 onOpen / onError 与数据帧到达体现。
  */
+/** 浏览器/测试环境可能没有 EventSource；缺席时退化为 no-op 订阅而不是抛错。 */
+function browserEventSourceFactory(): ((url: string) => TurnEventSource) | null {
+  if (typeof EventSource === "undefined") return null
+  return (target: string) => new EventSource(target, { withCredentials: true }) as unknown as TurnEventSource
+}
+
 export function subscribeTurnEvents(
   turnId: string,
   handlers: TurnEventHandlers,
   options: SubscribeTurnEventsOptions = {},
 ): () => void {
-  const factory =
-    options.eventSourceFactory ??
-    ((target: string) => new EventSource(target, { withCredentials: true }) as unknown as TurnEventSource)
+  const factory = options.eventSourceFactory ?? browserEventSourceFactory()
+  if (!factory) return () => {}
   const source = factory(turnEventsUrl(turnId, options.baseUrl ?? API_BASE_URL))
 
   const onSnapshot = (event: MessageEvent) => {

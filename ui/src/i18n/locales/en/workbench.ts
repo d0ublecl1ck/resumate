@@ -62,7 +62,6 @@ export default {
     inputPlaceholder: "Describe your editing intent, e.g. highlight my performance-optimization work… (⌘↵ to send)",
     inputAria: "Conversation input",
     sendAria: "Send",
-    approvedEvent: "Change approved and applied to this turn's Working Copy (no committed version created)",
-    rejectedEvent: "Change rejected; nothing written to the Working Copy",
+    actionError: "The approval action failed: {{message}}",
   },
 }
