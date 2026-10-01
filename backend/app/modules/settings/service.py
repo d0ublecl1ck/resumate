@@ -75,6 +75,11 @@ def _decrypt_secret(value: str) -> str | None:
         return None
 
 
+def decrypt_api_key(value: str | None) -> str | None:
+    """Public accessor for the Fernet path (used by the agent runner)."""
+    return _decrypt_secret(value or "")
+
+
 def _normalize_keys(keys: str) -> str:
     return " ".join(keys.split()).lower()
 

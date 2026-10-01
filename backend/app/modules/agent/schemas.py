@@ -228,5 +228,18 @@ class RunStateUpdateRequest(ApiModel):
     run_state: dict[str, Any]
 
 
+class RunStartRequest(ApiModel):
+    """Body for POST /resumes/{resume_id}/runs."""
+
+    prompt: str = Field(min_length=1, max_length=8000)
+    execution_mode: ExecutionMode | None = None
+    session_id: str | None = Field(default=None, max_length=36)
+
+
+class RunStartResponse(ApiModel):
+    run_id: str
+    status: str
+
+
 class PendingActionDecision(ApiModel):
     """Approve / reject accept an optional empty body."""

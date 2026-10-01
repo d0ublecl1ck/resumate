@@ -16,6 +16,7 @@ class ErrorCode(StrEnum):
     PENDING_ACTION_STALE = "PENDING_ACTION_STALE"
     REBASE_CONFLICT = "REBASE_CONFLICT"
     RUN_STATE_CONFLICT = "RUN_STATE_CONFLICT"
+    MODEL_NOT_CONFIGURED = "MODEL_NOT_CONFIGURED"
     SCOPE_INSUFFICIENT = "SCOPE_INSUFFICIENT"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     TOKEN_REVOKED = "TOKEN_REVOKED"
@@ -100,6 +101,11 @@ class RebaseConflict(ApiException):
 class RunStateConflict(ApiException):
     status_code = 409
     code = ErrorCode.RUN_STATE_CONFLICT
+
+
+class ModelNotConfigured(ApiException):
+    status_code = 409
+    code = ErrorCode.MODEL_NOT_CONFIGURED
 
 
 class Unauthenticated(ApiException):
