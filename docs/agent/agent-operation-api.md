@@ -131,11 +131,12 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 
 ## 6. 端点
 
-所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。approve / reject 另要求人类会话：PAT / agent 来源一律 403 **FORBIDDEN**（见 §9）。会话层与 run checkpoint 的端点见 §19（本表只列最初的 11 个轮次端点）。
+所有端点分别声明唯一权限：读 **resume:read**，写 **resume:write**。approve / reject 另要求人类会话：PAT / agent 来源一律 403 **FORBIDDEN**（见 §9）。会话层与 run checkpoint 的端点见 §19。
 
 | 方法 | 路径 | 权限 | 说明 |
 | --- | --- | --- | --- |
 | POST | /resumes/{resume_id}/turns | resume:write | 创建轮次；若有未关闭轮次，先按 C-04 finalize 旧轮 |
+| GET | /resumes/{resume_id}/turns | resume:read | 列出该简历的轮次；`state` 可选（open\|finalized\|cancelled），创建时间倒序，最多 100 条 |
 | GET | /turns/{turn_id} | resume:read | 读取轮次与待办 |
 | POST | /turns/{turn_id}/finalize | resume:write | 聚合提交并关闭；幂等 |
 | POST | /turns/{turn_id}/cancel | resume:write | 失效未决待办、按 C-04 结算已应用修改并关闭 |
@@ -158,6 +159,8 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 - **patches:apply**：body **{ ops, reason?, baseVersionId?, pendingActionId?, idempotencyKey? }** → PatchApplyResponse **{ applied, userTurnId, resumeId, changeCount, affectedSections, workingRevision, pendingActionId, idempotentReplay }**。
 - **working-document**：GET → WorkingDocumentResponse。
 - **approve / reject**：body **{}** 可选 → PendingActionResponse。
+
+**GET /resumes/{resume_id}/turns**：可选查询参数 **state**（`open` / `finalized` / `cancelled`）过滤；按 `createdAt` 倒序返回 UserTurnResponse[]（含 pendingActions），最多 100 条。简历不存在或不属于当前用户 → 404 RESOURCE_NOT_FOUND；没有任何匹配轮次 → `[]`（不是 404）。轮次发现**不得依赖 Working Copy**：approval 模式下 preview 只创建 PendingAction、不 stage，`working-document.userTurnId` 在首次 apply 之前为空；前端 `getActiveRun` 因此改用本端点发现「已有待办、尚未 apply」的活跃轮次。
 
 ## 7. 状态机
 
