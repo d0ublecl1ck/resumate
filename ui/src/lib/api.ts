@@ -15,6 +15,7 @@ import type {
   AuthUser,
   BackupPayload,
   CapabilityDiscovery,
+  ExecutionMode,
   ImportPreview,
   ImportResult,
   JobDescription,
@@ -165,6 +166,23 @@ export async function getActiveRun(resumeId: string): Promise<AgentRun | undefin
   if (!turn) return undefined
   const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
   return mapTurnToRun(turn, state)
+}
+
+export interface StartRunInput {
+  prompt: string
+  executionMode?: ExecutionMode
+}
+
+export interface RunStartAccepted {
+  runId: string
+  status: string
+}
+
+/** POST /resumes/{resume_id}/runs —— 由后端 spawn 运行体；202 只表示已启动。 */
+export function startRun(resumeId: string, input: StartRunInput): Promise<RunStartAccepted> {
+  const body: { prompt: string; executionMode?: ExecutionMode } = { prompt: input.prompt }
+  if (input.executionMode) body.executionMode = input.executionMode
+  return request<RunStartAccepted>(`/resumes/${resumeId}/runs`, { method: "POST", body: JSON.stringify(body) })
 }
 
 /** POST /pending-actions/{id}/approve */

@@ -5,7 +5,9 @@
 import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { approvePendingAction, rejectPendingAction } from "@/lib/api"
+import { approvePendingAction, rejectPendingAction, startRun } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
+import i18n from "@/i18n"
 import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
@@ -25,25 +27,52 @@ const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   turn_closed: "text-muted-foreground",
 }
 
-export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode }) {
+/** 机器错误码 → i18n 键；禁止把服务端原始 message 直接展示给用户。 */
+function runStartErrorKey(cause: unknown): string {
+  if (cause instanceof ApiRequestError) {
+    if (cause.code === "MODEL_NOT_CONFIGURED") return "workbench.run.errors.modelNotConfigured"
+    if (cause.code === "RATE_LIMITED") return "workbench.run.errors.rateLimited"
+    if (cause.code === "NETWORK_ERROR") return "workbench.run.errors.network"
+  }
+  return "workbench.run.errors.generic"
+}
+
+export function RunPanel({ run, mode, resumeId }: { run?: AgentRun; mode: ExecutionMode; resumeId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [input, setInput] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const [startError, setStartError] = useState<string | null>(null)
+  const [starting, setStarting] = useState(false)
   const [submittingId, setSubmittingId] = useState<string | null>(null)
 
   const decision = useMutation({
     mutationFn: ({ actionId, kind }: { actionId: string; kind: "approve" | "reject" }) =>
       kind === "approve" ? approvePendingAction(actionId) : rejectPendingAction(actionId),
     onMutate: ({ actionId }) => {
-      setError(null)
+      setActionError(null)
       setSubmittingId(actionId)
     },
     onSuccess: () => {
-      if (run) void queryClient.invalidateQueries({ queryKey: ["active-run", run.resumeId] })
+      void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
     },
-    onError: (cause) => setError(cause instanceof Error ? cause.message : String(cause)),
+    onError: (cause) => setActionError(cause instanceof Error ? cause.message : String(cause)),
     onSettled: () => setSubmittingId(null),
+  })
+
+  const start = useMutation({
+    mutationFn: (prompt: string) => startRun(resumeId, { prompt, executionMode: mode }),
+    onMutate: () => {
+      setStartError(null)
+      setStarting(true)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
+    },
+    onError: (cause) => {
+      setStarting(false)
+      setStartError(i18n.t(runStartErrorKey(cause)))
+    },
   })
 
   // StrictMode 安全：每次挂载新建订阅，cleanup 关闭 EventSource（不做一次性 ref 守卫）。
@@ -51,13 +80,38 @@ export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode })
     if (!run?.id) return
     return subscribeTurnEvents(run.id, {
       onUpdate: () => {
-        void queryClient.invalidateQueries({ queryKey: ["active-run", run.resumeId] })
+        void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
       },
     })
-  }, [run?.id, run?.resumeId, queryClient])
+  }, [run?.id, resumeId, queryClient])
+
+  // 子进程创建轮次有延迟：run 出现前轮询 active-run，最多 60s，避免立刻显示「无轮次」。
+  useEffect(() => {
+    if (!starting || run?.id) return
+    const timer = window.setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
+    }, 1500)
+    const stop = window.setTimeout(() => setStarting(false), 60000)
+    return () => {
+      window.clearInterval(timer)
+      window.clearTimeout(stop)
+    }
+  }, [starting, run?.id, resumeId, queryClient])
+
+  // run 出现后结束「正在启动」。
+  useEffect(() => {
+    if (run?.id) setStarting(false)
+  }, [run?.id])
 
   const approve = (actionId: string) => decision.mutate({ actionId, kind: "approve" })
   const reject = (actionId: string) => decision.mutate({ actionId, kind: "reject" })
+
+  function submit() {
+    const prompt = input.trim()
+    if (!prompt || start.isPending) return
+    setInput("")
+    start.mutate(prompt)
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -73,9 +127,14 @@ export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode })
           <span>{t("workbench.run.currentModePrefix")}<span className="font-medium text-foreground">{t("common.executionMode." + (run?.executionMode ?? mode))}</span>{t("workbench.run.currentModeSuffix")}</span>
           {run ? <span>{t("workbench.run.budget", { usedTokens: run.budget.usedTokens, maxTokens: run.budget.maxTokens, usedTurns: run.budget.usedTurns, maxTurns: run.budget.maxTurns })}</span> : null}
         </div>
-        {error ? (
+        {startError ? (
           <p role="alert" className="mt-2 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
-            {t("workbench.run.actionError", { message: error })}
+            {startError}
+          </p>
+        ) : null}
+        {actionError ? (
+          <p role="alert" className="mt-2 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
+            {t("workbench.run.actionError", { message: actionError })}
           </p>
         ) : null}
       </div>
@@ -84,6 +143,11 @@ export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode })
       <div className="flex-1 space-y-3 overflow-auto p-3" aria-live="polite">
         {run ? (
           run.timeline.map((ev) => <TimelineItem key={ev.id} ev={ev} />)
+        ) : starting ? (
+          <p role="status" className="flex items-center justify-center gap-2 py-8 text-center text-sm text-muted-foreground">
+            <CircleDashed className="size-4 animate-spin" aria-hidden />
+            {t("workbench.run.starting")}
+          </p>
         ) : (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("workbench.run.empty")}</p>
         )}
@@ -102,15 +166,23 @@ export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode })
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-                setInput("")
+                submit()
               }
             }}
             rows={2}
+            disabled={start.isPending}
+            aria-busy={start.isPending}
             placeholder={t("workbench.run.inputPlaceholder")}
-            className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+            className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
             aria-label={t("workbench.run.inputAria")}
           />
-          <button className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90" aria-label={t("workbench.run.sendAria")}>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={start.isPending}
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label={t("workbench.run.sendAria")}
+          >
             <Send className="size-4" />
           </button>
         </div>

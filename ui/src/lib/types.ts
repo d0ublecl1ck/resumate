@@ -42,6 +42,7 @@ export type MachineErrorCode =
   | "VERIFICATION_TOKEN_INVALID" // 400（d7b99）
   | "RESEND_TOO_SOON" // 429（d7b99）
   | "RATE_LIMITED" // 429（d7b99）
+  | "MODEL_NOT_CONFIGURED" // 409（83c41）
   | "PASSWORD_RESET_TOKEN_INVALID" // 400（b5586）
 
 export interface ApiError {

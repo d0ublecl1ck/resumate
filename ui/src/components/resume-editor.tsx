@@ -111,7 +111,7 @@ export function ResumeEditor({
         </section>
 
         <section className={cn("min-h-0 card-soft", mobileCol === "chat" ? "block" : "hidden", "lg:block")} aria-label={t("resume.editor.chatAndRun")}>
-          <RunPanel run={run} mode={resume.versions[0]?.executionMode ?? "approval"} />
+          <RunPanel resumeId={resume.id} run={run} mode={resume.versions[0]?.executionMode ?? "approval"} />
         </section>
 
         <section className={cn("min-h-0 card-soft overflow-hidden", mobileCol === "preview" ? "block" : "hidden", "lg:block")} aria-label={t("resume.editor.preview")}>

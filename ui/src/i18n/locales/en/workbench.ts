@@ -63,5 +63,12 @@ export default {
     inputAria: "Conversation input",
     sendAria: "Send",
     actionError: "The approval action failed: {{message}}",
+    starting: "Starting the runner…",
+    errors: {
+      modelNotConfigured: "No model credential yet. Add an OpenAI-compatible endpoint and API key in Settings, then try again.",
+      rateLimited: "Another run is already in progress. Please try again shortly.",
+      network: "Cannot reach the backend service. Make sure it is running.",
+      generic: "Could not start the run. Please try again.",
+    },
   },
 }

@@ -342,6 +342,9 @@ export const handlers = [
       stateVersion: 1,
     }),
   ),
+  http.post("/api/resumes/:id/runs", () =>
+    HttpResponse.json({ runId: "run_mock", status: "started" }, { status: 202 }),
+  ),
   http.post("/api/pending-actions/:id/approve", ({ params }) =>
     HttpResponse.json({ ...MOCK_PENDING_ACTION, id: params.id, state: "approved" }),
   ),
