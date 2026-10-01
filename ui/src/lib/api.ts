@@ -152,15 +152,17 @@ export function listResumeVersions(id: string) {
 // ---------------------------------------------------------------------------
 
 /**
- * GET /resumes/{id}/working-document → GET /turns/{turnId} → GET /turns/{turnId}/state
+ * GET /resumes/{id}/turns?state=open → GET /turns/{turnId}/state
  *
- * 没有正在占有 working copy 的轮次时返回 undefined（无 mock 兜底）。
- * 预算来自轮次 checkpoint；该端点不可用时预算退化为 0，不影响运行与待办展示。
+ * 用「open 轮次列表」而不是 working-document 发现轮次：approval 下 preview 只建
+ * 待办、不落 working copy，只有 open 列表能在首次 apply 前发现待审批轮次。
+ * 没有 open 轮次时返回 undefined（无 mock 兜底）。预算来自轮次 checkpoint，
+ * 该端点不可用时预算退化为 0，不影响运行与待办展示。
  */
 export async function getActiveRun(resumeId: string): Promise<AgentRun | undefined> {
-  const working = await request<{ userTurnId?: string | null }>(`/resumes/${resumeId}/working-document`)
-  if (!working.userTurnId) return undefined
-  const turn = await request<ApiTurn>(`/turns/${working.userTurnId}`)
+  const turns = await request<ApiTurn[]>(`/resumes/${resumeId}/turns?state=open`)
+  const turn = turns[0]
+  if (!turn) return undefined
   const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
   return mapTurnToRun(turn, state)
 }
