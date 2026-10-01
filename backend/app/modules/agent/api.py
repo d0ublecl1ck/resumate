@@ -22,6 +22,7 @@ from .schemas import (
     RunStateUpdateRequest,
     RunStartRequest,
     RunStartResponse,
+    RuntimeStatusResponse,
     SessionCreateRequest,
     SessionMessageCreateRequest,
     SessionMessageResponse,
@@ -63,6 +64,14 @@ def start_run(
 ) -> RunStartResponse:
     """Spawn the CLI runner for one run (contract section 20)."""
     return runner.start_run(db, user, resume_id, payload, request, client)
+
+
+@router.get("/agent/runtime", response_model=RuntimeStatusResponse)
+def get_runtime_status(
+    _user: CurrentUser = Depends(require_permission("resume:read")),
+) -> RuntimeStatusResponse:
+    """Report whether the backend can start the runner on demand (contract 20.5)."""
+    return service.runtime_status()
 
 
 @router.get("/resumes/{resume_id}/turns", response_model=list[UserTurnResponse])
