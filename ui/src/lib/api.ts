@@ -4,12 +4,14 @@
 // 后端已实现的端点走真实 HTTP（api-client.ts）；未实现的端点仍从 lib/content.ts
 // 读取 mock，待对应后端能力落地后再替换，函数签名与入参、返回类型保持不变。
 
-import { AGENT_RUNS, CURRENT_USER, JOB_MATCHES, PROFILE } from "./content"
+import { CURRENT_USER, JOB_MATCHES, PROFILE } from "./content"
 import type {
   AccessLogEntry,
   AgentConfig,
   AgentConfigUpdate,
   AgentRun,
+  ApiTurn,
+  ApiTurnPendingAction,
   AuthUser,
   BackupPayload,
   CapabilityDiscovery,
@@ -40,8 +42,11 @@ import type {
   Resume,
   ResumeTemplate,
   ResumeVersion,
+  RunTimelineEvent,
+  TurnStateResponse,
   UserPreferences,
   UserPreferencesUpdate,
+  PendingAction,
   PasswordResetAccepted,
   PasswordResetInput,
   ResendVerificationInput,
@@ -146,9 +151,78 @@ export function listResumeVersions(id: string) {
 // Agent Run / Conversation：events / cancel / PendingAction approve|reject
 // ---------------------------------------------------------------------------
 
-/** GET /resumes/{id}/run （SSE 在真实实现中用 EventSource） */
-export function getActiveRun(resumeId: string): Promise<AgentRun | undefined> {
-  return resolve(AGENT_RUNS.find((run) => run.resumeId === resumeId))
+/**
+ * GET /resumes/{id}/working-document → GET /turns/{turnId} → GET /turns/{turnId}/state
+ *
+ * 没有正在占有 working copy 的轮次时返回 undefined（无 mock 兜底）。
+ * 预算来自轮次 checkpoint；该端点不可用时预算退化为 0，不影响运行与待办展示。
+ */
+export async function getActiveRun(resumeId: string): Promise<AgentRun | undefined> {
+  const working = await request<{ userTurnId?: string | null }>(`/resumes/${resumeId}/working-document`)
+  if (!working.userTurnId) return undefined
+  const turn = await request<ApiTurn>(`/turns/${working.userTurnId}`)
+  const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
+  return mapTurnToRun(turn, state)
+}
+
+/** POST /pending-actions/{id}/approve */
+export function approvePendingAction(actionId: string): Promise<PendingAction> {
+  return request<PendingAction>(`/pending-actions/${actionId}/approve`, { method: "POST" })
+}
+
+/** POST /pending-actions/{id}/reject */
+export function rejectPendingAction(actionId: string): Promise<PendingAction> {
+  return request<PendingAction>(`/pending-actions/${actionId}/reject`, { method: "POST" })
+}
+
+function mapPendingAction(action: ApiTurnPendingAction): PendingAction {
+  return {
+    id: action.id,
+    kind: action.kind,
+    title: action.title,
+    targetResource: action.targetResource,
+    baseVersionId: action.baseVersionId ?? undefined,
+    impactSummary: action.impactSummary,
+    requiresTextConfirm: action.requiresTextConfirm,
+    state: action.state,
+    staleReason: action.staleReason ?? undefined,
+    diff: action.diff,
+  }
+}
+
+/** 把后端轮次投影映射为界面 Run；状态只由真实轮次与待办状态推导，不虚构事件。 */
+export function mapTurnToRun(turn: ApiTurn, state?: TurnStateResponse): AgentRun {
+  const pendingActions = (turn.pendingActions ?? []).map(mapPendingAction)
+  const hasPending = pendingActions.some((action) => action.state === "pending")
+  const hasApproved = pendingActions.some((action) => action.state === "approved")
+  const runState: AgentRun["state"] =
+    turn.state === "open" ? (hasPending ? "awaiting_confirm" : hasApproved ? "approved" : "running") : "turn_closed"
+  const budget = state?.runState?.budget ?? {}
+  const timeline: RunTimelineEvent[] = []
+  if (turn.message) {
+    timeline.push({ id: `${turn.id}:message`, kind: "message", at: turn.createdAt ?? new Date().toISOString(), role: "user", text: turn.message })
+  }
+  if (turn.result?.message) {
+    timeline.push({ id: `${turn.id}:result`, kind: "finalize", at: turn.closedAt ?? new Date().toISOString(), role: "agent", text: turn.result.message })
+  }
+  return {
+    id: turn.id,
+    resumeId: turn.resumeId,
+    conversationId: turn.sessionId ?? turn.id,
+    userTurnId: turn.id,
+    executionMode: turn.executionMode,
+    modeSource: turn.modeSource,
+    state: runState,
+    budget: {
+      usedTokens: budget.tokensUsed ?? 0,
+      maxTokens: budget.maxTokens ?? 0,
+      usedTurns: budget.turnsUsed ?? 0,
+      maxTurns: budget.maxTurns ?? 0,
+      costUsd: budget.costUsedUsd ?? 0,
+    },
+    timeline,
+    pendingActions,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -584,8 +658,9 @@ export async function getWorkbenchSummary(): Promise<WorkbenchSummary> {
   const resumes = await listResumes()
   const jds = await listJds()
   const profile = await getProfile()
-  const runs = AGENT_RUNS
-  const pendingActionCount = runs.reduce((n, run) => n + run.pendingActions.filter((p) => p.state === "pending").length, 0)
+  // 没有「列出活动轮次」的端点：逐份简历查询 working-document，累加真实待办数。
+  const runs = await Promise.all(resumes.map((resume) => getActiveRun(resume.id)))
+  const pendingActionCount = runs.reduce((n, run) => n + (run?.pendingActions.filter((p) => p.state === "pending").length ?? 0), 0)
   return resolve({
     latestResume: resumes[0],
     uncommittedDraftCount: resumes.filter((r) => r.saveState === "uncommitted" || r.saveState === "synced_draft").length,
