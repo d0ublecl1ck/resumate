@@ -19,13 +19,16 @@ import json
 import threading
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, runtime_checkable
 
 from .client import ResumateClient
 from .errors import ApiClientError
 from .models import PatchPreviewResponse, TurnResult, UserTurn
 from .tools import TOOLS, Tool, UnknownToolError
 from .turn import TurnSession
+
+if TYPE_CHECKING:  # pragma: no cover - typing-only import avoids a cycle
+    from .checkpoint import CheckpointStore
 
 DEFAULT_SYSTEM_PROMPT = (
     "You operate a Resumate resume through the public API. Work inside one turn: "
@@ -72,6 +75,25 @@ class Message:
         if self.name is not None:
             payload["name"] = self.name
         return payload
+
+    @classmethod
+    def from_wire(cls, payload: Mapping[str, Any]) -> "Message":
+        """Rebuild a message from its checkpoint wire form."""
+        tool_calls = tuple(
+            ToolCall(
+                id=str(call.get("id", "")),
+                name=str(call.get("name", "")),
+                arguments=dict(call.get("arguments") or {}),
+            )
+            for call in payload.get("toolCalls") or []
+        )
+        return cls(
+            role=payload.get("role", "user"),
+            content=payload.get("content") or "",
+            tool_calls=tool_calls,
+            tool_call_id=payload.get("toolCallId"),
+            name=payload.get("name"),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,6 +239,20 @@ class RunBudget:
             "maxCostUsd": self.max_cost_usd,
         }
 
+    @classmethod
+    def from_snapshot(cls, snapshot: Mapping[str, Any] | None) -> "RunBudget":
+        """Rebuild a budget (limits + usage) from a checkpoint snapshot."""
+        data = dict(snapshot or {})
+        budget = cls(
+            max_tokens=int(data.get("maxTokens", 100_000)),
+            max_turns=int(data.get("maxTurns", 24)),
+            max_cost_usd=float(data.get("maxCostUsd", 5.0)),
+        )
+        budget.turns_used = int(data.get("turnsUsed", 0))
+        budget.tokens_used = int(data.get("tokensUsed", 0))
+        budget.cost_used = float(data.get("costUsedUsd", 0.0))
+        return budget
+
 
 class CancellationToken:
     """Thread-safe cooperative cancellation flag."""
@@ -258,6 +294,7 @@ class AgentRuntime:
         system_prompt: str | None = None,
         auto_finalize: bool = True,
         max_tool_result_chars: int = MAX_TOOL_RESULT_CHARS,
+        checkpoint: CheckpointStore | None = None,
     ) -> None:
         self.client = client
         self.provider = provider
@@ -267,6 +304,7 @@ class AgentRuntime:
         self.system_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
         self.auto_finalize = auto_finalize
         self.max_tool_result_chars = max_tool_result_chars
+        self.checkpoint = checkpoint
 
     # --- helpers ------------------------------------------------------------
 
@@ -356,25 +394,92 @@ class AgentRuntime:
             Message(role="system", content=self.system_prompt),
             Message(role="user", content=prompt),
         ]
-        provider_tools = self._provider_tools()
+        yield from self._drive(session, messages)
 
+    def resume(self, turn_id: str) -> Iterator[RunEvent]:
+        """Continue an interrupted turn from its server-side checkpoint."""
+        if self.checkpoint is None:
+            yield ErrorEvent(code="RUNTIME_ERROR", message="resume requires a checkpoint store")
+            return
+        try:
+            turn = self.client.get_turn(turn_id)
+        except ApiClientError as exc:
+            yield ErrorEvent(code=exc.code, message=str(exc), detail="resume failed")
+            return
+        session = TurnSession(self.client, turn.resume_id, turn_id=turn_id)
+        try:
+            session.begin()
+        except ApiClientError as exc:
+            yield ErrorEvent(code=exc.code, message=str(exc), detail="resume failed")
+            return
+        if not session.open:
+            yield FinalizeEvent(turn=session.turn, result=session.turn.result)
+            return
+
+        state = self.checkpoint.load(turn_id)
+        run_state = state.run_state or {}
+        restored = [
+            Message.from_wire(item) for item in (run_state.get("messages") or []) if isinstance(item, Mapping)
+        ]
+        messages: list[Message] = restored or [Message(role="system", content=self.system_prompt)]
+        budget_snapshot = run_state.get("budget")
+        if isinstance(budget_snapshot, Mapping):
+            self.budget = RunBudget.from_snapshot(budget_snapshot)
+        yield from self._drive(session, messages)
+
+    def _save_checkpoint(
+        self,
+        session: TurnSession,
+        messages: Sequence[Message],
+        phase: str,
+        pending_action_id: str | None = None,
+    ) -> None:
+        """Best-effort checkpoint write; a failure must not kill a live run."""
+        if self.checkpoint is None:
+            return
+        try:
+            self.checkpoint.save(
+                session.turn_id,
+                messages=messages,
+                budget=self.budget,
+                phase=phase,
+                pending_action_id=pending_action_id,
+                extra={"resumeId": session.resume_id},
+            )
+        except ApiClientError:
+            # The next model turn writes again; a lost checkpoint only costs the
+            # ability to resume from that exact point.
+            pass
+
+    @staticmethod
+    def _phase(pending_action_id: str | None) -> str:
+        """Checkpoint phase: a live approval gate is visible to a resumer."""
+        return "awaiting_approval" if pending_action_id else "running"
+
+    def _drive(self, session: TurnSession, messages: list[Message]) -> Iterator[RunEvent]:
+        provider_tools = self._provider_tools()
+        pending_action_id: str | None = None
         for _ in range(self.budget.max_turns):
             if self._is_cancelled():
+                self._save_checkpoint(session, messages, "cancelled", pending_action_id)
                 yield from self._abort(session, "CANCELLED", "Run cancelled by caller")
                 return
             try:
                 self.budget.start_turn()
             except BudgetExceeded as exc:
+                self._save_checkpoint(session, messages, "failed", pending_action_id)
                 yield from self._abort(session, "BUDGET_EXCEEDED", str(exc), exc.limit)
                 return
             try:
                 response = self.provider.complete(tuple(messages), tuple(provider_tools))
             except Exception as exc:
+                self._save_checkpoint(session, messages, "failed", pending_action_id)
                 yield from self._abort(session, "MODEL_ERROR", str(exc))
                 return
             try:
                 self.budget.consume(response)
             except BudgetExceeded as exc:
+                self._save_checkpoint(session, messages, "failed", pending_action_id)
                 yield from self._abort(session, "BUDGET_EXCEEDED", str(exc), exc.limit)
                 return
 
@@ -383,6 +488,8 @@ class AgentRuntime:
 
             tool_calls = tuple(response.message.tool_calls)
             if not tool_calls:
+                messages.append(response.message)
+                self._save_checkpoint(session, messages, self._phase(pending_action_id), pending_action_id)
                 break
 
             messages.append(response.message)
@@ -442,10 +549,13 @@ class AgentRuntime:
                     and isinstance(payload, Mapping)
                     and payload.get("pendingActionId")
                 ):
+                    pending_action_id = str(payload["pendingActionId"])
                     yield PendingActionEvent(
-                        pending_action_id=str(payload["pendingActionId"]),
+                        pending_action_id=pending_action_id,
                         preview=PatchPreviewResponse.model_validate(payload),
                     )
+                elif call.name == "apply_patch":
+                    pending_action_id = None
                 messages.append(
                     Message(
                         role="tool",
@@ -460,16 +570,21 @@ class AgentRuntime:
                 elif call.name == "cancel_turn":
                     terminal = "cancel"
 
+            self._save_checkpoint(session, messages, self._phase(pending_action_id), pending_action_id)
+
             if terminal == "finalize":
                 try:
                     session.refresh()
                 except ApiClientError:  # pragma: no cover - informational refresh
                     pass
+                self._save_checkpoint(session, messages, "finalized", None)
                 yield FinalizeEvent(turn=session.turn, result=finalize_result or session.turn.result)
                 return
             if terminal == "cancel":
+                self._save_checkpoint(session, messages, "cancelled", None)
                 return
         else:
+            self._save_checkpoint(session, messages, "failed", pending_action_id)
             yield from self._abort(
                 session,
                 "BUDGET_EXCEEDED",
@@ -485,4 +600,5 @@ class AgentRuntime:
         except ApiClientError as exc:
             yield ErrorEvent(code=exc.code, message=str(exc), detail="finalize failed")
             return
+        self._save_checkpoint(session, messages, "finalized", None)
         yield FinalizeEvent(turn=closed, result=closed.result)

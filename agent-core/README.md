@@ -126,18 +126,22 @@ Exit codes: `0` when the turn finalized, `1` when the run reported an `error`
 event or never finalized, `2` for a usage/configuration mistake. Credentials are
 never echoed to stdout or stderr.
 
-### Run state today, and what is deliberately missing
+### Run state and resume
 
-`--state <path>` writes a minimal snapshot when the run starts (`phase:
-started`) and overwrites it when the run ends (`phase: finished` or
-`failed`, with `startedAt` / `endedAt`). It is a **latest snapshot, not a
-checkpoint**: a restart cannot resume from it.
+The runner checkpoints after **every model call**: the message context, budget
+counters, `turn_id`, `pending_action_id`, and `phase` are written to the
+server-side per-turn checkpoint (`GET|PUT /turns/{turn_id}/state`), so nothing
+depends on local process memory. `--resume <turnId>` reloads that checkpoint and
+continues the same open turn until it finalizes:
 
-That is intentional scaffolding. The runner is meant to checkpoint after every
-model call, so a later `/step` can advance to the next breakpoint, and this flag
-keeps the seam for that work. Per-turn checkpointing, resume, and the persistent
-session/message store are the next issue; until then the file only answers
-"which run is in flight".
+```bash
+uv run resumate-agent --resume turn_abc123 \
+  --model gpt-4o-mini --api-key "$OPENAI_API_KEY"
+```
+
+`--state <path>` remains a **local observability snapshot** (start/finish of one
+process), not the source of truth: a restart resumes from the server checkpoint
+via `--resume`, never from that file.
 
 ## Layout
 
@@ -147,11 +151,12 @@ src/resumate_agent_core/
   errors.py    # error envelope -> ApiClientError
   models.py    # pydantic v2 models for contract sections 4 and 5
   patches.py   # set_basics / upsert_section / remove_section / upsert_entry / remove_entry
-  client.py    # ResumateClient: the 12 public endpoints
+  client.py    # ResumateClient: the agent-operation public endpoints
   turn.py      # TurnSession + idempotency-key helper
+  checkpoint.py # per-turn run checkpoint over GET|PUT /turns/{turn_id}/state
   tools.py     # TOOLS registry: name -> schema + client callable
   runtime.py   # C-09 loop skeleton (ModelProvider Protocol, budget, cancel, events)
-  cli.py       # resumate-agent: one run as a standalone process (JSONL events, --state)
+  cli.py       # resumate-agent: one run as a standalone process (JSONL events, --resume)
   __main__.py  # python -m resumate_agent_core -> cli.main
   openai_provider.py   # OpenAI-compatible ModelProvider over httpx
   skills.py    # SKILL.md loader for a skills directory

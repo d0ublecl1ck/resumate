@@ -5,11 +5,14 @@ The package is the client-side half of the frozen Agent operation API contract
 never touches the business database (contract C-09).
 """
 
+from .checkpoint import CheckpointStore, build_run_state, messages_from_run_state
 from .client import ResumateClient
 from .config import AgentCoreSettings
 from .errors import ApiClientError, ErrorCode, MalformedResponseError, TransportError
 from .openai_provider import OpenAICompatibleError, OpenAICompatibleProvider
 from .models import (
+    AgentMessage,
+    AgentSession,
     CapabilityResponse,
     DiffItem,
     PatchApplyRequest,
@@ -25,6 +28,7 @@ from .models import (
     ResumeEntry,
     ResumeSection,
     TurnResult,
+    TurnState,
     UserTurn,
     UserTurnResponse,
     WorkingDocument,
@@ -72,11 +76,14 @@ from .turn import TurnSession, make_idempotency_key
 
 __all__ = [
     "AgentCoreSettings",
+    "AgentMessage",
     "AgentRuntime",
+    "AgentSession",
     "ApiClientError",
     "BudgetExceeded",
     "CancellationToken",
     "CapabilityResponse",
+    "CheckpointStore",
     "DiffItem",
     "ErrorCode",
     "ErrorEvent",
@@ -105,6 +112,7 @@ __all__ = [
     "ResumateClient",
     "RunBudget",
     "RunEvent",
+    "TurnState",
     "Skill",
     "SkillLoader",
     "SkillNotFoundError",
@@ -123,10 +131,12 @@ __all__ = [
     "WorkingDocumentResponse",
     "build_apply_request",
     "build_patch",
+    "build_run_state",
     "call_tool",
     "get_tool",
     "list_tools",
     "make_idempotency_key",
+    "messages_from_run_state",
     "openai_tool_specs",
     "parse_frontmatter",
     "remove_entry",
