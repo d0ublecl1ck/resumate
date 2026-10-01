@@ -1,14 +1,15 @@
 ---
 id: 3ae82
-status: in-progress
+status: closed
 created_at: 2026-10-01T01:37:39.921Z
-updated_at: 2026-10-01T01:37:55.995Z
+updated_at: 2026-10-01T01:38:58.970Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 核心实体接口
 started_at: 2026-10-01T01:37:55.995Z
+closed_at: 2026-10-01T01:38:58.970Z
 ---
 
 # 历史会话界面：会话列表与详情 Storybook 先行
