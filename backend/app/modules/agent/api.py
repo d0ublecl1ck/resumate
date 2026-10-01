@@ -23,6 +23,7 @@ from .schemas import (
     SessionMessageResponse,
     SessionResponse,
     TurnCancelRequest,
+    TurnState,
     TurnCreateRequest,
     TurnFinalizeRequest,
     UserTurnResponse,
@@ -40,6 +41,16 @@ def create_turn(
     user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> UserTurnResponse:
     return service.begin_turn(db, user, resume_id, payload)
+
+
+@router.get("/resumes/{resume_id}/turns", response_model=list[UserTurnResponse])
+def list_turns(
+    resume_id: str,
+    state: TurnState | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> list[UserTurnResponse]:
+    return service.list_turns(db, user, resume_id, state)
 
 
 @router.get("/turns/{turn_id}", response_model=UserTurnResponse)
