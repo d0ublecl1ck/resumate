@@ -137,6 +137,7 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 | --- | --- | --- | --- |
 | POST | /resumes/{resume_id}/turns | resume:write | 创建轮次；若有未关闭轮次，先按 C-04 finalize 旧轮 |
 | GET | /resumes/{resume_id}/turns | resume:read | 列出该简历的轮次；`state` 可选（open\|finalized\|cancelled），创建时间倒序，最多 100 条 |
+| POST | /resumes/{resume_id}/runs | resume:write + 人类会话 | spawn 运行体（第 20 节）；未配置模型 409 MODEL_NOT_CONFIGURED |
 | GET | /turns/{turn_id} | resume:read | 读取轮次与待办 |
 | POST | /turns/{turn_id}/finalize | resume:write | 聚合提交并关闭；幂等 |
 | POST | /turns/{turn_id}/cancel | resume:write | 失效未决待办、按 C-04 结算已应用修改并关闭 |
@@ -419,3 +420,39 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 | code | HTTP | 触发 | 恢复动作 |
 | --- | --- | --- | --- |
 | `RUN_STATE_CONFLICT` | 409 | PUT state 的 `stateVersion` 与服务端当前值不一致 | 重新 `GET /turns/{turn_id}/state`，基于新版本重写 |
+
+## 20. 运行体 spawn（83c41）
+
+运行体是**独立进程**：后端不实现模型调用，而是为一次 run spawn `resumate-agent` CLI，由它通过公共 API 创建轮次、落 checkpoint 并写简历。
+
+### 20.1 端点
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| POST | /resumes/{resume_id}/runs | resume:write + 人类会话 | 启动一次运行体进程，返回 202 |
+
+- body：`{ prompt: string(1..8000), executionMode?: "approval" | "full_access", sessionId?: string }`。
+- 成功：202 `{ runId, status: "started" }`；**不返回 turnId**——轮次由子进程创建，前端用 `GET /resumes/{id}/turns?state=open` 与 SSE 发现。
+- 未知/越权简历 404；未知/越权会话 404；PAT / agent 来源 403 `FORBIDDEN`（运行体需要可委派的用户凭据，且 spawn 进程是用户动作）。
+- 未配置模型密钥 409 `MODEL_NOT_CONFIGURED`（不 spawn，供界面引导）。
+- 并发已满 429 `RATE_LIMITED`。
+
+### 20.2 凭据
+
+- 子进程环境变量：`RESUME_AGENT_CORE_BASE_URL`、`RESUME_AGENT_CORE_SESSION_COOKIE` / `RESUME_AGENT_CORE_SESSION_COOKIE_NAME`、`RESUME_AGENT_CORE_MODEL`、`RESUME_AGENT_CORE_API_KEY`，可选 `RESUME_AGENT_CORE_PROVIDER_BASE_URL`。apiKey 与 cookie **只走 env，不进 argv**（`ps` 不可见）。
+- 子进程使用**最小环境**（PATH / LANG / PYTHONUNBUFFERED + 上述变量），不继承后端自身的 `DATABASE_URL`、`SETTINGS_SECRET_KEY` 等。
+- apiKey 在 spawn 前由 Fernet 解密，只存在于该子进程生命周期；进程退出即消失，后端不写盘、不写日志。
+- 显式 `executionMode` 优先；缺省回退账户 `agent_config.nextRunMode`，都没有时子进程按默认 `approval`。
+
+### 20.3 超时、并发与日志
+
+- 硬超时 `AGENT_RUNNER_TIMEOUT_SECONDS`（默认 300s）：到点对子进程**进程组**发 `SIGKILL`（`start_new_session=True` + `os.killpg`），守候线程再 `wait()` 回收，避免僵尸。
+- 并发 `AGENT_RUNNER_MAX_CONCURRENT`（默认 2，**进程内**计数）；超限直接 429，**不排队**。多 worker 部署时上限是「每 worker」，不是全局。
+- 子进程 stdout/stderr 合并写入 `AGENT_RUNNER_LOG_DIR`（默认 `backend/var/agent-runs`）下 `<runId>.log`，目录 0700、文件 0600。日志只含子进程自身输出；后端不向日志注入 apiKey / cookie。
+- 命令由 `AGENT_RUNNER_COMMAND` 配置（默认 `resumate-agent`，需在 PATH；测试指向桩脚本）。
+
+### 20.4 安全边界与已知残余风险
+
+- 子进程持有调用方的**完整会话 cookie**。它是用户级凭据，不是按 run 限权的短时令牌；生命周期受硬超时约束，但期间若子进程泄露，攻击者可冒充该用户调用 API。
+- 更安全的替代（本工单未做）：后端签发一次性、短时、按 resume 限权的 run token，由子进程使用。
+- 模型密钥不会跨用户使用：后端始终读取**调用者本人**的 `user_settings.model_config`。

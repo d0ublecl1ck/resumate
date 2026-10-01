@@ -167,7 +167,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 187 passed
+uv run --directory backend pytest        # → 193 passed
 cd agent-core && uv run pytest -q        # → 97 passed
 cd ui && pnpm test                       # → 27 files / 199 passed
 archkit inspect .                        # → Quality gates passed.
@@ -178,7 +178,7 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 统计口径：
 
 ```bash
-grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 82 个端点
+grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 83 个端点
 ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
 ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 17 个 story 文件
 ```
