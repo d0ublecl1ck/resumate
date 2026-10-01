@@ -22,6 +22,16 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, runtime_checkable
 
 from .client import ResumateClient
+from .compaction import (
+    SUMMARY_MARKER,
+    SUMMARY_ROLE,
+    CompactionPolicy,
+    compaction_marker,
+    cut_index,
+    estimate_context_tokens,
+    render_transcript,
+    should_compact,
+)
 from .errors import ApiClientError
 from .models import PatchPreviewResponse, TurnResult, UserTurn
 from .tools import TOOLS, Tool, UnknownToolError
@@ -172,7 +182,26 @@ class ErrorEvent:
     type: ClassVar[str] = "error"
 
 
-RunEvent = MessageEvent | ToolProgressEvent | PendingActionEvent | FinalizeEvent | ErrorEvent
+@dataclass(frozen=True, slots=True)
+class CompactionEvent:
+    """Old turns were folded into a summary before the next model call."""
+
+    compacted_messages: int
+    kept_messages: int
+    summary_chars: int
+    tokens_before: int
+    tokens_after: int
+    type: ClassVar[str] = "compaction"
+
+
+RunEvent = (
+    MessageEvent
+    | ToolProgressEvent
+    | PendingActionEvent
+    | FinalizeEvent
+    | ErrorEvent
+    | CompactionEvent
+)
 
 
 # --- budgets and cancellation ------------------------------------------------
@@ -297,6 +326,7 @@ class AgentRuntime:
         max_tool_result_chars: int = MAX_TOOL_RESULT_CHARS,
         checkpoint: CheckpointStore | None = None,
         sessions: SessionJournal | None = None,
+        compaction: CompactionPolicy | None = None,
     ) -> None:
         self.client = client
         self.provider = provider
@@ -308,6 +338,10 @@ class AgentRuntime:
         self.max_tool_result_chars = max_tool_result_chars
         self.checkpoint = checkpoint
         self.sessions = sessions
+        # None means "compact with the defaults"; a caller that wants a different
+        # trigger passes its own policy.
+        self.compaction = compaction if compaction is not None else CompactionPolicy()
+        self._compaction: dict[str, Any] | None = None
         # Resolved by run()/resume(); exposed so a caller can report where the
         # conversation history was written (issue d2e4a).
         self.session_id: str | None = None
@@ -349,6 +383,77 @@ class AgentRuntime:
         """Mirror the current context into the session; best-effort by design."""
         if self.sessions is not None:
             self.sessions.record(messages)
+
+    def _summary_prompt(self, messages: Sequence[Message]) -> list[Message]:
+        """The prompt that turns folded turns into one continuation summary."""
+        return [
+            Message(
+                role="system",
+                content=(
+                    "You compress an agent conversation. Summarise the transcript below for "
+                    "another agent that must continue the same task: keep decisions, tool "
+                    "outcomes, identifiers, and unresolved questions. Reply with the summary only."
+                ),
+            ),
+            Message(role="user", content=render_transcript(messages)),
+        ]
+
+    def _summarise(self, messages: Sequence[Message]) -> str:
+        """Ask the injected provider for a summary (no tools on this call)."""
+        response = self.provider.complete(tuple(self._summary_prompt(messages)), ())
+        return response.message.content or ""
+
+    def _maybe_compact(
+        self,
+        session: TurnSession,
+        messages: list[Message],
+        pending_action_id: str | None,
+    ) -> Iterator[CompactionEvent]:
+        """Fold old turns into one summary message when the context is too big."""
+        policy = self.compaction
+        if policy is None or not should_compact(messages, policy, max_tokens=self.budget.max_tokens):
+            return
+        cut = cut_index(messages, policy.keep_recent_turns)
+        if cut <= 1 or cut >= len(messages):
+            return
+        folded = list(messages[1:cut])
+        before = estimate_context_tokens(messages, chars_per_token=policy.chars_per_token)
+        try:
+            summary = self._summarise(folded)
+        except Exception:
+            # A failed summary must not kill the run: keep the full context and
+            # let the ordinary budget guard decide what happens next.
+            return
+        if not summary.strip():
+            return
+
+        marker = Message(role=SUMMARY_ROLE, content=compaction_marker(summary))
+        messages[:] = [messages[0], marker, *messages[cut:]]
+        if self.sessions is not None:
+            # Re-anchor the history cursor: the context shrank, so the marker
+            # becomes the new base and later messages continue after it.
+            self.sessions.record_compaction(
+                {**marker.to_wire(), "compactedHistory": True, "compactedMessages": len(folded)},
+                context_length=len(messages),
+            )
+        self._compaction = {
+            "version": 1,
+            "marker": SUMMARY_MARKER,
+            "compactedMessages": len(folded),
+            "keptMessages": len(messages) - 2,
+            "keepRecentTurns": policy.keep_recent_turns,
+            "summaryChars": len(summary),
+        }
+        # Persist immediately: a crash right after compaction must not resurrect
+        # the full context on resume.
+        self._save_checkpoint(session, messages, self._phase(pending_action_id), pending_action_id)
+        yield CompactionEvent(
+            compacted_messages=len(folded),
+            kept_messages=len(messages) - 2,
+            summary_chars=len(summary),
+            tokens_before=before,
+            tokens_after=estimate_context_tokens(messages, chars_per_token=policy.chars_per_token),
+        )
 
     def _stringify(self, payload: Any) -> str:
         try:
@@ -476,6 +581,10 @@ class AgentRuntime:
         budget_snapshot = run_state.get("budget")
         if isinstance(budget_snapshot, Mapping):
             self.budget = RunBudget.from_snapshot(budget_snapshot)
+        stored_compaction = run_state.get("compaction")
+        if isinstance(stored_compaction, Mapping):
+            # Keep the compaction metadata visible in later checkpoints too.
+            self._compaction = dict(stored_compaction)
         self._record_session(messages)
         yield from self._drive(session, messages)
 
@@ -490,6 +599,14 @@ class AgentRuntime:
         self._record_session(messages)
         if self.checkpoint is None:
             return
+        extra: dict[str, Any] = {
+            "resumeId": session.resume_id,
+            "sessionId": self.session_id,
+            "sessionBase": self.sessions.base if self.sessions is not None else 0,
+            "sessionSeq": self.sessions.recorded if self.sessions is not None else 0,
+        }
+        if self._compaction is not None:
+            extra["compaction"] = dict(self._compaction)
         try:
             self.checkpoint.save(
                 session.turn_id,
@@ -497,12 +614,7 @@ class AgentRuntime:
                 budget=self.budget,
                 phase=phase,
                 pending_action_id=pending_action_id,
-                extra={
-                    "resumeId": session.resume_id,
-                    "sessionId": self.session_id,
-                    "sessionBase": self.sessions.base if self.sessions is not None else 0,
-                    "sessionSeq": self.sessions.recorded if self.sessions is not None else 0,
-                },
+                extra=extra,
             )
         except ApiClientError:
             # The next model turn writes again; a lost checkpoint only costs the
@@ -522,6 +634,8 @@ class AgentRuntime:
                 self._save_checkpoint(session, messages, "cancelled", pending_action_id)
                 yield from self._abort(session, "CANCELLED", "Run cancelled by caller")
                 return
+            # Fold old turns before spending a model call on an oversized context.
+            yield from self._maybe_compact(session, messages, pending_action_id)
             try:
                 self.budget.start_turn()
             except BudgetExceeded as exc:
