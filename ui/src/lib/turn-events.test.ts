@@ -87,6 +87,16 @@ describe("subscribeTurnEvents", () => {
     expect(onUpdate).toHaveBeenCalledWith({ ...TURN, state: "finalized" })
   })
 
+  it("returns a no-op subscription when EventSource is unavailable", () => {
+    vi.stubGlobal("EventSource", undefined)
+    const onUpdate = vi.fn()
+
+    const unsubscribe = subscribeTurnEvents("turn_1", { onUpdate })
+
+    expect(() => unsubscribe()).not.toThrow()
+    vi.unstubAllGlobals()
+  })
+
   it("ignores malformed frames instead of throwing", () => {
     const onSnapshot = vi.fn()
     const { source } = subscription({ onSnapshot })

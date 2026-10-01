@@ -23,12 +23,15 @@ export function PendingActionCard({
   onReject,
   onDiffAccept,
   onDiffReject,
+  busy = false,
 }: {
   action: PendingAction
   onApprove?: (id: string) => void
   onReject?: (id: string) => void
   onDiffAccept?: (actionId: string, diffId: string) => void
   onDiffReject?: (actionId: string, diffId: string) => void
+  /** 提交中：禁用两个动作按钮，避免重复请求。 */
+  busy?: boolean
 }) {
   const { t } = useTranslation()
   const [confirmText, setConfirmText] = useState("")
@@ -37,7 +40,7 @@ export function PendingActionCard({
   const confirmReady = !action.requiresTextConfirm || confirmText.trim() === confirmWord
 
   return (
-    <div className="card-frame p-4">
+    <div className="card-frame p-4" aria-busy={busy || undefined}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-md bg-cobalt/10 text-cobalt">
@@ -52,7 +55,7 @@ export function PendingActionCard({
       </div>
 
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-        <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.toolCall")}</dt><dd className="font-mono text-foreground">{action.toolCallId}</dd></div>
+        {action.toolCallId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.toolCall")}</dt><dd className="font-mono text-foreground">{action.toolCallId}</dd></div> : null}
         {action.baseVersionId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.baseVersion")}</dt><dd className="font-mono text-foreground">{action.baseVersionId}</dd></div> : null}
       </dl>
 
@@ -88,15 +91,16 @@ export function PendingActionCard({
           ) : null}
           <div className="flex gap-2">
             <button
-              disabled={!confirmReady}
+              disabled={!confirmReady || busy}
               onClick={() => onApprove?.(action.id)}
               className="rounded-md bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("common.actions.approve")}
             </button>
             <button
+              disabled={busy}
               onClick={() => onReject?.(action.id)}
-              className="rounded-md border border-border px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+              className="rounded-md border border-border px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("common.actions.reject")}
             </button>
