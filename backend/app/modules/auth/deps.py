@@ -25,6 +25,9 @@ from .rbac import PERMISSION_CODES
 PAT_AUTH_PURPOSE = "pat_auth"
 PAT_SCOPE_PURPOSE = "pat_scope"
 PAT_HUMAN_SESSION_PURPOSE = "pat_human_session"
+RUN_TOKEN_AUTH_PURPOSE = "run_token_auth"
+RUN_TOKEN_SCOPE_PURPOSE = "run_token_scope"
+RUN_HUMAN_SESSION_PURPOSE = "run_human_session"
 _UNKNOWN_OWNER = "unknown"
 _UNKNOWN_CLIENT = "unknown"
 
@@ -51,7 +54,7 @@ def _is_expired(expires_at: datetime) -> bool:
     return expires_at <= _utcnow()
 
 
-def _record_pat_log(
+def _record_auth_log(
     db: Session,
     *,
     owner_id: str,
@@ -62,7 +65,7 @@ def _record_pat_log(
     result: str,
     error_code: ErrorCode | None = None,
 ) -> None:
-    """Write one PAT audit row and commit it before the request settles."""
+    """Write one credential audit row and commit it before the request settles."""
     from app.modules.access import dao as access_dao
 
     access_dao.record_access_log(
@@ -85,7 +88,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
 
     resource = request.url.path
     if not secret.startswith(TOKEN_PREFIX):
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=_UNKNOWN_OWNER,
             client_id=_UNKNOWN_CLIENT,
@@ -99,7 +102,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
 
     token = get_token_by_hash(db, hashlib.sha256(secret.encode("utf-8")).hexdigest())
     if token is None:
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=_UNKNOWN_OWNER,
             client_id=_UNKNOWN_CLIENT,
@@ -114,7 +117,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
     scopes = frozenset(token.scopes or [])
     scope_label = ",".join(sorted(scopes))
     if token.revoked_at is not None:
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=token.owner_id,
             client_id=token.name,
@@ -126,7 +129,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
         )
         raise TokenRevoked("访问令牌已撤销")
     if _is_expired(token.expires_at):
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=token.owner_id,
             client_id=token.name,
@@ -140,7 +143,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
 
     user = dao.get_user(db, token.owner_id)
     if user is None:
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=token.owner_id,
             client_id=token.name,
@@ -152,7 +155,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
         )
         raise Unauthenticated("访问令牌无效")
     if user.is_banned:
-        _record_pat_log(
+        _record_auth_log(
             db,
             owner_id=token.owner_id,
             client_id=token.name,
@@ -166,7 +169,7 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
 
     roles, permissions, primary = _resolve_access(db, user.id)
     token.last_used_at = _utcnow()
-    _record_pat_log(
+    _record_auth_log(
         db,
         owner_id=user.id,
         client_id=token.name,
@@ -188,6 +191,130 @@ def _authenticate_pat(request: Request, db: Session, secret: str) -> CurrentUser
     )
 
 
+def _run_token_scope_denied(db: Session, credential, *, resource: str, error_code: ErrorCode) -> None:
+    """Audit one scope refusal for an otherwise valid run credential."""
+    _record_auth_log(
+        db,
+        owner_id=credential.owner_id,
+        client_id=credential.run_id or _UNKNOWN_CLIENT,
+        scope="",
+        resource=resource,
+        purpose=RUN_TOKEN_SCOPE_PURPOSE,
+        result="denied",
+        error_code=error_code,
+    )
+
+
+def _enforce_run_scope(request: Request, credential, db: Session) -> None:
+    """Refuse a valid run credential that reaches past its own run.
+
+    Approval decisions are deliberately left to require_human_session, so their
+    denial carries the human-session purpose; every other path must match the
+    run allowlist and target the credential's own resume.
+    """
+    from app.modules.agent import run_token
+
+    path = request.url.path
+    if run_token.is_human_only_path(path):
+        return
+    if not run_token.endpoint_allowed(request.method, path):
+        _run_token_scope_denied(db, credential, resource=path, error_code=ErrorCode.FORBIDDEN)
+        raise Forbidden("运行凭据不能访问该端点")
+
+    target = run_token.path_resume_id(path)
+    if target is None:
+        turn_id = run_token.path_turn_id(path)
+        if turn_id is not None:
+            from app.modules.agent import dao as agent_dao
+
+            turn = agent_dao.get_turn(db, turn_id)
+            target = turn.resume_id if turn is not None else None
+    if target is not None and target != credential.resume_id:
+        _run_token_scope_denied(db, credential, resource=path, error_code=ErrorCode.FORBIDDEN)
+        raise Forbidden("运行凭据只能访问它所属的简历")
+
+
+def _authenticate_run_token(
+    request: Request,
+    db: Session,
+    client: redis.Redis,
+    secret: str,
+) -> CurrentUser:
+    """Resolve an Authorization: Bearer run credential (issue 8f5fe)."""
+    from app.modules.agent import run_token
+
+    resource = request.url.path
+    credential = run_token.lookup_run_token(client, secret)
+    if credential is None:
+        _record_auth_log(
+            db,
+            owner_id=_UNKNOWN_OWNER,
+            client_id=_UNKNOWN_CLIENT,
+            scope="",
+            resource=resource,
+            purpose=RUN_TOKEN_AUTH_PURPOSE,
+            result="denied",
+            error_code=ErrorCode.UNAUTHENTICATED,
+        )
+        raise Unauthenticated("运行凭据无效或已过期")
+    if _is_expired(credential.expires_at):
+        _record_auth_log(
+            db,
+            owner_id=credential.owner_id,
+            client_id=credential.run_id or _UNKNOWN_CLIENT,
+            scope="",
+            resource=resource,
+            purpose=RUN_TOKEN_AUTH_PURPOSE,
+            result="denied",
+            error_code=ErrorCode.UNAUTHENTICATED,
+        )
+        raise Unauthenticated("运行凭据已过期")
+    if run_token.register_use(client, secret) > credential.max_uses:
+        # Exhaustion retires the credential at once; later calls look unknown.
+        run_token.revoke_run_token(client, secret)
+        _record_auth_log(
+            db,
+            owner_id=credential.owner_id,
+            client_id=credential.run_id or _UNKNOWN_CLIENT,
+            scope="",
+            resource=resource,
+            purpose=RUN_TOKEN_AUTH_PURPOSE,
+            result="denied",
+            error_code=ErrorCode.FORBIDDEN,
+        )
+        raise Forbidden("运行凭据已用完")
+
+    user = dao.get_user(db, credential.owner_id)
+    if user is None or user.is_banned:
+        _record_auth_log(
+            db,
+            owner_id=credential.owner_id,
+            client_id=credential.run_id or _UNKNOWN_CLIENT,
+            scope="",
+            resource=resource,
+            purpose=RUN_TOKEN_AUTH_PURPOSE,
+            result="denied",
+            error_code=ErrorCode.ACCOUNT_BANNED if user is not None else ErrorCode.UNAUTHENTICATED,
+        )
+        if user is not None:
+            raise AccountBanned("账号已被封禁，请联系管理员")
+        raise Unauthenticated("运行凭据无效或已过期")
+
+    roles, permissions, primary = _resolve_access(db, user.id)
+    principal = CurrentUser(
+        id=user.id,
+        display_name=user.display_name,
+        role=primary,
+        roles=roles,
+        permissions=permissions,
+        auth_kind="run",
+        run_id=credential.run_id or None,
+        client_id=credential.run_id or None,
+    )
+    _enforce_run_scope(request, credential, db)
+    return principal
+
+
 def get_current_user(
     request: Request,
     db: Session = Depends(get_db),
@@ -196,7 +323,12 @@ def get_current_user(
     """Resolve a Bearer PAT first, then the HttpOnly session cookie."""
     authorization = request.headers.get("authorization")
     if authorization and authorization.lower().startswith("bearer "):
-        return _authenticate_pat(request, db, authorization[len("Bearer ") :].strip())
+        secret = authorization[len("Bearer ") :].strip()
+        from app.modules.agent import run_token
+
+        if secret.startswith(run_token.RUN_TOKEN_PREFIX):
+            return _authenticate_run_token(request, db, client, secret)
+        return _authenticate_pat(request, db, secret)
 
     token = request.cookies.get(get_settings().session_cookie_name)
     if not token:
@@ -238,7 +370,7 @@ def require_permission(code: str) -> Callable[..., CurrentUser]:
         if code not in user.permissions:
             raise Forbidden("当前账号没有该操作权限")
         if user.auth_kind == "pat" and code not in user.scopes:
-            _record_pat_log(
+            _record_auth_log(
                 db,
                 owner_id=user.id,
                 client_id=user.pat_id or _UNKNOWN_CLIENT,
@@ -268,14 +400,17 @@ def require_human_session(
     caller must never decide its own pending action. The request is denied and
     audited instead of being silently accepted.
     """
-    if user.auth_kind == "pat":
-        _record_pat_log(
+    if user.auth_kind != "session":
+        # PAT keeps its original purpose; a run credential gets its own so the
+        # two delegated credential kinds stay distinguishable in the audit trail.
+        purpose = PAT_HUMAN_SESSION_PURPOSE if user.auth_kind == "pat" else RUN_HUMAN_SESSION_PURPOSE
+        _record_auth_log(
             db,
             owner_id=user.id,
-            client_id=user.pat_id or _UNKNOWN_CLIENT,
+            client_id=user.pat_id or user.run_id or _UNKNOWN_CLIENT,
             scope="",
             resource=request.url.path,
-            purpose=PAT_HUMAN_SESSION_PURPOSE,
+            purpose=purpose,
             result="denied",
             error_code=ErrorCode.FORBIDDEN,
         )
