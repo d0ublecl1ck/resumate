@@ -5,6 +5,7 @@ import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { RunPanel } from "@/components/run-panel"
+import i18n from "@/i18n"
 import type { AgentRun } from "@/lib/types"
 import { server } from "@/test-server"
 
@@ -72,7 +73,7 @@ function newClient() {
 function renderPanel(run: AgentRun, queryClient: QueryClient) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <RunPanel run={run} mode="approval" />
+      <RunPanel resumeId="res_1" run={run} mode="approval" />
     </QueryClientProvider>,
   )
 }
@@ -200,12 +201,143 @@ describe("RunPanel 审批接线", () => {
   it("没有活动轮次时不订阅 SSE", async () => {
     render(
       <QueryClientProvider client={newClient()}>
-        <RunPanel mode="approval" />
+        <RunPanel resumeId="res_1" mode="approval" />
       </QueryClientProvider>,
     )
 
     await new Promise((resolve) => setTimeout(resolve, 20))
 
     expect(FakeEventSource.instances.length).toBe(0)
+  })
+})
+
+describe("RunPanel 发起运行", () => {
+  function renderStart(queryClient: QueryClient) {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <RunPanel resumeId="res_1" mode="approval" />
+      </QueryClientProvider>,
+    )
+  }
+
+  it("提交后发出 POST /resumes/res_1/runs 并显示启动中", async () => {
+    const bodies: unknown[] = []
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request, params }) => {
+        bodies.push({ id: params.id, body: await request.json() })
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderStart(newClient())
+    const input = screen.getByRole("textbox", { name: "对话输入" })
+
+    fireEvent.change(input, { target: { value: "突出性能优化" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    await waitFor(() =>
+      expect(bodies).toEqual([{ id: "res_1", body: { prompt: "突出性能优化", executionMode: "approval" } }]),
+    )
+    expect(screen.getByText(i18n.t("workbench.run.starting"))).toBeInTheDocument()
+    expect((input as HTMLTextAreaElement).value).toBe("")
+  })
+
+  it("MODEL_NOT_CONFIGURED 显示配置引导且不回显服务端原文", async () => {
+    server.use(
+      http.post("/api/resumes/:id/runs", () =>
+        HttpResponse.json({ code: "MODEL_NOT_CONFIGURED", message: "RAW-SERVER-TOKEN" }, { status: 409 }),
+      ),
+    )
+    renderStart(newClient())
+
+    fireEvent.change(screen.getByRole("textbox", { name: "对话输入" }), { target: { value: "改简历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    const alert = await screen.findByRole("alert")
+    expect(alert.textContent).toContain(i18n.t("workbench.run.errors.modelNotConfigured"))
+    expect(screen.queryByText(/RAW-SERVER-TOKEN/)).not.toBeInTheDocument()
+  })
+
+  it("RATE_LIMITED 显示可读文案且不回显服务端原文", async () => {
+    server.use(
+      http.post("/api/resumes/:id/runs", () =>
+        HttpResponse.json({ code: "RATE_LIMITED", message: "RAW-RATE" }, { status: 429 }),
+      ),
+    )
+    renderStart(newClient())
+
+    fireEvent.change(screen.getByRole("textbox", { name: "对话输入" }), { target: { value: "改简历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    const alert = await screen.findByRole("alert")
+    expect(alert.textContent).toContain(i18n.t("workbench.run.errors.rateLimited"))
+    expect(screen.queryByText(/RAW-RATE/)).not.toBeInTheDocument()
+  })
+
+  it("其它错误显示通用文案且不回显服务端原文", async () => {
+    server.use(
+      http.post("/api/resumes/:id/runs", () =>
+        HttpResponse.json({ code: "VALIDATION_FAILED", message: "RAW-OTHER" }, { status: 500 }),
+      ),
+    )
+    renderStart(newClient())
+
+    fireEvent.change(screen.getByRole("textbox", { name: "对话输入" }), { target: { value: "改简历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    const alert = await screen.findByRole("alert")
+    expect(alert.textContent).toContain(i18n.t("workbench.run.errors.generic"))
+    expect(screen.queryByText(/RAW-OTHER/)).not.toBeInTheDocument()
+  })
+
+  it("发起期间禁用输入与提交并置 aria-busy", async () => {
+    let release: () => void = () => {}
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    server.use(
+      http.post("/api/resumes/:id/runs", async () => {
+        await gate
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderStart(newClient())
+    const input = screen.getByRole("textbox", { name: "对话输入" })
+    const send = screen.getByRole("button", { name: "发送" })
+
+    fireEvent.change(input, { target: { value: "改简历" } })
+    fireEvent.click(send)
+
+    await waitFor(() => expect(send).toBeDisabled())
+    expect(input).toBeDisabled()
+    expect(input).toHaveAttribute("aria-busy", "true")
+
+    release()
+    await waitFor(() => expect(send).not.toBeDisabled())
+  })
+
+  it("run 出现后不再显示启动中", async () => {
+    server.use(
+      http.post("/api/resumes/:id/runs", () =>
+        HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 }),
+      ),
+    )
+    const queryClient = newClient()
+    const view = render(
+      <QueryClientProvider client={queryClient}>
+        <RunPanel resumeId="res_1" mode="approval" />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(screen.getByRole("textbox", { name: "对话输入" }), { target: { value: "改简历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+    await screen.findByText(i18n.t("workbench.run.starting"))
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <RunPanel resumeId="res_1" mode="approval" run={RUN} />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => expect(screen.queryByText(i18n.t("workbench.run.starting"))).not.toBeInTheDocument())
   })
 })
