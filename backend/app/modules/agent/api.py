@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,12 @@ from .schemas import (
     PatchValidationResponse,
     PendingActionDecision,
     PendingActionResponse,
+    RunStateResponse,
+    RunStateUpdateRequest,
+    SessionCreateRequest,
+    SessionMessageCreateRequest,
+    SessionMessageResponse,
+    SessionResponse,
     TurnCancelRequest,
     TurnCreateRequest,
     TurnFinalizeRequest,
@@ -160,3 +166,66 @@ def reject_action(
     _human: CurrentUser = Depends(require_human_session),
 ) -> PendingActionResponse:
     return service.decide_action(db, user, action_id, approve=False)
+
+
+# --- sessions, messages and run checkpoints (issue 9d29a) -----------------------
+
+
+@router.post("/sessions", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
+def create_session(
+    payload: SessionCreateRequest | None = None,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> SessionResponse:
+    return service.create_session(db, user)
+
+
+@router.get("/sessions", response_model=list[SessionResponse])
+def list_sessions(
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> list[SessionResponse]:
+    return service.list_sessions(db, user)
+
+
+@router.get("/sessions/{session_id}/messages", response_model=list[SessionMessageResponse])
+def list_session_messages(
+    session_id: str,
+    after_seq: int = Query(0, ge=0, alias="afterSeq"),
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> list[SessionMessageResponse]:
+    return service.list_session_messages(db, user, session_id, after_seq)
+
+
+@router.post(
+    "/sessions/{session_id}/messages",
+    response_model=SessionMessageResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def append_session_message(
+    session_id: str,
+    payload: SessionMessageCreateRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> SessionMessageResponse:
+    return service.append_session_message(db, user, session_id, payload)
+
+
+@router.get("/turns/{turn_id}/state", response_model=RunStateResponse)
+def get_turn_state(
+    turn_id: str,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> RunStateResponse:
+    return service.get_turn_state(db, user, turn_id)
+
+
+@router.put("/turns/{turn_id}/state", response_model=RunStateResponse)
+def update_turn_state(
+    turn_id: str,
+    payload: RunStateUpdateRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> RunStateResponse:
+    return service.update_turn_state(db, user, turn_id, payload)
