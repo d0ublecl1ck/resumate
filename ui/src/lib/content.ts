@@ -6,7 +6,6 @@
 import type {
   AccessLogEntry,
   AgentConfig,
-  AgentRun,
   CapabilityDiscovery,
   ImportPreview,
   JobDescription,
@@ -218,60 +217,6 @@ export const RESUMES: Resume[] = [
 
 // ---------------------------------------------------------------------------
 // Agent Run（当前活跃 Run，挂在 res_fe_lead 上）
-// ---------------------------------------------------------------------------
-
-export const AGENT_RUNS: AgentRun[] = [
-  {
-    id: "run_now",
-    resumeId: "res_fe_lead",
-    conversationId: "conv_now",
-    userTurnId: "turn_now",
-    executionMode: "approval",
-    modeSource: "session",
-    state: "awaiting_confirm",
-    budget: { usedTokens: 4200, maxTokens: 20000, usedTurns: 2, maxTurns: 8, costUsd: 0.03 },
-    timeline: [
-      { id: "ev_1", kind: "message", at: "2026-09-20T14:30:00+08:00", role: "user", text: "帮我根据美团这份 JD 突出我的性能优化和团队管理经历。" },
-      { id: "ev_2", kind: "tool_progress", at: "2026-09-20T14:30:05+08:00", toolName: "read_resume", text: "读取当前简历基线 v_fe_5" },
-      { id: "ev_3", kind: "tool_progress", at: "2026-09-20T14:30:08+08:00", toolName: "match_job", text: "匹配 JD 要求与 Profile 事实" },
-      { id: "ev_4", kind: "pending_action", at: "2026-09-20T14:30:12+08:00", role: "agent", text: "生成 2 项内容修改，等待你的确认。" },
-    ],
-    pendingActions: [
-      {
-        id: "pa_1",
-        toolCallId: "call_a1",
-        kind: "content_patch",
-        title: "强化性能优化量化成果",
-        targetResource: "高级前端工程师简历 · 职业经历",
-        baseVersionId: "v_fe_5",
-        impactSummary: "修改 1 条经历要点，新增 1 条量化描述；不影响其它章节。",
-        requiresTextConfirm: false,
-        state: "pending",
-        diff: [
-          {
-            id: "d_1",
-            target: "职业经历 · 高级前端工程师 · 第 1 条",
-            changeType: "modified",
-            before: "主导商详页重构，首屏 LCP 从 3.2s 降至 1.4s，转化率提升 6%。",
-            after: "主导商详页重构（团队 5 人），首屏 LCP 从 3.2s 降至 1.4s，转化率提升 6%，年增量 GMV 约 1200 万。",
-            reason: "美团 JD 强调规模化收益与团队协作，补充团队规模与业务结果。",
-            provenance: { kind: "jd_snapshot", label: "JD 快照 · 美团 rev.1", jdRevision: 1 },
-            state: "pending",
-          },
-          {
-            id: "d_2",
-            target: "职业经历 · 高级前端工程师 · 新增第 3 条",
-            changeType: "added",
-            after: "带教 3 名初级工程师，建立组件评审与性能预算机制。",
-            reason: "JD 要求团队管理经验，从 Profile 事实 fact_mentor 选材。",
-            provenance: { kind: "profile_fact", label: "来自 Profile 事实 · 待核实", factId: "fact_mentor" },
-            state: "pending",
-          },
-        ],
-      },
-    ],
-  },
-]
 
 // ---------------------------------------------------------------------------
 // Profile
