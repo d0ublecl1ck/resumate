@@ -44,6 +44,7 @@ import type {
   ResumeTemplate,
   ResumeVersion,
   RunTimelineEvent,
+  RuntimeStatus,
   TurnStateResponse,
   UserPreferences,
   UserPreferencesUpdate,
@@ -539,6 +540,14 @@ export function updateAgentConfig(patch: AgentConfigUpdate): Promise<AgentConfig
 /** GET /models/config */
 export function getModelConfig(): Promise<ModelConfig> {
   return request<ModelConfig>("/models/config")
+}
+
+/**
+ * GET /agent/runtime —— 运行体就绪探测（契约 §20.5）。
+ * available=true 只表示后端能在需要时启动运行体，不代表已有常驻进程。
+ */
+export function getRuntimeStatus(): Promise<RuntimeStatus> {
+  return request<RuntimeStatus>("/agent/runtime")
 }
 
 /**

@@ -61,12 +61,20 @@ describe("SettingsForm", () => {
   })
 
   it("暂不可用时在 Agent 分区如实说明", async () => {
+    server.use(http.get("/api/agent/runtime", () => HttpResponse.json({ command: "resumate-agent", available: false })))
     renderForm()
 
     expect(await screen.findByText("助手暂时不可用")).toBeInTheDocument()
     expect(
       screen.getByText("助手现在还不能聊天，请稍后再试。"),
     ).toBeInTheDocument()
+  })
+
+  it("后端可在需要时启动时显示可以开始而非暂不可用", async () => {
+    renderForm()
+
+    expect(await screen.findByText("说说你的经历")).toBeInTheDocument()
+    expect(screen.queryByText("助手暂时不可用")).not.toBeInTheDocument()
   })
 
   it("切换 provider 后从对应目录选择 model 并保存", async () => {
