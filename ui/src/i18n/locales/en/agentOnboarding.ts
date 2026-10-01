@@ -13,8 +13,8 @@ export default {
     },
     available: {
       stamp: "Connected",
-      title: "Assistant ready",
-      description: "The runtime is online and the model is usable. Describe an experience and the assistant proposes a change you confirm before it is written.",
+      title: "Ready when you are",
+      description: "Just describe what you did. The assistant drafts the edit first, and nothing is written to your profile until you approve it.",
       action: "Start chatting",
     },
   },
