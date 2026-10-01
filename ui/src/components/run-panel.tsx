@@ -1,10 +1,13 @@
 // SCR-108 Run、模式与 PendingAction Panel + DES-004 对话/Run 时间线。
-// 当前 Run 模式服务端固化（C-02）；控制事件（批准/拒绝/取消）留在原轮次，
-// 不开启新任务轮次。这里为前端演示，交互更新本地状态。
+// 当前 Run 模式服务端固化（C-02）；控制事件（批准/拒绝）留在原轮次，不开启新任务轮次。
+// 真实接线：approve/reject 走公共 API，turn.updated 经 SSE 触发 run 查询刷新。
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { approvePendingAction, rejectPendingAction } from "@/lib/api"
 import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
+import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
 import { cn } from "@/lib/utils"
 import { CircleDashed, MessageSquare, Send, Wrench } from "lucide-react"
@@ -22,35 +25,39 @@ const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   turn_closed: "text-muted-foreground",
 }
 
-export function RunPanel({ run: initialRun, mode }: { run?: AgentRun; mode: ExecutionMode }) {
+export function RunPanel({ run, mode }: { run?: AgentRun; mode: ExecutionMode }) {
   const { t } = useTranslation()
-  const [run, setRun] = useState(initialRun)
+  const queryClient = useQueryClient()
   const [input, setInput] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [submittingId, setSubmittingId] = useState<string | null>(null)
 
-  function approve(actionId: string) {
-    setRun((r) =>
-      r
-        ? {
-            ...r,
-            state: "approved",
-            pendingActions: r.pendingActions.map((a) => (a.id === actionId ? { ...a, state: "approved" as const } : a)),
-            timeline: [...r.timeline, sysEvent(t("workbench.run.approvedEvent"))],
-          }
-        : r,
-    )
-  }
-  function reject(actionId: string) {
-    setRun((r) =>
-      r
-        ? {
-            ...r,
-            state: "rejected",
-            pendingActions: r.pendingActions.map((a) => (a.id === actionId ? { ...a, state: "rejected" as const } : a)),
-            timeline: [...r.timeline, sysEvent(t("workbench.run.rejectedEvent"))],
-          }
-        : r,
-    )
-  }
+  const decision = useMutation({
+    mutationFn: ({ actionId, kind }: { actionId: string; kind: "approve" | "reject" }) =>
+      kind === "approve" ? approvePendingAction(actionId) : rejectPendingAction(actionId),
+    onMutate: ({ actionId }) => {
+      setError(null)
+      setSubmittingId(actionId)
+    },
+    onSuccess: () => {
+      if (run) void queryClient.invalidateQueries({ queryKey: ["active-run", run.resumeId] })
+    },
+    onError: (cause) => setError(cause instanceof Error ? cause.message : String(cause)),
+    onSettled: () => setSubmittingId(null),
+  })
+
+  // StrictMode 安全：每次挂载新建订阅，cleanup 关闭 EventSource（不做一次性 ref 守卫）。
+  useEffect(() => {
+    if (!run?.id) return
+    return subscribeTurnEvents(run.id, {
+      onUpdate: () => {
+        void queryClient.invalidateQueries({ queryKey: ["active-run", run.resumeId] })
+      },
+    })
+  }, [run?.id, run?.resumeId, queryClient])
+
+  const approve = (actionId: string) => decision.mutate({ actionId, kind: "approve" })
+  const reject = (actionId: string) => decision.mutate({ actionId, kind: "reject" })
 
   return (
     <div className="flex h-full flex-col">
@@ -66,6 +73,11 @@ export function RunPanel({ run: initialRun, mode }: { run?: AgentRun; mode: Exec
           <span>{t("workbench.run.currentModePrefix")}<span className="font-medium text-foreground">{t("common.executionMode." + (run?.executionMode ?? mode))}</span>{t("workbench.run.currentModeSuffix")}</span>
           {run ? <span>{t("workbench.run.budget", { usedTokens: run.budget.usedTokens, maxTokens: run.budget.maxTokens, usedTurns: run.budget.usedTurns, maxTurns: run.budget.maxTurns })}</span> : null}
         </div>
+        {error ? (
+          <p role="alert" className="mt-2 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
+            {t("workbench.run.actionError", { message: error })}
+          </p>
+        ) : null}
       </div>
 
       {/* 时间线 */}
@@ -78,7 +90,7 @@ export function RunPanel({ run: initialRun, mode }: { run?: AgentRun; mode: Exec
 
         {/* 待确认动作 */}
         {run?.pendingActions.map((action) => (
-          <PendingActionCard key={action.id} action={action} onApprove={approve} onReject={reject} />
+          <PendingActionCard key={action.id} action={action} onApprove={approve} onReject={reject} busy={submittingId === action.id} />
         ))}
       </div>
 
@@ -134,8 +146,4 @@ function TimelineItem({ ev }: { ev: RunTimelineEvent }) {
       {ev.text}
     </div>
   )
-}
-
-function sysEvent(text: string): RunTimelineEvent {
-  return { id: `ev_${Math.random().toString(36).slice(2, 8)}`, kind: "finalize", at: new Date().toISOString(), text }
 }

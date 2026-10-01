@@ -275,7 +275,8 @@ export type PendingActionKind =
 
 export interface PendingAction {
   id: string
-  toolCallId: string
+  /** 后端未暴露 tool call id；从真实轮次映射时缺省。 */
+  toolCallId?: string
   kind: PendingActionKind
   title: string
   targetResource: string
@@ -310,6 +311,48 @@ export interface AgentRun {
   budget: { usedTokens: number; maxTokens: number; usedTurns: number; maxTurns: number; costUsd: number }
   timeline: RunTimelineEvent[]
   pendingActions: PendingAction[]
+}
+
+/** GET /turns/{id} 返回的后端轮次投影（契约 §4.1）。 */
+export interface ApiTurnPendingAction {
+  id: string
+  userTurnId: string
+  kind: "content_patch"
+  title: string
+  targetResource: string
+  baseVersionId?: string | null
+  impactSummary: string
+  requiresTextConfirm: boolean
+  state: "pending" | "approved" | "rejected" | "consumed" | "stale"
+  staleReason?: string | null
+  diff?: DiffItem[]
+}
+
+export interface ApiTurn {
+  id: string
+  resumeId: string
+  clientId?: string
+  source?: string
+  executionMode: ExecutionMode
+  modeSource: "session" | "agent" | "account"
+  state: "open" | "finalized" | "cancelled"
+  baseVersionId?: string | null
+  sessionId?: string | null
+  message?: string
+  createdAt?: string
+  closedAt?: string | null
+  result?: { state: string; versionId?: string | null; changeCount?: number; message?: string } | null
+  pendingActions?: ApiTurnPendingAction[]
+}
+
+/** GET /turns/{id}/state 返回的 run checkpoint（契约 §19）。 */
+export interface TurnStateResponse {
+  turnId: string
+  runState: {
+    budget?: { tokensUsed?: number; maxTokens?: number; turnsUsed?: number; maxTurns?: number; costUsedUsd?: number }
+    [key: string]: unknown
+  }
+  stateVersion: number
 }
 
 // ---------------------------------------------------------------------------

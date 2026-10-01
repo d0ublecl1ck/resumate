@@ -62,7 +62,6 @@ export default {
     inputPlaceholder: "描述编辑意图，例如：突出我的性能优化经历…（⌘↵ 发送）",
     inputAria: "对话输入",
     sendAria: "发送",
-    approvedEvent: "已批准修改，已应用到本轮 Working Copy（未新建正式版本）",
-    rejectedEvent: "已拒绝修改，未写入 Working Copy",
+    actionError: "审批操作失败：{{message}}",
   },
 }

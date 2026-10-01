@@ -46,6 +46,33 @@ const RBAC_PERMISSIONS: Permission[] = [
   { id: "perm_role_write", code: "role:write", group: "role", name: "维护角色" },
 ]
 
+// 55e99：真实 Agent Run 端点的 mock 状态。res_fe_lead 上挂一个带待办的活跃轮次。
+const MOCK_PENDING_ACTION = {
+  id: "pa_now",
+  userTurnId: "turn_now",
+  kind: "content_patch",
+  title: "强化性能优化量化成果",
+  targetResource: "高级前端工程师简历 · 职业经历",
+  baseVersionId: "ver_fe_5",
+  impactSummary: "修改 1 条经历要点，新增 1 条量化描述；不影响其它章节。",
+  requiresTextConfirm: false,
+  state: "pending",
+  staleReason: null,
+  diff: [
+    {
+      id: "d_now_1",
+      target: "职业经历 · 第 1 条",
+      changeType: "modified",
+      before: "主导商详页重构。",
+      after: "主导商详页重构（团队 5 人），首屏 LCP 3.2s 降至 1.4s。",
+      reason: "JD 强调规模化收益与团队协作。",
+      state: "pending",
+    },
+  ],
+  createdAt: "2026-09-20T14:30:12+08:00",
+  decidedAt: null,
+}
+
 function unauthorized(code: string, message: string) {
   return HttpResponse.json({ code, message }, { status: 401 })
 }
@@ -260,6 +287,59 @@ export const handlers = [
       idMappings: IMPORT_PREVIEW_SAMPLE.idMappings,
       bindingRestores: IMPORT_PREVIEW_SAMPLE.bindingRestores,
     }),
+  ),
+  // Agent Run：working-document 提供活动轮次指针；仅 res_fe_lead 有活跃轮次。
+  http.get("/api/resumes/:id/working-document", ({ params }) => {
+    if (params.id === "res_fe_lead") {
+      return HttpResponse.json({
+        resumeId: "res_fe_lead",
+        document: {},
+        baseVersionId: "ver_fe_5",
+        userTurnId: "turn_now",
+        workingRevision: 1,
+        dirty: true,
+      })
+    }
+    return HttpResponse.json({
+      resumeId: params.id,
+      document: {},
+      baseVersionId: null,
+      userTurnId: null,
+      workingRevision: 0,
+      dirty: false,
+    })
+  }),
+  http.get("/api/turns/:id", ({ params }) => {
+    if (params.id !== "turn_now") return notFound(`轮次 ${params.id} 不存在`)
+    return HttpResponse.json({
+      id: "turn_now",
+      resumeId: "res_fe_lead",
+      clientId: "external",
+      source: "agent",
+      executionMode: "approval",
+      modeSource: "session",
+      state: "open",
+      baseVersionId: "ver_fe_5",
+      sessionId: "sess_now",
+      message: "帮我根据美团这份 JD 突出性能优化经历。",
+      createdAt: "2026-09-20T14:30:00+08:00",
+      closedAt: null,
+      result: null,
+      pendingActions: [MOCK_PENDING_ACTION],
+    })
+  }),
+  http.get("/api/turns/:id/state", ({ params }) =>
+    HttpResponse.json({
+      turnId: params.id,
+      runState: { budget: { turnsUsed: 2, tokensUsed: 4200, costUsedUsd: 0.03, maxTurns: 8, maxTokens: 20000, maxCostUsd: 0.5 } },
+      stateVersion: 1,
+    }),
+  ),
+  http.post("/api/pending-actions/:id/approve", ({ params }) =>
+    HttpResponse.json({ ...MOCK_PENDING_ACTION, id: params.id, state: "approved" }),
+  ),
+  http.post("/api/pending-actions/:id/reject", ({ params }) =>
+    HttpResponse.json({ ...MOCK_PENDING_ACTION, id: params.id, state: "rejected" }),
   ),
 ]
 
