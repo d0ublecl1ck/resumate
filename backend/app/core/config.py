@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     agent_runner_timeout_seconds: float = 300.0
     agent_runner_log_dir: str = "var/agent-runs"
     agent_runner_max_concurrent: int = 2
+    # Run credentials: how long they outlive the hard timeout, and how many API
+    # calls one run may make before the credential is revoked.
+    agent_runner_token_slack_seconds: int = 120
+    agent_runner_token_max_uses: int = 1000
 
 
 @lru_cache

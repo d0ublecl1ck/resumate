@@ -1,3 +1,4 @@
+import redis
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -5,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser
+from app.core.redis import get_redis
 from app.modules.auth.deps import require_human_session, require_permission
 
 from . import events, runner, service
@@ -55,11 +57,12 @@ def start_run(
     payload: RunStartRequest,
     request: Request,
     db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
     user: CurrentUser = Depends(require_permission("resume:write")),
     _human: CurrentUser = Depends(require_human_session),
 ) -> RunStartResponse:
     """Spawn the CLI runner for one run (contract section 20)."""
-    return runner.start_run(db, user, resume_id, payload, request)
+    return runner.start_run(db, user, resume_id, payload, request, client)
 
 
 @router.get("/resumes/{resume_id}/turns", response_model=list[UserTurnResponse])
