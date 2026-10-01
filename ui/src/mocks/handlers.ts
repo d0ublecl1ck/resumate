@@ -73,6 +73,23 @@ const MOCK_PENDING_ACTION = {
   decidedAt: null,
 }
 
+const MOCK_TURN = {
+  id: "turn_now",
+  resumeId: "res_fe_lead",
+  clientId: "external",
+  source: "agent",
+  executionMode: "approval",
+  modeSource: "session",
+  state: "open",
+  baseVersionId: "ver_fe_5",
+  sessionId: "sess_now",
+  message: "帮我根据美团这份 JD 突出性能优化经历。",
+  createdAt: "2026-09-20T14:30:00+08:00",
+  closedAt: null,
+  result: null,
+  pendingActions: [MOCK_PENDING_ACTION],
+}
+
 function unauthorized(code: string, message: string) {
   return HttpResponse.json({ code, message }, { status: 401 })
 }
@@ -288,7 +305,12 @@ export const handlers = [
       bindingRestores: IMPORT_PREVIEW_SAMPLE.bindingRestores,
     }),
   ),
-  // Agent Run：working-document 提供活动轮次指针；仅 res_fe_lead 有活跃轮次。
+  // Agent Run：GET /resumes/:id/turns?state=open 提供活跃轮次（preview-only 也能发现）。
+  http.get("/api/resumes/:id/turns", ({ params, request }) => {
+    const state = new URL(request.url).searchParams.get("state")
+    if (state && state !== "open") return HttpResponse.json([])
+    return HttpResponse.json(params.id === "res_fe_lead" ? [MOCK_TURN] : [])
+  }),
   http.get("/api/resumes/:id/working-document", ({ params }) => {
     if (params.id === "res_fe_lead") {
       return HttpResponse.json({
@@ -311,22 +333,7 @@ export const handlers = [
   }),
   http.get("/api/turns/:id", ({ params }) => {
     if (params.id !== "turn_now") return notFound(`轮次 ${params.id} 不存在`)
-    return HttpResponse.json({
-      id: "turn_now",
-      resumeId: "res_fe_lead",
-      clientId: "external",
-      source: "agent",
-      executionMode: "approval",
-      modeSource: "session",
-      state: "open",
-      baseVersionId: "ver_fe_5",
-      sessionId: "sess_now",
-      message: "帮我根据美团这份 JD 突出性能优化经历。",
-      createdAt: "2026-09-20T14:30:00+08:00",
-      closedAt: null,
-      result: null,
-      pendingActions: [MOCK_PENDING_ACTION],
-    })
+    return HttpResponse.json(MOCK_TURN)
   }),
   http.get("/api/turns/:id/state", ({ params }) =>
     HttpResponse.json({
