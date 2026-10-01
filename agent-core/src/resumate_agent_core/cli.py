@@ -32,10 +32,12 @@ import httpx
 
 from .checkpoint import CheckpointStore
 from .client import ResumateClient
+from .compaction import CompactionPolicy
 from .config import ENV_PREFIX, AgentCoreSettings
 from .openai_provider import DEFAULT_OPENAI_BASE_URL, OpenAICompatibleProvider
 from .runtime import (
     AgentRuntime,
+    CompactionEvent,
     ErrorEvent,
     FinalizeEvent,
     MessageEvent,
@@ -126,6 +128,18 @@ def build_parser(env: Mapping[str, str] | None = None) -> argparse.ArgumentParse
     parser.add_argument("--temperature", type=float, default=None, help="provider sampling temperature")
     parser.add_argument("--provider-max-tokens", type=int, default=None, help="provider-side max_tokens")
 
+    parser.add_argument(
+        "--keep-recent-turns",
+        type=int,
+        default=None,
+        help="context compaction: turns kept verbatim (default 4)",
+    )
+    parser.add_argument(
+        "--compact-above-tokens",
+        type=int,
+        default=None,
+        help="context compaction: estimate threshold; default is half of --max-tokens",
+    )
     parser.add_argument("--max-turns", type=int, default=None, help="run budget: model turns")
     parser.add_argument("--max-tokens", type=int, default=None, help="run budget: total tokens")
     parser.add_argument("--max-cost-usd", type=float, default=None, help="run budget: total cost in USD")
@@ -174,6 +188,15 @@ def _build_provider(
     return factory(**kwargs)
 
 
+def _build_compaction(args: argparse.Namespace) -> CompactionPolicy:
+    overrides: dict[str, Any] = {}
+    if args.keep_recent_turns is not None:
+        overrides["keep_recent_turns"] = args.keep_recent_turns
+    if args.compact_above_tokens is not None:
+        overrides["max_context_tokens"] = args.compact_above_tokens
+    return CompactionPolicy(**overrides)
+
+
 def _build_budget(args: argparse.Namespace) -> RunBudget:
     overrides: dict[str, Any] = {}
     if args.max_turns is not None:
@@ -213,6 +236,15 @@ def event_to_wire(event: RunEvent) -> dict[str, Any]:
             "turn": event.turn.to_wire(),
             "result": event.result.to_wire() if event.result is not None else None,
         }
+    if isinstance(event, CompactionEvent):
+        return {
+            "type": event.type,
+            "compactedMessages": event.compacted_messages,
+            "keptMessages": event.kept_messages,
+            "summaryChars": event.summary_chars,
+            "tokensBefore": event.tokens_before,
+            "tokensAfter": event.tokens_after,
+        }
     if isinstance(event, ErrorEvent):
         return {
             "type": event.type,
@@ -235,6 +267,11 @@ def event_to_text(event: RunEvent) -> str:
     if isinstance(event, FinalizeEvent):
         version = event.result.version_id if event.result is not None else None
         return f"[finalize] turn {event.turn.id} state={event.turn.state} version={version}"
+    if isinstance(event, CompactionEvent):
+        return (
+            f"[compaction] folded {event.compacted_messages} messages into a summary "
+            f"(approx {event.tokens_before} -> {event.tokens_after} tokens)"
+        )
     if isinstance(event, ErrorEvent):
         return f"[error] {event.code}: {event.message}"
     raise TypeError(f"unknown run event: {event!r}")  # pragma: no cover - defensive
@@ -339,6 +376,7 @@ def main(
                 budget=_build_budget(args),
                 checkpoint=CheckpointStore(client),
                 sessions=SessionJournal(client),
+                compaction=_build_compaction(args),
             )
             if args.resume:
                 stream = runtime.resume(args.resume)
