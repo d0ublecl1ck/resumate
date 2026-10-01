@@ -29,8 +29,10 @@ class ScriptedProvider:
         self._responses = list(responses)
         self._state_path = state_path
         self.seen_during_run: list[dict] = []
+        self.calls: list[list] = []
 
     def complete(self, messages, tools):
+        self.calls.append(list(messages))
         if self._state_path is not None:
             self.seen_during_run.append(json.loads(self._state_path.read_text(encoding="utf-8")))
         return self._responses.pop(0)
@@ -67,6 +69,10 @@ def shortest_path_router(*, turns_status: int = 201):
             return httpx.Response(200, json=working_document_payload())
         if path == "/turns/turn_1/finalize":
             return httpx.Response(200, json=turn_payload(state="finalized", result=result_payload()))
+        if path == "/turns/turn_1/state" and request.method == "GET":
+            return httpx.Response(200, json={"turnId": "turn_1", "runState": {}, "stateVersion": 0})
+        if path == "/turns/turn_1/state" and request.method == "PUT":
+            return httpx.Response(200, json={"turnId": "turn_1", "runState": {}, "stateVersion": 1})
         raise AssertionError(f"unexpected {request.method} {path}")
 
     return handler, calls
@@ -279,6 +285,56 @@ def test_cli_text_mode_is_human_readable() -> None:
         raise AssertionError(f"text mode must not emit JSON lines: {line!r}")
     assert "finalize" in lines[-1]
     assert "get_working_document" in stdout
+
+
+def test_cli_resume_continues_from_the_stored_checkpoint() -> None:
+    calls: list[dict] = []
+    checkpoint = {
+        "phase": "running",
+        "pendingActionId": None,
+        "budget": {
+            "turnsUsed": 1,
+            "tokensUsed": 9,
+            "costUsedUsd": 0.0,
+            "maxTurns": 8,
+            "maxTokens": 1000,
+            "maxCostUsd": 1.0,
+        },
+        "messages": [
+            {"role": "system", "content": "sys"},
+            {"role": "user", "content": "go"},
+            {"role": "tool", "content": "turn_9 checkpoint", "toolCallId": "c1", "name": "get_turn"},
+        ],
+    }
+
+    def handler(request):
+        path = request.url.path
+        calls.append({"method": request.method, "path": path})
+        if path == "/turns/turn_9" and request.method == "GET":
+            return httpx.Response(200, json=turn_payload(id="turn_9"))
+        if path == "/turns/turn_9/state" and request.method == "GET":
+            return httpx.Response(200, json={"turnId": "turn_9", "runState": checkpoint, "stateVersion": 3})
+        if path == "/turns/turn_9/state" and request.method == "PUT":
+            return httpx.Response(200, json={"turnId": "turn_9", "runState": checkpoint, "stateVersion": 4})
+        if path == "/turns/turn_9/finalize":
+            return httpx.Response(200, json=turn_payload(id="turn_9", state="finalized", result=result_payload()))
+        raise AssertionError(f"unexpected {request.method} {path}")
+
+    provider = ScriptedProvider([done_response()])
+
+    code, stdout, stderr = run_cli(
+        ["--resume", "turn_9"],
+        transport=httpx.MockTransport(handler),
+        provider=provider,
+    )
+
+    assert code == 0, stderr
+    # The restored context proves the state came from the checkpoint, not memory.
+    assert provider.calls[0][-1].role == "tool"
+    assert "turn_9 checkpoint" in provider.calls[0][-1].content
+    events = json_events(stdout)
+    assert events[-1]["type"] == "finalize"
+    assert any(call["path"] == "/turns/turn_9/state" and call["method"] == "GET" for call in calls)
 
 
 def test_cli_requires_a_model_when_it_must_build_the_provider() -> None:

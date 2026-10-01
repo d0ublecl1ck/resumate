@@ -30,6 +30,7 @@ from typing import Any, TextIO
 
 import httpx
 
+from .checkpoint import CheckpointStore
 from .client import ResumateClient
 from .config import ENV_PREFIX, AgentCoreSettings
 from .openai_provider import DEFAULT_OPENAI_BASE_URL, OpenAICompatibleProvider
@@ -83,8 +84,13 @@ def build_parser(env: Mapping[str, str] | None = None) -> argparse.ArgumentParse
             "variables (see the package README); command-line flags win."
         ),
     )
-    parser.add_argument("--resume-id", required=True, help="resume id the turn operates on")
-    parser.add_argument("--prompt", required=True, help="user message that opens the turn")
+    parser.add_argument("--resume-id", default=None, help="resume id the turn operates on (required unless --resume)")
+    parser.add_argument("--prompt", default=None, help="user message that opens the turn (required unless --resume)")
+    parser.add_argument(
+        "--resume",
+        default=None,
+        help="resume an interrupted turn id from its server-side checkpoint",
+    )
     parser.add_argument(
         "--execution-mode",
         choices=("approval", "full_access"),
@@ -288,6 +294,10 @@ def main(
     err = stderr if stderr is not None else sys.stderr
     clock: Callable[[], datetime] = now or (lambda: datetime.now(timezone.utc))
 
+    if not args.resume and (not args.resume_id or not args.prompt):
+        print(f"{PROGRAM}: --resume-id and --prompt are required unless --resume is given.", file=err)
+        return EXIT_USAGE
+
     owns_provider = provider is None
     if owns_provider and provider_factory is None and not args.model:
         print(
@@ -309,16 +319,25 @@ def main(
     saw_finalize = False
     try:
         with ResumateClient(settings, transport=transport) as client:
-            runtime = AgentRuntime(client, provider, budget=_build_budget(args))
-            for event in runtime.run(
-                args.resume_id,
-                args.prompt,
-                execution_mode=args.execution_mode,
-                base_version_id=args.base_version_id,
-                client_id=args.client_id,
-                turn_id=args.turn_id,
-                turn_message=args.turn_message,
-            ):
+            runtime = AgentRuntime(
+                client,
+                provider,
+                budget=_build_budget(args),
+                checkpoint=CheckpointStore(client),
+            )
+            if args.resume:
+                stream = runtime.resume(args.resume)
+            else:
+                stream = runtime.run(
+                    args.resume_id,
+                    args.prompt,
+                    execution_mode=args.execution_mode,
+                    base_version_id=args.base_version_id,
+                    client_id=args.client_id,
+                    turn_id=args.turn_id,
+                    turn_message=args.turn_message,
+                )
+            for event in stream:
                 last_event_type = event.type
                 saw_error = saw_error or isinstance(event, ErrorEvent)
                 saw_finalize = saw_finalize or isinstance(event, FinalizeEvent)

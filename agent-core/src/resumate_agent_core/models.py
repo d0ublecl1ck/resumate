@@ -306,6 +306,7 @@ class UserTurn(ApiModel):
     mode_source: ModeSource
     state: TurnState
     base_version_id: str | None = None
+    session_id: str | None = None
     message: str = ""
     created_at: datetime
     closed_at: datetime | None = None
@@ -335,6 +336,37 @@ class WorkingDocument(ApiModel):
 WorkingDocumentResponse = WorkingDocument
 
 
+# --- Sessions, messages and run checkpoints (contract section 19) -----------
+
+
+class AgentSession(ApiModel):
+    """A conversation grouping agent turns for one owner."""
+
+    id: str
+    created_at: datetime
+    updated_at: datetime
+    last_active_at: datetime
+
+
+class AgentMessage(ApiModel):
+    """One ordered message inside an agent session."""
+
+    id: str
+    session_id: str
+    seq: int
+    role: Literal["system", "user", "assistant", "tool"]
+    content: Any = None
+    created_at: datetime
+
+
+class TurnState(ApiModel):
+    """The per-turn run checkpoint stored on the server."""
+
+    turn_id: str
+    run_state: dict[str, Any] = Field(default_factory=dict)
+    state_version: int = 0
+
+
 # --- Turn lifecycle request bodies (contract section 6) ---------------------
 
 
@@ -345,6 +377,7 @@ class CreateTurnRequest(ApiModel):
     execution_mode: ExecutionMode | None = None
     client_id: str | None = None
     source: SourceKind | None = None
+    session_id: str | None = None
     message: str | None = None
 
 

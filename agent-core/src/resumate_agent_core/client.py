@@ -16,6 +16,8 @@ import httpx
 from .config import AgentCoreSettings
 from .errors import ApiClientError, MalformedResponseError, TransportError
 from .models import (
+    AgentMessage,
+    AgentSession,
     CancelTurnRequest,
     CapabilityResponse,
     CreateTurnRequest,
@@ -26,6 +28,7 @@ from .models import (
     PatchRequest,
     PatchValidationResponse,
     PendingAction,
+    TurnState,
     UserTurn,
     WorkingDocument,
 )
@@ -142,6 +145,7 @@ class ResumateClient:
         execution_mode: str | None = None,
         client_id: str | None = None,
         source: str | None = None,
+        session_id: str | None = None,
         message: str | None = None,
     ) -> UserTurn:
         """Open a turn, finalizing any previous open turn per C-04."""
@@ -150,6 +154,7 @@ class ResumateClient:
             execution_mode=execution_mode,
             client_id=client_id,
             source=source,
+            session_id=session_id,
             message=message,
         )
         payload = self._request(
@@ -334,4 +339,43 @@ class ResumateClient:
         """Fetch public capability discovery (never user resources)."""
         payload = self._request("GET", "/.well-known/resume-agent")
         return self._decode(CapabilityResponse, payload)
+
+    # --- sessions, messages and run checkpoints (contract section 19) --------
+
+    def create_session(self) -> AgentSession:
+        """Open a conversation that groups related turns."""
+        payload = self._request("POST", "/sessions", json_body={})
+        return self._decode(AgentSession, payload)
+
+    def list_sessions(self) -> list[AgentSession]:
+        """List the caller's sessions, most recently active first."""
+        return self._decode_list(AgentSession, self._request("GET", "/sessions"))
+
+    def list_session_messages(self, session_id: str, *, after_seq: int | None = None) -> list[AgentMessage]:
+        """Read messages, optionally only those after a known sequence."""
+        params = None if after_seq is None else {"afterSeq": after_seq}
+        payload = self._request("GET", f"/sessions/{_encode(session_id)}/messages", params=params)
+        return self._decode_list(AgentMessage, payload)
+
+    def append_session_message(self, session_id: str, *, seq: int, role: str, content: Any) -> AgentMessage:
+        """Append a message; the server is idempotent on (session_id, seq)."""
+        payload = self._request(
+            "POST",
+            f"/sessions/{_encode(session_id)}/messages",
+            json_body={"seq": seq, "role": role, "content": content},
+        )
+        return self._decode(AgentMessage, payload)
+
+    def get_turn_state(self, turn_id: str) -> TurnState:
+        """Read a turn's run checkpoint and its optimistic-lock version."""
+        return self._decode(TurnState, self._request("GET", f"{self._turn_path(turn_id)}/state"))
+
+    def update_turn_state(self, turn_id: str, *, state_version: int, run_state: Mapping[str, Any]) -> TurnState:
+        """Write the run checkpoint, guarded by the version last read."""
+        payload = self._request(
+            "PUT",
+            f"{self._turn_path(turn_id)}/state",
+            json_body={"stateVersion": state_version, "runState": dict(run_state)},
+        )
+        return self._decode(TurnState, payload)
 
