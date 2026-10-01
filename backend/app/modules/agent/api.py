@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -7,7 +7,7 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser
 from app.modules.auth.deps import require_human_session, require_permission
 
-from . import events, service
+from . import events, runner, service
 from .schemas import (
     PatchApplyRequest,
     PatchApplyResponse,
@@ -18,6 +18,8 @@ from .schemas import (
     PendingActionResponse,
     RunStateResponse,
     RunStateUpdateRequest,
+    RunStartRequest,
+    RunStartResponse,
     SessionCreateRequest,
     SessionMessageCreateRequest,
     SessionMessageResponse,
@@ -41,6 +43,23 @@ def create_turn(
     user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> UserTurnResponse:
     return service.begin_turn(db, user, resume_id, payload)
+
+
+@router.post(
+    "/resumes/{resume_id}/runs",
+    response_model=RunStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def start_run(
+    resume_id: str,
+    payload: RunStartRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+    _human: CurrentUser = Depends(require_human_session),
+) -> RunStartResponse:
+    """Spawn the CLI runner for one run (contract section 20)."""
+    return runner.start_run(db, user, resume_id, payload, request)
 
 
 @router.get("/resumes/{resume_id}/turns", response_model=list[UserTurnResponse])

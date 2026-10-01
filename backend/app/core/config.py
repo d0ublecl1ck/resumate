@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     sse_poll_interval_seconds: float = 1.0
     sse_heartbeat_interval_seconds: float = 15.0
 
+    # Agent runner: the backend spawns the resumate-agent CLI for one run. The
+    # command is an executable (tests point it at a stub); the decrypted model
+    # key travels in the child's environment, never in argv.
+    agent_runner_command: str = "resumate-agent"
+    agent_runner_timeout_seconds: float = 300.0
+    agent_runner_log_dir: str = "var/agent-runs"
+    agent_runner_max_concurrent: int = 2
+
 
 @lru_cache
 def get_settings() -> Settings:

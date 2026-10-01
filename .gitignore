@@ -6,6 +6,9 @@
 /ui/node_modules/
 /ui/dist/
 
+# Agent runner logs (runtime output, never committed)
+/backend/var/
+
 # Planner local working memory
 /task_plan.md
 /notes.md
