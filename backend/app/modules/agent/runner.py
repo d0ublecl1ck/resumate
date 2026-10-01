@@ -14,6 +14,9 @@ import os
 import signal
 import subprocess
 import threading
+from collections.abc import Iterator
+
+import redis
 from pathlib import Path
 from uuid import uuid4
 
@@ -25,13 +28,16 @@ from app.core.deps import CurrentUser
 from app.modules.resume import service as resume_service
 from app.modules.settings import dao as settings_dao
 from app.modules.settings import service as settings_service
-from app.shared.errors import ModelNotConfigured, RateLimited, ResourceNotFound, Unauthenticated
+from app.shared.errors import ModelNotConfigured, RateLimited, ResourceNotFound
 
-from . import dao
+from . import dao, run_token
 from .schemas import RunStartRequest, RunStartResponse
 
 _ACTIVE_LOCK = threading.Lock()
 _ACTIVE_RUNS: dict[str, subprocess.Popen] = {}
+# run id -> (raw credential, the Redis client that stores it). Kept so the
+# supervisor can revoke the credential the moment the child is reaped.
+_ACTIVE_TOKENS: dict[str, tuple[str, redis.Redis]] = {}
 _ACTIVE_COUNT = 0
 
 _EXECUTION_MODES = ("approval", "full_access")
@@ -42,6 +48,7 @@ def _reset_state() -> None:
     global _ACTIVE_COUNT
     with _ACTIVE_LOCK:
         _ACTIVE_RUNS.clear()
+        _ACTIVE_TOKENS.clear()
         _ACTIVE_COUNT = 0
 
 
@@ -65,8 +72,12 @@ def _release_slot(run_id: str) -> None:
     global _ACTIVE_COUNT
     with _ACTIVE_LOCK:
         _ACTIVE_RUNS.pop(run_id, None)
+        credential = _ACTIVE_TOKENS.pop(run_id, None)
         if _ACTIVE_COUNT > 0:
             _ACTIVE_COUNT -= 1
+    if credential is not None:
+        secret, client = credential
+        run_token.revoke_run_token(client, secret)
 
 
 def _resolve_model_config(db: Session, user: CurrentUser) -> tuple[str, str, str]:
@@ -116,20 +127,23 @@ def _child_command(
 def _child_env(
     *,
     base_url: str,
-    cookie_name: str,
-    cookie: str,
+    token: str,
     model: str,
     endpoint: str,
     api_key: str,
 ) -> dict[str, str]:
-    """Minimal environment: no backend secrets, only what the runner needs."""
+    """Minimal environment: no backend secrets, only what the runner needs.
+
+    The child receives a short-lived run credential, never the caller's session
+    cookie: a leaked child environment is then worth only one resume until the
+    credential expires or is revoked.
+    """
     env = {
         "PATH": os.environ.get("PATH", ""),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
         "PYTHONUNBUFFERED": "1",
         "RESUME_AGENT_CORE_BASE_URL": base_url,
-        "RESUME_AGENT_CORE_SESSION_COOKIE_NAME": cookie_name,
-        "RESUME_AGENT_CORE_SESSION_COOKIE": cookie,
+        "RESUME_AGENT_CORE_TOKEN": token,
         "RESUME_AGENT_CORE_MODEL": model,
         "RESUME_AGENT_CORE_API_KEY": api_key,
     }
@@ -167,6 +181,7 @@ def start_run(
     resume_id: str,
     payload: RunStartRequest,
     request: Request,
+    client: redis.Redis,
 ) -> RunStartResponse:
     """Validate, then spawn one runner process; return before it finishes."""
     resume_service.get_resume(db, user.id, resume_id)
@@ -174,19 +189,29 @@ def start_run(
         _require_owned_session(db, user.id, payload.session_id)
     model, endpoint, api_key = _resolve_model_config(db, user)
 
-    cookie_name = get_settings().session_cookie_name
-    cookie = request.cookies.get(cookie_name)
-    if not cookie:
-        raise Unauthenticated("登录已失效，请重新登录")
-
     if not _acquire_slot():
         limit = max(1, get_settings().agent_runner_max_concurrent)
         raise RateLimited(f"已有 {limit} 个运行在执行，请稍后重试")
 
+    settings = get_settings()
     run_id = f"run_{uuid4().hex[:12]}"
+    # The child receives a credential scoped to this resume instead of the
+    # caller's session cookie. It is revoked when the child is reaped and expires
+    # on its own if the backend dies first.
+    secret = run_token.issue_run_token(
+        client,
+        owner_id=user.id,
+        resume_id=resume_id,
+        run_id=run_id,
+        ttl_seconds=int(settings.agent_runner_timeout_seconds)
+        + max(1, settings.agent_runner_token_slack_seconds),
+        max_uses=max(1, settings.agent_runner_token_max_uses),
+    )
+    with _ACTIVE_LOCK:
+        _ACTIVE_TOKENS[run_id] = (secret, client)
     try:
         command = _child_command(
-            get_settings().agent_runner_command,
+            settings.agent_runner_command,
             resume_id=resume_id,
             prompt=payload.prompt,
             execution_mode=_execution_mode(db, user, payload.execution_mode),
@@ -194,13 +219,12 @@ def start_run(
         )
         env = _child_env(
             base_url=str(request.base_url).rstrip("/"),
-            cookie_name=cookie_name,
-            cookie=cookie,
+            token=secret,
             model=model,
             endpoint=endpoint,
             api_key=api_key,
         )
-        log_dir = Path(get_settings().agent_runner_log_dir)
+        log_dir = Path(settings.agent_runner_log_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(log_dir, 0o700)
         log_path = log_dir / f"{run_id}.log"
@@ -222,7 +246,7 @@ def start_run(
         _ACTIVE_RUNS[run_id] = proc
     threading.Thread(
         target=_supervise,
-        args=(run_id, proc, get_settings().agent_runner_timeout_seconds),
+        args=(run_id, proc, settings.agent_runner_timeout_seconds),
         daemon=True,
     ).start()
     return RunStartResponse(run_id=run_id, status="started")

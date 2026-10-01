@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.modules.agent import runner
+from app.modules.agent import run_token, runner
 
 import support
 
@@ -89,7 +89,12 @@ def test_run_requires_model_configuration(client: TestClient) -> None:
     assert response.json()["code"] == "MODEL_NOT_CONFIGURED"
 
 
-def test_run_spawns_runner_with_env_credentials(client: TestClient, monkeypatch, tmp_path: Path) -> None:
+def test_run_spawns_runner_with_env_credentials(
+    client: TestClient,
+    fake_redis,
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
     env_file = tmp_path / "child-env.txt"
     argv_file = tmp_path / "child-argv.txt"
     script = _write_stub(
@@ -102,7 +107,6 @@ def test_run_spawns_runner_with_env_credentials(client: TestClient, monkeypatch,
     _configure_model(client)
     resume = _create_resume(client)
     session = client.post("/sessions", json={}).json()
-    client.cookies.set("resumate_session", "sess-cookie-value")
 
     response = client.post(
         f"/resumes/{resume['id']}/runs",
@@ -127,11 +131,15 @@ def test_run_spawns_runner_with_env_credentials(client: TestClient, monkeypatch,
         session["id"],
     ]
 
-    env = dict(line.split("=", 1) for line in env_file.read_text(encoding="utf-8").splitlines() if "=" in line)
+    env_text = env_file.read_text(encoding="utf-8")
+    env = dict(line.split("=", 1) for line in env_text.splitlines() if "=" in line)
     assert env["RESUME_AGENT_CORE_API_KEY"] == "sk-stub-secret"
-    assert env["RESUME_AGENT_CORE_SESSION_COOKIE"] == "sess-cookie-value"
-    assert env["RESUME_AGENT_CORE_SESSION_COOKIE_NAME"] == "resumate_session"
     assert env["RESUME_AGENT_CORE_MODEL"] == "stub-model"
+    # The child gets a run-scoped credential, never the caller's session cookie.
+    token = env["RESUME_AGENT_CORE_TOKEN"]
+    assert token.startswith(run_token.RUN_TOKEN_PREFIX)
+    assert "RESUME_AGENT_CORE_SESSION_COOKIE" not in env
+    assert "RESUME_AGENT_CORE_SESSION_COOKIE_NAME" not in env
     assert env["RESUME_AGENT_CORE_PROVIDER_BASE_URL"] == "https://provider.test/v1"
     assert env["RESUME_AGENT_CORE_BASE_URL"]
     # The child must not inherit the backend's own secrets.
@@ -142,8 +150,11 @@ def test_run_spawns_runner_with_env_credentials(client: TestClient, monkeypatch,
     log = next(log_dir.glob("*.log")).read_text(encoding="utf-8")
     assert "runner-stub-ok" in log
     assert "sk-stub-secret" not in log
-    assert "sess-cookie-value" not in log
+    assert token not in log
     assert _wait_for(lambda: runner.active_run_count() == 0)
+    # Reaping the child revokes the credential: nothing is left in the store.
+    assert not runner._ACTIVE_TOKENS
+    assert fake_redis.get(f"{run_token.RUN_TOKEN_KEY_PREFIX}{run_token.hash_run_token(token)}") is None
 
 
 def test_run_timeout_kills_the_child(client: TestClient, monkeypatch, tmp_path: Path) -> None:

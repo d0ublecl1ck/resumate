@@ -90,11 +90,12 @@ def _touch_session(session: AgentSession) -> None:
 def _resolve_mode(db: Session, user: CurrentUser, requested: str | None) -> tuple[str, str]:
     """Freeze the execution mode and its source for one turn (contract section 3).
 
-    A PAT caller's executionMode is untrusted and ignored (C-01/C-02): its mode
-    resolves only from the account agent config or the account default, so a
-    token cannot promote an account to full_access through the request body.
+    A delegated credential's executionMode is untrusted and ignored (C-01/C-02):
+    both PAT and run tokens resolve only from the account agent config or the
+    account default, so neither can promote an account to full_access through the
+    request body.
     """
-    if user.auth_kind != "pat" and requested is not None:
+    if user.auth_kind == "session" and requested is not None:
         return requested, "session"
     settings = settings_dao.get_by_owner(db, user.id)
     if settings is not None:
@@ -365,9 +366,10 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         raise BaseVersionStale("简历已产生新版本，请基于最新版本重试", latest_version_id=resume.current_version_id)
     session = _require_session(db, user.id, payload.session_id) if payload.session_id else None
     mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
-    if user.auth_kind == "pat":
-        # The PAT fixes the client identity and the turn is always agent-sourced;
-        # a request-body clientId/source is untrusted and ignored (contract 13.4).
+    if user.auth_kind in ("pat", "run"):
+        # Delegated credentials fix the client identity and the turn is always
+        # agent-sourced; a request-body clientId/source is untrusted and ignored
+        # (contract 13.4). A run credential reports its own run id as client id.
         client_id = (user.client_id or user.pat_id or DEFAULT_CLIENT_ID)[:64]
         source = DEFAULT_SOURCE
     else:
