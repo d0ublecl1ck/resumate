@@ -1,20 +1,20 @@
 export default {
   state: {
     model_missing: {
-      stamp: "Model not configured",
-      title: "Configure a model first",
-      description: "This account has no usable model credential yet. Add an OpenAI-compatible endpoint and API key in Settings before the assistant can work.",
-      action: "Set up a model",
+      stamp: "One step left",
+      title: "Finish setting up",
+      description: "Complete the setup in Settings, then come back to start shaping your experience into a resume.",
+      action: "Open Settings",
     },
     runtime_offline: {
-      stamp: "Runtime not connected",
-      title: "AI capabilities are not connected yet",
-      description: "A model is configured, but no runtime process is handling agent requests. Until that changes, chat and runs will not execute.",
+      stamp: "Not available",
+      title: "The assistant is unavailable",
+      description: "The assistant isn't available right now, so you can't chat with it yet. Please try again later.",
     },
     available: {
-      stamp: "Connected",
-      title: "Ready when you are",
-      description: "Just describe what you did. The assistant drafts the edit first, and nothing is written to your profile until you approve it.",
+      stamp: "Ready to go",
+      title: "Tell us your story",
+      description: "Just tell me about your experience in your own words. I'll shape it into a draft for you to review before it's added to your profile.",
       action: "Start chatting",
     },
   },

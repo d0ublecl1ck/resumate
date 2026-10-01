@@ -1,21 +1,21 @@
 export default {
   state: {
     model_missing: {
-      stamp: "模型未配置",
-      title: "先配置一个模型",
-      description: "当前账号还没有可用的模型凭证。到设置里填入 OpenAI 兼容的 Endpoint 与 API Key，助手才能开始工作。",
-      action: "去设置模型",
+      stamp: "还差一步",
+      title: "先把助手开起来",
+      description: "去设置里把助手需要的信息填好，回来就能开始整理你的经历。",
+      action: "去设置",
     },
     runtime_offline: {
-      stamp: "运行体未接入",
-      title: "AI 能力尚未接入",
-      description: "模型已经配置好，但还没有任何运行体进程在处理 Agent 请求。在你看到这条状态期间，对话与 Run 都不会执行。",
+      stamp: "暂不可用",
+      title: "助手暂时不可用",
+      description: "助手现在还不能聊天，请稍后再试。",
     },
     available: {
-      stamp: "已接入",
-      title: "随时可以开始",
-      description: "直接说你的经历就行，助手会先给出一版改法，你确认之后才会写进主档。",
-      action: "开始对话",
+      stamp: "可以开始",
+      title: "说说你的经历",
+      description: "把想到的经历直接告诉我就好，我会先整理一版给你看；你确认后，才会写进个人资料。",
+      action: "开始聊聊",
     },
   },
 }
