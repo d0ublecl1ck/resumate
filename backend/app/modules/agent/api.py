@@ -38,6 +38,16 @@ from .schemas import (
 router = APIRouter(tags=["agent"])
 
 
+@router.post("/turns", response_model=UserTurnResponse, status_code=status.HTTP_201_CREATED)
+def create_scoped_turn(
+    payload: TurnCreateRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> UserTurnResponse:
+    """Create a resume or profile turn from the body (contract section 21)."""
+    return service.begin_scoped_turn(db, user, payload)
+
+
 @router.post("/resumes/{resume_id}/turns", response_model=UserTurnResponse, status_code=status.HTTP_201_CREATED)
 def create_turn(
     resume_id: str,

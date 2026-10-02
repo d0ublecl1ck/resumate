@@ -10,6 +10,7 @@ ExecutionMode = Literal["approval", "full_access"]
 ModeSource = Literal["session", "agent", "account"]
 TurnSource = Literal["agent", "manual", "client"]
 TurnState = Literal["open", "finalized", "cancelled"]
+RunScope = Literal["resume", "profile"]
 PendingActionState = Literal["pending", "approved", "rejected", "consumed", "stale"]
 DiffChangeType = Literal["added", "removed", "modified"]
 DiffState = Literal["pending", "accepted", "rejected"]
@@ -113,9 +114,10 @@ class PatchApplyResponse(ApiModel):
 class PendingActionResponse(ApiModel):
     id: str
     user_turn_id: str
-    kind: Literal["content_patch"]
+    kind: Literal["content_patch", "profile_change"]
+    target: RunScope = "resume"
     title: str
-    target_resource: str
+    target_resource: str | None
     base_version_id: str | None
     impact_summary: str
     requires_text_confirm: bool = False
@@ -128,7 +130,7 @@ class PendingActionResponse(ApiModel):
 
 class TurnResult(ApiModel):
     state: Literal["finalized", "cancelled"]
-    resume_id: str
+    resume_id: str | None
     version_id: str | None
     change_count: int
     affected_sections: list[str]
@@ -139,7 +141,8 @@ class TurnResult(ApiModel):
 
 class UserTurnResponse(ApiModel):
     id: str
-    resume_id: str
+    scope: RunScope = "resume"
+    resume_id: str | None
     client_id: str
     source: TurnSource
     execution_mode: ExecutionMode
@@ -167,6 +170,8 @@ class WorkingDocumentResponse(ApiModel):
 
 
 class TurnCreateRequest(ApiModel):
+    scope: RunScope = "resume"
+    resume_id: str | None = Field(default=None, max_length=36)
     base_version_id: str | None = None
     execution_mode: ExecutionMode | None = None
     client_id: str | None = Field(default=None, max_length=64)
