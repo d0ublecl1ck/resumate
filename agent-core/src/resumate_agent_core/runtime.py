@@ -34,7 +34,7 @@ from .compaction import (
 )
 from .errors import ApiClientError
 from .models import PatchPreviewResponse, TurnResult, UserTurn
-from .tools import TOOLS, Tool, UnknownToolError
+from .tools import Tool, UnknownToolError, tools_for_scope
 from .turn import TurnSession
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only imports avoid a cycle
@@ -327,10 +327,13 @@ class AgentRuntime:
         checkpoint: CheckpointStore | None = None,
         sessions: SessionJournal | None = None,
         compaction: CompactionPolicy | None = None,
+        scope: str = "resume",
     ) -> None:
         self.client = client
         self.provider = provider
-        self.tools: dict[str, Tool] = dict(tools) if tools is not None else dict(TOOLS)
+        self.scope = scope
+        self._tools_explicit = tools is not None
+        self.tools: dict[str, Tool] = dict(tools) if tools is not None else tools_for_scope(scope)
         self.budget = budget or RunBudget()
         self.cancellation = cancellation
         self.system_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
@@ -364,6 +367,8 @@ class AgentRuntime:
             args["turn_id"] = session.turn_id
         if "resume_id" in required and not args.get("resume_id"):
             args["resume_id"] = session.resume_id
+        if "session_id" in required and not args.get("session_id"):
+            args["session_id"] = self.session_id
         return tool.invoke(self.client, args)
 
     def _open_session(
@@ -489,9 +494,10 @@ class AgentRuntime:
 
     def run(
         self,
-        resume_id: str,
+        resume_id: str | None,
         prompt: str,
         *,
+        scope: str = "resume",
         execution_mode: str | None = None,
         base_version_id: str | None = None,
         client_id: str | None = None,
@@ -501,6 +507,9 @@ class AgentRuntime:
         session_id: str | None = None,
     ) -> Iterator[RunEvent]:
         """Drive the loop, yielding typed events until the turn settles."""
+        self.scope = scope
+        if not self._tools_explicit:
+            self.tools = tools_for_scope(scope)
         try:
             self._open_session(session_id)
         except ApiClientError as exc:
@@ -516,6 +525,7 @@ class AgentRuntime:
             message=turn_message,
             turn_id=turn_id,
             session_id=self.session_id,
+            scope=scope,
         )
         try:
             session.begin()
@@ -533,7 +543,7 @@ class AgentRuntime:
         # The opening context is journalled before the first model call, so the
         # session reflects the run even if that call fails.
         self._record_session(messages)
-        yield from self._drive(session, messages)
+        yield from self._drive_and_reply(session, messages)
 
     def resume(self, turn_id: str) -> Iterator[RunEvent]:
         """Continue an interrupted turn from its server-side checkpoint."""
@@ -559,11 +569,16 @@ class AgentRuntime:
             )
         else:
             self.session_id = None
+        resume_scope = getattr(turn, "scope", "resume")
+        self.scope = resume_scope
+        if not self._tools_explicit:
+            self.tools = tools_for_scope(resume_scope)
         session = TurnSession(
             self.client,
             turn.resume_id,
             turn_id=turn_id,
             session_id=self.session_id,
+            scope=resume_scope,
         )
         try:
             session.begin()
@@ -586,7 +601,7 @@ class AgentRuntime:
             # Keep the compaction metadata visible in later checkpoints too.
             self._compaction = dict(stored_compaction)
         self._record_session(messages)
-        yield from self._drive(session, messages)
+        yield from self._drive_and_reply(session, messages)
 
     def _save_checkpoint(
         self,
@@ -625,6 +640,16 @@ class AgentRuntime:
     def _phase(pending_action_id: str | None) -> str:
         """Checkpoint phase: a live approval gate is visible to a resumer."""
         return "awaiting_approval" if pending_action_id else "running"
+
+    def _drive_and_reply(self, session: TurnSession, messages: list[Message]) -> Iterator[RunEvent]:
+        """Drive the loop, then persist the user-facing assistant reply."""
+        final_text = ""
+        for event in self._drive(session, messages):
+            if isinstance(event, MessageEvent) and event.text.strip():
+                final_text = event.text
+            yield event
+        if final_text.strip() and self.sessions is not None:
+            self.sessions.reply(final_text)
 
     def _drive(self, session: TurnSession, messages: list[Message]) -> Iterator[RunEvent]:
         provider_tools = self._provider_tools()

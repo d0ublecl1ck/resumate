@@ -114,10 +114,13 @@ def _child_command(
     prompt: str,
     execution_mode: str | None,
     session_id: str | None,
+    scope: str = "resume",
 ) -> list[str]:
     """Non-secret arguments only; credentials go through the environment."""
     argv = [command]
-    if resume_id:
+    if scope == "profile":
+        argv += ["--scope", "profile"]
+    elif resume_id:
         argv += ["--resume-id", resume_id]
     argv += ["--prompt", prompt]
     if execution_mode:
@@ -226,6 +229,7 @@ def start_session_run(
         execution_mode=_execution_mode(db, user, None),
         request=request,
         client=client,
+        scope="profile",
     )
 
 
@@ -239,6 +243,7 @@ def _spawn(
     execution_mode: str | None,
     request: Request,
     client: redis.Redis,
+    scope: str = "resume",
 ) -> RunStartResponse:
     model, endpoint, api_key = _resolve_model_config(db, user)
 
@@ -269,6 +274,7 @@ def _spawn(
             prompt=prompt,
             execution_mode=execution_mode,
             session_id=session_id,
+            scope=scope,
         )
         env = _child_env(
             base_url=str(request.base_url).rstrip("/"),
