@@ -211,6 +211,33 @@ def _get_working_document(client: ResumateClient, args: Mapping[str, Any]) -> An
     return _wire(client.get_working_document(_require(args, "resume_id")))
 
 
+def _get_profile(client: ResumateClient, args: Mapping[str, Any]) -> Any:
+    profile: dict[str, Any] = _wire(client.get_profile())
+    if args.get("include_facts", True):
+        profile["facts"] = _wire(client.list_profile_facts())
+    return profile
+
+
+def _propose_profile_change(client: ResumateClient, args: Mapping[str, Any]) -> Any:
+    return _wire(
+        client.propose_profile_change(
+            _require(args, "turn_id"),
+            ops=_require(args, "ops"),
+            reason=args.get("reason"),
+        )
+    )
+
+
+def _create_profile_turn(client: ResumateClient, args: Mapping[str, Any]) -> Any:
+    return _wire(
+        client.create_profile_turn(
+            session_id=_require(args, "session_id"),
+            execution_mode=args.get("execution_mode"),
+            message=args.get("message"),
+        )
+    )
+
+
 # --- registry ----------------------------------------------------------------
 
 TOOLS: dict[str, Tool] = {
@@ -349,6 +376,96 @@ TOOLS: dict[str, Tool] = {
         handler=_get_working_document,
     ),
 }
+
+
+# --- scope-based selection (issue 60a52) -------------------------------------
+
+_PROFILE_ACTION_OPS = {
+    "type": "array",
+    "minItems": 1,
+    "description": "Profile change ops: {op: create_fact|update_fact|update_basics, payload: {...}}.",
+    "items": {"type": "object"},
+}
+
+# Tool names a profile run shares with a resume run (resource-independent tools).
+_SHARED_TOOL_NAMES = (
+    "capability",
+    "create_turn",
+    "get_turn",
+    "finalize_turn",
+    "cancel_turn",
+    "list_pending_actions",
+)
+
+PROFILE_TOOLS: dict[str, Tool] = {name: TOOLS[name] for name in _SHARED_TOOL_NAMES}
+PROFILE_TOOLS["create_turn"] = Tool(
+    name="create_turn",
+    description="Open a profile-scoped turn for the current session (no resume).",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "session_id": {"type": "string", "description": "Owning session id."},
+            "execution_mode": {
+                "type": "string",
+                "enum": ["approval", "full_access"],
+                "description": "Requested mode; the server resolves and freezes it.",
+            },
+            "message": {"type": "string", "description": "Turn description."},
+        },
+        "required": ["session_id"],
+        "additionalProperties": False,
+    },
+    handler=_create_profile_turn,
+)
+PROFILE_TOOLS["get_profile"] = Tool(
+    name="get_profile",
+    description="Read the owner profile basics and facts.",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "include_facts": {"type": "boolean", "description": "Include the fact list (default true)."}
+        },
+        "additionalProperties": False,
+    },
+    handler=_get_profile,
+)
+PROFILE_TOOLS["propose_profile_change"] = Tool(
+    name="propose_profile_change",
+    description=(
+        "Submit profile changes for human confirmation. In approval mode this "
+        "opens a PendingAction the human must approve before it is written."
+    ),
+    input_schema={
+        "type": "object",
+        "properties": {
+            "turn_id": _TURN_ID,
+            "ops": _PROFILE_ACTION_OPS,
+            "reason": _REASON,
+        },
+        "required": ["turn_id", "ops"],
+        "additionalProperties": False,
+    },
+    handler=_propose_profile_change,
+)
+
+
+def tools_for_scope(scope: str) -> dict[str, Tool]:
+    """The registry a run gets: resume keeps the patch tools, profile does not."""
+    return dict(PROFILE_TOOLS) if scope == "profile" else dict(TOOLS)
+
+
+def _ordered(registry: Mapping[str, Tool]) -> list[Tool]:
+    return [registry[name] for name in sorted(registry)]
+
+
+def tool_specs_for_scope(scope: str) -> list[dict[str, Any]]:
+    """Neutral function specs for one scope."""
+    return [tool.to_spec() for tool in _ordered(tools_for_scope(scope))]
+
+
+def openai_tool_specs_for_scope(scope: str) -> list[dict[str, Any]]:
+    """OpenAI-compatible function specs for one scope."""
+    return [tool.to_openai_tool() for tool in _ordered(tools_for_scope(scope))]
 
 
 def list_tools() -> list[Tool]:
