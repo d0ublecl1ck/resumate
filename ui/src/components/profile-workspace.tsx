@@ -4,7 +4,7 @@
 // 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
 
 import { Link } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
 import { createFactManually, updateBasics, updateFact } from "@/lib/api"
@@ -47,14 +47,11 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
     window.setTimeout(() => setFlashId((cur) => (cur === id ? null : cur)), 2500)
   }
 
-  function handleCommitFact(fact: ProfileFact, operation: "create" | "update") {
-    setFacts((prev) => (operation === "update" ? prev.map((f) => (f.id === fact.id ? fact : f)) : [fact, ...prev]))
-    flash(fact.id)
-  }
-
-  function handleCommitBasics(next: ResumeBasics) {
-    setBasics(next)
-  }
+  // 主档被对话审批写入后 ["profile"] 会重新取数：把新数据同步进本地副本，页面立即可见。
+  useEffect(() => {
+    setBasics(profile.basics)
+    setFacts(profile.facts)
+  }, [profile])
 
   async function handleSaveBasics(next: ResumeBasics) {
     const saved = await updateBasics(next)
@@ -203,12 +200,7 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         )
       })}
 
-      <ProfileAssistant
-        open={assistantOpen}
-        onClose={() => setAssistantOpen(false)}
-        onCommitFact={handleCommitFact}
-        onCommitBasics={handleCommitBasics}
-      />
+      <ProfileAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} />
     </div>
   )
 }

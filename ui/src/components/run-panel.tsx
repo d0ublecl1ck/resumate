@@ -6,8 +6,7 @@ import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { approvePendingAction, rejectPendingAction, startRun } from "@/lib/api"
-import { ApiRequestError } from "@/lib/api-client"
-import i18n from "@/i18n"
+import { agentErrorKey } from "@/lib/agent-error"
 import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
@@ -25,16 +24,6 @@ const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   failed: "text-coral",
   frozen: "text-muted-foreground",
   turn_closed: "text-muted-foreground",
-}
-
-/** 机器错误码 → i18n 键；禁止把服务端原始 message 直接展示给用户。 */
-function runStartErrorKey(cause: unknown): string {
-  if (cause instanceof ApiRequestError) {
-    if (cause.code === "MODEL_NOT_CONFIGURED") return "workbench.run.errors.modelNotConfigured"
-    if (cause.code === "RATE_LIMITED") return "workbench.run.errors.rateLimited"
-    if (cause.code === "NETWORK_ERROR") return "workbench.run.errors.network"
-  }
-  return "workbench.run.errors.generic"
 }
 
 export function RunPanel({ run, mode, resumeId }: { run?: AgentRun; mode: ExecutionMode; resumeId: string }) {
@@ -71,7 +60,7 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun; mode: Execut
     },
     onError: (cause) => {
       setStarting(false)
-      setStartError(i18n.t(runStartErrorKey(cause)))
+      setStartError(t(agentErrorKey(cause)))
     },
   })
 

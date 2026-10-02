@@ -14,7 +14,7 @@ import {
   TEMPLATES,
   USER_PREFERENCES,
 } from "@/lib/content"
-import type { AuthUser, Permission, ProfileFact, Role } from "@/lib/types"
+import type { AgentSession, AuthUser, Permission, ProfileFact, Role } from "@/lib/types"
 
 const AUTH_USER: AuthUser = {
   id: "user_test",
@@ -88,6 +88,11 @@ const MOCK_TURN = {
   closedAt: null,
   result: null,
   pendingActions: [MOCK_PENDING_ACTION],
+}
+
+function createSession(id: string): AgentSession {
+  const now = new Date().toISOString()
+  return { id: `sess_${id}`, createdAt: now, updatedAt: now, lastActiveAt: now }
 }
 
 function unauthorized(code: string, message: string) {
@@ -345,6 +350,21 @@ export const handlers = [
   ),
   http.post("/api/resumes/:id/runs", () =>
     HttpResponse.json({ runId: "run_mock", status: "started" }, { status: 202 }),
+  ),
+  // 会话层与 profile 作用域 run（契约 §19 / §21）：默认空会话，测试按需覆盖。
+  http.get("/api/sessions", () => HttpResponse.json([])),
+  http.post("/api/sessions", () => HttpResponse.json(createSession(Date.now().toString(36)), { status: 201 })),
+  http.get("/api/sessions/:id/messages", () => HttpResponse.json([])),
+  http.post("/api/sessions/:id/messages", async ({ params, request }) => {
+    const body = (await request.json()) as { seq: number; role: string; content: unknown }
+    return HttpResponse.json(
+      { id: `msg_${params.id}_${body.seq}`, sessionId: params.id, seq: body.seq, role: body.role, content: body.content, createdAt: new Date().toISOString() },
+      { status: 201 },
+    )
+  }),
+  http.get("/api/sessions/:id/turns", () => HttpResponse.json([])),
+  http.post("/api/sessions/:id/runs", () =>
+    HttpResponse.json({ runId: "run_mock_profile", status: "started" }, { status: 202 }),
   ),
   http.post("/api/pending-actions/:id/approve", ({ params }) =>
     HttpResponse.json({ ...MOCK_PENDING_ACTION, id: params.id, state: "approved" }),
