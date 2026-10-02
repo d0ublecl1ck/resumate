@@ -11,7 +11,10 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.core.config import get_settings
-from app.modules.agent import run_token, runner
+from app.core.deps import CurrentUser
+from app.modules.agent import run_token, runner, service
+from app.modules.agent.schemas import CreateFactAction, ProfileActionPreviewRequest
+from app.modules.profile.schemas import ProfileFactCreate
 
 import support
 
@@ -219,3 +222,81 @@ def test_run_credential_cannot_start_a_session_run(session_clients, fake_redis) 
 
     assert response.status_code == 403, response.text
     assert response.json()["code"] == "FORBIDDEN"
+
+
+def _profile_turn(client: TestClient) -> str:
+    session_id = _create_session(client)
+    response = client.post("/turns", json={"scope": "profile", "sessionId": session_id})
+    assert response.status_code == 201, response.text
+    return response.json()["id"]
+
+
+def _owner(user_id: str = "user_test") -> CurrentUser:
+    return CurrentUser(id=user_id, display_name="测试用户", role="super_admin", roles=("super_admin",), permissions=frozenset())
+
+
+def _stage_fact(db_session, owner_id: str, turn_id: str, title: str) -> str:
+    staged = service.stage_profile_action(
+        db_session,
+        _owner(owner_id),
+        turn_id,
+        ProfileActionPreviewRequest(
+            ops=[CreateFactAction(op="create_fact", payload=ProfileFactCreate(type="skill", title=title, content="来自助手"))]
+        ),
+    )
+    assert staged.pending_action_id is not None, staged
+    return staged.pending_action_id
+
+
+def test_profile_pending_action_approve_writes_the_profile(client: TestClient, db_session) -> None:
+    turn_id = _profile_turn(client)
+    action_id = _stage_fact(db_session, "user_test", turn_id, "Rust 高性能服务")
+
+    approved = client.post(f"/pending-actions/{action_id}/approve", json={})
+
+    assert approved.status_code == 200, approved.text
+    body = approved.json()
+    assert body["state"] == "approved"
+    assert body["target"] == "profile"
+    assert body["targetResource"] is None
+    facts = client.get("/profile/facts").json()
+    assert [fact["title"] for fact in facts if fact["title"] == "Rust 高性能服务"] == ["Rust 高性能服务"]
+
+
+def test_profile_pending_action_reject_leaves_the_profile_untouched(client: TestClient, db_session) -> None:
+    turn_id = _profile_turn(client)
+    action_id = _stage_fact(db_session, "user_test", turn_id, "Erlang 并发")
+
+    rejected = client.post(f"/pending-actions/{action_id}/reject", json={})
+
+    assert rejected.status_code == 200, rejected.text
+    assert rejected.json()["state"] == "rejected"
+    facts = client.get("/profile/facts").json()
+    assert not any(fact["title"] == "Erlang 并发" for fact in facts)
+
+
+def test_run_credential_cannot_approve_a_profile_action(session_clients, fake_redis, db_session) -> None:
+    session = session_clients()
+    registered = support.register_verified(
+        session, email="profile-approve-run@example.com", password="password123", name="Run 用户"
+    )
+    assert registered.status_code == 200, registered.text
+    owner = session.get("/auth/me").json()["id"]
+    session_id = session.post("/sessions", json={}).json()["id"]
+    turn = session.post("/turns", json={"scope": "profile", "sessionId": session_id}).json()
+    action_id = _stage_fact(db_session, owner, turn["id"], "不该被写入的主档")
+    secret = run_token.issue_run_token(
+        fake_redis, owner_id=owner, resume_id=None, run_id="run_profile", ttl_seconds=120, max_uses=50
+    )
+    runner_client = session_clients()
+
+    denied = runner_client.post(
+        f"/pending-actions/{action_id}/approve",
+        json={},
+        headers={"Authorization": f"Bearer {secret}"},
+    )
+
+    assert denied.status_code == 403, denied.text
+    assert denied.json()["code"] == "FORBIDDEN"
+    facts = session.get("/profile/facts").json()
+    assert not any(fact["title"] == "不该被写入的主档" for fact in facts)

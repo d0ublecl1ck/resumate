@@ -3,6 +3,7 @@ from typing import Annotated, Any, Literal, Union
 
 from pydantic import Field
 
+from app.modules.profile.schemas import ProfileBasicsUpdate, ProfileFactCreate, ProfileFactUpdate
 from app.modules.resume.schemas import ResumeBasics, ResumeDocument, ResumeEntry, ResumeSection
 from app.shared.schemas import ApiModel
 
@@ -106,6 +107,49 @@ class PatchApplyResponse(ApiModel):
     pending_action_id: str | None
     idempotent_replay: bool = False
     base_rebased: bool = False
+
+
+# --- Profile actions (issue fef83) ----------------------------------------------
+
+
+class ProfileFactUpdateWithId(ProfileFactUpdate):
+    """update_fact carries the target fact id alongside the updatable fields."""
+
+    fact_id: str
+
+
+class CreateFactAction(ApiModel):
+    op: Literal["create_fact"]
+    payload: ProfileFactCreate
+
+
+class UpdateFactAction(ApiModel):
+    op: Literal["update_fact"]
+    payload: ProfileFactUpdateWithId
+
+
+class UpdateBasicsAction(ApiModel):
+    op: Literal["update_basics"]
+    payload: ProfileBasicsUpdate
+
+
+ProfileAction = Annotated[
+    Union[CreateFactAction, UpdateFactAction, UpdateBasicsAction],
+    Field(discriminator="op"),
+]
+
+
+class ProfileActionPreviewRequest(ApiModel):
+    ops: list[ProfileAction] = Field(min_length=1)
+    reason: str = ""
+
+
+class ProfileActionPreviewResponse(ApiModel):
+    valid: bool
+    target: Literal["profile"] = "profile"
+    change_count: int
+    pending_action_id: str | None = None
+    requires_confirmation: bool = False
 
 
 # --- Resources (section 4) ------------------------------------------------------

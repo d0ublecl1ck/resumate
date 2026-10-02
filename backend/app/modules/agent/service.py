@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.deps import CurrentUser
+from app.modules.profile import service as profile_service
+from app.modules.profile.schemas import ProfileBasicsUpdate, ProfileFactCreate, ProfileFactUpdate
 from app.modules.resume import service as resume_service
 from app.modules.resume.models import Resume, ResumeVersion
 from app.modules.settings import dao as settings_dao
@@ -37,6 +39,8 @@ from .schemas import (
     PatchRequest,
     PatchValidationResponse,
     PendingActionResponse,
+    ProfileActionPreviewRequest,
+    ProfileActionPreviewResponse,
     RunStateResponse,
     RunStateUpdateRequest,
     RuntimeStatusResponse,
@@ -691,6 +695,82 @@ def list_pending_actions(db: Session, user: CurrentUser, turn_id: str) -> list[P
     return [_pending_action_response(action) for action in dao.list_actions_for_turn(db, turn.id)]
 
 
+def _profile_ops_payload(payload: ProfileActionPreviewRequest) -> list[dict]:
+    return [op.model_dump(by_alias=True, mode="json") for op in payload.ops]
+
+
+def _apply_profile_ops(db: Session, action: PendingAction) -> None:
+    """Write an approved profile action by reusing the profile service (no second store)."""
+    for raw in action.ops or []:
+        op = (raw or {}).get("op")
+        payload = dict((raw or {}).get("payload") or {})
+        if op == "create_fact":
+            profile_service.create_fact(db, action.owner_id, ProfileFactCreate(**payload))
+        elif op == "update_fact":
+            fact_id = payload.pop("factId", None) or payload.pop("fact_id", None)
+            if not fact_id:
+                raise ValidationFailed("主档更新缺少 factId")
+            profile_service.update_fact(db, action.owner_id, fact_id, ProfileFactUpdate(**payload))
+        elif op == "update_basics":
+            profile_service.update_basics(db, action.owner_id, ProfileBasicsUpdate(**payload))
+        else:
+            raise ValidationFailed(f"未知的主档操作 {op}")
+
+
+def stage_profile_action(
+    db: Session,
+    user: CurrentUser,
+    turn_id: str,
+    payload: ProfileActionPreviewRequest,
+) -> ProfileActionPreviewResponse:
+    """Stage profile changes for a profile turn.
+
+    Approval mode creates a pending action the human must approve; full_access
+    writes immediately and keeps an approved record for audit. Nothing here
+    touches a resume.
+    """
+    turn = _require_turn(db, user.id, turn_id)
+    _require_open(turn)
+    if turn.scope != "profile":
+        raise ValidationFailed("该轮次不是主档轮次")
+    for existing in dao.list_actions_for_turn(db, turn.id):
+        if existing.state == "pending":
+            existing.state = "stale"
+            existing.stale_reason = "已被新的预览取代"
+    requires_confirmation = turn.execution_mode == "approval"
+    action = PendingAction(
+        id=_new_id("pa"),
+        owner_id=user.id,
+        turn_id=turn.id,
+        target="profile",
+        resume_id=None,
+        kind="profile_change",
+        title=f"主档修改（{len(payload.ops)} 处）",
+        base_version_id=None,
+        impact_summary=f"共 {len(payload.ops)} 处主档改动",
+        requires_text_confirm=False,
+        state="pending" if requires_confirmation else "approved",
+        ops=_profile_ops_payload(payload),
+        reason=payload.reason,
+        diff=[],
+        change_count=len(payload.ops),
+        affected_sections=[],
+        created_at=_now(),
+        decided_at=None if requires_confirmation else _now(),
+    )
+    dao.add_action(db, action)
+    if not requires_confirmation:
+        _apply_profile_ops(db, action)
+    db.commit()
+    db.refresh(action)
+    return ProfileActionPreviewResponse(
+        valid=True,
+        change_count=action.change_count,
+        pending_action_id=action.id if requires_confirmation else None,
+        requires_confirmation=requires_confirmation,
+    )
+
+
 def decide_action(db: Session, user: CurrentUser, action_id: str, *, approve: bool) -> PendingActionResponse:
     action = dao.get_action(db, action_id)
     if action is None or action.owner_id != user.id:
@@ -700,6 +780,8 @@ def decide_action(db: Session, user: CurrentUser, action_id: str, *, approve: bo
         raise TurnNotOpen("所属轮次已关闭，无法处理待办")
     if action.state != "pending":
         raise ValidationFailed("待办已处理，不能重复操作")
+    if approve and action.target == "profile":
+        _apply_profile_ops(db, action)
     action.state = "approved" if approve else "rejected"
     action.decided_at = _now()
     db.commit()
