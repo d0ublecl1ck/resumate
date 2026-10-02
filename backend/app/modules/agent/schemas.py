@@ -246,6 +246,12 @@ class RunStartResponse(ApiModel):
     status: str
 
 
+class SessionRunStartRequest(ApiModel):
+    """Body for POST /sessions/{session_id}/runs (profile-scoped run)."""
+
+    prompt: str = Field(min_length=1, max_length=8000)
+
+
 class RuntimeStatusResponse(ApiModel):
     """Runner readiness probe (GET /agent/runtime).
 

@@ -23,6 +23,7 @@ from .schemas import (
     RunStartRequest,
     RunStartResponse,
     RuntimeStatusResponse,
+    SessionRunStartRequest,
     SessionCreateRequest,
     SessionMessageCreateRequest,
     SessionMessageResponse,
@@ -74,6 +75,24 @@ def start_run(
 ) -> RunStartResponse:
     """Spawn the CLI runner for one run (contract section 20)."""
     return runner.start_run(db, user, resume_id, payload, request, client)
+
+
+@router.post(
+    "/sessions/{session_id}/runs",
+    response_model=RunStartResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def start_session_run(
+    session_id: str,
+    payload: SessionRunStartRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    client: redis.Redis = Depends(get_redis),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+    _human: CurrentUser = Depends(require_human_session),
+) -> RunStartResponse:
+    """Spawn a profile-scoped run for one of the caller's sessions (contract 21.3)."""
+    return runner.start_session_run(db, user, session_id, payload, request, client)
 
 
 @router.get("/agent/runtime", response_model=RuntimeStatusResponse)

@@ -31,7 +31,7 @@ from app.modules.settings import service as settings_service
 from app.shared.errors import ModelNotConfigured, RateLimited, ResourceNotFound
 
 from . import dao, run_token
-from .schemas import RunStartRequest, RunStartResponse
+from .schemas import RunStartRequest, RunStartResponse, SessionRunStartRequest
 
 _ACTIVE_LOCK = threading.Lock()
 _ACTIVE_RUNS: dict[str, subprocess.Popen] = {}
@@ -116,7 +116,10 @@ def _child_command(
     session_id: str | None,
 ) -> list[str]:
     """Non-secret arguments only; credentials go through the environment."""
-    argv = [command, "--resume-id", resume_id, "--prompt", prompt]
+    argv = [command]
+    if resume_id:
+        argv += ["--resume-id", resume_id]
+    argv += ["--prompt", prompt]
     if execution_mode:
         argv += ["--execution-mode", execution_mode]
     if session_id:
@@ -183,10 +186,60 @@ def start_run(
     request: Request,
     client: redis.Redis,
 ) -> RunStartResponse:
-    """Validate, then spawn one runner process; return before it finishes."""
+    """Validate a resume run, then spawn one runner process; return before it finishes."""
     resume_service.get_resume(db, user.id, resume_id)
     if payload.session_id:
         _require_owned_session(db, user.id, payload.session_id)
+    return _spawn(
+        db,
+        user,
+        resume_id=resume_id,
+        session_id=payload.session_id,
+        prompt=payload.prompt,
+        execution_mode=_execution_mode(db, user, payload.execution_mode),
+        request=request,
+        client=client,
+    )
+
+
+def start_session_run(
+    db: Session,
+    user: CurrentUser,
+    session_id: str,
+    payload: SessionRunStartRequest,
+    request: Request,
+    client: redis.Redis,
+) -> RunStartResponse:
+    """Spawn a profile-scoped run for one of the caller's sessions (contract 21.3).
+
+    The child gets a short-lived run credential with no resume bound: it can only
+    touch turns whose own resume_id is null, so a profile run cannot reach any
+    resume.
+    """
+    _require_owned_session(db, user.id, session_id)
+    return _spawn(
+        db,
+        user,
+        resume_id=None,
+        session_id=session_id,
+        prompt=payload.prompt,
+        execution_mode=_execution_mode(db, user, None),
+        request=request,
+        client=client,
+    )
+
+
+def _spawn(
+    db: Session,
+    user: CurrentUser,
+    *,
+    resume_id: str | None,
+    session_id: str | None,
+    prompt: str,
+    execution_mode: str | None,
+    request: Request,
+    client: redis.Redis,
+) -> RunStartResponse:
     model, endpoint, api_key = _resolve_model_config(db, user)
 
     if not _acquire_slot():
@@ -213,9 +266,9 @@ def start_run(
         command = _child_command(
             settings.agent_runner_command,
             resume_id=resume_id,
-            prompt=payload.prompt,
-            execution_mode=_execution_mode(db, user, payload.execution_mode),
-            session_id=payload.session_id,
+            prompt=prompt,
+            execution_mode=execution_mode,
+            session_id=session_id,
         )
         env = _child_env(
             base_url=str(request.base_url).rstrip("/"),
