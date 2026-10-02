@@ -488,9 +488,10 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 | 方法 | 路径 | 权限 | 说明 |
 | --- | --- | --- | --- |
 | POST | /turns | resume:write | body 带 `scope`；`scope=resume` 必须 `resumeId`，`scope=profile` 必须 `sessionId` 且不接受 `resumeId` |
+| GET | /sessions/{session_id}/turns | resume:read | 列出该会话的轮次，owner 隔离、最新优先，含 `pendingActions` |
 
 - `POST /resumes/{resume_id}/turns` 保持既有契约：固定 `scope=resume`，`resumeId` 取自路径。
-- 简历专属操作（`patches:validate|preview|apply`、`finalize`、`cancel`）对 profile 轮次返回 422 `VALIDATION_FAILED`：这些语义尚未泛化。
+- 简历专属操作（`patches:validate|preview|apply`）对 profile 轮次返回 422 `VALIDATION_FAILED`；`finalize` / `cancel` 已泛化：profile 轮次没有 working copy，只负责关闭轮次（cancel 同时把未决 pending action 置 stale）。
 - 同一会话内新建 profile 轮次会取代旧的 open profile 轮次（C-04 类比，旧的标记为 cancelled，未决 pending action 置 stale）。
 
 ### 21.3 profile 作用域 run
@@ -508,5 +509,12 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 - approval 模式下，profile 改动先进入 pending action（`target=profile`，`kind=profile_change`）；`POST /pending-actions/{id}/approve` 才会**真正写入主档**，写入复用 `app/modules/profile/service.py` 的既有函数，不另写一套；reject 不动主档。
 - full_access 模式下，stage 时立即写入，并保留一条 approved 记录用于审计。
 - approve / reject 仍要求人类会话：run 凭据 403 `FORBIDDEN`（e9ad6 的越权路径没有被重新打开）。
-- 当前阶段只有服务函数 `stage_profile_action` 创建 profile pending action；暴露给运行体的 HTTP 预览端点留给第 2 阶段，与 agent-core 工具和白名单一起加。
+- 创建 profile pending action 的 HTTP 端点是 `POST /turns/{turn_id}/profile-actions`（校验 `scope=profile`；run 凭据可调用，因为提交待确认改动不是人类决策）；approve / reject 仍必须人类会话，run 凭据 403。
+
+### 21.5 profile run 的子进程、工具集与回复消息
+
+- 后端 spawn profile run 时传 `--scope profile`（不带 `--resume-id`），凭据与 base url 仍按 §20.2 走环境变量。
+- run 凭据白名单额外放行 `GET /profile`、`GET /profile/facts`、`POST /turns`、`GET /sessions/{id}/turns`、`POST /turns/{id}/profile-actions`。`test_run_token_allowlist.py` 用 AST 从 `client.py` 推导实际调用并比对，新增 client 方法会被自动纳管。
+- agent-core 按 scope 注入工具：resume 保持原有 10 个工具；profile 注入 `capability` / `create_turn` / `get_turn` / `finalize_turn` / `cancel_turn` / `list_pending_actions` + `get_profile` + `propose_profile_change`，**不含** `get_working_document` / `validate_patch` / `preview_patch` / `apply_patch`。
+- run 结束时把 Agent 的最终文字回复写成一条 `role=assistant`、`content={"text": "..."}` 的会话消息（`SessionJournal.reply`，取下一个 seq 并把游标移过它）。它是面向用户的回复，不属于模型上下文。
 
