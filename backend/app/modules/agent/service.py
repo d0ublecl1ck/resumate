@@ -491,15 +491,28 @@ def list_turns(
     return [_turn_response(db, turn) for turn in dao.list_turns(db, resume_id, user.id, state)]
 
 
+def list_session_turns(db: Session, user: CurrentUser, session_id: str) -> list[UserTurnResponse]:
+    """List one session's turns newest-first, pending actions included (owner isolated)."""
+    _require_session(db, user.id, session_id)
+    return [_turn_response(db, turn) for turn in dao.list_turns_for_session(db, session_id, user.id)]
+
+
 def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFinalizeRequest) -> UserTurnResponse:
     turn = _require_turn(db, user.id, turn_id)
-    _require_resume_scope(turn)
     request_hash = _canonical_hash({"message": payload.message or ""})
     operation = _lookup_operation(db, turn.id, "finalize", payload.idempotency_key)
     if operation is not None:
         _assert_same_request(operation, request_hash)
         return _replayed_turn(operation)
     _require_open(turn)
+    if turn.scope == "profile":
+        # A profile turn has no working copy: finalize only closes it.
+        message = payload.message or turn.message or "主档轮次提交"
+        _apply_result(turn, None, message, "finalized")
+        response = _turn_response(db, turn)
+        _store_operation(db, turn, "finalize", payload.idempotency_key, request_hash, response)
+        db.commit()
+        return response
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     base_rebased = _rebase_if_needed(db, turn, resume)
     message = payload.message or turn.message or "Agent 轮次提交"
@@ -513,13 +526,23 @@ def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFin
 
 def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCancelRequest) -> UserTurnResponse:
     turn = _require_turn(db, user.id, turn_id)
-    _require_resume_scope(turn)
     request_hash = _canonical_hash({"reason": payload.reason or ""})
     operation = _lookup_operation(db, turn.id, "cancel", payload.idempotency_key)
     if operation is not None:
         _assert_same_request(operation, request_hash)
         return _replayed_turn(operation)
     _require_open(turn)
+    if turn.scope == "profile":
+        for action in dao.list_actions_for_turn(db, turn.id):
+            if action.state == "pending":
+                action.state = "stale"
+                action.stale_reason = "轮次已取消"
+        message = payload.reason or "主档轮次取消"
+        _apply_result(turn, None, message, "cancelled")
+        response = _turn_response(db, turn)
+        _store_operation(db, turn, "cancel", payload.idempotency_key, request_hash, response)
+        db.commit()
+        return response
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     base_rebased, conflict_reason = _rebase_or_abandon(db, turn, resume)
     for action in dao.list_actions_for_turn(db, turn.id):

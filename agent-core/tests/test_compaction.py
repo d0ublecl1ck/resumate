@@ -140,7 +140,9 @@ def test_run_compacts_old_turns_and_persists_the_result(make_client) -> None:
     assert all(row["role"] == "system" for row in markers)
     marker_seq = max(row["seq"] for row in markers)
     later = [row for row in stored if row["seq"] > marker_seq]
-    assert [row["role"] for row in later] == ["assistant"]
+    # The final context assistant message plus the user-facing reply message.
+    assert [row["role"] for row in later] == ["assistant", "assistant"]
+    assert isinstance(later[-1]["content"], dict) and "text" in later[-1]["content"]
 
 
 def test_resume_restores_the_compacted_context(make_client) -> None:

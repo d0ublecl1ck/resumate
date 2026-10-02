@@ -61,9 +61,11 @@ class TurnSession:
         message: str | None = None,
         turn_id: str | None = None,
         session_id: str | None = None,
+        scope: str = "resume",
     ) -> None:
         self.client = client
         self.resume_id = resume_id
+        self.scope = scope
         self.base_version_id = base_version_id
         self.execution_mode = execution_mode
         self.client_id = client_id
@@ -110,6 +112,14 @@ class TurnSession:
     def begin(self) -> UserTurn:
         """Create (or adopt) the turn. Idempotent for this session."""
         if self._turn is not None:
+            return self._turn
+        if self.scope == "profile":
+            self._turn = self.client.create_profile_turn(
+                session_id=self.session_id or "",
+                execution_mode=self.execution_mode,
+                message=self.turn_message,
+            )
+            self._pending_action_id = self._latest_pending_id(self._turn)
             return self._turn
         self._turn = self.client.create_turn(
             self.resume_id,

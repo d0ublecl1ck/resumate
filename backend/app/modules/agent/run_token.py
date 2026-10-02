@@ -134,6 +134,11 @@ _ALLOWED_ENDPOINTS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("GET", re.compile(r"^/sessions$")),
     ("GET", re.compile(r"^/sessions/[^/]+/messages$")),
     ("POST", re.compile(r"^/sessions/[^/]+/messages$")),
+    ("GET", re.compile(r"^/sessions/[^/]+/turns$")),
+    ("GET", re.compile(r"^/profile$")),
+    ("GET", re.compile(r"^/profile/facts$")),
+    ("POST", re.compile(r"^/turns$")),
+    ("POST", re.compile(r"^/turns/[^/]+/profile-actions$")),
 )
 
 

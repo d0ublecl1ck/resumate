@@ -21,7 +21,7 @@ ExecutionMode: TypeAlias = Literal["approval", "full_access"]
 ModeSource: TypeAlias = Literal["session", "agent", "account"]
 TurnState: TypeAlias = Literal["open", "finalized", "cancelled"]
 TurnResultState: TypeAlias = Literal["finalized", "cancelled"]
-PendingActionKind: TypeAlias = Literal["content_patch"]
+PendingActionKind: TypeAlias = Literal["content_patch", "profile_change"]
 PendingActionState: TypeAlias = Literal["pending", "approved", "rejected", "consumed", "stale"]
 ChangeType: TypeAlias = Literal["added", "removed", "modified"]
 DiffState: TypeAlias = Literal["pending", "accepted", "rejected"]
@@ -226,8 +226,9 @@ class PendingAction(ApiModel):
     id: str
     user_turn_id: str
     kind: PendingActionKind = "content_patch"
+    target: Literal["resume", "profile"] = "resume"
     title: str
-    target_resource: str
+    target_resource: str | None = None
     base_version_id: str | None = None
     impact_summary: str
     requires_text_confirm: bool = False
@@ -287,7 +288,7 @@ class TurnResult(ApiModel):
     """The settled outcome of a closed turn."""
 
     state: TurnResultState
-    resume_id: str
+    resume_id: str | None = None
     version_id: str | None = None
     change_count: int = 0
     affected_sections: list[str] = Field(default_factory=list)
@@ -299,7 +300,8 @@ class UserTurn(ApiModel):
     """A resume-editing turn owned by an external agent or the UI."""
 
     id: str
-    resume_id: str
+    scope: Literal["resume", "profile"] = "resume"
+    resume_id: str | None = None
     client_id: str = "external"
     source: SourceKind = "agent"
     execution_mode: ExecutionMode
@@ -357,6 +359,40 @@ class AgentMessage(ApiModel):
     role: Literal["system", "user", "assistant", "tool"]
     content: Any = None
     created_at: datetime
+
+
+class ProfileFact(ApiModel):
+    """One profile fact as returned by GET /profile/facts."""
+
+    id: str
+    type: str = ""
+    title: str = ""
+    content: str = ""
+    tags: list[str] = Field(default_factory=list)
+    source: str = ""
+    confidence: float = 0.0
+    visibility: str = "private"
+
+
+class ProfileSummary(ApiModel):
+    """The profile basics plus its facts (GET /profile)."""
+
+    id: str = ""
+    owner_id: str = ""
+    display_name: str = ""
+    completeness: int = 0
+    basics: dict[str, Any] = Field(default_factory=dict)
+    facts: list[ProfileFact] = Field(default_factory=list)
+
+
+class ProfileActionPreview(ApiModel):
+    """Result of submitting a profile change for confirmation."""
+
+    valid: bool = True
+    target: str = "profile"
+    change_count: int = 0
+    pending_action_id: str | None = None
+    requires_confirmation: bool = False
 
 
 class TurnState(ApiModel):

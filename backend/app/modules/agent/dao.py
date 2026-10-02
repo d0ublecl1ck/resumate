@@ -49,6 +49,17 @@ def list_open_profile_turns(db: Session, session_id: str) -> list[AgentTurn]:
     return list(db.scalars(statement))
 
 
+def list_turns_for_session(db: Session, session_id: str, owner_id: str, limit: int = 100) -> list[AgentTurn]:
+    """List one session's turns newest-first (owner isolated)."""
+    statement = (
+        select(AgentTurn)
+        .where(AgentTurn.session_id == session_id, AgentTurn.owner_id == owner_id)
+        .order_by(AgentTurn.created_at.desc(), AgentTurn.id.desc())
+        .limit(limit)
+    )
+    return list(db.scalars(statement))
+
+
 def add_turn(db: Session, turn: AgentTurn) -> None:
     db.add(turn)
 

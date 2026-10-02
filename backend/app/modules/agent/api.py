@@ -18,6 +18,8 @@ from .schemas import (
     PatchValidationResponse,
     PendingActionDecision,
     PendingActionResponse,
+    ProfileActionPreviewRequest,
+    ProfileActionPreviewResponse,
     RunStateResponse,
     RunStateUpdateRequest,
     RunStartRequest,
@@ -257,6 +259,27 @@ def list_sessions(
     user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> list[SessionResponse]:
     return service.list_sessions(db, user)
+
+
+@router.get("/sessions/{session_id}/turns", response_model=list[UserTurnResponse])
+def list_session_turns(
+    session_id: str,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> list[UserTurnResponse]:
+    """List one session's turns, newest first (contract 21.2)."""
+    return service.list_session_turns(db, user, session_id)
+
+
+@router.post("/turns/{turn_id}/profile-actions", response_model=ProfileActionPreviewResponse)
+def stage_profile_action(
+    turn_id: str,
+    payload: ProfileActionPreviewRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> ProfileActionPreviewResponse:
+    """Submit one profile change for confirmation (contract 21.4)."""
+    return service.stage_profile_action(db, user, turn_id, payload)
 
 
 @router.get("/sessions/{session_id}/messages", response_model=list[SessionMessageResponse])
