@@ -267,6 +267,7 @@ export type PendingActionState = "pending" | "approved" | "rejected" | "stale" |
 
 export type PendingActionKind =
   | "content_patch"
+  | "profile_change"
   | "create_resume"
   | "delete"
   | "restore"
@@ -318,9 +319,11 @@ export interface AgentRun {
 export interface ApiTurnPendingAction {
   id: string
   userTurnId: string
-  kind: "content_patch"
+  /** profile 轮次的待办 kind 为 profile_change（契约 §21.4）。 */
+  kind: "content_patch" | "profile_change"
   title: string
-  targetResource: string
+  /** 简历待办为 resumeId；profile 待办没有绑定资源（后端返回 null）。 */
+  targetResource: string | null
   baseVersionId?: string | null
   impactSummary: string
   requiresTextConfirm: boolean
@@ -331,7 +334,9 @@ export interface ApiTurnPendingAction {
 
 export interface ApiTurn {
   id: string
-  resumeId: string
+  /** resume 轮次带简历；profile 轮次不带任何简历（契约 §21.1）。 */
+  scope?: "resume" | "profile"
+  resumeId: string | null
   clientId?: string
   source?: string
   executionMode: ExecutionMode
@@ -344,6 +349,38 @@ export interface ApiTurn {
   closedAt?: string | null
   result?: { state: string; versionId?: string | null; changeCount?: number; message?: string } | null
   pendingActions?: ApiTurnPendingAction[]
+}
+
+/** GET /sessions 返回的会话（契约 §19.1）。只绑 owner，一个会话可横跨多份简历与主档。 */
+export interface AgentSession {
+  id: string
+  createdAt: ISODate
+  updatedAt: ISODate
+  lastActiveAt: ISODate
+}
+
+export type SessionMessageRole = "system" | "user" | "assistant" | "tool"
+
+/**
+ * 会话消息（契约 §19.1）。content 是不透明 JSON：运行体写完整 Message wire
+ * （`{role, content, toolCalls?, ...}`），前端追加用户消息时也写同一形态，
+ * 让历史能被同一套解析消费。
+ */
+export interface AgentSessionMessage {
+  id: string
+  sessionId: string
+  /** 会话内单调递增的消息身份；(session_id, seq) 幂等。 */
+  seq: number
+  role: SessionMessageRole
+  content: unknown
+  createdAt: ISODate
+}
+
+/** POST /sessions/{id}/messages 的入参：seq 由调用方分配（契约 §19.3）。 */
+export interface SessionMessageInput {
+  seq: number
+  role: SessionMessageRole
+  content: unknown
 }
 
 /** GET /turns/{id}/state 返回的 run checkpoint（契约 §19）。 */
@@ -386,28 +423,6 @@ export interface ProfileVersion {
 }
 
 /**
- * 自然语言解析出的「事实变更建议」（对话式新增/更新）。
- * C-07：Agent 从自然语言得到的内容一律是「建议」，需用户显式确认后才成为事实；
- * 解析产出的证据状态默认非 verified（模型推断不等于事实）。
- */
-export interface ProposedFactChange {
-  operation: "create" | "update"
-  /** operation=update 时指向被更新的事实 */
-  targetFactId?: string
-  targetFactTitle?: string
-  type: FactType
-  title: string
-  content: string
-  tags: string[]
-  /** 结构化抽取结果，便于用户逐项核对 */
-  extracted: { label: string; value: string }[]
-  evidenceStatus: EvidenceStatus
-  /** 解析置信度 0-1（仅用于提示，不代表事实可信度） */
-  parseConfidence: number
-  note: string
-}
-
-/**
  * 直接编辑（表单）写入事实的输入。
  * 与对话解析结果分开：表单里的内容由用户直接填写，不经过模型推断（BR-D09）。
  */
@@ -430,24 +445,6 @@ export interface Profile {
   facts: ProfileFact[]
   versions: ProfileVersion[]
 }
-
-// ---------------------------------------------------------------------------
-// Profile 助手：自然语言输入的统一解析结果
-// ---------------------------------------------------------------------------
-
-export type BasicsField = "fullName" | "headline" | "email" | "phone" | "location"
-
-/** 对基本信息的变更建议（对话式修改），确认后写入。 */
-export interface ProposedBasicsChange {
-  fields: { key: BasicsField; label: string; before: string; after: string }[]
-  parseConfidence: number
-  note: string
-}
-
-/** Profile 助手一次输入的解析结果：要么改基本信息，要么新增/更新一段经历类事实。 */
-export type ProfileInputResult =
-  | { kind: "fact"; change: ProposedFactChange }
-  | { kind: "basics"; change: ProposedBasicsChange }
 
 // ---------------------------------------------------------------------------
 // JD 自然语言 / 截图创建
