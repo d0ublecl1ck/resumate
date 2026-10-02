@@ -35,6 +35,20 @@ def list_turns(
     return list(db.scalars(statement))
 
 
+def list_open_profile_turns(db: Session, session_id: str) -> list[AgentTurn]:
+    """Open profile-scoped turns for one session, oldest first (C-04 analogue)."""
+    statement = (
+        select(AgentTurn)
+        .where(
+            AgentTurn.session_id == session_id,
+            AgentTurn.scope == "profile",
+            AgentTurn.state == "open",
+        )
+        .order_by(AgentTurn.created_at)
+    )
+    return list(db.scalars(statement))
+
+
 def add_turn(db: Session, turn: AgentTurn) -> None:
     db.add(turn)
 

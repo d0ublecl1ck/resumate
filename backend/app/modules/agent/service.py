@@ -77,6 +77,12 @@ def _require_open(turn: AgentTurn) -> None:
         raise TurnAlreadyClosed("轮次已关闭，不能再修改")
 
 
+def _require_resume_scope(turn: AgentTurn) -> None:
+    """The resume patch/working-copy flow is meaningless for a profile turn."""
+    if turn.scope != "resume":
+        raise ValidationFailed("该操作仅适用于简历轮次")
+
+
 def _require_session(db: Session, owner_id: str, session_id: str) -> AgentSession:
     session = dao.get_session(db, session_id)
     if session is None or session.owner_id != owner_id:
@@ -106,6 +112,15 @@ def _resolve_mode(db: Session, user: CurrentUser, requested: str | None) -> tupl
         if mode in MODE_VALUES:
             return mode, "agent"
     return DEFAULT_MODE, "account"
+
+
+def _client_identity(user: CurrentUser, payload: TurnCreateRequest) -> tuple[str, str]:
+    """Delegated credentials fix the client identity; a request body cannot forge it (13.4)."""
+    if user.auth_kind in ("pat", "run"):
+        return (user.client_id or user.pat_id or DEFAULT_CLIENT_ID)[:64], DEFAULT_SOURCE
+    client_id = payload.client_id or DEFAULT_CLIENT_ID
+    source = payload.source if payload.source in ("agent", "client") else DEFAULT_SOURCE
+    return client_id, source
 
 
 def _candidate_document(turn: AgentTurn, resume: Resume) -> dict:
@@ -246,6 +261,7 @@ def _pending_action_response(action: PendingAction) -> PendingActionResponse:
         id=action.id,
         user_turn_id=action.turn_id,
         kind=action.kind,
+        target=action.target,
         title=action.title,
         target_resource=action.resume_id,
         base_version_id=action.base_version_id,
@@ -264,7 +280,7 @@ def _turn_result(turn: AgentTurn, *, base_rebased: bool = False) -> TurnResult |
         return None
     return TurnResult(
         state=turn.result_state,
-        resume_id=turn.resume_id,
+        resume_id=turn.resume_id,  # None for profile turns
         version_id=turn.result_version_id,
         change_count=turn.result_change_count or 0,
         affected_sections=list(turn.result_affected_sections or []),
@@ -276,6 +292,7 @@ def _turn_result(turn: AgentTurn, *, base_rebased: bool = False) -> TurnResult |
 def _turn_response(db: Session, turn: AgentTurn, *, base_rebased: bool = False) -> UserTurnResponse:
     return UserTurnResponse(
         id=turn.id,
+        scope=turn.scope,
         resume_id=turn.resume_id,
         client_id=turn.client_id,
         source=turn.source,
@@ -369,18 +386,11 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         raise BaseVersionStale("简历已产生新版本，请基于最新版本重试", latest_version_id=resume.current_version_id)
     session = _require_session(db, user.id, payload.session_id) if payload.session_id else None
     mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
-    if user.auth_kind in ("pat", "run"):
-        # Delegated credentials fix the client identity and the turn is always
-        # agent-sourced; a request-body clientId/source is untrusted and ignored
-        # (contract 13.4). A run credential reports its own run id as client id.
-        client_id = (user.client_id or user.pat_id or DEFAULT_CLIENT_ID)[:64]
-        source = DEFAULT_SOURCE
-    else:
-        client_id = payload.client_id or DEFAULT_CLIENT_ID
-        source = payload.source if payload.source in ("agent", "client") else DEFAULT_SOURCE
+    client_id, source = _client_identity(user, payload)
     turn = AgentTurn(
         id=_new_id("turn"),
         owner_id=user.id,
+        scope="resume",
         resume_id=resume.id,
         client_id=client_id,
         source=source,
@@ -395,6 +405,64 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
     )
     if session is not None:
         _touch_session(session)
+    dao.add_turn(db, turn)
+    db.commit()
+    db.refresh(turn)
+    return _turn_response(db, turn)
+
+
+def begin_scoped_turn(db: Session, user: CurrentUser, payload: TurnCreateRequest) -> UserTurnResponse:
+    """Create a turn from the body; scope decides which resource it targets."""
+    if payload.scope == "profile":
+        if payload.resume_id is not None:
+            raise ValidationFailed("主档轮次不接受 resumeId")
+        return _begin_profile_turn(db, user, payload)
+    if payload.resume_id is None:
+        raise ValidationFailed("简历轮次需要 resumeId")
+    return begin_turn(db, user, payload.resume_id, payload)
+
+
+def _close_profile_turn(db: Session, turn: AgentTurn) -> None:
+    """C-04 analogue: a new profile turn supersedes the open one in its session."""
+    for action in dao.list_actions_for_turn(db, turn.id):
+        if action.state == "pending":
+            action.state = "stale"
+            action.stale_reason = "轮次已被新的主档轮次取代"
+    turn.state = "cancelled"
+    turn.closed_at = _now()
+    turn.result_state = "cancelled"
+    turn.result_version_id = None
+    turn.result_change_count = 0
+    turn.result_affected_sections = []
+    turn.result_message = "被新的主档轮次取代"
+
+
+def _begin_profile_turn(db: Session, user: CurrentUser, payload: TurnCreateRequest) -> UserTurnResponse:
+    """A profile turn carries no resume and is grouped by its session."""
+    if not payload.session_id:
+        raise ValidationFailed("主档轮次需要 sessionId")
+    session = _require_session(db, user.id, payload.session_id)
+    for open_turn in dao.list_open_profile_turns(db, session.id):
+        _close_profile_turn(db, open_turn)
+    mode, mode_source = _resolve_mode(db, user, payload.execution_mode)
+    client_id, source = _client_identity(user, payload)
+    turn = AgentTurn(
+        id=_new_id("turn"),
+        owner_id=user.id,
+        scope="profile",
+        resume_id=None,
+        client_id=client_id,
+        source=source,
+        execution_mode=mode,
+        mode_source=mode_source,
+        state="open",
+        base_version_id=None,
+        session_id=session.id,
+        message=payload.message,
+        result_message="",
+        created_at=_now(),
+    )
+    _touch_session(session)
     dao.add_turn(db, turn)
     db.commit()
     db.refresh(turn)
@@ -421,6 +489,7 @@ def list_turns(
 
 def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFinalizeRequest) -> UserTurnResponse:
     turn = _require_turn(db, user.id, turn_id)
+    _require_resume_scope(turn)
     request_hash = _canonical_hash({"message": payload.message or ""})
     operation = _lookup_operation(db, turn.id, "finalize", payload.idempotency_key)
     if operation is not None:
@@ -440,6 +509,7 @@ def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFin
 
 def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCancelRequest) -> UserTurnResponse:
     turn = _require_turn(db, user.id, turn_id)
+    _require_resume_scope(turn)
     request_hash = _canonical_hash({"reason": payload.reason or ""})
     operation = _lookup_operation(db, turn.id, "cancel", payload.idempotency_key)
     if operation is not None:
@@ -473,6 +543,7 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
 def validate_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRequest) -> PatchValidationResponse:
     turn = _require_turn(db, user.id, turn_id)
     _require_open(turn)
+    _require_resume_scope(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     errors = patch.validate(_candidate_document(turn, resume), payload.ops)
     return PatchValidationResponse(valid=not errors, errors=errors)
@@ -481,6 +552,7 @@ def validate_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchR
 def preview_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchRequest) -> PatchPreviewResponse:
     turn = _require_turn(db, user.id, turn_id)
     _require_open(turn)
+    _require_resume_scope(turn)
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     base_rebased = _rebase_if_needed(db, turn, resume)
     _assert_base(turn, resume, payload.base_version_id)
@@ -558,6 +630,7 @@ def _authorize_pending(action: PendingAction, request_payload: dict) -> None:
 
 def apply_patch(db: Session, user: CurrentUser, turn_id: str, payload: PatchApplyRequest) -> PatchApplyResponse:
     turn = _require_turn(db, user.id, turn_id)
+    _require_resume_scope(turn)
     request_hash = _canonical_hash(
         {
             "ops": _ops_payload(payload.ops),
