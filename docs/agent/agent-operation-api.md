@@ -139,6 +139,8 @@ Patch 按数组顺序应用；任一条失败则整组不生效（validate 返�
 | GET | /resumes/{resume_id}/turns | resume:read | 列出该简历的轮次；`state` 可选（open\|finalized\|cancelled），创建时间倒序，最多 100 条 |
 | POST | /resumes/{resume_id}/runs | resume:write + 人类会话 | spawn 运行体（第 20 节）；未配置模型 409 MODEL_NOT_CONFIGURED |
 | GET | /agent/runtime | resume:read | 运行体就绪探测（第 20.5 节）：`available` 表示后端能在需要时启动运行体，不是常驻进程 |
+| POST | /turns | resume:write | 通用建轮次（第 21.2 节）：`scope=resume` 需 `resumeId`，`scope=profile` 需 `sessionId` |
+| POST | /sessions/{session_id}/runs | resume:write + 人类会话 | profile 作用域 run（第 21.3 节）；PAT / run 凭据 403 |
 | GET | /turns/{turn_id} | resume:read | 读取轮次与待办 |
 | POST | /turns/{turn_id}/finalize | resume:write | 聚合提交并关闭；幂等 |
 | POST | /turns/{turn_id}/cancel | resume:write | 失效未决待办、按 C-04 结算已应用修改并关闭 |
@@ -471,3 +473,40 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 
 - `available` 由 `shutil.which(AGENT_RUNNER_COMMAND)` 判定：命令能在 PATH 上解析即为 true。**探测不执行命令**，响应只含 `command` 与 `available`，不含任何密钥。
 - 语义边界：`available=true` 只承诺「`POST /resumes/{id}/runs` 有机会 spawn 成功」，**不承诺**模型可用、也**不承诺**已有常驻运行体进程。前端据此把可用性派生为 model_missing / runtime_offline / available 三态。
+
+## 21. 作用域泛化：resume 与 profile（fef83）
+
+### 21.1 scope 语义
+
+- 一个轮次（`agent_turns`）只有一个 `scope`：`resume` 或 `profile`。**scope 决定这一轮操作谁**：`resume` 轮次带 `resumeId`，`profile` 轮次不带任何简历。
+- 会话（`agent_sessions`）**只绑 owner**，不绑 resume 或 profile：一次会话可以横跨多个简历与主档。scope 是轮次属性，不是会话属性。
+- 待办（`agent_pending_actions`）用 `target` 镜像 scope：`target=resume` 走简历 patch / approve / apply 流程；`target=profile` 的 `ops` 是 `{op: create_fact | update_fact | update_basics, payload}`。
+- 既有行在迁移后保持 `scope=resume` / `target=resume`（server_default），既有简历流程不变。
+
+### 21.2 通用建轮次 POST /turns
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| POST | /turns | resume:write | body 带 `scope`；`scope=resume` 必须 `resumeId`，`scope=profile` 必须 `sessionId` 且不接受 `resumeId` |
+
+- `POST /resumes/{resume_id}/turns` 保持既有契约：固定 `scope=resume`，`resumeId` 取自路径。
+- 简历专属操作（`patches:validate|preview|apply`、`finalize`、`cancel`）对 profile 轮次返回 422 `VALIDATION_FAILED`：这些语义尚未泛化。
+- 同一会话内新建 profile 轮次会取代旧的 open profile 轮次（C-04 类比，旧的标记为 cancelled，未决 pending action 置 stale）。
+
+### 21.3 profile 作用域 run
+
+| 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- |
+| POST | /sessions/{session_id}/runs | resume:write + 人类会话 | spawn 一次 profile run；body `{prompt}`；202 与简历 run 同构 |
+
+- 会话必须属于调用者，否则 404；PAT 与 run 凭据一律 403 `FORBIDDEN`。
+- 子进程拿到的 run 凭据**不绑定任何简历**（`resumeId=null`）。鉴权层只放行 `resumeId` 为空的轮次，因此 profile run 无法访问任何简历：这是作用域隔离的关键。
+- 未配置模型仍返回 409 `MODEL_NOT_CONFIGURED`；并发满仍返回 429 `RATE_LIMITED`。
+
+### 21.4 profile 待确认改动的审批语义
+
+- approval 模式下，profile 改动先进入 pending action（`target=profile`，`kind=profile_change`）；`POST /pending-actions/{id}/approve` 才会**真正写入主档**，写入复用 `app/modules/profile/service.py` 的既有函数，不另写一套；reject 不动主档。
+- full_access 模式下，stage 时立即写入，并保留一条 approved 记录用于审计。
+- approve / reject 仍要求人类会话：run 凭据 403 `FORBIDDEN`（e9ad6 的越权路径没有被重新打开）。
+- 当前阶段只有服务函数 `stage_profile_action` 创建 profile pending action；暴露给运行体的 HTTP 预览端点留给第 2 阶段，与 agent-core 工具和白名单一起加。
+
