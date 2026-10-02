@@ -169,7 +169,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ```bash
 uv run --directory backend pytest        # → 221 passed
 cd agent-core && uv run pytest -q        # → 97 passed
-cd ui && pnpm test                       # → 29 files / 220 passed
+cd ui && pnpm test                       # → 30 files / 232 passed
 archkit inspect .                        # → Quality gates passed.
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
@@ -187,7 +187,7 @@ ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # 
 
 诚实清单——这些还没做，或需要你先准备好：
 
-- **Agent Run 已接真实端点，解析类能力仍是启发式。** 发起运行、轮次与待办展示、审批、SSE 实时刷新都已走真实 API；仍在本地用启发式与样例数据的是自然语言解析（`parseProfileInput`）、JD 解析与岗位匹配（[ui/README.md](ui/README.md)）。
+- **Agent Run 与主档助手已接真实端点，JD 解析仍是启发式。** 发起运行、轮次与待办展示、审批、SSE 实时刷新，以及个人资料助手的会话 / 实时刷新 / 审批都已走真实 API；已在本地用启发式与样例数据的只剩 JD 解析（`parseJdFromText` / `parseJdFromImage`）与岗位匹配（[ui/README.md](ui/README.md)）。
 - **Agent 轮次 SSE 只推真实状态。** `GET /turns/{turn_id}/events` 目前只推轮次/待办的 `snapshot` 与 `turn.updated`，空闲发心跳；模型进度 / token / 步骤事件需要 Agent run loop 与队列，尚未实现（见 [契约 §18](docs/agent/agent-operation-api.md)）。
 - **没有 MCP server。** 能力发现返回的 `mcpUrl` 是占位，实测 `GET /mcp` 返回 404；外部接入目前走 REST 与 PAT。
 - **后端 spawn 运行体要求 CLI 在 `PATH`。** `POST /resumes/{id}/runs` 默认执行 `resumate-agent`，安装方式：`uv tool install ./agent-core`（或把 `AGENT_RUNNER_COMMAND` 指向其它可执行文件）。注意该工具是安装时的快照，`agent-core` 改动后需要重新安装才会生效。
