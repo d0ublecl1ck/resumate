@@ -165,6 +165,8 @@ def test_session_run_spawns_a_profile_runner(
         and "--session" in argv_file.read_text(encoding="utf-8")
     ), "stub never wrote its argv/env"
     argv = argv_file.read_text(encoding="utf-8").splitlines()
+    assert "--scope" in argv
+    assert argv[argv.index("--scope") + 1] == "profile"
     assert "--resume-id" not in argv
     assert argv[argv.index("--session") + 1] == session_id
     assert argv[argv.index("--prompt") + 1] == "整理我的技能"

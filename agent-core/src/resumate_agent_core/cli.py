@@ -62,6 +62,7 @@ ENV_API_KEY = f"{ENV_PREFIX}API_KEY"
 ENV_PROVIDER_BASE_URL = f"{ENV_PREFIX}PROVIDER_BASE_URL"
 ENV_EXECUTION_MODE = f"{ENV_PREFIX}EXECUTION_MODE"
 ENV_SESSION = f"{ENV_PREFIX}SESSION"
+ENV_SCOPE = f"{ENV_PREFIX}SCOPE"
 ENV_STATE = f"{ENV_PREFIX}STATE"
 ENV_EVENTS = f"{ENV_PREFIX}EVENTS"
 
@@ -111,6 +112,13 @@ def build_parser(env: Mapping[str, str] | None = None) -> argparse.ArgumentParse
             f"session id the conversation history is appended to (env {ENV_SESSION}); "
             "a new session is created when omitted"
         ),
+    )
+
+    parser.add_argument(
+        "--scope",
+        choices=("resume", "profile"),
+        default=source.get(ENV_SCOPE) or "resume",
+        help=f"what the run operates on (env {ENV_SCOPE}); default resume",
     )
 
     parser.add_argument("--base-url", default=None, help=f"API root (env {ENV_PREFIX}BASE_URL)")
@@ -304,6 +312,7 @@ def state_payload(
     payload: dict[str, Any] = {
         "version": STATE_VERSION,
         "phase": phase,
+        "scope": getattr(args, "scope", "resume"),
         "resumeId": args.resume_id,
         "executionMode": args.execution_mode,
         "model": args.model,
@@ -344,7 +353,14 @@ def main(
     err = stderr if stderr is not None else sys.stderr
     clock: Callable[[], datetime] = now or (lambda: datetime.now(timezone.utc))
 
-    if not args.resume and (not args.resume_id or not args.prompt):
+    if args.scope == "profile":
+        if not args.resume and not args.session:
+            print(f"{PROGRAM}: --scope profile requires --session.", file=err)
+            return EXIT_USAGE
+        if not args.resume and not args.prompt:
+            print(f"{PROGRAM}: --scope profile requires --prompt unless --resume is given.", file=err)
+            return EXIT_USAGE
+    elif not args.resume and (not args.resume_id or not args.prompt):
         print(f"{PROGRAM}: --resume-id and --prompt are required unless --resume is given.", file=err)
         return EXIT_USAGE
 
@@ -384,6 +400,7 @@ def main(
                 stream = runtime.run(
                     args.resume_id,
                     args.prompt,
+                    scope=args.scope,
                     execution_mode=args.execution_mode,
                     base_version_id=args.base_version_id,
                     client_id=args.client_id,

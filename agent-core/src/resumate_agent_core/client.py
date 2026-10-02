@@ -28,6 +28,9 @@ from .models import (
     PatchRequest,
     PatchValidationResponse,
     PendingAction,
+    ProfileActionPreview,
+    ProfileFact,
+    ProfileSummary,
     TurnState,
     UserTurn,
     WorkingDocument,
@@ -35,6 +38,14 @@ from .models import (
 from .patches import build_apply_request, build_patch
 
 _JSON = Mapping[str, Any]
+
+
+def _wire_op(op: Any) -> Any:
+    """Serialize one profile action op (model or plain mapping) for the wire."""
+    wire = getattr(op, "to_wire", None)
+    if callable(wire):
+        return wire()
+    return dict(op)
 
 
 def _encode(value: str) -> str:
@@ -167,6 +178,26 @@ class ResumateClient:
     def get_turn(self, turn_id: str) -> UserTurn:
         """Read a turn and its pending-action projection."""
         return self._decode(UserTurn, self._request("GET", self._turn_path(turn_id)))
+
+    def create_profile_turn(
+        self,
+        *,
+        session_id: str,
+        execution_mode: str | None = None,
+        message: str | None = None,
+    ) -> UserTurn:
+        """Open a profile-scoped turn; the session carries the scope, no resume."""
+        body: dict[str, Any] = {"scope": "profile", "sessionId": session_id}
+        if execution_mode is not None:
+            body["executionMode"] = execution_mode
+        if message is not None:
+            body["message"] = message
+        return self._decode(UserTurn, self._request("POST", "/turns", json_body=body))
+
+    def list_session_turns(self, session_id: str) -> list[UserTurn]:
+        """List one session's turns, newest first."""
+        payload = self._request("GET", f"/sessions/{_encode(session_id)}/turns")
+        return self._decode_list(UserTurn, payload)
 
     def finalize_turn(
         self,
@@ -339,6 +370,32 @@ class ResumateClient:
         """Fetch public capability discovery (never user resources)."""
         payload = self._request("GET", "/.well-known/resume-agent")
         return self._decode(CapabilityResponse, payload)
+
+    # --- profile scope (contract section 21) --------------------------------
+
+    def get_profile(self) -> ProfileSummary:
+        """Read the profile basics and its fact list (GET /profile)."""
+        return self._decode(ProfileSummary, self._request("GET", "/profile"))
+
+    def list_profile_facts(self) -> list[ProfileFact]:
+        """Read the profile facts (GET /profile/facts)."""
+        return self._decode_list(ProfileFact, self._request("GET", "/profile/facts"))
+
+    def propose_profile_change(
+        self,
+        turn_id: str,
+        *,
+        ops: Any,
+        reason: str | None = None,
+    ) -> ProfileActionPreview:
+        """Submit a profile change for human confirmation (POST .../profile-actions)."""
+        body: dict[str, Any] = {"ops": [_wire_op(op) for op in ops]}
+        if reason is not None:
+            body["reason"] = reason
+        return self._decode(
+            ProfileActionPreview,
+            self._request("POST", f"{self._turn_path(turn_id)}/profile-actions", json_body=body),
+        )
 
     # --- sessions, messages and run checkpoints (contract section 19) --------
 

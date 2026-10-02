@@ -246,8 +246,10 @@ def test_run_journals_messages_and_associates_the_turn_with_the_session(make_cli
         stored = fake.stored(session_id)
 
     assert events[-1].type == "finalize"
-    assert [entry["seq"] for entry in stored] == [1, 2, 3, 4, 5]
-    assert [entry["role"] for entry in stored] == ["system", "user", "assistant", "tool", "assistant"]
+    assert [entry["seq"] for entry in stored] == [1, 2, 3, 4, 5, 6]
+    assert [entry["role"] for entry in stored] == ["system", "user", "assistant", "tool", "assistant", "assistant"]
+    # The last row is the user-facing reply, not part of the model context.
+    assert stored[-1]["content"] == {"text": "Done"}
     assert fake.turn_bodies[0]["sessionId"] == session_id
 
 
@@ -280,6 +282,7 @@ def test_resume_continues_the_session_without_duplicate_seq(make_client) -> None
 
     assert [event.type for event in events] == ["message", "finalize"]
     rows = fake.stored(session_id)
-    assert [row["seq"] for row in rows] == [1, 2, 3, 4, 5]
-    assert [row["role"] for row in rows] == ["system", "user", "assistant", "tool", "assistant"]
+    assert [row["seq"] for row in rows] == [1, 2, 3, 4, 5, 6]
+    assert [row["role"] for row in rows] == ["system", "user", "assistant", "tool", "assistant", "assistant"]
+    assert rows[-1]["content"] == {"text": "Done"}
     assert len({row["seq"] for row in rows}) == len(rows)

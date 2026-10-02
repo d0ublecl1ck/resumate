@@ -93,6 +93,28 @@ class SessionJournal:
             return None
         return seq
 
+    def reply(self, text: str) -> int | None:
+        """Append the user-facing assistant reply after the mirrored context.
+
+        The reply is not part of the model context: it takes the next seq and the
+        cursor re-anchors past it, so a later record() cannot overwrite it.
+        """
+        if self.session_id is None:
+            return None
+        seq = self._base + self._recorded + 1
+        self._base = seq
+        self._recorded = 0
+        try:
+            self._client.append_session_message(
+                self.session_id,
+                seq=seq,
+                role="assistant",
+                content={"text": text},
+            )
+        except ApiClientError:
+            return None
+        return seq
+
     def record(self, messages: Sequence[Message]) -> int:
         """Mirror messages the session does not have yet; return the new count.
 
