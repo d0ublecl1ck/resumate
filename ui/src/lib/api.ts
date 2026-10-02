@@ -4,10 +4,12 @@
 // 后端已实现的端点走真实 HTTP（api-client.ts）；未实现的端点仍从 lib/content.ts
 // 读取 mock，待对应后端能力落地后再替换，函数签名与入参、返回类型保持不变。
 
-import { CURRENT_USER, JOB_MATCHES, PROFILE } from "./content"
+import { CURRENT_USER, JOB_MATCHES } from "./content"
 import type {
   AccessLogEntry,
   AgentConfig,
+  AgentSession,
+  AgentSessionMessage,
   AgentConfigUpdate,
   AgentRun,
   ApiTurn,
@@ -34,12 +36,8 @@ import type {
   Profile,
   ProfileFact,
   ProfileFactInput,
-  ProposedFactChange,
-  ProposedBasicsChange,
-  ProfileInputResult,
   ProposedJd,
   ResumeBasics,
-  FactType,
   Resume,
   ResumeTemplate,
   ResumeVersion,
@@ -50,6 +48,7 @@ import type {
   UserPreferencesUpdate,
   PendingAction,
   PasswordResetAccepted,
+  SessionMessageInput,
   PasswordResetInput,
   ResendVerificationInput,
   VerificationAccepted,
@@ -186,6 +185,56 @@ export function startRun(resumeId: string, input: StartRunInput): Promise<RunSta
   return request<RunStartAccepted>(`/resumes/${resumeId}/runs`, { method: "POST", body: JSON.stringify(body) })
 }
 
+// ---------------------------------------------------------------------------
+// Agent 会话与 profile 作用域 run（契约 §19 / §21）
+// ---------------------------------------------------------------------------
+
+/**
+ * POST /sessions —— 建会话；body 可省略。
+ * 会话只绑 owner，一个会话可横跨多份简历与主档：scope 是轮次属性，不是会话属性。
+ */
+export function createSession(): Promise<AgentSession> {
+  return request<AgentSession>("/sessions", { method: "POST", body: JSON.stringify({}) })
+}
+
+/** GET /sessions —— 当前用户的会话，最近活跃优先（last_active_at desc）。 */
+export function listSessions(): Promise<AgentSession[]> {
+  return request<AgentSession[]>("/sessions")
+}
+
+/**
+ * GET /sessions/{id}/messages —— 会话历史。
+ * afterSeq=N 只返回 seq > N，用于断线或收到 turn.updated 后的增量拉取；默认返回全部。
+ */
+export function listSessionMessages(sessionId: string, afterSeq = 0): Promise<AgentSessionMessage[]> {
+  const suffix = afterSeq > 0 ? `?afterSeq=${afterSeq}` : ""
+  return request<AgentSessionMessage[]>(`/sessions/${sessionId}/messages${suffix}`)
+}
+
+/**
+ * POST /sessions/{id}/messages —— 追加消息，同一 (session_id, seq) 幂等。
+ * seq 由调用方分配：运行体从会话当前最大 seq 之后继续写，不会覆盖历史。
+ */
+export function appendSessionMessage(sessionId: string, input: SessionMessageInput): Promise<AgentSessionMessage> {
+  return request<AgentSessionMessage>(`/sessions/${sessionId}/messages`, { method: "POST", body: JSON.stringify(input) })
+}
+
+/**
+ * GET /sessions/{id}/turns —— profile 作用域轮次，与 GET /resumes/{id}/turns 同构。
+ * 返回 UserTurnResponse[]（含 pendingActions），创建时间倒序；无轮次返回 []。
+ */
+export function listSessionTurns(sessionId: string): Promise<ApiTurn[]> {
+  return request<ApiTurn[]>(`/sessions/${sessionId}/turns`)
+}
+
+/**
+ * POST /sessions/{id}/runs —— 起一次 profile 作用域 run；202 只表示已启动。
+ * 与简历 run 一样不返回 turnId：轮次由子进程创建，前端用 GET turns 与 SSE 发现。
+ */
+export function startProfileRun(sessionId: string, prompt: string): Promise<RunStartAccepted> {
+  return request<RunStartAccepted>(`/sessions/${sessionId}/runs`, { method: "POST", body: JSON.stringify({ prompt }) })
+}
+
 /** POST /pending-actions/{id}/approve */
 export function approvePendingAction(actionId: string): Promise<PendingAction> {
   return request<PendingAction>(`/pending-actions/${actionId}/approve`, { method: "POST" })
@@ -196,12 +245,16 @@ export function rejectPendingAction(actionId: string): Promise<PendingAction> {
   return request<PendingAction>(`/pending-actions/${actionId}/reject`, { method: "POST" })
 }
 
-function mapPendingAction(action: ApiTurnPendingAction): PendingAction {
+/**
+ * 把后端待办投影映射为界面 PendingAction。
+ * profile 待办没有绑定简历，targetResource 为空串（PendingActionCard 按空串渲染）。
+ */
+export function mapPendingAction(action: ApiTurnPendingAction): PendingAction {
   return {
     id: action.id,
     kind: action.kind,
     title: action.title,
-    targetResource: action.targetResource,
+    targetResource: action.targetResource ?? "",
     baseVersionId: action.baseVersionId ?? undefined,
     impactSummary: action.impactSummary,
     requiresTextConfirm: action.requiresTextConfirm,
@@ -228,7 +281,8 @@ export function mapTurnToRun(turn: ApiTurn, state?: TurnStateResponse): AgentRun
   }
   return {
     id: turn.id,
-    resumeId: turn.resumeId,
+    // AgentRun 目前只服务简历工作台；profile 轮次不带简历，这里退化为空串。
+    resumeId: turn.resumeId ?? "",
     conversationId: turn.sessionId ?? turn.id,
     userTurnId: turn.id,
     executionMode: turn.executionMode,
@@ -261,29 +315,6 @@ export function matchJob(jdId: string): Promise<{ results: JobMatchResult[]; gap
 }
 
 /**
- * POST /profile/facts:parse
- * 把用户的自然语言输入解析为「事实变更建议」。真实实现由 Agent（LLM）完成；
- * 这里用启发式规则做前端演示。返回的是建议，调用方必须让用户显式确认后再写入。
- */
-export function parseFactFromText(text: string): Promise<ProposedFactChange> {
-  return resolve(heuristicParseFact(text, PROFILE.facts))
-}
-
-/** POST /profile/facts —— 用户确认对话建议后创建事实（证据默认待核实，C-07） */
-export function createFact(input: ProposedFactChange): Promise<ProfileFact> {
-  return request<ProfileFact>("/profile/facts", {
-    method: "POST",
-    body: JSON.stringify({
-      type: input.type,
-      title: input.title,
-      content: input.content,
-      tags: input.tags,
-      evidence: { status: input.evidenceStatus },
-    }),
-  })
-}
-
-/**
  * POST /profile/facts —— 用户在表单中直接录入事实。
  * 与对话路径只在来源标记上不同；证据状态由表单决定，默认待核实（BR-D09）。
  */
@@ -294,17 +325,6 @@ export function createFactManually(input: ProfileFactInput): Promise<ProfileFact
 /** PATCH /profile/facts/{id} —— 用户确认后更新事实（对话与直接编辑共用） */
 export function updateFact(id: string, patch: Partial<ProfileFact>): Promise<ProfileFact> {
   return request<ProfileFact>(`/profile/facts/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
-}
-
-/**
- * POST /profile:parse-input
- * 统一解析 Profile 助手的自然语言输入：可能是「修改基本信息」，
- * 也可能是「新增/更新一段经历/项目/技能等」。真实实现由 Agent 完成。
- */
-export function parseProfileInput(text: string): Promise<ProfileInputResult> {
-  const basics = heuristicParseBasics(text, PROFILE.basics)
-  if (basics) return resolve({ kind: "basics", change: basics })
-  return resolve({ kind: "fact", change: heuristicParseFact(text, PROFILE.facts) })
 }
 
 /** PATCH /profile/basics —— 用户确认后更新基本信息 */
@@ -342,48 +362,6 @@ export function createJd(input: ProposedJd): Promise<JobDescription> {
       tags: input.tags,
     }),
   })
-}
-
-// —— 启发式自然语言基本信息解析 ——
-function heuristicParseBasics(raw: string, basics: ResumeBasics): ProposedBasicsChange | null {
-  const text = raw.trim()
-  const fields: ProposedBasicsChange["fields"] = []
-
-  const email = text.match(/[\w.+-]+@[\w-]+\.[\w.-]+/)
-  if (email && /(邮箱|邮件|email|mail)/i.test(text)) {
-    fields.push({ key: "email", label: i18n.t("api.basics.fields.email"), before: basics.email, after: email[0] })
-  }
-
-  const phone = text.match(/(?:\+?86[\s-]?)?1[3-9]\d(?:[\s-]?\d){8}/)
-  if (phone && /(电话|手机|号码|phone|tel|联系方式)/i.test(text)) {
-    fields.push({ key: "phone", label: i18n.t("api.basics.fields.phone"), before: basics.phone, after: phone[0].trim() })
-  }
-
-  let city: string | undefined
-  const m1 = text.match(/(?:现居|坐标|定居|位于|base(?:\s*在)?)[：: ]*([\u4e00-\u9fa5]{2,6})/i)
-  const m2 = text.match(/(?:现在?在|搬到了?|搬去)\s*([\u4e00-\u9fa5]{2,4})(?:市)?(?:工作|生活|办公|定居)?/)
-  if (m1) city = m1[1]
-  else if (m2 && /(工作|生活|办公|定居|现在在|搬)/.test(text)) city = m2[1]
-  if (city && city !== basics.location) {
-    fields.push({ key: "location", label: i18n.t("api.basics.fields.location"), before: basics.location, after: city })
-  }
-
-  const headline = text.match(/(?:头衔|职位 ?title|一句话(?:介绍|标语)|个人标语|slogan|title)[：: 是]*(.+)$/i)
-  if (headline && headline[1]) {
-    fields.push({ key: "headline", label: i18n.t("api.basics.fields.headline"), before: basics.headline, after: headline[1].trim() })
-  }
-
-  const name = text.match(/(?:我(?:的名字|叫)|姓名|名字)[是叫：: ]*([\u4e00-\u9fa5]{2,4}|[A-Za-z][A-Za-z ]{1,19})/)
-  if (name && name[1]) {
-    fields.push({ key: "fullName", label: i18n.t("api.basics.fields.fullName"), before: basics.fullName, after: name[1].trim() })
-  }
-
-  if (!fields.length) return null
-  return {
-    fields,
-    parseConfidence: Math.min(0.95, 0.6 + fields.length * 0.1),
-    note: i18n.t("api.basics.note"),
-  }
 }
 
 // —— 启发式 JD 结构化解析 ——
@@ -435,73 +413,6 @@ function heuristicParseJd(raw: string, inputSource: "text" | "image"): ProposedJ
         ? i18n.t("api.jd.note.image")
         : i18n.t("api.jd.note.text"),
     inputSource,
-  }
-}
-
-// —— 启发式自然语言事实解析（仅用于前端演示，真实由 Agent 承担）——
-function heuristicParseFact(
-  raw: string,
-  existing: { id: string; title: string; type: FactType; content: string }[],
-): ProposedFactChange {
-  const text = raw.trim()
-  const extracted: { label: string; value: string }[] = []
-
-  // 时间抽取
-  const dateMatch =
-    text.match(/(20\d{2})\s*年\s*(\d{1,2})?\s*月?/) || text.match(/(20\d{2})[-/.](\d{1,2})(?:[-/.]\d{1,2})?/)
-  if (dateMatch) extracted.push({ label: i18n.t("api.fact.extracted.time"), value: dateMatch[0] })
-
-  // 类型判定
-  const typeRules: { type: FactType; re: RegExp }[] = [
-    { type: "achievement", re: /(获奖|得奖|荣获|拿了.*奖|得了.*奖|获得.*奖|最佳|冠军|亚军|季军|第[一二三]名|荣誉|表彰|优秀员工|一等奖|二等奖|三等奖|金奖|银奖|奖学金|奖项)/ },
-    { type: "certificate", re: /(证书|认证|考取|资格证|通过了?.*考试|等级考试|PMP|CPA|CFA)/ },
-    { type: "education", re: /(毕业|学位|本科|硕士|博士|学士|大学|学院|GPA|专业)/ },
-    { type: "project", re: /(项目|开发了?|搭建|重构|上线|从 ?0 ?到 ?1|主导.*系统|做了个)/ },
-    { type: "skill", re: /(精通|熟练|掌握|会用|技能|擅长|语言|框架|工具链)/ },
-    { type: "experience", re: /(入职|担任|负责|工作|任职|带团队|晋升|离职)/ },
-  ]
-  const matched = typeRules.find((r) => r.re.test(text))
-  const type: FactType = matched?.type ?? "experience"
-  extracted.push({
-    label: i18n.t("api.fact.extracted.type"),
-    value: matched ? i18n.t("api.fact.types." + matched.type) : i18n.t("api.fact.typeDefault"),
-  })
-
-  // 标题：去掉开头的时间短语，截取首个短句
-  let titleSource = text.replace(/^(在|于)?\s*20\d{2}\s*年\s*(\d{1,2}\s*月)?\s*/, "")
-  const firstClause = titleSource.split(/[，,。.；;、\n]/)[0]?.trim() || titleSource
-  const title = firstClause.length > 24 ? firstClause.slice(0, 24) + "…" : firstClause || i18n.t("api.fact.untitled")
-
-  // 更新判定：与现有事实标题/内容有明显 token 重合则视为更新建议
-  const tokens = (title.match(/[\u4e00-\u9fa5A-Za-z0-9]{2,}/g) || []).filter((t) => t.length >= 2)
-  let target: (typeof existing)[number] | undefined
-  let bestScore = 0
-  for (const f of existing) {
-    const hay = f.title + f.content
-    const score = tokens.reduce((n, t) => (hay.includes(t) ? n + 1 : n), 0)
-    if (score > bestScore) {
-      bestScore = score
-      target = f
-    }
-  }
-  const isUpdate = !!target && bestScore >= 2
-
-  const parseConfidence = Math.min(0.95, 0.55 + (matched ? 0.2 : 0) + (dateMatch ? 0.1 : 0) + (isUpdate ? 0.1 : 0))
-
-  return {
-    operation: isUpdate ? "update" : "create",
-    targetFactId: isUpdate ? target!.id : undefined,
-    targetFactTitle: isUpdate ? target!.title : undefined,
-    type: isUpdate ? target!.type : type,
-    title: isUpdate ? target!.title : title,
-    content: text,
-    tags: [],
-    extracted,
-    evidenceStatus: "unverified",
-    parseConfidence,
-    note: isUpdate
-      ? i18n.t("api.fact.note.update", { title: target!.title })
-      : i18n.t("api.fact.note.create"),
   }
 }
 
