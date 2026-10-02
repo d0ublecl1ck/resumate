@@ -26,7 +26,8 @@ AGENT_TABLES = (
     "agent_sessions",
     "agent_session_messages",
 )
-AGENT_TURN_COLUMNS = ("session_id", "run_state", "state_version")
+AGENT_TURN_COLUMNS = ("session_id", "run_state", "state_version", "scope")
+AGENT_ACTION_COLUMNS = ("target",)
 WORKING_COPY_COLUMNS = (
     "working_document",
     "working_base_version_id",
@@ -57,8 +58,14 @@ def test_alembic_upgrade_head_on_sqlite(tmp_path: Path, monkeypatch: pytest.Monk
     assert set(AGENT_TABLES) <= tables
     resume_columns = {column["name"] for column in inspector.get_columns("resumes")}
     assert set(WORKING_COPY_COLUMNS) <= resume_columns
-    turn_columns = {column["name"] for column in inspector.get_columns("agent_turns")}
-    assert set(AGENT_TURN_COLUMNS) <= turn_columns
+    turn_columns = {column["name"]: column for column in inspector.get_columns("agent_turns")}
+    assert set(AGENT_TURN_COLUMNS) <= set(turn_columns)
+    assert turn_columns["resume_id"]["nullable"] is True
+    assert turn_columns["scope"]["nullable"] is False
+    action_columns = {column["name"]: column for column in inspector.get_columns("agent_pending_actions")}
+    assert set(AGENT_ACTION_COLUMNS) <= set(action_columns)
+    assert action_columns["resume_id"]["nullable"] is True
+    assert action_columns["target"]["nullable"] is False
 
     # Resolve the latest revision from migrations/versions instead of hardcoding it.
     expected_head = ScriptDirectory.from_config(config).get_current_head()

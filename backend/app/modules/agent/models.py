@@ -18,7 +18,9 @@ class AgentTurn(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     owner_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
-    resume_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    # scope decides what this turn operates on; profile turns carry no resume_id.
+    scope: Mapped[str] = mapped_column(String(16), nullable=False, default="resume")
+    resume_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     client_id: Mapped[str] = mapped_column(String(64), nullable=False, default="external")
     source: Mapped[str] = mapped_column(String(32), nullable=False, default="agent")
     execution_mode: Mapped[str] = mapped_column(String(32), nullable=False)
@@ -46,7 +48,9 @@ class PendingAction(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     owner_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     turn_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
-    resume_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    # target mirrors the turn scope: profile actions write the profile, not a resume.
+    target: Mapped[str] = mapped_column(String(16), nullable=False, default="resume")
+    resume_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     kind: Mapped[str] = mapped_column(String(32), nullable=False, default="content_patch")
     title: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     base_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
