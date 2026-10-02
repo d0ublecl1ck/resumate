@@ -43,7 +43,7 @@ class RunCredential:
     """The claims carried by one run credential."""
 
     owner_id: str
-    resume_id: str
+    resume_id: str | None
     run_id: str
     expires_at: datetime
     max_uses: int
@@ -53,7 +53,7 @@ def issue_run_token(
     client: redis.Redis,
     *,
     owner_id: str,
-    resume_id: str,
+    resume_id: str | None,
     run_id: str,
     ttl_seconds: int,
     max_uses: int = DEFAULT_MAX_USES,
@@ -83,7 +83,7 @@ def lookup_run_token(client: redis.Redis, secret: str) -> RunCredential | None:
     data = json.loads(raw)
     return RunCredential(
         owner_id=str(data["ownerId"]),
-        resume_id=str(data["resumeId"]),
+        resume_id=str(data["resumeId"]) if data.get("resumeId") is not None else None,
         run_id=str(data.get("runId") or ""),
         expires_at=datetime.fromisoformat(str(data["expiresAt"])),
         max_uses=int(data.get("maxUses", DEFAULT_MAX_USES)),
