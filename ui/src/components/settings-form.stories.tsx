@@ -46,6 +46,7 @@ function catalogStory(state: CatalogState, model: ModelConfig = MODEL_CONFIG) {
   return <CatalogStory scenario={state + ":" + model.provider + ":" + model.model} model={model} />
 }
 
+
 /** Seed the connection-test result through the saved config (no request needed). */
 function testResultStory(ok: boolean, message: string) {
   applyCatalogHandlers("ready")
@@ -82,11 +83,14 @@ export const CatalogError = { render: () => catalogStory("error") }
 /** Provider is in the catalog, but the saved model is not. */
 export const ModelNotInCatalog = { render: () => catalogStory("ready", { ...MODEL_CONFIG, model: "legacy-model" }) }
 
-/** Saved provider and model are both absent from the catalog. */
+// 目录收窄后（issue 7aa58）目录外的已保存 provider 就是「自定义」：provider 与 model
+// 换成文本输入，用户继续编辑自己的服务标识，不再是一个禁用的下拉。
+/** Saved provider is outside the whitelist, so both fields fall back to text inputs. */
 export const ProviderNotInCatalog = { render: () => catalogStory("ready", { ...MODEL_CONFIG, provider: "legacy-openai", model: "legacy-model" }) }
 
 /** Nothing selected yet: provider is empty, so the model select is disabled. */
 export const NoProviderSelected = { render: () => catalogStory("ready", { ...MODEL_CONFIG, provider: "", model: "" }) }
+
 
 /** Connection test in flight: the button shows a spinner and the testing hint. */
 export const TestPending = {

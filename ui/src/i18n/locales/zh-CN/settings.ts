@@ -45,6 +45,8 @@ export default {
     hint: "Provider 与 Model 来自开源模型目录（只读）；Endpoint / API Key 可选填，Key 加密存储且界面不回显。",
     provider: "Provider",
     providerNone: "未设置",
+    providerCustom: "自定义",
+    providerCustomPlaceholder: "自建网关或中转站标识，如 my-gateway",
     catalogMissingOption: "{{id}}（不在当前目录）",
     catalogLoading: "模型目录加载中…",
     catalogError: "模型目录加载失败，已保留当前配置。",

@@ -45,6 +45,8 @@ export default {
     hint: "Provider and model come from the open-source model catalog (read-only); endpoint and API key stay optional, and the key is stored encrypted and never shown.",
     provider: "Provider",
     providerNone: "Not set",
+    providerCustom: "Custom",
+    providerCustomPlaceholder: "Identifier of your own gateway or relay, e.g. my-gateway",
     catalogMissingOption: "{{id}} (not in catalog)",
     catalogLoading: "Loading model catalog…",
     catalogError: "Could not load the model catalog; the saved configuration is kept.",

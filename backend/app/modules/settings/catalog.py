@@ -20,6 +20,17 @@ from app.shared.errors import ValidationFailed
 
 SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "model_catalog.json"
 CATALOG_SOURCE = "models.dev"
+# Providers the settings picker exposes (issue 7aa58). Everything else in the
+# snapshot stays on disk but is reachable only through the custom entry, where
+# the user types provider/model/endpoint by hand. Order here is the order the
+# picker shows, so adding or removing a provider is a one-line change.
+ALLOWED_PROVIDER_IDS = (
+    "deepseek",
+    "openai",
+    "anthropic",
+    "zhipuai",
+    "zhipuai-coding-plan",
+)
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 PROBE_TIMEOUT_SECONDS = 5.0
 CHAT_COMPLETIONS_PATH = "/chat/completions"
@@ -120,14 +131,23 @@ def _catalog_tree() -> tuple[CatalogProvider, ...]:
 def list_catalog(*, provider: str | None = None, query: str | None = None) -> list[CatalogProvider]:
     """Return providers/models filtered by provider id and a model search.
 
-    A provider survives only when it still has at least one matching model, so
-    the response stays usable for the settings picker under a search query.
+    Only ALLOWED_PROVIDER_IDS are visible: an id outside the whitelist matches
+    nothing, so a caller asking for a hidden provider gets an empty list rather
+    than a peek at the rest of the snapshot. Results follow the whitelist order
+    instead of the snapshot order, so the settings picker is stable no matter how
+    models.dev sorts its file. A provider survives only when it still has at least
+    one matching model, so the response stays usable under a search query.
     """
     provider_filter = (provider or "").strip()
     needle = (query or "").strip().lower()
+    tree = _catalog_tree()
+    by_id = {entry.id: entry for entry in tree}
     result: list[CatalogProvider] = []
-    for entry in _catalog_tree():
-        if provider_filter and entry.id != provider_filter:
+    for entry_id in ALLOWED_PROVIDER_IDS:
+        if provider_filter and entry_id != provider_filter:
+            continue
+        entry = by_id.get(entry_id)
+        if entry is None:
             continue
         models = [
             model

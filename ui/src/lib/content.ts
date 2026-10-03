@@ -396,7 +396,14 @@ export const MODEL_CONFIG: ModelConfig = {
 // 只读模型目录（契约 §17）：真实数据由后端从 models.dev 快照产出，这里仅作为前端演示 fixture。
 export const MODEL_CATALOG: ModelCatalog = {
   source: "models.dev",
+  // 顺序与后端白名单一致（issue 7aa58）：deepseek / openai / anthropic / zhipuai / zhipuai-coding-plan。
+  // 目录外的厂商不在这个 fixture 里，由 settings-form 的「自定义」文本输入承接。
   providers: [
+    {
+      id: "deepseek",
+      label: "DeepSeek",
+      models: [{ id: "deepseek-chat", label: "DeepSeek Chat", contextWindow: 64000, maxOutputTokens: 8192, inputCostPerMillion: 0.27, outputCostPerMillion: 1.1 }],
+    },
     {
       id: "openai",
       label: "OpenAI",
@@ -414,9 +421,20 @@ export const MODEL_CATALOG: ModelCatalog = {
       ],
     },
     {
-      id: "deepseek",
-      label: "DeepSeek",
-      models: [{ id: "deepseek-chat", label: "DeepSeek Chat", contextWindow: 64000, maxOutputTokens: 8192, inputCostPerMillion: 0.27, outputCostPerMillion: 1.1 }],
+      id: "zhipuai",
+      label: "智谱 GLM",
+      models: [
+        { id: "glm-4.6", label: "GLM-4.6", contextWindow: 200000, maxOutputTokens: 8192, inputCostPerMillion: 0.6, outputCostPerMillion: 2.2 },
+        { id: "glm-4.5-air", label: "GLM-4.5 Air", contextWindow: 128000, maxOutputTokens: 8192, inputCostPerMillion: 0.2, outputCostPerMillion: 1.1 },
+      ],
+    },
+    {
+      id: "zhipuai-coding-plan",
+      label: "智谱 GLM 编程套餐",
+      models: [
+        { id: "glm-5.3", label: "GLM-5.3", contextWindow: 200000, maxOutputTokens: 8192, inputCostPerMillion: 0.6, outputCostPerMillion: 2.2 },
+        { id: "glm-5.3-flash", label: "GLM-5.3 Flash", contextWindow: 200000, maxOutputTokens: 8192, inputCostPerMillion: 0.1, outputCostPerMillion: 0.4 },
+      ],
     },
   ],
 }

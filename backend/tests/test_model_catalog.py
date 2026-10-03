@@ -142,3 +142,56 @@ def test_probe_maps_network_failure() -> None:
 
     assert ok is False
     assert "无法连接" in message
+
+
+# --- provider whitelist (issue 7aa58) ---------------------------------------
+
+
+def test_list_catalog_only_exposes_the_whitelisted_providers() -> None:
+    assert catalog.ALLOWED_PROVIDER_IDS == (
+        "deepseek",
+        "openai",
+        "anthropic",
+        "zhipuai",
+        "zhipuai-coding-plan",
+    )
+
+    entries = catalog.list_catalog()
+
+    assert tuple(entry.id for entry in entries) == catalog.ALLOWED_PROVIDER_IDS
+    snapshot = {provider["id"]: provider for provider in _snapshot_data()["providers"]}
+    for entry in entries:
+        assert [model.id for model in entry.models] == [
+            model["id"] for model in snapshot[entry.id]["models"]
+        ]
+
+
+def test_list_catalog_two_zhipu_providers_stay_separate() -> None:
+    entries = catalog.list_catalog()
+
+    assert [entry.id for entry in entries if entry.id.startswith("zhipuai")] == [
+        "zhipuai",
+        "zhipuai-coding-plan",
+    ]
+
+
+def test_list_catalog_keeps_query_filter_inside_the_whitelist() -> None:
+    matches = catalog.list_catalog(query="glm")
+
+    assert matches
+    assert {entry.id for entry in matches} <= set(catalog.ALLOWED_PROVIDER_IDS)
+    for entry in matches:
+        assert all("glm" in f"{model.id} {model.label}".lower() for model in entry.models)
+
+
+def test_list_catalog_rejects_providers_outside_the_whitelist() -> None:
+    assert catalog.list_catalog(provider="nearai") == []
+    assert catalog.list_catalog(provider="openai,anthropic") == []
+    assert catalog.list_catalog(provider="OpenAI") == []
+
+
+def test_snapshot_file_keeps_the_full_models_dev_tree() -> None:
+    data = _snapshot_data()
+
+    assert len(data["providers"]) > len(catalog.ALLOWED_PROVIDER_IDS)
+    assert "nearai" in {provider["id"] for provider in data["providers"]}
