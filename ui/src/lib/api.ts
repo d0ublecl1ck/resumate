@@ -39,6 +39,7 @@ import type {
   ProposedJd,
   ResumeBasics,
   Resume,
+  ResumeDocument,
   ResumeTemplate,
   ResumeVersion,
   RunTimelineEvent,
@@ -151,6 +152,23 @@ export function getResume(id: string): Promise<Resume | undefined> {
 /** GET /resumes/{id}/versions */
 export function listResumeVersions(id: string) {
   return request<ResumeVersion[]>(`/resumes/${id}/versions`)
+}
+
+/**
+ * PUT /resumes/{id}/document —— 手动结构化编辑落库。
+ *
+ * 提交整份文档 + 基线版本号：后端用 base_version_id 做乐观锁，基线过期返回 409 BASE_VERSION_STALE；
+ * 文档与当前版本一致时后端不生成新版本、直接回当前 Resume。返回值是服务端权威状态（含 saveState 与新的 currentVersionId）。
+ */
+export function updateDocument(id: string, input: { document: ResumeDocument; baseVersionId: string; message?: string }): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/document`, {
+    method: "PUT",
+    body: JSON.stringify({
+      document: input.document,
+      baseVersionId: input.baseVersionId,
+      message: input.message,
+    }),
+  })
 }
 
 // ---------------------------------------------------------------------------

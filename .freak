@@ -1,5 +1,6 @@
 # FREAK
 
+- [ ] `ui/src/components/resume-editor.tsx` 的「导出」按钮 — 没有 `onClick`，后端也没有简历导出端点（只有 `/backup/export` 与 `/backup/export/markdown`），点了什么都不会发生；做导出时要同时补端点、按钮行为与 i18n 文案。另外手动编辑目前**只有「保存（flush）」一条落库路径**：没有自动保存，也没有离开页面前的未保存提醒，关掉标签页就会丢草稿（54136 只接了手动保存）。记录：2026-10-03
 - [ ] `ui/prototypes/index.html` 现在是 `ui/src` 的镜像（54136）：令牌逐值复制 `index.css`，外壳对齐 `app-shell.tsx` / `app-nav.tsx`，页面按 `App.tsx` 路由逐条登记。规矩反过来了——**改实现就要同步改原型**；原型里的类和令牌不再是自己发明的一套。下次加页面/改令牌/改外壳前先看这个文件，别只改 `ui/src` 留原型过期。记录：2026-10-03
 - [ ] `ui/public/favicon-*.png` 与 `apple-touch-icon.png` / `android-chrome-*.png`（e13aa，2026-10-03）— 都是 `brand/mark.png` 的派生产物，品牌源图一改就全部过期；生成命令登记在 [ui/public/brand/README.md](ui/public/brand/README.md) 的「网站图标」一节，改源图后重跑一遍即可。另一个口径差：应用 `theme-color` 与图标垫底用 `#f7f5f0`，而品牌与原型把 paper 定义为 `#FFF9EC`（应用 `--background: oklch(0.97 0.012 90)` ≈ `#f8f5ec`），三者并不相等；下次动品牌令牌或背景色时先决定要不要统一到品牌 cream 再改图标垫底色。记录：2026-10-03
 - [ ] `archkit issue close` 的无范围校验会被两条历史 merge commit 卡死（2026-10-03 实测 7aa58）：`3c9dcee` 与 `cf15032`（issue 3ae82 的 worktree 合并）subject 里带 `（issue 3ae82）` 却没有 `Issue: 3ae82` trailer，而 archkit 1.6.31 会从最早的 `Closes:` 起验证其后历史，于是无参数 close 停在 `Error: Commit 3c9dcee must contain exactly one Issue: <id> trailer.`。关单必须用 `archkit issue close <id> --base <本次实现前的提交>`。根治要么重写那两条历史（已被 `.freak` 的公开仓库决议挡住），要么向 archkit 反馈「merge commit 不参与 trailer 校验」。记录：2026-10-03

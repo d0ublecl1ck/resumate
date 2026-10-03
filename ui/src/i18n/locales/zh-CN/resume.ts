@@ -43,6 +43,14 @@ export default {
     structuredEditing: "结构化编辑",
     chatAndRun: "对话与 Run",
     preview: "预览",
+    manualSaveMessage: "手动编辑",
+    saveErrors: {
+      stale: "简历内容已在别处更新，请刷新后基于最新版本重试。",
+      validation: "文档内容不合法，请检查后重试。",
+      permission: "当前账号没有保存这份简历的权限。",
+      network: "无法连接后端服务，请检查网络后重试。",
+      generic: "保存失败，请重试。",
+    },
   },
   structured: {
     basics: "基本信息",

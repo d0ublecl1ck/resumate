@@ -206,6 +206,19 @@ export const handlers = [
     const resume = RESUMES.find((item) => item.id === params.id)
     return resume ? HttpResponse.json(resume.versions) : notFound(`简历 ${params.id} 不存在`)
   }),
+  // 手动编辑落库：镜像后端 PUT /resumes/{id}/document 的乐观锁行为。
+  http.put("/api/resumes/:id/document", async ({ params, request }) => {
+    const resume = RESUMES.find((item) => item.id === params.id)
+    if (!resume) return notFound(`简历 ${params.id} 不存在`)
+    const body = (await request.json()) as { document: typeof resume.document; baseVersionId?: string }
+    if (body.baseVersionId && body.baseVersionId !== resume.currentVersionId) {
+      return HttpResponse.json(
+        { code: "BASE_VERSION_STALE", message: "简历内容已更新，请基于最新版本重试", latestVersionId: resume.currentVersionId },
+        { status: 409 },
+      )
+    }
+    return HttpResponse.json({ ...resume, document: body.document, saveState: "committed" })
+  }),
   http.get("/api/jds", ({ request }) => {
     const url = new URL(request.url)
     const query = url.searchParams.get("query")

@@ -5,6 +5,9 @@
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
+import { updateDocument } from "@/lib/api"
+import { documentSaveErrorMessage } from "@/lib/resume-document"
 import type { AgentRun, JobDescription, Resume, ResumeDocument } from "@/lib/types"
 import { StructuredEditor } from "@/components/structured-editor"
 import { RunPanel } from "@/components/run-panel"
@@ -29,20 +32,43 @@ export function ResumeEditor({
   initialColumn?: Column
 }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
   const [doc, setDoc] = useState<ResumeDocument>(resume.document)
   const [saveState, setSaveState] = useState(resume.saveState)
   const [mobileCol, setMobileCol] = useState<Column>(initialColumn)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const dirty = saveState === "local_unsynced" || saveState === "uncommitted"
 
   function onDocChange(next: ResumeDocument) {
     setDoc(next)
-    // C-05：有效输入立即标记本地未送达，重置静默计时（此处演示为状态切换）。
+    // C-05：有效输入立即标记本地未送达，重置静默计时。
     setSaveState("local_unsynced")
   }
 
-  function flush() {
+  // C-05 / C-06：flush 提交整份文档并带基线版本号，服务端用 base_version_id 做乐观锁。
+  // 基线过期返回 409 BASE_VERSION_STALE：保留本地草稿、就地报错，刷新后基于最新版本重试。
+  async function flush() {
+    if (saving || !dirty) return
+    setSaveError(null)
+    setSaving(true)
     setSaveState("saving")
-    setTimeout(() => setSaveState("committed"), 500)
+    try {
+      const saved = await updateDocument(resume.id, {
+        document: doc,
+        baseVersionId: resume.currentVersionId,
+        message: t("resume.editor.manualSaveMessage"),
+      })
+      setDoc(saved.document)
+      setSaveState(saved.saveState)
+      await queryClient.invalidateQueries({ queryKey: ["resume", resume.id] })
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+    } catch (cause) {
+      setSaveState(resume.saveState)
+      setSaveError(documentSaveErrorMessage(cause))
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -69,7 +95,8 @@ export function ResumeEditor({
           <SaveStateBadge state={saveState} />
           <button
             onClick={flush}
-            disabled={!dirty}
+            disabled={!dirty || saving}
+            aria-busy={saving}
             className="rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {t("resume.editor.flush")}
@@ -82,6 +109,12 @@ export function ResumeEditor({
           </button>
         </div>
       </div>
+
+      {saveError ? (
+        <p role="alert" className="mt-3 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-sm text-foreground">
+          {saveError}
+        </p>
+      ) : null}
 
       {/* 窄屏列切换 */}
       <div className="mt-3 flex gap-1 rounded-lg border border-border bg-card p-1 lg:hidden">
