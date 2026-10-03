@@ -1,14 +1,15 @@
 ---
 id: 7aa58
-status: in-progress
+status: closed
 created_at: 2026-10-03T06:25:35.692Z
-updated_at: 2026-10-03T06:26:05.822Z
+updated_at: 2026-10-03T06:58:08.054Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 设置与模型配置
 started_at: 2026-10-03T06:26:05.822Z
+closed_at: 2026-10-03T06:58:08.054Z
 ---
 
 # 模型目录白名单收窄为 DeepSeek/OpenAI/Anthropic/GLM 并支持自定义
