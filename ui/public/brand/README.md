@@ -13,6 +13,26 @@ Resumate 的标志与吉祥物。角色设定：一页拟人化的简历纸—�
 
 四张均为透明底 RGBA PNG，导出边长约 1254px。
 
+## 网站图标
+
+浏览器标签、iOS 主屏与 Android/PWA 图标都从 `mark.png` 生成，产物在 [ui/public](../../public/)，不要在图标文件上手工改图：改品牌标志后按下表重跑一遍即可，`ui/index.html` 与 [site.webmanifest](../../public/site.webmanifest) 的引用不用动。
+
+| 产物 | 尺寸 | 说明 |
+| --- | --- | --- |
+| `favicon-16.png` / `favicon-32.png` / `favicon-48.png` | 16 / 32 / 48 | 浏览器标签与书签，保持透明底，画布补成正方形 |
+| `apple-touch-icon.png` | 180 | iOS 主屏，垫 `#f7f5f0` 底，避免系统把透明压成黑底 |
+| `android-chrome-192x192.png` / `android-chrome-512x512.png` | 192 / 512 | Android 主屏与 PWA manifest，同样垫 `#f7f5f0` 底 |
+
+```bash
+cd ui/public
+for s in 16 32 48; do sips -Z $s -p $s $s brand/mark.png --out "favicon-$s.png"; done
+sips -Z 180 -p 180 180 --padColor F7F5F0 brand/mark.png --out apple-touch-icon.png
+sips -Z 192 -p 192 192 --padColor F7F5F0 brand/mark.png --out android-chrome-192x192.png
+sips -Z 512 -p 512 512 --padColor F7F5F0 brand/mark.png --out android-chrome-512x512.png
+```
+
+已知取舍：16px 下角色细节会糊成一个色块（任何含角色的方形图标都会如此），所以 16 档只作占位；要更锐利需要单独做一版去掉角色的简化标志，目前没有这份素材。
+
 ## 配色
 
 与 [定稿原型](../../prototypes/index.html) 和 [设计令牌](../../src/index.css) 一致，不得引入表外颜色：
