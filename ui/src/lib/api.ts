@@ -155,6 +155,17 @@ export function listResumeVersions(id: string) {
 }
 
 /**
+ * PUT /resumes/{id}/draft —— 把编辑草稿同步到服务端缓冲，**不生成版本**（C-05）。
+ * 静默计时到期或显式保存时再 PUT /resumes/{id}/document 提交为 source=manual 版本。
+ */
+export function saveDraft(id: string, input: { document: ResumeDocument; baseVersionId: string }): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/draft`, {
+    method: "PUT",
+    body: JSON.stringify({ document: input.document, baseVersionId: input.baseVersionId }),
+  })
+}
+
+/**
  * PUT /resumes/{id}/document —— 手动结构化编辑落库。
  *
  * 提交整份文档 + 基线版本号：后端用 base_version_id 做乐观锁，基线过期返回 409 BASE_VERSION_STALE；

@@ -23,6 +23,11 @@ class Resume(Base):
     lifecycle: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     save_state: Mapped[str] = mapped_column(String(32), nullable=False, default="committed")
     document: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    # 手动编辑的服务端草稿缓冲（C-05）：自动保存只写这里、不生成版本；
+    # 与 Agent 的 working_* 列分开，保证两条编辑链路各自持有基线。
+    draft_document: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    draft_base_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    draft_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     working_document: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     working_base_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     working_turn_id: Mapped[str | None] = mapped_column(String(36), nullable=True)

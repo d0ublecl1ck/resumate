@@ -227,6 +227,8 @@ export interface Resume {
   restoreDeadline?: ISODate
   profileId?: string
   document: ResumeDocument
+  /** 服务端草稿缓冲（C-05）：自动保存写入、尚未提交成版本的内容；无草稿时为 null。 */
+  draft?: ResumeDocument | null
   versions: ResumeVersion[]
 }
 
@@ -585,6 +587,8 @@ export interface UserPreferences {
   language: string
   displayName: string
   autosave: boolean
+  /** 空闲自动保存的静默秒数（C-05）；默认 10，合法区间 3–120。 */
+  autosaveIntervalSeconds: number
   defaultTemplateId: string
   defaultTemplateRetired?: boolean
   shortcuts: { action: string; keys: string; conflict?: boolean }[]
@@ -596,7 +600,7 @@ export interface AgentConfigUpdate {
 }
 
 export type UserPreferencesUpdate = Partial<
-  Pick<UserPreferences, "theme" | "language" | "displayName" | "autosave" | "defaultTemplateId" | "shortcuts">
+  Pick<UserPreferences, "theme" | "language" | "displayName" | "autosave" | "autosaveIntervalSeconds" | "defaultTemplateId" | "shortcuts">
 >
 
 // ---------------------------------------------------------------------------

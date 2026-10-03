@@ -88,6 +88,7 @@ class ResumeResponse(ApiModel):
     restore_deadline: datetime | None = None
     profile_id: str | None = None
     document: ResumeDocument
+    draft: ResumeDocument | None = None
     versions: list[ResumeVersionResponse] = Field(default_factory=list)
 
 
@@ -110,4 +111,11 @@ class ResumeUpdate(ApiModel):
 class DocumentUpdate(ApiModel):
     document: ResumeDocument
     message: str = ""
+    base_version_id: str | None = None
+
+
+class DraftUpdate(ApiModel):
+    """草稿缓冲写入（C-05）：只同步内容，不生成版本。"""
+
+    document: ResumeDocument
     base_version_id: str | None = None

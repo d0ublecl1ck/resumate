@@ -44,6 +44,8 @@ export default {
     chatAndRun: "Chat & Run",
     preview: "Preview",
     manualSaveMessage: "Manual edit",
+    autosaveMessage: "Auto-save",
+    autosaveHint: "Auto-save in {{seconds}}s",
     saveErrors: {
       stale: "This resume changed elsewhere. Refresh and retry from the latest version.",
       validation: "The document is not valid. Check the fields and try again.",

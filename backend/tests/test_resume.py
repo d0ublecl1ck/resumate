@@ -127,6 +127,59 @@ def test_document_update_with_stale_base_returns_conflict(client: TestClient) ->
     assert response.json()["latestVersionId"] == created["currentVersionId"]
 
 
+def test_draft_update_keeps_committed_document_and_marks_synced_draft(client: TestClient) -> None:
+    created = _create(client)
+    draft_document = _document(section_title="草稿章节")
+
+    response = client.put(
+        f"/resumes/{created['id']}/draft",
+        json={"document": draft_document, "baseVersionId": created["currentVersionId"]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["saveState"] == "synced_draft"
+    assert body["draft"]["sections"][0]["title"] == "草稿章节"
+    # 草稿只进缓冲：不生成版本，也不改动已提交文档
+    assert len(body["versions"]) == 1
+    assert body["currentVersionId"] == created["currentVersionId"]
+    assert body["document"]["sections"][0]["title"] == "工作经历"
+
+
+def test_draft_with_stale_base_returns_conflict(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.put(
+        f"/resumes/{created['id']}/draft",
+        json={"document": _document(), "baseVersionId": "ver_stale"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "BASE_VERSION_STALE"
+    assert response.json()["latestVersionId"] == created["currentVersionId"]
+
+
+def test_commit_after_draft_clears_draft_and_creates_version(client: TestClient) -> None:
+    created = _create(client)
+    draft_document = _document(section_title="草稿章节")
+    client.put(
+        f"/resumes/{created['id']}/draft",
+        json={"document": draft_document, "baseVersionId": created["currentVersionId"]},
+    )
+
+    response = client.put(
+        f"/resumes/{created['id']}/document",
+        json={"document": draft_document, "message": "自动保存", "baseVersionId": created["currentVersionId"]},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["saveState"] == "committed"
+    assert body["draft"] is None
+    assert len(body["versions"]) == 2
+    assert body["versions"][-1]["message"] == "自动保存"
+
+
 def test_soft_delete_and_restore(client: TestClient) -> None:
     created = _create(client)
 

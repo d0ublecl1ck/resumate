@@ -44,6 +44,8 @@ export default {
     chatAndRun: "对话与 Run",
     preview: "预览",
     manualSaveMessage: "手动编辑",
+    autosaveMessage: "自动保存",
+    autosaveHint: "空闲自动保存：{{seconds}} 秒后",
     saveErrors: {
       stale: "简历内容已在别处更新，请刷新后基于最新版本重试。",
       validation: "文档内容不合法，请检查后重试。",

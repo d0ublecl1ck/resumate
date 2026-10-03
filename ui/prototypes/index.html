@@ -526,6 +526,7 @@
                   <a style="font-size:14px;color:var(--muted-foreground)">← 返回简历库</a>
                   <h1 style="margin:0;font-family:var(--font-serif);font-size:24px;font-weight:700">高级前端工程师简历</h1>
                   <span class="badge badge-coral">未提交</span>
+                  <span style="font-size:12px;color:var(--muted-foreground)">空闲自动保存：10 秒后</span>
                 </div>
                 <div style="display:flex;gap:8px">
                   <button class="btn btn-outline btn-sm" type="button">保存（flush）</button>
@@ -577,6 +578,9 @@
           <li>基线过期：409 <code>BASE_VERSION_STALE</code> 就地 coral 报错、保留本地草稿、按钮可重试；不透出服务端原文，也不显示「已保存」</li>
           <li>校验 / 权限 / 网络失败：同一处 <code>role="alert"</code> 给 i18n 文案</li>
           <li>基线漂移（Agent 侧）：409 + 最新版本 + 重做入口（<code>REBASE_CONFLICT</code>）</li>
+          <li>空闲自动保存（C-05）：每次有效输入重置静默计时（默认 10 秒，设置里可改），计时期间服务端持草稿缓冲、状态为 <code>synced_draft</code>；到期 flush 成一个 <code>source=manual</code> 版本</li>
+          <li>关闭自动保存：保留服务端草稿并保持「未提交」，暂停静默计时，手动 flush 入口仍有效</li>
+          <li>切换简历 / 离开页面 / 显式保存：立即 flush；失败时保留草稿并提示未保存</li>
           <li>已知缺口：导出按钮还没有后端端点（点击无行为）</li>
         </ul>
       </div>
@@ -746,6 +750,20 @@
                   <button class="btn btn-outline btn-sm" type="button">测试连通性</button>
                 </div>
               </section>
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0 0 12px;font-size:14px;font-weight:600">个人偏好</h2>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px">
+                  <span>
+                    <span style="display:block;font-size:14px;font-weight:500">空闲自动保存</span>
+                    <span style="display:block;font-size:12px;color:var(--muted-foreground)">停止输入后自动把草稿提交为一个版本</span>
+                  </span>
+                  <button type="button" role="switch" aria-checked="true" aria-label="空闲自动保存" style="position:relative;width:44px;height:24px;border:0;border-radius:999px;background:var(--cobalt)">
+                    <span style="position:absolute;top:2px;left:22px;width:20px;height:20px;border-radius:999px;background:var(--card)"></span>
+                  </button>
+                </div>
+                <label class="field"><span>自动保存间隔（秒）</span><input class="input" type="number" min="3" max="120" value="10" /><small>默认 10 秒，可设 3–120 秒；关闭自动保存后本项禁用。</small></label>
+                <p style="margin:12px 0 0;font-size:12px;color:var(--muted-foreground)">显示名、语言、主题也在这个分区（US-13.4）。</p>
+              </section>
             </div>
           </div></div>
         </div>
@@ -753,6 +771,7 @@
           <li>分区保存：编辑 → 保存中 → 已保存 / 失败</li>
           <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」</li>
           <li>语言切换在「个人偏好」分区（US-13.4）</li>
+          <li>个人偏好：显示名 / 语言 / 主题 / 空闲自动保存开关与间隔（默认 10 秒，3–120 秒，越界由后端 422 兜底）</li>
         </ul>
       </div>
 

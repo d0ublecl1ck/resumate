@@ -118,6 +118,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 不可变版本、任意两版比较、恢复 | 已实现（版本列表与恢复界面） |
 | 简历导出（PDF / 文件） | 未实现：编辑器「导出」按钮还没有后端端点，点击无行为 |
 | 章节 / 条目级结构化编辑与领域 Patch | 已实现（手动编辑经 `PUT /resumes/{id}/document` 落库并生成 manual 版本；领域 Patch 5 个 op，非 RFC 6902） |
+| 空闲自动保存与服务端草稿缓冲 | 已实现：输入停顿先经 `PUT /resumes/{id}/draft` 进缓冲（不建版本），静默到期自动提交 manual 版本；默认 10 秒，设置里可调 3–120 秒（C-05） |
 | **UserTurn + Working Copy + 审批闭环** | 已实现：`begin → validate → preview → approve → apply → finalize` |
 | **PendingAction 人工审批、幂等键、基线重排** | 已实现并覆盖测试（含 `REBASE_CONFLICT`） |
 | **Agent 轮次 SSE 事件订阅** | 已实现：`GET /turns/{turn_id}/events` 推 snapshot / turn.updated / 心跳，前端 `subscribeTurnEvents` |
@@ -168,7 +169,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 228 passed
+uv run --directory backend pytest        # → 238 passed
 cd agent-core && uv run pytest -q        # → 101 passed
 cd ui && pnpm test                       # → 35 files / 259 passed
 archkit inspect .                        # → Quality gates passed.

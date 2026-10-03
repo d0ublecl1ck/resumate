@@ -444,6 +444,7 @@ export const USER_PREFERENCES: UserPreferences = {
   language: "zh-CN",
   displayName: "张沐",
   autosave: true,
+  autosaveIntervalSeconds: 10,
   defaultTemplateId: "tpl_classic",
   defaultTemplateRetired: false,
   // action 为 i18n 键（settings.preferences.shortcutAction），由设置页按当前语言渲染。
