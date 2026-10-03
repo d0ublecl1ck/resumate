@@ -95,49 +95,34 @@ export default {
   },
   create: {
     title: "开始一份新的简历",
-    description: "选择创建方式，锁定标题、岗位、模板与来源。",
+    description: "从现有简历复制，或完全新开一份空白简历。",
     methodLegend: "创建方式",
     method: {
-      form: {
-        label: "表单创建",
-        desc: "从空白结构化表单开始，显式提交即授权",
+      copy: {
+        label: "从现有简历复制",
+        desc: "内容原样复制成新简历，标题自动加「（副本）」",
       },
-      chat: {
-        label: "对话创建",
-        desc: "用自然语言描述目标，Agent 生成首版（approval 需确认）",
-      },
-      profile: {
-        label: "Profile 生成",
-        desc: "选择 JD 与事实，从事实库选材生成",
+      blank: {
+        label: "完全新开",
+        desc: "创建空白简历，标题与模板用默认值，建好再改",
       },
     },
-    fields: {
-      title: "简历标题",
-      role: "目标岗位",
-      template: "模板",
-      jdOptional: "关联 JD（可选）",
+    noSource: "还没有可复制的简历，先完全新开一份。",
+    copyPick: {
+      title: "选择要复制的简历",
+      description: "选中一份简历，内容原样复制成新简历，标题自动加「（副本）」。",
+      empty: "还没有可复制的简历。",
+      confirm: "创建副本",
     },
-    placeholders: {
-      title: "例如：高级前端工程师简历",
-      role: "例如：高级前端工程师",
-    },
-    noJd: "不关联",
-    revision: "rev.{{revision}}",
-    summary: {
-      title: "创建摘要",
-      line: "方式：{{method}}；标题：{{title}}；岗位：{{role}}；模板：{{template}}",
-    },
-    notFilled: "（未填写）",
-    approvalNotice: "approval 模式：Agent 创建将展示创建摘要，需你二次确认后才会创建。",
-    formNotice: "表单创建：点击「创建」即视为授权，直接创建空草稿。",
+    noTemplate: "没有已发布的模板，暂时无法完全新开；可以先从现有简历复制。",
+    defaultTitle: "未命名简历",
     submitting: "创建中…",
-    agentNotAvailable: "对话创建与 Profile 生成尚未接入后端 Agent 服务，暂时无法创建；请先改用表单创建。",
     errors: {
-      validation: "标题或模板不合法，请检查后重试。",
+      sourceMissing: "选中的原简历已不存在，请刷新后重试。",
+      validation: "创建参数不合法，请刷新后重试。",
       permission: "当前账号没有创建简历的权限。",
       network: "无法连接后端服务，请检查网络后重试。",
       generic: "创建失败，请稍后重试。",
     },
-    previewSummary: "预览创建摘要",
   },
 }

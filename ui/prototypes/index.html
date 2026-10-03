@@ -204,6 +204,41 @@
       background:color-mix(in srgb,var(--ink) 48%,transparent);background-clip:padding-box;
     }
 
+    /* SCR-101 新建简历（设计补充）：两条链路卡片 + 复制来源选择器 */
+    .create-cards{display:grid;gap:12px}
+    .create-card{
+      display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;
+      border:2px solid var(--line);border-radius:var(--radius);background:var(--card);
+      padding:14px;min-height:48px;transition:border-color .15s,background .15s;
+    }
+    .create-card[aria-pressed="true"]{border-color:var(--cobalt);background:color-mix(in srgb,var(--cobalt) 7%,var(--card))}
+    .create-card:disabled{opacity:.45;cursor:not-allowed}
+    .create-card .cc-icon{
+      flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+      background:var(--yellow-soft);border:2px solid var(--ink);font-weight:900;font-size:16px;
+    }
+    .create-card strong{display:block;font-size:15px;font-weight:800}
+    .create-card small{display:block;color:var(--ink-soft);font-size:13px;margin-top:2px}
+    .create-demo{display:grid;gap:20px;margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));align-items:start}
+    .create-step{border:2px solid var(--ink);border-radius:var(--radius);background:var(--card);padding:18px}
+    .create-step h3{margin:0 0 12px;font-size:15px;font-weight:900}
+    .picker-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+    .picker-card{
+      display:flex;flex-direction:column;gap:4px;text-align:left;border:2px solid var(--line);
+      border-radius:var(--radius);background:var(--card);padding:12px;min-height:96px;
+    }
+    .picker-card[aria-pressed="true"]{border-color:var(--cobalt);background:color-mix(in srgb,var(--cobalt) 7%,var(--card))}
+    .picker-card strong{font-size:14px;font-weight:800}
+    .picker-card small{color:var(--ink-soft);font-size:12px}
+    .picker-tags{display:flex;flex-wrap:wrap;gap:6px}
+    .picker-tags em{font-style:normal;background:var(--yellow-soft);border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+    .create-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+    .create-actions button{
+      border:2px solid var(--ink);border-radius:999px;padding:10px 22px;min-height:44px;font-weight:800;font-size:14px;
+    }
+    .create-actions .ghost{background:var(--card);color:var(--ink)}
+    .create-actions .solid{background:var(--cobalt);color:#fff}
+
     /* Toast */
     .toast{
       position:fixed;left:50%;bottom:28px;transform:translate(-50%,80px);
@@ -512,6 +547,79 @@
         </div>
       </section>
 
+      <section class="panel" id="create-resume" aria-label="设计补充：新建简历两条链路" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · SCR-101 新建简历（复制 / 完全新开）</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            新建简历只留两条链路：从现有简历复制、完全新开空稿；不再要求填写标题 / 岗位 / 模板。
+            复制是两步：第一步选链路并点「创建」，第二步在独立大弹层里用网格卡片选一份简历再复制——
+            第一步没有来源下拉，点「创建」也不会直接产生资源。视觉全部复用既有令牌：
+            card 粗描边 2px、--radius 圆角、cobalt 选中态、44px 触控高度，不新增页面视觉规则。
+          </p>
+          <div class="create-demo">
+            <div class="create-step">
+              <h3>第一步 · 选链路（默认复制选中）</h3>
+              <div class="create-cards" role="group" aria-label="创建方式（默认：从现有简历复制）">
+                <button type="button" class="create-card" aria-pressed="true">
+                  <span class="cc-icon" aria-hidden="true">⧉</span>
+                  <span><strong>从现有简历复制</strong><small>内容原样复制成新简历，标题自动加「（副本）」</small></span>
+                </button>
+                <button type="button" class="create-card" aria-pressed="false">
+                  <span class="cc-icon" aria-hidden="true">＋</span>
+                  <span><strong>完全新开</strong><small>创建空白简历，标题与模板用默认值，建好再改</small></span>
+                </button>
+              </div>
+              <div class="create-actions">
+                <button type="button" class="ghost">取消</button>
+                <button type="button" class="solid">创建</button>
+              </div>
+            </div>
+            <div class="create-step">
+              <h3>第二步 · 从现有简历复制（大弹层 + 网格卡片）</h3>
+              <div class="picker-grid" role="group" aria-label="选择要复制的简历">
+                <button type="button" class="picker-card" aria-pressed="true">
+                  <strong>高级前端工程师简历</strong>
+                  <small>岗位方向：高级前端工程师</small>
+                  <span class="picker-tags"><em>前端</em><em>社招</em></span>
+                  <small>模板 rev.3 · 上次编辑 2026-10-01 10:07</small>
+                </button>
+                <button type="button" class="picker-card" aria-pressed="false">
+                  <strong>产品经理转型简历</strong>
+                  <small>岗位方向：B 端产品经理</small>
+                  <span class="picker-tags"><em>转岗</em></span>
+                  <small>模板 rev.2 · 上次编辑 2026-09-28 09:12</small>
+                </button>
+                <button type="button" class="picker-card" aria-pressed="false">
+                  <strong>校招版简历</strong>
+                  <small>岗位方向：前端开发工程师</small>
+                  <span class="picker-tags"><em>校招</em></span>
+                  <small>模板 rev.3 · 上次编辑 2026-09-20 18:40</small>
+                </button>
+              </div>
+              <div class="create-actions">
+                <button type="button" class="ghost">取消</button>
+                <button type="button" class="solid">创建副本</button>
+              </div>
+            </div>
+          </div>
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-101 状态">
+            <li class="check-item"><span class="label">第一步：复制链路选中，点「创建」不产生资源，转入简历选择层</span><span class="tag">step 1</span></li>
+            <li class="check-item"><span class="label">第二步：大弹层用网格卡片列出活跃简历（标题 / 岗位 / 标签 / 模板 rev / 上次编辑），归档不列</span><span class="tag">step 2 · grid</span></li>
+            <li class="check-item"><span class="label">第二步选中卡片后 cobalt 高亮，点「创建副本」才调用复制接口</span><span class="tag">POST /resumes/{id}/duplicate</span></li>
+            <li class="check-item"><span class="label">第二步取消回到第一步，不创建任何资源</span><span class="tag">back</span></li>
+            <li class="check-item"><span class="label">完全新开：不进入选择层，标题与模板取默认值，文档为空，点「创建」即创建</span><span class="tag">POST /resumes</span></li>
+            <li class="check-item"><span class="label">无活跃简历：复制链路不可选并写明原因，默认落到完全新开</span><span class="tag">disabled</span></li>
+            <li class="check-item"><span class="label">无已发布模板：完全新开不可提交并写明原因，复制链路仍可用</span><span class="tag">disabled</span></li>
+            <li class="check-item"><span class="label">提交中：「创建」/「创建副本」禁用并显示进行中文案</span><span class="tag">loading</span></li>
+            <li class="check-item"><span class="label">创建失败：错误码映射成中文提示，当前层保留原选择可重试</span><span class="tag">error · coral · alert</span></li>
+            <li class="check-item"><span class="label">创建成功：关闭弹窗并进入新简历编辑器</span><span class="tag">/resumes/{id}</span></li>
+          </ul>
+          <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            落点：ui/src/components/create-resume-modal.tsx（第一步）、ui/src/components/resume-picker-dialog.tsx（第二步选择层）
+            与 ui/src/components/resume-library.tsx（列表行「复制」按钮，与弹窗复制共用同一个 POST /resumes/{id}/duplicate）。后端契约不变。
+          </p>
+        </div>
+      </section>
     </main>
   </div>
 

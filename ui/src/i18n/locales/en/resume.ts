@@ -95,49 +95,34 @@ export default {
   },
   create: {
     title: "Start a new resume",
-    description: "Pick how to create it, then set the title, role, template and source.",
+    description: "Copy an existing resume, or start a blank one.",
     methodLegend: "Creation method",
     method: {
-      form: {
-        label: "Form creation",
-        desc: "Start from a blank structured form; an explicit submit counts as authorization",
+      copy: {
+        label: "Copy an existing resume",
+        desc: "Copies the content as-is; the title gets a copy suffix",
       },
-      chat: {
-        label: "Chat creation",
-        desc: "Describe the goal in natural language; the Agent drafts the first version (needs confirmation in approval mode)",
-      },
-      profile: {
-        label: "Generate from Profile",
-        desc: "Pick a JD and facts, then generate from the fact library",
+      blank: {
+        label: "Start blank",
+        desc: "Creates an empty resume with a default title and template; edit it later",
       },
     },
-    fields: {
-      title: "Resume title",
-      role: "Target role",
-      template: "Template",
-      jdOptional: "Linked JD (optional)",
+    noSource: "No resume is available to copy. Start a blank one instead.",
+    copyPick: {
+      title: "Choose a resume to copy",
+      description: "Pick one resume; its content is copied as-is into a new resume and the title gets a copy suffix.",
+      empty: "No resume is available to copy.",
+      confirm: "Create copy",
     },
-    placeholders: {
-      title: "e.g. Senior Frontend Engineer Resume",
-      role: "e.g. Senior Frontend Engineer",
-    },
-    noJd: "None",
-    revision: "rev.{{revision}}",
-    summary: {
-      title: "Creation summary",
-      line: "Method: {{method}}; Title: {{title}}; Role: {{role}}; Template: {{template}}",
-    },
-    notFilled: "(not filled)",
-    approvalNotice: "Approval mode: Agent creation shows a creation summary and requires your confirmation before creating.",
-    formNotice: "Form creation: clicking “Create” counts as authorization and creates an empty draft right away.",
+    noTemplate: "No published template is available, so a blank resume cannot be created yet. Copy an existing resume instead.",
+    defaultTitle: "Untitled resume",
     submitting: "Creating…",
-    agentNotAvailable: "Chat and Profile creation are not connected to the backend Agent service yet, so they cannot create a resume. Please use Form creation for now.",
     errors: {
-      validation: "The title or template is invalid. Check and try again.",
+      sourceMissing: "The selected resume no longer exists. Refresh and try again.",
+      validation: "The creation parameters are invalid. Refresh and try again.",
       permission: "Your account does not have permission to create a resume.",
       network: "Cannot reach the backend service. Check your network and try again.",
       generic: "Could not create the resume. Please try again later.",
     },
-    previewSummary: "Preview creation summary",
   },
 }

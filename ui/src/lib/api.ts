@@ -122,8 +122,8 @@ export function listResumes(params?: { lifecycle?: Resume["lifecycle"]; query?: 
 }
 
 /**
- * POST /resumes —— 表单创建空草稿：显式提交即授权（C-01）。
- * chat / profile 的 Agent 创建链路后端尚未提供，本函数只承载服务端已实现的表单创建契约。
+ * POST /resumes —— 完全新开空草稿：显式提交即授权（C-01）。
+ * title / templateId 由调用方补默认值，文档留空，建好后再改。
  */
 export function createResume(input: { title: string; templateId: string; targetRole?: string; tags?: string[]; profileId?: string }): Promise<Resume> {
   return request<Resume>("/resumes", {
@@ -136,6 +136,11 @@ export function createResume(input: { title: string; templateId: string; targetR
       profileId: input.profileId,
     }),
   })
+}
+
+/** POST /resumes/{id}/duplicate —— 复制整份文档；后端把标题改成「原标题（副本）」。 */
+export function duplicateResume(id: string): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/duplicate`, { method: "POST" })
 }
 
 /** GET /resumes/{id} */
