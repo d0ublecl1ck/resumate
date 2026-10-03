@@ -359,12 +359,18 @@
             </p>
             <ul class="checklist" style="margin-top:0" aria-label="Provider 目录选择态">
               <li class="check-item done"><span class="label">Provider · openai</span><span class="tag">已选</span></li>
-              <li class="check-item"><span class="label">Provider · anthropic</span><span class="tag">可选</span></li>
+              <li class="check-item"><span class="label">Provider · anthropic / deepseek / zhipuai / zhipuai-coding-plan</span><span class="tag">可选</span></li>
+              <li class="check-item"><span class="label">Provider · 自定义</span><span class="tag">平行选项</span></li>
             </ul>
             <ul class="checklist" style="margin-top:0" aria-label="Model 目录选择态">
               <li class="check-item done"><span class="label">Model · GPT-4o mini</span><span class="tag">已选</span></li>
               <li class="check-item"><span class="label">Model · Claude 3.5 Sonnet</span><span class="tag">可选</span></li>
             </ul>
+            <p style="margin:10px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+              模型目录收窄态（7aa58）：目录只暴露 deepseek / openai / anthropic / zhipuai / zhipuai-coding-plan 五家，
+              其余厂商走「自定义」——选中后 provider 与 model 由下拉换成文本输入，任意 OpenAI 兼容服务都能填；
+              未选「自定义」但已保存值不在目录时，沿用「不在当前目录」标注并保留已保存值。
+            </p>
           </div>
           <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
             暗色令牌（ui/src/index.css 的 .dark）：background/card 取 ink 系低明度，

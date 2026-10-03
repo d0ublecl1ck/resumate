@@ -204,9 +204,12 @@ def test_model_catalog_provider_filter_returns_only_that_provider(client: TestCl
 
 def test_model_catalog_reads_the_local_snapshot_offline(client: TestClient) -> None:
     # The catalog must never reach the network at request time; the committed
-    # snapshot resolves the full catalog.
+    # snapshot resolves the catalog. Only the whitelisted providers are exposed
+    # (issue 7aa58), so the observable model count dropped while the snapshot
+    # itself stayed complete.
     body = client.get("/models/catalog").json()
-    assert sum(len(provider["models"]) for provider in body["providers"]) > 100
+    assert [provider["id"] for provider in body["providers"]] == list(catalog.ALLOWED_PROVIDER_IDS)
+    assert sum(len(provider["models"]) for provider in body["providers"]) > 50
 
 
 def test_api_key_is_encrypted_at_rest(client: TestClient, db_session: Session) -> None:

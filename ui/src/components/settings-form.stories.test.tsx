@@ -45,12 +45,16 @@ describe("model settings stories", () => {
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("legacy-model（不在当前目录）")
   })
 
-  it("ProviderNotInCatalog marks the saved provider as missing and disables the model select", async () => {
+  // 目录收窄后（issue 7aa58），目录外的已保存 provider 就是「自定义」：下拉换成文本输入，
+  // 用户仍能改自己的服务标识，不再是一个禁用下拉。
+  it("ProviderNotInCatalog switches the saved provider to custom text inputs", async () => {
     render(ProviderNotInCatalog.render())
     expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
-    expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("legacy-openai（不在当前目录）")
-    expect(screen.getByRole("combobox", { name: "Model" })).toBeDisabled()
+    expect(screen.getByRole("textbox", { name: "Provider" })).toHaveValue("legacy-openai")
+    expect(screen.getByRole("textbox", { name: "Model" })).toHaveValue("legacy-model")
   })
+
+
 
   it("NoProviderSelected shows the empty option", async () => {
     render(NoProviderSelected.render())

@@ -19,6 +19,11 @@ type SaveState = "idle" | "saving" | "saved" | "error"
 const INPUT_CLASS =
   "mt-1 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
 
+// 模型目录只暴露白名单 provider（issue 7aa58）。这个哨兵值只存在于下拉，不落库：
+// 选中它时 provider 与 model 换成文本输入，用户才填得出目录外的服务。
+const CUSTOM_PROVIDER = "__custom__"
+
+
 export function SettingsForm({
   agent,
   model,
@@ -124,10 +129,14 @@ export function SettingsForm({
   const selectedProvider = catalogProviders.find((item) => item.id === provider)
   const selectedModel = selectedProvider?.models.find((item) => item.id === modelName)
 
+  // 目录只暴露白名单 provider（issue 7aa58）：已保存值不在目录里就是「自定义」，
+  // 此时 provider 与 model 由下拉换成文本输入，任意 OpenAI 兼容服务都能填。
+  const customProvider = provider !== "" && !catalogProviders.some((item) => item.id === provider)
   const providerOptions = [
     { value: "", label: t("settings.model.providerNone") },
     ...catalogProviders.map((item) => ({ value: item.id, label: item.label })),
-    ...(provider && !catalogProviders.some((item) => item.id === provider)
+    { value: CUSTOM_PROVIDER, label: t("settings.model.providerCustom") },
+    ...(customProvider && provider !== CUSTOM_PROVIDER
       ? [{ value: provider, label: t("settings.model.catalogMissingOption", { id: provider }) }]
       : []),
   ]
@@ -238,31 +247,62 @@ export function SettingsForm({
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.model.provider")}</FieldLabel>
-            <Select
-              items={providerOptions}
-              value={provider}
-              onValueChange={(next) => {
-                const nextProviderId = String(next ?? "")
-                setProvider(nextProviderId)
-                const nextProvider = catalogProviders.find((item) => item.id === nextProviderId)
-                setModelName(nextProvider?.models[0]?.id ?? "")
-                setModelStatus("idle")
-              }}
-            >
-              <SelectTrigger className="mt-1" aria-label={t("settings.model.provider")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {providerOptions.map((option) => (
-                  <SelectItem key={option.value || "__none__"} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {customProvider ? (
+              <input
+                className={INPUT_CLASS}
+                aria-label={t("settings.model.provider")}
+                placeholder={t("settings.model.providerCustomPlaceholder")}
+                value={provider === CUSTOM_PROVIDER ? "" : provider}
+                onChange={(event) => {
+                  setProvider(event.target.value)
+                  setModelStatus("idle")
+                }}
+              />
+            ) : (
+              <Select
+                items={providerOptions}
+                value={provider}
+                onValueChange={(next) => {
+                  const nextProviderId = String(next ?? "")
+                  if (nextProviderId === CUSTOM_PROVIDER) {
+                    // 保留已保存的自定义标识便于继续编辑；白名单 provider 则清空让用户重填。
+                    setProvider(catalogProviders.some((item) => item.id === provider) ? "" : provider)
+                    setModelStatus("idle")
+                    return
+                  }
+                  setProvider(nextProviderId)
+                  const nextProvider = catalogProviders.find((item) => item.id === nextProviderId)
+                  setModelName(nextProvider?.models[0]?.id ?? "")
+                  setModelStatus("idle")
+                }}
+              >
+                <SelectTrigger className="mt-1" aria-label={t("settings.model.provider")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {providerOptions.map((option) => (
+                    <SelectItem key={option.value || "__none__"} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.model.model")}</FieldLabel>
+            {customProvider ? (
+              <input
+                className={INPUT_CLASS}
+                aria-label={t("settings.model.model")}
+                placeholder={t("settings.model.modelNone")}
+                value={modelName}
+                onChange={(event) => {
+                  setModelName(event.target.value)
+                  setModelStatus("idle")
+                }}
+              />
+            ) : (
             <Select
               items={modelOptions}
               value={modelName}
@@ -283,6 +323,7 @@ export function SettingsForm({
                 ))}
               </SelectContent>
             </Select>
+            )}
             {selectedModel ? (
               <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
                 {[

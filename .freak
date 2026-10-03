@@ -1,5 +1,7 @@
 # FREAK
 
+- [ ] `backend/app/modules/settings/catalog.py` — 模型目录白名单在读取层（`ALLOWED_PROVIDER_IDS`：deepseek / openai / anthropic / zhipuai / zhipuai-coding-plan，7aa58），快照文件与 `scripts/refresh_model_catalog.py` 未改。下次刷新全量快照后要实测 `GET /models/catalog` 仍只剩这五家，并复核下拉顺序是否仍等于白名单顺序；若产品要增删厂商，只改这一处常量。记录：2026-10-03
+- [ ] `ui/src/components/settings-form.tsx` — Provider 下拉的自定义态靠哨兵值 `__custom__` 触发（7aa58），它只该存在于下拉：选中时清空 `provider`，保存仍写用户键入的真实标识。当前没有测试断言这个哨兵不会落库，若以后有别的调用方直接对 Select 的值调 `updateModelConfig`，`model_config.provider` 就会存成 `__custom__`。下次改动模型分区时补一条「保存请求体不含哨兵」的断言。记录：2026-10-03
 - [ ] `quality-gates/.gate-version` — 当前仅启用 generic 层，后端已有 FastAPI 健康检查；开发业务模块前核对专项门禁覆盖，generic 通过不等价于后端架构验证。记录：2026-09-21
 - [ ] `docs/prd/对话式简历编辑系统-屏幕流定义.md` §1、§10 — 当前使用 `UJ-D*`/`FEA-D*`/`PER-D*`/`BR-D*` 推导标识；正式前置工件建立后替换并复核矩阵，线框评审补齐 P0 状态。记录：2026-09-21
 - [ ] `ui/prototypes/index.html` — 定稿原型未覆盖设置页的语言切换控件（US-13.4 入口）；本次复用 SCR-010 已有的分段选择控件视觉（`border-cobalt bg-cobalt/5` 选中态），未新增页面视觉规则，待原型补该状态。记录：2026-09-27
