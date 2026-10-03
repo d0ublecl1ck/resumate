@@ -88,6 +88,26 @@
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground; }
   button, input, textarea { font: inherit; }
+
+  /* 滚动条：细滑块 + 透明轨道（原型 ui/prototypes/index.html#scrollbar）。
+     原生滚动条（浅灰宽轨道 + 方形高对比滑块）破坏粗描边、圆角、暖纸底的卡片语言。
+     滑块派生自 --foreground，明暗主题自动跟随，不引入裸色值。 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 26%, transparent) transparent;
+  }
+  /* 旧引擎回落：不支持标准属性时用 WebKit 伪元素给出同色细滑块。 */
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--foreground) 26%, transparent);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--foreground) 48%, transparent);
+  }
 }
 
 .font-serif { font-family: var(--font-noto-serif), 'Songti SC', serif; }
