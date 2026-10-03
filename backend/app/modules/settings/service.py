@@ -33,6 +33,8 @@ from .schemas import (
 DEFAULT_THEME = "paper"
 DEFAULT_LANGUAGE = "zh-CN"
 DEFAULT_AUTOSAVE = True
+# 空闲自动保存的静默秒数（C-05）：默认 10 秒，合法区间与前端 clampAutosaveSeconds 一致。
+DEFAULT_AUTOSAVE_INTERVAL_SECONDS = 10
 # Stable action keys; the UI maps them through settings.preferences.shortcutAction.*.
 DEFAULT_SHORTCUTS: list[dict] = [
     {"action": "save_flush", "keys": "⌘ S"},
@@ -116,6 +118,7 @@ def get_or_create(db: Session, user: CurrentUser) -> UserSettings:
                 "language": DEFAULT_LANGUAGE,
                 "displayName": user.display_name,
                 "autosave": DEFAULT_AUTOSAVE,
+                "autosaveIntervalSeconds": DEFAULT_AUTOSAVE_INTERVAL_SECONDS,
                 "defaultTemplateId": "",
                 "shortcuts": copy.deepcopy(DEFAULT_SHORTCUTS),
             },
@@ -150,6 +153,7 @@ def _preferences(db: Session, settings: UserSettings) -> UserPreferencesResponse
         language=prefs.get("language", DEFAULT_LANGUAGE),
         display_name=prefs.get("displayName", ""),
         autosave=prefs.get("autosave", DEFAULT_AUTOSAVE),
+        autosave_interval_seconds=prefs.get("autosaveIntervalSeconds", DEFAULT_AUTOSAVE_INTERVAL_SECONDS),
         default_template_id=template_id,
         default_template_retired=not _template_available(db, template_id),
         shortcuts=shortcuts,

@@ -9,6 +9,7 @@ from . import service
 from .models import Resume
 from .schemas import (
     DocumentUpdate,
+    DraftUpdate,
     ResumeCreate,
     ResumeDocument,
     ResumeLifecycle,
@@ -37,6 +38,7 @@ def _to_response(db: Session, owner_id: str, resume: Resume) -> ResumeResponse:
         restore_deadline=resume.restore_deadline,
         profile_id=resume.profile_id,
         document=ResumeDocument.model_validate(resume.document),
+        draft=ResumeDocument.model_validate(resume.draft_document) if resume.draft_document else None,
         versions=[ResumeVersionResponse.model_validate(version) for version in versions],
     )
 
@@ -134,6 +136,16 @@ def update_document(
     user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> ResumeResponse:
     return _to_response(db, user.id, service.update_document(db, user.id, resume_id, payload))
+
+
+@router.put("/resumes/{resume_id}/draft", response_model=ResumeResponse)
+def save_draft(
+    resume_id: str,
+    payload: DraftUpdate,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> ResumeResponse:
+    return _to_response(db, user.id, service.save_draft(db, user.id, resume_id, payload))
 
 
 @router.get("/resumes/{resume_id}/versions", response_model=list[ResumeVersionResponse])

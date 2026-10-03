@@ -37,6 +37,23 @@ def test_patch_settings_persists_partial_update(client: TestClient) -> None:
     assert client.get("/settings").json()["theme"] == "dark"
 
 
+def test_autosave_interval_defaults_to_ten_seconds(client: TestClient) -> None:
+    body = client.get("/settings").json()
+
+    assert body["autosaveIntervalSeconds"] == 10
+
+
+def test_autosave_interval_persists_and_is_bounded(client: TestClient) -> None:
+    saved = client.patch("/settings", json={"autosaveIntervalSeconds": 30})
+
+    assert saved.status_code == 200
+    assert saved.json()["autosaveIntervalSeconds"] == 30
+    assert client.get("/settings").json()["autosaveIntervalSeconds"] == 30
+
+    assert client.patch("/settings", json={"autosaveIntervalSeconds": 2}).status_code == 422
+    assert client.patch("/settings", json={"autosaveIntervalSeconds": 121}).status_code == 422
+
+
 def test_invalid_theme_is_rejected_by_contract(client: TestClient) -> None:
     response = client.patch("/settings", json={"theme": "neon"})
 

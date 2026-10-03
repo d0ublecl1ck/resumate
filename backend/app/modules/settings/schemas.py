@@ -84,6 +84,7 @@ class UserPreferencesResponse(ApiModel):
     language: str
     display_name: str
     autosave: bool
+    autosave_interval_seconds: int
     default_template_id: str
     default_template_retired: bool = False
     shortcuts: list[Shortcut] = Field(default_factory=list)
@@ -94,5 +95,7 @@ class UserPreferencesUpdate(ApiModel):
     language: str | None = Field(default=None, min_length=1, max_length=35)
     display_name: str | None = Field(default=None, max_length=200)
     autosave: bool | None = None
+    # 空闲自动保存的静默秒数（C-05）：默认 10，合法区间 3–120。
+    autosave_interval_seconds: int | None = Field(default=None, ge=3, le=120)
     default_template_id: str | None = Field(default=None, max_length=36)
     shortcuts: list[Shortcut] | None = None

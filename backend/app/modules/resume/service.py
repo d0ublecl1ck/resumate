@@ -10,7 +10,7 @@ from app.shared.errors import BaseVersionStale, ResourceNotFound, ValidationFail
 
 from . import dao
 from .models import Resume, ResumeVersion
-from .schemas import DocumentUpdate, ResumeCreate, ResumeDocument, ResumeUpdate
+from .schemas import DocumentUpdate, DraftUpdate, ResumeCreate, ResumeDocument, ResumeUpdate
 
 RESTORE_WINDOW_DAYS = 30
 
@@ -300,12 +300,37 @@ def get_document(db: Session, owner_id: str, resume_id: str) -> dict:
     return _get_owned(db, owner_id, resume_id).document
 
 
+def save_draft(db: Session, owner_id: str, resume_id: str, payload: DraftUpdate) -> Resume:
+    """把手动编辑草稿写进服务端缓冲（C-05）：不生成版本、不改 current_version_id。"""
+    resume = _get_owned(db, owner_id, resume_id)
+    if payload.base_version_id is not None and payload.base_version_id != resume.current_version_id:
+        raise BaseVersionStale("简历内容已更新，请基于最新版本重试", latest_version_id=resume.current_version_id)
+    resume.draft_document = _document_payload(payload.document)
+    resume.draft_base_version_id = resume.current_version_id
+    resume.draft_updated_at = _now()
+    resume.save_state = "synced_draft"
+    resume.updated_at = _now()
+    db.commit()
+    db.refresh(resume)
+    return resume
+
+
 def update_document(db: Session, owner_id: str, resume_id: str, payload: DocumentUpdate) -> Resume:
     resume = _get_owned(db, owner_id, resume_id)
     if payload.base_version_id is not None and payload.base_version_id != resume.current_version_id:
         raise BaseVersionStale("简历内容已更新，请基于最新版本重试", latest_version_id=resume.current_version_id)
     document = _document_payload(payload.document)
+    # 提交即消费草稿缓冲：内容已落成版本，缓冲不再需要。
+    had_draft = resume.draft_document is not None
+    resume.draft_document = None
+    resume.draft_base_version_id = None
+    resume.draft_updated_at = None
     if document == (resume.document or {}):
+        resume.save_state = "committed"
+        if had_draft:
+            resume.updated_at = _now()
+            db.commit()
+            db.refresh(resume)
         return resume
     previous_version_id = resume.current_version_id
     _commit_version(

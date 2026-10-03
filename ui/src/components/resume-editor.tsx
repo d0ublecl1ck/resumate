@@ -3,10 +3,11 @@
 // 窄屏按「编辑 → 对话 → 预览」切换（DES-003 布局契约）。
 
 import { Link } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useQueryClient } from "@tanstack/react-query"
-import { updateDocument } from "@/lib/api"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { getPreferences, saveDraft, updateDocument } from "@/lib/api"
+import { DEFAULT_AUTOSAVE_SECONDS, useIdleAutosave } from "@/lib/autosave"
 import { documentSaveErrorMessage } from "@/lib/resume-document"
 import type { AgentRun, JobDescription, Resume, ResumeDocument } from "@/lib/types"
 import { StructuredEditor } from "@/components/structured-editor"
@@ -17,6 +18,9 @@ import { cn } from "@/lib/utils"
 import { ArrowLeft, Download, History, Link2, PanelsTopLeft } from "lucide-react"
 
 type Column = "edit" | "chat" | "preview"
+
+/** 输入停顿后把草稿同步到服务端缓冲的等待时间（与可配置的静默计时分开）。 */
+const DRAFT_SYNC_DELAY_MS = 1500
 
 export function ResumeEditor({
   resume,
@@ -33,22 +37,61 @@ export function ResumeEditor({
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const [doc, setDoc] = useState<ResumeDocument>(resume.document)
+  const preferencesQuery = useQuery({ queryKey: ["preferences"], queryFn: getPreferences })
+  const autosaveEnabled = preferencesQuery.data?.autosave ?? false
+  const autosaveSeconds = preferencesQuery.data?.autosaveIntervalSeconds ?? DEFAULT_AUTOSAVE_SECONDS
+  // 重开页面时优先展示服务端草稿缓冲：浏览器异常关闭也不会丢已同步的内容（C-05）。
+  const [doc, setDoc] = useState<ResumeDocument>(resume.draft ?? resume.document)
   const [saveState, setSaveState] = useState(resume.saveState)
   const [mobileCol, setMobileCol] = useState<Column>(initialColumn)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const dirty = saveState === "local_unsynced" || saveState === "uncommitted"
+  const [revision, setRevision] = useState(0)
+  // 未落成正式版本的三态都算「有未保存内容」：本地未送达 / 服务端草稿缓冲 / 未提交。
+  const dirty = saveState === "local_unsynced" || saveState === "uncommitted" || saveState === "synced_draft"
 
   function onDocChange(next: ResumeDocument) {
     setDoc(next)
-    // C-05：有效输入立即标记本地未送达，重置静默计时。
+    // C-05：有效输入立即标记本地未送达，并重置静默计时。
     setSaveState("local_unsynced")
+    setRevision((value) => value + 1)
   }
+
+  // C-05：输入停顿后先把草稿同步到服务端缓冲（不建版本），浏览器异常关闭也不会丢。
+  useEffect(() => {
+    if (!dirty || saving) return
+    const timer = window.setTimeout(() => {
+      void saveDraft(resume.id, { document: doc, baseVersionId: resume.currentVersionId })
+        .then((synced) => setSaveState(synced.saveState))
+        // 缓冲失败不打断编辑：静默计时到期仍会走 flush 的报错路径。
+        .catch(() => undefined)
+    }, DRAFT_SYNC_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [doc, dirty, saving, resume.id, resume.currentVersionId])
+
+  // C-05：静默计时到期自动 flush 成一个 source=manual 版本。
+  const secondsLeft = useIdleAutosave({
+    active: autosaveEnabled && dirty && !saving,
+    seconds: autosaveSeconds,
+    revision,
+    onIdle: () => void flush(t("resume.editor.autosaveMessage")),
+  })
+
+  // C-05：切换简历 / 离开页面立即请求 flush；失败留给服务端已收到的草稿缓冲。
+  const leaveRef = useRef({ dirty, doc, resumeId: resume.id, baseVersionId: resume.currentVersionId })
+  leaveRef.current = { dirty, doc, resumeId: resume.id, baseVersionId: resume.currentVersionId }
+  useEffect(
+    () => () => {
+      const pending = leaveRef.current
+      if (!pending.dirty) return
+      void updateDocument(pending.resumeId, { document: pending.doc, baseVersionId: pending.baseVersionId }).catch(() => undefined)
+    },
+    [],
+  )
 
   // C-05 / C-06：flush 提交整份文档并带基线版本号，服务端用 base_version_id 做乐观锁。
   // 基线过期返回 409 BASE_VERSION_STALE：保留本地草稿、就地报错，刷新后基于最新版本重试。
-  async function flush() {
+  async function flush(message = t("resume.editor.manualSaveMessage")) {
     if (saving || !dirty) return
     setSaveError(null)
     setSaving(true)
@@ -57,7 +100,7 @@ export function ResumeEditor({
       const saved = await updateDocument(resume.id, {
         document: doc,
         baseVersionId: resume.currentVersionId,
-        message: t("resume.editor.manualSaveMessage"),
+        message,
       })
       setDoc(saved.document)
       setSaveState(saved.saveState)
@@ -93,8 +136,11 @@ export function ResumeEditor({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SaveStateBadge state={saveState} />
+          {autosaveEnabled && dirty && !saving ? (
+            <span className="text-xs text-muted-foreground">{t("resume.editor.autosaveHint", { seconds: secondsLeft })}</span>
+          ) : null}
           <button
-            onClick={flush}
+            onClick={() => void flush()}
             disabled={!dirty || saving}
             aria-busy={saving}
             className="rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"

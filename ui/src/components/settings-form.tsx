@@ -10,6 +10,7 @@ import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelCon
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
+import { MAX_AUTOSAVE_SECONDS, MIN_AUTOSAVE_SECONDS, clampAutosaveSeconds } from "@/lib/autosave"
 import { useRuntimeStatus } from "@/lib/runtime"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
@@ -53,6 +54,7 @@ export function SettingsForm({
   const [displayName, setDisplayName] = useState(prefs.displayName)
   const [theme, setTheme] = useState(prefs.theme)
   const [autosave, setAutosave] = useState(prefs.autosave)
+  const [autosaveSeconds, setAutosaveSeconds] = useState(clampAutosaveSeconds(prefs.autosaveIntervalSeconds))
   const [defaultTemplateId, setDefaultTemplateId] = useState(prefs.defaultTemplateId)
   const [shortcuts, setShortcuts] = useState(prefs.shortcuts)
   const [prefsStatus, setPrefsStatus] = useState<SaveState>("idle")
@@ -95,7 +97,15 @@ export function SettingsForm({
   })
 
   const prefsMutation = useMutation({
-    mutationFn: () => updatePreferences({ displayName, theme, autosave, defaultTemplateId, shortcuts }),
+    mutationFn: () =>
+      updatePreferences({
+        displayName,
+        theme,
+        autosave,
+        autosaveIntervalSeconds: clampAutosaveSeconds(autosaveSeconds),
+        defaultTemplateId,
+        shortcuts,
+      }),
     onMutate: () => setPrefsStatus("saving"),
     onSuccess: (data) => {
       queryClient.setQueryData(["preferences"], data)
@@ -476,6 +486,28 @@ export function SettingsForm({
             >
               <span className={cn("absolute top-0.5 size-5 rounded-full bg-card transition-transform", autosave ? "translate-x-5" : "translate-x-0.5")} />
             </button>
+          </label>
+          <label className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <span>
+              <span className="block text-sm text-foreground">{t("settings.preferences.autosaveInterval")}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t("settings.preferences.autosaveIntervalHint", { min: MIN_AUTOSAVE_SECONDS, max: MAX_AUTOSAVE_SECONDS })}
+              </span>
+            </span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_AUTOSAVE_SECONDS}
+              max={MAX_AUTOSAVE_SECONDS}
+              disabled={!autosave}
+              value={autosaveSeconds}
+              onChange={(event) => {
+                setAutosaveSeconds(Number(event.target.value))
+                setPrefsStatus("idle")
+              }}
+              aria-label={t("settings.preferences.autosaveInterval")}
+              className={cn(INPUT_CLASS, "w-24 disabled:opacity-60")}
+            />
           </label>
           <div className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.preferences.defaultTemplate")}</FieldLabel>

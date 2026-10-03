@@ -206,6 +206,19 @@ export const handlers = [
     const resume = RESUMES.find((item) => item.id === params.id)
     return resume ? HttpResponse.json(resume.versions) : notFound(`简历 ${params.id} 不存在`)
   }),
+  // 草稿缓冲（C-05）：只同步文档，不生成版本；状态停在 synced_draft。
+  http.put("/api/resumes/:id/draft", async ({ params, request }) => {
+    const resume = RESUMES.find((item) => item.id === params.id)
+    if (!resume) return notFound(`简历 ${params.id} 不存在`)
+    const body = (await request.json()) as { document: typeof resume.document; baseVersionId?: string }
+    if (body.baseVersionId && body.baseVersionId !== resume.currentVersionId) {
+      return HttpResponse.json(
+        { code: "BASE_VERSION_STALE", message: "简历内容已更新，请基于最新版本重试", latestVersionId: resume.currentVersionId },
+        { status: 409 },
+      )
+    }
+    return HttpResponse.json({ ...resume, document: body.document, saveState: "synced_draft" })
+  }),
   // 手动编辑落库：镜像后端 PUT /resumes/{id}/document 的乐观锁行为。
   http.put("/api/resumes/:id/document", async ({ params, request }) => {
     const resume = RESUMES.find((item) => item.id === params.id)
