@@ -115,8 +115,9 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 能力 | 现状 |
 | --- | --- |
 | 简历 CRUD、复制、标签、归档、软删除与恢复 | 已实现（后端 + 界面） |
-| 不可变版本、任意两版比较、恢复、导出 | 已实现（版本列表与恢复界面） |
-| 章节 / 条目级结构化编辑与领域 Patch | 已实现（5 个 op，非 RFC 6902） |
+| 不可变版本、任意两版比较、恢复 | 已实现（版本列表与恢复界面） |
+| 简历导出（PDF / 文件） | 未实现：编辑器「导出」按钮还没有后端端点，点击无行为 |
+| 章节 / 条目级结构化编辑与领域 Patch | 已实现（手动编辑经 `PUT /resumes/{id}/document` 落库并生成 manual 版本；领域 Patch 5 个 op，非 RFC 6902） |
 | **UserTurn + Working Copy + 审批闭环** | 已实现：`begin → validate → preview → approve → apply → finalize` |
 | **PendingAction 人工审批、幂等键、基线重排** | 已实现并覆盖测试（含 `REBASE_CONFLICT`） |
 | **Agent 轮次 SSE 事件订阅** | 已实现：`GET /turns/{turn_id}/events` 推 snapshot / turn.updated / 心跳，前端 `subscribeTurnEvents` |
@@ -169,7 +170,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ```bash
 uv run --directory backend pytest        # → 228 passed
 cd agent-core && uv run pytest -q        # → 101 passed
-cd ui && pnpm test                       # → 34 files / 254 passed
+cd ui && pnpm test                       # → 35 files / 259 passed
 archkit inspect .                        # → Quality gates passed.
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证

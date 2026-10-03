@@ -536,6 +536,8 @@
               <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted-foreground)">
                 <span>目标：高级前端工程师</span><span>基线：<code>ver_609aa102af5e</code></span><span>默认模板</span><span>未关联 JD</span>
               </div>
+              <p role="alert" style="margin:0;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);background:color-mix(in oklab,var(--coral) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">简历内容已在别处更新，请刷新后基于最新版本重试。</p>
+              <p style="margin:-12px 0 0;font-size:12px;color:var(--muted-foreground)">上面这条就是保存失败态（基线过期 409），与成功态共用同一位置。</p>
               <div style="display:grid;gap:12px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr)">
                 <section class="card-soft" style="padding:16px">
                   <h2 style="margin:0 0 12px;font-size:14px;font-weight:600">结构化编辑</h2>
@@ -571,7 +573,11 @@
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
-          <li>基线漂移：409 + 最新版本 + 重做入口（<code>REBASE_CONFLICT</code>）</li>
+          <li>保存（flush）：有改动时按钮可用，<code>PUT /resumes/{id}/document</code> 提交整份文档 + 基线版本号；成功后徽标取服务端 <code>saveState</code>，并失效简历查询重取基线</li>
+          <li>基线过期：409 <code>BASE_VERSION_STALE</code> 就地 coral 报错、保留本地草稿、按钮可重试；不透出服务端原文，也不显示「已保存」</li>
+          <li>校验 / 权限 / 网络失败：同一处 <code>role="alert"</code> 给 i18n 文案</li>
+          <li>基线漂移（Agent 侧）：409 + 最新版本 + 重做入口（<code>REBASE_CONFLICT</code>）</li>
+          <li>已知缺口：导出按钮还没有后端端点（点击无行为）</li>
         </ul>
       </div>
 

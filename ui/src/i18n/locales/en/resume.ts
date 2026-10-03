@@ -43,6 +43,14 @@ export default {
     structuredEditing: "Structured editing",
     chatAndRun: "Chat & Run",
     preview: "Preview",
+    manualSaveMessage: "Manual edit",
+    saveErrors: {
+      stale: "This resume changed elsewhere. Refresh and retry from the latest version.",
+      validation: "The document is not valid. Check the fields and try again.",
+      permission: "Your account cannot save this resume.",
+      network: "Cannot reach the backend. Check your network and try again.",
+      generic: "Save failed. Please try again.",
+    },
   },
   structured: {
     basics: "Basic information",
