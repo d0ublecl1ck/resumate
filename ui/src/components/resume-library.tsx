@@ -1,5 +1,7 @@
 // SCR-002 简历库。明确活跃 / 归档 / 删除恢复窗口；
-// 列表分层显示「内容版本 / 元数据变化 / 草稿状态」，避免把重命名误解为内容提交。
+// 网格卡片分层显示「内容版本 / 元数据变化 / 草稿状态」，避免把重命名误解为内容提交。
+// 断点：lg 两列、xl 三列，更窄回落单列（左侧栏固定宽，两列从 1024 起才放得下四个操作）
+// 原型 #resume-library 是视觉依据。
 
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { useMemo, useState } from "react"
@@ -12,7 +14,7 @@ import { SaveStateBadge } from "@/components/kit/badges"
 import { FilterToolbar, PageHeader } from "@/components/kit/toolbar"
 import { StateBlock } from "@/components/kit/state-block"
 import { CreateResumeModal } from "@/components/create-resume-modal"
-import { Archive, Copy, History, Link2, Plus, Tag } from "lucide-react"
+import { Link2, Plus, Tag } from "lucide-react"
 
 type Tab = "active" | "archived"
 
@@ -77,9 +79,9 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
           description={query || tag ? t("resume.library.empty.filteredDescription") : t("resume.library.empty.description")}
         />
       ) : (
-        <ul className="grid gap-4">
+        <ul className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {filtered.map((r) => (
-            <ResumeRow key={r.id} resume={r} jds={jds} />
+            <ResumeCard key={r.id} resume={r} jds={jds} />
           ))}
         </ul>
       )}
@@ -89,7 +91,7 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
   )
 }
 
-function ResumeRow({ resume, jds }: { resume: Resume; jds: JobDescription[] }) {
+function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -114,60 +116,67 @@ function ResumeRow({ resume, jds }: { resume: Resume; jds: JobDescription[] }) {
   }
 
   return (
-    <li className="card-soft p-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link to={`/resumes/${resume.id}`} className="font-serif text-lg font-bold text-foreground hover:underline">
-              {resume.title}
-            </Link>
-            {resume.lifecycle === "archived" ? <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("resume.library.archivedBadge")}</span> : null}
-          </div>
-          <p className="text-sm text-muted-foreground">{t("resume.library.targetRole", { role: resume.targetRole })}</p>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {resume.tags.map((t) => (
-              <span key={t} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground">
-                <Tag className="size-3" aria-hidden /> {t}
-              </span>
-            ))}
-          </div>
-          {boundJds.length ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <Link2 className="size-3.5" aria-hidden />
-              {t("resume.library.boundJds")}
-              {boundJds.map((j) => (
-                <Link key={j.id} to={`/jds/${j.id}`} className="text-cobalt hover:underline">{j.role}{j.company ? `·${j.company}` : ""}</Link>
-              ))}
-            </div>
+    <li className="card-soft flex flex-col p-5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <Link to={`/resumes/${resume.id}`} className="font-serif text-lg font-bold text-foreground hover:underline">
+            {resume.title}
+          </Link>
+          {resume.lifecycle === "archived" ? (
+            <span className="ml-2 align-middle rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("resume.library.archivedBadge")}</span>
           ) : null}
         </div>
-
-        {/* 三层状态：内容版本 / 元数据 / 草稿状态 分开显示 */}
-        <div className="flex shrink-0 flex-col items-end gap-2 text-right">
-          <SaveStateBadge state={resume.saveState} />
-          <p className="text-xs text-muted-foreground">
-            {t("resume.library.currentVersion")} <code className="font-mono text-foreground">{resume.currentVersionId}</code>
-          </p>
-          <p className="text-xs text-muted-foreground">{t("resume.library.templateRevision", { revision: resume.templateVersion })}</p>
-          <p className="text-xs text-muted-foreground">{t("resume.library.lastEdited", { date: resume.updatedAt.slice(0, 16).replace("T", " ") })}</p>
-        </div>
+        <SaveStateBadge state={resume.saveState} className="shrink-0" />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
-        <Link to={`/resumes/${resume.id}`} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">{t("resume.library.openEditor")}</Link>
-        <Link to={`/resumes/${resume.id}/versions`} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
-          <History className="size-3.5" aria-hidden /> {t("resume.library.versionHistory")}
+      <p className="mt-1.5 text-sm text-muted-foreground">{t("resume.library.targetRole", { role: resume.targetRole })}</p>
+
+      {resume.tags.length ? (
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          {resume.tags.map((tag) => (
+            <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-secondary-foreground">
+              <Tag className="size-3" aria-hidden /> {tag}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {boundJds.length ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          <Link2 className="size-3.5 shrink-0" aria-hidden />
+          {t("resume.library.boundJds")}
+          {boundJds.map((j) => (
+            <Link key={j.id} to={`/jds/${j.id}`} className="text-cobalt hover:underline">{j.role}{j.company ? `·${j.company}` : ""}</Link>
+          ))}
+        </div>
+      ) : null}
+
+      {/* 三层状态：内容版本 / 元数据 / 草稿状态 分开显示 */}
+      <dl className="mt-3 mb-4 space-y-1 text-xs text-muted-foreground">
+        <div className="flex items-baseline gap-1.5">
+          <dt className="shrink-0">{t("resume.library.currentVersion")}</dt>
+          <dd className="min-w-0 truncate font-mono text-foreground" title={resume.currentVersionId ?? undefined}>{resume.currentVersionId}</dd>
+        </div>
+        <div>{t("resume.library.templateRevision", { revision: resume.templateVersion })}</div>
+        <div>{t("resume.library.lastEdited", { date: resume.updatedAt.slice(0, 16).replace("T", " ") })}</div>
+      </dl>
+
+      {/* 操作区压成一行：三列宽度下四颗按钮不折行，因此次级操作不带图标、内边距收紧。 */}
+      <div className="mt-auto flex flex-wrap gap-1.5 border-t border-border pt-3">
+        <Link to={`/resumes/${resume.id}`} className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">{t("resume.library.openEditor")}</Link>
+        <Link to={`/resumes/${resume.id}/versions`} className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
+          {t("resume.library.versionHistory")}
         </Link>
         <button
           onClick={copy}
           disabled={copying}
           aria-busy={copying}
-          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <Copy className="size-3.5" aria-hidden /> {t("common.actions.copy")}
+          {t("common.actions.copy")}
         </button>
-        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">
-          <Archive className="size-3.5" aria-hidden /> {resume.lifecycle === "archived" ? t("resume.library.restore") : t("resume.library.archive")}
+        <button className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">
+          {resume.lifecycle === "archived" ? t("resume.library.restore") : t("resume.library.archive")}
         </button>
       </div>
       {copyError ? <p role="alert" className="mt-2 text-xs text-coral">{copyError}</p> : null}

@@ -57,3 +57,33 @@ describe("简历库列表：复制入口", () => {
     expect(window.location.pathname).toBe("/resumes")
   })
 })
+
+describe("简历库：网格卡片布局", () => {
+  it("列表是 sm:2 / xl:3 网格，卡片纵向排布且操作区用 mt-auto 贴底", async () => {
+    renderLibrary()
+
+    const card = (await screen.findByRole("link", { name: "高级前端工程师简历" })).closest("li")
+    expect(card).not.toBeNull()
+    expect(card).toHaveClass("flex-col")
+
+    const list = card!.parentElement
+    expect(list?.tagName).toBe("UL")
+    expect(list).toHaveClass("lg:grid-cols-2")
+    expect(list).toHaveClass("xl:grid-cols-3")
+
+    // jsdom 不算布局，这里用 mt-auto 契约守住「操作区贴底、同排卡片按钮对齐」。
+    expect(card!.querySelector(".mt-auto")).not.toBeNull()
+  })
+
+  it("归档卡片保留归档徽标且操作文案是恢复", async () => {
+    renderLibrary()
+    // 「归档」既是页签也是卡片操作：页签在 DOM 中先出现，这里精确点页签。
+    const archiveButtons = await screen.findAllByRole("button", { name: "归档" })
+    fireEvent.click(archiveButtons[0])
+
+    const card = (await screen.findByRole("link", { name: "实习生简历（旧）" })).closest("li")
+    expect(card).not.toBeNull()
+    expect(card!).toHaveTextContent("已归档")
+    expect(card!).toHaveTextContent("恢复")
+  })
+})

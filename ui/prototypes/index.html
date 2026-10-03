@@ -239,6 +239,30 @@
     .create-actions .ghost{background:var(--card);color:var(--ink)}
     .create-actions .solid{background:var(--cobalt);color:#fff}
 
+    /* SCR-002 简历库（设计补充）：网格卡片 */
+    .resume-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .resume-card{
+      display:flex;flex-direction:column;border:2px solid var(--ink);border-radius:var(--radius);
+      background:var(--card);padding:18px;min-height:216px;
+    }
+    .resume-card .rc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .resume-card h4{margin:0;font-size:17px;font-weight:900;line-height:1.3}
+    .resume-card .rc-badge{
+      flex:none;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;
+      font-size:11px;font-weight:800;background:var(--yellow-soft);white-space:nowrap;
+    }
+    .resume-card .rc-role{margin:6px 0 0;color:var(--ink-soft);font-size:13px}
+    .resume-card .rc-tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+    .resume-card .rc-tags em{font-style:normal;background:var(--yellow-soft);border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+    .resume-card .rc-meta{margin-top:12px;color:var(--ink-soft);font-size:12px;line-height:1.8}
+    .resume-card .rc-meta code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);word-break:break-all}
+    .resume-card .rc-actions{margin-top:auto;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:8px}
+    .resume-card .rc-actions{gap:6px}
+    .resume-card .rc-actions button{
+      border:2px solid var(--ink);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;background:var(--card);white-space:nowrap;
+    }
+    .resume-card .rc-actions .solid{background:var(--cobalt);color:#fff}
+
     /* Toast */
     .toast{
       position:fixed;left:50%;bottom:28px;transform:translate(-50%,80px);
@@ -526,6 +550,69 @@
           </p>
         </div>
       </section>
+      <section class="panel" id="resume-library" aria-label="设计补充：简历库网格卡片" style="margin-top:24px">
+        <div class="panel-head"><span class="panel-title">设计补充 · SCR-002 简历库（网格卡片）</span></div>
+        <div class="tabpanel">
+          <p style="margin:0;color:var(--ink-soft);font-size:14px">
+            简历库从单列列表改为网格卡片：<code>lg</code> 起两列、<code>xl</code> 起三列（左侧栏是固定宽，两列从 1024 起才放得下四个操作），
+            卡片内垂直排布（标题 + 保存状态 / 岗位方向 / 标签 / 关联 JD / 当前版本 · 模板 rev · 上次编辑 / 操作区贴底），同排卡片等高。
+            操作区压成一行：四颗按钮不带图标、内边距收紧，三列宽度下不折行。
+            字段与操作沿用原列表项，不新增数据；沿用 card 粗描边 2px、--radius 圆角、44px 触控高度。
+          </p>
+          <ul class="resume-grid" style="margin-top:16px;list-style:none;padding:0">
+              <li class="resume-card">
+                <div class="rc-head"><h4>高级前端工程师简历</h4><span class="rc-badge">已保存版本</span></div>
+                <p class="rc-role">岗位方向：高级前端工程师</p>
+                <div class="rc-tags"><em>前端</em><em>React</em><em>团队负责</em></div>
+                <div class="rc-meta">当前正式版本<br><code>ver_609aa102af5e</code><br>模板 rev.3 · 上次编辑 2026-09-20 14:32</div>
+                <div class="rc-actions">
+                  <button type="button" class="solid">打开编辑</button>
+                  <button type="button">版本历史</button>
+                  <button type="button">复制</button>
+                  <button type="button">归档</button>
+                </div>
+              </li>
+              <li class="resume-card">
+                <div class="rc-head"><h4>产品经理转型简历</h4><span class="rc-badge">未提交</span></div>
+                <p class="rc-role">岗位方向：B 端产品经理</p>
+                <div class="rc-tags"><em>产品</em><em>转型</em></div>
+                <div class="rc-meta">当前正式版本<br><code>ver_pm_5f31c2</code><br>模板 rev.2 · 上次编辑 2026-09-12 18:10</div>
+                <div class="rc-actions">
+                  <button type="button" class="solid">打开编辑</button>
+                  <button type="button">版本历史</button>
+                  <button type="button">复制</button>
+                  <button type="button">归档</button>
+                </div>
+              </li>
+              <li class="resume-card">
+                <div class="rc-head"><h4>实习生简历（旧）</h4><span class="rc-badge">已归档</span></div>
+                <p class="rc-role">岗位方向：前端实习生</p>
+                <div class="rc-tags"><em>校招</em></div>
+                <div class="rc-meta">当前正式版本<br><code>ver_intern_1a77</code><br>模板 rev.1 · 上次编辑 2026-08-28 09:05</div>
+                <div class="rc-actions">
+                  <button type="button" class="solid">打开编辑</button>
+                  <button type="button">版本历史</button>
+                  <button type="button">复制</button>
+                  <button type="button">归档</button>
+                </div>
+              </li>
+          </ul>
+          <ul class="checklist" style="margin-top:16px" aria-label="SCR-002 网格状态">
+            <li class="check-item"><span class="label">网格断点：<code>lg</code> 两列、<code>xl</code> 三列，更窄回落单列</span><span class="tag">lg:2 / xl:3</span></li>
+            <li class="check-item"><span class="label">卡片等高：操作区用 <code>mt-auto</code> 贴底，同排按钮对齐</span><span class="tag">flex-col + mt-auto</span></li>
+            <li class="check-item"><span class="label">操作区一行：四颗按钮在三列宽度下不折行（次级操作不带图标、内边距收紧）</span><span class="tag">nowrap row</span></li>
+            <li class="check-item"><span class="label">长版本号在三列宽度下截断或折行，不撑破卡片</span><span class="tag">边界</span></li>
+            <li class="check-item"><span class="label">归档卡：保留「已归档」徽标，操作区显示「恢复」</span><span class="tag">lifecycle</span></li>
+            <li class="check-item"><span class="label">复制失败：卡片内就地 coral 提示（role=alert），不跳转</span><span class="tag">error · coral · alert</span></li>
+            <li class="check-item"><span class="label">空态 / 筛选无结果：仍由既有 StateBlock 承载，不进网格</span><span class="tag">empty</span></li>
+          </ul>
+          <p style="margin:16px 0 0;color:var(--ink-soft);font-size:13px;line-height:1.7">
+            落点：ui/src/components/resume-library.tsx。与新建简历的「选择要复制的简历」层（ui/src/components/resume-picker-dialog.tsx）
+            视觉同源但不共用组件：选择层整卡是可点的 button，不能内嵌这里的操作按钮。
+          </p>
+        </div>
+      </section>
+
       <section class="panel" id="scrollbar" aria-label="设计补充：滚动容器与滚动条" style="margin-top:24px">
         <div class="panel-head"><span class="panel-title">设计补充 · 滚动容器与滚动条（SCR-101 新建简历弹窗等）</span></div>
         <div class="tabpanel">
