@@ -1,10 +1,13 @@
 // SCR-002 简历库。明确活跃 / 归档 / 删除恢复窗口；
 // 列表分层显示「内容版本 / 元数据变化 / 草稿状态」，避免把重命名误解为内容提交。
 
-import { Link, useSearchParams } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
 import type { JobDescription, Resume, ResumeTemplate } from "@/lib/types"
+import { duplicateResume } from "@/lib/api"
+import { resumeCreateErrorMessage } from "@/lib/resume-create"
 import { SaveStateBadge } from "@/components/kit/badges"
 import { FilterToolbar, PageHeader } from "@/components/kit/toolbar"
 import { StateBlock } from "@/components/kit/state-block"
@@ -81,14 +84,35 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
         </ul>
       )}
 
-      <CreateResumeModal open={createOpen} onClose={() => setCreateOpen(false)} templates={templates} jds={jds} />
+      <CreateResumeModal open={createOpen} onClose={() => setCreateOpen(false)} resumes={resumes} templates={templates} />
     </div>
   )
 }
 
 function ResumeRow({ resume, jds }: { resume: Resume; jds: JobDescription[] }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [copying, setCopying] = useState(false)
+  const [copyError, setCopyError] = useState<string | null>(null)
   const boundJds = jds.filter((j) => resume.boundByJdIds.includes(j.id))
+
+  async function copy() {
+    if (copying) return
+    setCopyError(null)
+    setCopying(true)
+    try {
+      const clone = await duplicateResume(resume.id)
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+      await queryClient.invalidateQueries({ queryKey: ["workbench-summary"] })
+      navigate(`/resumes/${clone.id}`)
+    } catch (cause) {
+      setCopyError(resumeCreateErrorMessage(cause))
+    } finally {
+      setCopying(false)
+    }
+  }
+
   return (
     <li className="card-soft p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -134,13 +158,19 @@ function ResumeRow({ resume, jds }: { resume: Resume; jds: JobDescription[] }) {
         <Link to={`/resumes/${resume.id}/versions`} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
           <History className="size-3.5" aria-hidden /> {t("resume.library.versionHistory")}
         </Link>
-        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
+        <button
+          onClick={copy}
+          disabled={copying}
+          aria-busy={copying}
+          className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+        >
           <Copy className="size-3.5" aria-hidden /> {t("common.actions.copy")}
         </button>
         <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">
           <Archive className="size-3.5" aria-hidden /> {resume.lifecycle === "archived" ? t("resume.library.restore") : t("resume.library.archive")}
         </button>
       </div>
+      {copyError ? <p role="alert" className="mt-2 text-xs text-coral">{copyError}</p> : null}
     </li>
   )
 }

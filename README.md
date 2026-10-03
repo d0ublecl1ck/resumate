@@ -128,7 +128,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 界面 i18n（`zh-CN` / `en`） | 已实现，键结构有测试校验 |
 | 内置对话流、自然语言解析、岗位匹配界面 | **未实现，前端仍走 mock**（见 [已知边界](#已知边界)） |
 
-后端现有 **11 个业务模块、88 个 HTTP 端点**；前端 **20 个页面组件、18 个 Storybook story 文件**。
+后端现有 **11 个业务模块、88 个 HTTP 端点**；前端 **20 个页面组件、20 个 Storybook story 文件**。
 
 ## 它和同类有什么不同
 
@@ -169,7 +169,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ```bash
 uv run --directory backend pytest        # → 228 passed
 cd agent-core && uv run pytest -q        # → 101 passed
-cd ui && pnpm test                       # → 30 files / 232 passed
+cd ui && pnpm test                       # → 34 files / 252 passed
 archkit inspect .                        # → Quality gates passed.
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
@@ -180,7 +180,7 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 ```bash
 grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 88 个端点
 ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
-ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 18 个 story 文件
+ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 20 个 story 文件
 ```
 
 ## 已知边界
