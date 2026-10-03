@@ -1,6 +1,6 @@
 // 登录 / 注册表单（表现层）。
 // 视觉对齐现有应用（card-soft / bg-primary / font-serif / coral 错误色），
-// 文案全部经 i18n 的 auth 命名空间读取；原型 ui/prototypes/index.html 未覆盖登录页，待原型确认。
+// 文案全部经 i18n 的 auth 命名空间读取；原型 ui/prototypes/index.html 的 #screen-login 是本页的视觉基线。
 // 校验前移：react-hook-form + zod 在提交前拦截非法输入，不再依赖后端 EmailStr 兜底。
 
 import { useMemo } from "react"

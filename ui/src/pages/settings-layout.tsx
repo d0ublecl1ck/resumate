@@ -1,5 +1,5 @@
 // 设置分区布局：页头 + 分区导航 + 常驻 tab 面板。
-// 分区面板一旦访问过就保持挂载，切换 tab 只切换可见性（对照 ui/prototypes/index.html 的 .tabpanel[hidden]），
+// 分区面板一旦访问过就保持挂载，切换 tab 只切换可见性（原型 #screen-settings 登记了这一行为），
 // 避免卸载正在编辑的表单——SettingsForm 的本地草稿会随组件卸载丢失。
 
 import { useEffect, useState } from "react"
