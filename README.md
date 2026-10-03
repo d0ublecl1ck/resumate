@@ -159,7 +159,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 │   └── skills/resumate-api-operations/   # 给外部 Agent 的装载契约（SKILL.md + reference.md + README.md）
 ├── docs/        # design.md 蓝图、prd/、user-stories/ 公共契约、issues/ Issues-as-Code
 ├── quality-gates/  # 项目自有质量门禁（archkit inspect 执行的就是这里）
-└── ui/prototypes/index.html   # 定稿原型，页面视觉以它为准
+└── ui/prototypes/index.html   # 定稿原型：令牌 / 外壳 / 路由对齐 ui/src，改实现时同步改这里
 ```
 
 ## 验证与测试
@@ -215,7 +215,7 @@ ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # 
 | 外部 Agent 怎么接入 | [Skill README](agent-core/skills/resumate-api-operations/README.md) |
 | 后端配置、模块与测试 | [backend/README.md](backend/README.md) |
 | 前端对接现状、RBAC 与 i18n | [ui/README.md](ui/README.md) |
-| 页面视觉规范 | [定稿原型](ui/prototypes/index.html)、[品牌资产](ui/public/brand/README.md) |
+| 页面视觉规范 | [定稿原型](ui/prototypes/index.html)（对齐 `ui/src` 实现）、[品牌资产](ui/public/brand/README.md) |
 | 质量门禁 | [quality-gates/README.md](quality-gates/README.md) |
 | 变更的「为什么」 | [docs/issues/](docs/issues/)（每个非合并提交都带 `Issue: <id>`） |
 

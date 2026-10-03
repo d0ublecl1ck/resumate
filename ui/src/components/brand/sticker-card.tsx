@@ -1,5 +1,5 @@
-// 贴纸卡片：沿用原型 ui/prototypes/index.html 的 2px 墨边 + 硬投影 + 20px 圆角容器语法。
-// 交互态渲染为真实 button，并把原型的按压缩放位移（hover -2px / active +2px）保留下来。
+// 贴纸卡片：品牌语法层的固定形态——2px 墨边 + 硬投影 + 20px 圆角，独立于应用卡片的 card-frame 语法。
+// 交互态渲染为真实 button，并把按压缩放位移（hover -2px / active +2px）保留下来。
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react"
 
 import { cn } from "@/lib/utils"

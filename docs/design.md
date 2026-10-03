@@ -187,7 +187,7 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - 快捷键映射在写入时做按键冲突校验（同一按键不可绑定多个动作），冲突返回 422 并保留原映射。
 - 开放接入支持 PAT 签发、撤销、审计展示与请求鉴权：`Authorization: Bearer rsm_pat_...` 经 SHA-256 哈希查库校验（库中只存哈希），scope 与端点权限码同名、按集合强制，鉴权时更新 `last_used_at` 并写允许/拒绝审计。创建与撤销各写一条 `access_logs`（`purpose` 存稳定键，前端映射文案）。
 - 备份以 `resumate-backup/1.0` JSON 为权威载荷，导入始终创建新资源并重映射 ID；因 Profile 为单用户唯一行，导入时复用已存在的 Profile 容器、事实作为新行写入。证据附件未落地，附件列表为空。
-- UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计补充」区块登记暗色令牌与设置页交互态。
+- UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计令牌」区块逐值复制这套 oklch 令牌（含 `.dark`），原型整体是 `ui/src` 的镜像。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
 - 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n`、`ui-form-contract` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
