@@ -1,0 +1,29 @@
+# Resumate 后端镜像：uv 管理依赖，容器入口自动迁移与 seed，并把 agent-core 的
+# resumate-agent CLI 装进 PATH —— 后端 spawn 它跑 Agent 轮次（app/modules/agent/runner.py）。
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/root/.local/bin:$PATH"
+
+# uv 的版本与仓库开发环境保持一致；只装 CLI，不引入额外发行版包。
+RUN pip install --no-cache-dir "uv==0.9.5"
+
+WORKDIR /app/backend
+
+# 先装依赖再拷源码，改业务代码不失效这一层缓存。
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY backend/ ./
+RUN uv sync --frozen --no-dev
+
+# Agent 工具链：缺了它 /agent/runtime 会返回 available=false，Agent 轮次全部失败。
+COPY agent-core/ /tmp/agent-core/
+RUN uv tool install /tmp/agent-core && rm -rf /tmp/agent-core
+
+COPY docker/backend-entrypoint.sh /usr/local/bin/backend-entrypoint.sh
+RUN chmod +x /usr/local/bin/backend-entrypoint.sh
+
+EXPOSE 8000
+ENTRYPOINT ["/usr/local/bin/backend-entrypoint.sh"]

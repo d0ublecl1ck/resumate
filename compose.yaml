@@ -1,0 +1,73 @@
+# Resumate 生产式容器启动：nginx 托管前端构建产物，backend 入口自动迁移与 seed。
+#   docker compose up -d --build      启动整套
+#   docker compose logs -f backend    跟踪后端日志
+#   docker compose down               停止（数据卷保留）
+name: resumate
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: resumate
+      POSTGRES_PASSWORD: resumate
+      POSTGRES_DB: resumate
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resumate -d resumate"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://resumate:resumate@postgres:5432/resumate
+      REDIS_URL: redis://redis:6379/0
+      # 非本地部署必须覆盖：轮换它会让已加密的模型密钥不可读。
+      SETTINGS_SECRET_KEY: ${SETTINGS_SECRET_KEY:-resumate-local-dev-secret}
+      PUBLIC_WEB_BASE_URL: ${PUBLIC_WEB_BASE_URL:-http://localhost:8081}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=2).status == 200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      # 迁移与 seed 先跑，健康检查要等它们过去。
+      start_period: 30s
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ui
+    ports:
+      # 宿主端口；与本地既有服务冲突时改这里即可。
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
