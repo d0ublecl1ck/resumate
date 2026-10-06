@@ -2,6 +2,8 @@
 - **AFTER_CODING**: 每次代码变更完毕后 -> **MUST** 运行 `archkit inspect .` 执行同步后的项目质量门禁。
 - **IF** 门禁未通过 -> **MUST** 修复问题直到通过，**UNLESS** 获得用户明确同意方可跳过。
 - **PRIORITY**: 项目质量门禁规则定义在 quality-gates/gates/ 中，**MUST** 优先遵循项目门禁约束。
+- **WHEN** 执行 `git commit` -> **MUST** 依赖 `.githooks/pre-commit` 自动跑门禁（`node quality-gates/run.js`，与 `archkit inspect .` 同源同语义），**MUST NOT** 用 `--no-verify` 绕过，**UNLESS** 门禁自身故障且已在提交说明与汇报里写明原因。
+- **WHEN** 门禁报错 -> **MUST** 按「文件:行号 + 正确做法」修掉真实违规，**MUST NOT** 用 `i18n-allow` / `form-allow` / `error-message-allow` / `privacy-allow` 标记掩盖应当修复的问题。
 - **WHEN** 用户纠正你的代码规范或项目结构约定时 -> **MUST** 询问用户是否要将该规则更新到 quality-gates/gates/ 中。
 
 # 页面开发
