@@ -21,3 +21,16 @@ if ((${#removed[@]})); then
   echo "pre-commit: 已删除不再为空的目录中的 .gitkeep:"
   printf '  %s\n' "${removed[@]}"
 fi
+
+# >>> quality-gates >>>
+# 项目门禁：与 `archkit inspect .` 同源地执行 quality-gates/gates/*.js。
+# 失败即拦截本次提交；确实需要紧急提交时用 git commit --no-verify，并在提交说明或汇报里写清原因。
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: 找不到 node，无法运行项目门禁；装好 node 再提交，或用 --no-verify 显式跳过。" >&2
+  exit 1
+fi
+if ! node "$(git rev-parse --show-toplevel)/quality-gates/run.js"; then
+  echo "pre-commit: 项目门禁未通过，已拦截本次提交（修完再提交；确需绕过用 --no-verify）。" >&2
+  exit 1
+fi
+# <<< quality-gates <<<
