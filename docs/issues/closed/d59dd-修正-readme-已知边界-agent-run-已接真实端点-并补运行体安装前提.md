@@ -45,7 +45,7 @@ closed_at: 2026-10-01T01:34:20.781Z
 
 ## Verification
 
-- 实测安装与可用性：`UV_INDEX_URL=https://pypi.org/simple uv tool install ./agent-core` -> `Installed 1 executable: resumate-agent`；`which resumate-agent` -> `/Users/d0ublecl1ck/.local/bin/resumate-agent`；`resumate-agent --help` 正常输出（含 `--resume`）。
+- 实测安装与可用性：`UV_INDEX_URL=https://pypi.org/simple uv tool install ./agent-core` -> `Installed 1 executable: resumate-agent`；`which resumate-agent` -> `<uv tool 的 bin 目录>/resumate-agent`；`resumate-agent --help` 正常输出（含 `--resume`）。
 - 安装前 `which resumate-agent` 为空，确认这条前提此前确实缺失。
 - `archkit inspect .` -> `Quality gates passed.`
 - 本次只改 `README.md` 三行区域与 issue 文档，未触碰代码与测试。
