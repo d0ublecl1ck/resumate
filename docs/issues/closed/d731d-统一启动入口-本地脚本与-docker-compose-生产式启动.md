@@ -1,13 +1,14 @@
 ---
 id: d731d
-status: in-progress
+status: closed
 created_at: 2026-10-06T06:54:06.322Z
-updated_at: 2026-10-06T06:54:28.313Z
+updated_at: 2026-10-06T07:13:37.470Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-06T06:54:28.313Z
+closed_at: 2026-10-06T07:13:37.470Z
 ---
 
 # 统一启动入口：本地脚本与 Docker Compose 生产式启动
