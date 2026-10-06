@@ -1,13 +1,14 @@
 ---
 id: 132f3
-status: in-progress
+status: closed
 created_at: 2026-10-06T12:32:54.068Z
-updated_at: 2026-10-06T12:33:06.266Z
+updated_at: 2026-10-06T12:34:02.480Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-06T12:33:06.266Z
+closed_at: 2026-10-06T12:34:02.480Z
 ---
 
 # 门禁接入 pre-commit 钩子
