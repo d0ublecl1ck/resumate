@@ -16,7 +16,7 @@
 - [x] `ui/src/components/login-form.tsx` — 已由 efa88 迁移到 `react-hook-form` + `zodResolver`，`form-allow` 豁免已删除。记录：2026-09-28；处理：2026-09-28
 - [x] `ui/src/pages/login.tsx` — 已由 efa88 补齐 `VALIDATION_FAILED` 等映射并删除 `cause.message` 兜底与 `error-message-allow` 豁免。记录：2026-09-28；处理：2026-09-28
 - [ ] `ui/prototypes/index.html` — 未覆盖品牌语法组件的视觉状态（`ui/src/components/brand/`：库内标志 / 贴纸卡片 / 盖章状态 / 吉祥物对话 / 品牌空态）；组件仅复用原型既有令牌，未新增表外颜色；「音量档 + 吉祥物配额」约定已写入 `AGENTS.md` 的 `# 页面开发`，待原型补登记并在合并前复核。记录：2026-09-28
-- [ ] 仓库自 2026-09-29 起为公开仓库 —— 此后每个提交与新文件对外可见；新增文档、工单与示例禁止写入本机绝对路径、宿主 skill 目录或个人邮箱。核查方式：`git grep -nI -e "~/" -e "/Users/" -e "/opt/homebrew" -e "@gmail.com" -e "@163.com" -e "@qq.com" -- .`。记录：2026-09-29
+- [ ] 仓库自 2026-09-29 起为公开仓库 —— 此后每个提交与新文件对外可见；新增文档、工单与示例禁止写入本机绝对路径、宿主 skill 目录或个人邮箱。核查方式：`git grep -nI -e "~/" -e "/Users/" -e "/opt/homebrew" -e "@gmail.com" -e "@163.com" -e "@qq.com" -- .`。**带用户名的家目录绝对路径现已由 `quality-gates/gates/repo-private-paths.js` 门禁强制**（d703c，2026-10-06 并清理了 d59dd 与 1d43f 两处历史遗留）；个人邮箱与内网 IP 仍未纳入门禁，加入前先人工扫。记录：2026-09-29；更新：2026-10-06
 - [ ] git 历史不可回改 —— 公开仓库中 111 个提交的作者邮箱与早期 `docs/issues/` 文本仍可见；本轮已明确不做历史重写，若日后需要抹除只能重写历史并变更全部提交哈希。记录：2026-09-29
 - [ ] `agent-core/skills/resumate-api-operations/SKILL.md` 与 `docs/agent/agent-operation-api.md` — **没有任何门禁校验两者一致**；2026-09-28 的契约 §13/§15 漂移曾潜伏一天才被实测发现。下次契约变更时必须手工复核 SKILL.md 的鉴权段、失败码表与 §8 工具名，并考虑补一致性测试。记录：2026-09-29
 - [ ] `agent-core/skills/resumate-api-operations/reference.md` — 对运行时不可达：`SkillLoader` 只读 SKILL.md，字段字典拿不到。宿主需要精确字段时必须额外投喂该文件；若要改进，需改装载器而不是改文档。记录：2026-09-29
