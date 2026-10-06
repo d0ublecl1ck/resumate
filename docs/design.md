@@ -193,8 +193,8 @@ Python 包目录包含 `__init__.py`，上图省略这些文件。
 - UI 主题支持 `paper` / `dark` 双态：暗色令牌定义在 `ui/src/index.css` 的 `.dark`，由 `ThemeSync` 依偏好切换 `<html>` class；`ui/prototypes/index.html` 的「设计令牌」区块逐值复制这套 oklch 令牌（含 `.dark`），原型整体是 `ui/src` 的镜像。
 - `APP_NAME` 配置应用标题，默认值为 `backend`；`main.py` 从 Settings 读取标题。
 - 后端用 uv 管理依赖；测试通过 `TEST_DATABASE_URL`（默认 `resumate_test`）连接 PostgreSQL，每个测试在独立事务中运行并回滚，测试库与运行库隔离。
-- 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n`、`ui-form-contract`、`repo-private-paths` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
-- 仓库是公开仓库：Git 跟踪的文本文件不得出现带用户名的本机家目录绝对路径，由 `quality-gates/gates/repo-private-paths.js` 强制，改成描述性写法或 `<本机用户名>` 这类占位符。
+- 根目录 `archkit inspect .` 运行 generic 层与项目自定义 `ui-i18n`、`ui-form-contract`、`repo-privacy` 门禁；其通过不代表执行了 FastAPI 专项架构检查。后端分层由 `archkit guide -s fastapi`、代码审查与后端测试验证。
+- 仓库是公开仓库：Git 跟踪的文本文件不得出现本机绝对路径（`/Users/<用户名>/`、`C:\Users\<用户名>\`、`/opt/homebrew/`）、个人邮箱域（gmail / 163 / qq / outlook 等）与内网 IP（`10.`、`172.16-31.`、`192.168.`），由 `quality-gates/gates/repo-privacy.js` 强制；改写为描述性写法或 `<本机用户名>` / `<接收方邮箱>` / `<内网地址>` 这类占位符，确属规则说明的行加 `privacy-allow` 标记。
 - 表单与错误文案在客户端收口：含命名字段的表单必须接入 `useForm` + `zodResolver`，API 错误必须把机器错误码映射为 i18n 文案，不得直出服务端 `message`；由 `quality-gates/gates/ui-form-contract.js` 强制，遗留站点用行内 `form-allow` / `error-message-allow` 豁免标记登记。
 - 前端界面文案由 i18next 管理，支持 `zh-CN` 与 `en`：语言选择持久化在 `localStorage`，启动时按「持久化 → 浏览器 → zh-CN」检测，切换同步 `html[lang]` 与文档标题；组件统一使用 `useTranslation()`，非 React 模块使用 `@/i18n` 单例。简历正文、JD 正文、事实内容与 Diff 原文属于用户内容，不随界面语言变化（US-13.4）。
 - Agent 运行体采用**独立进程**形态，先以 CLI 落地（`agent-core` 提供可执行入口），后端后续 spawn 同一个入口；模型调用与 Agent 循环 **MUST NOT** 实现进后端（延续 C-09）。依据：独立进程强制运行体无状态（每一步都从持久化状态重建），且 CLI 是整个方案里不可逆性最低的形态——同一个入口将来既可被后端 spawn、也可被后端进程内调用、也可由用户自托管，业务逻辑无需改动。
