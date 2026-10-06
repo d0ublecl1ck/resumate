@@ -64,6 +64,9 @@ Resumate 采用同仓库前后端分离结构：`ui/` 提供 React 界面，`bac
 .
 ├── agent-core/                 # Agent 底座（Python, uv）：公共 API 客户端、轮次会话、工具与 Skill
 ├── ui/                         # React + TypeScript + Vite
+├── docker/                     # 容器构建：backend / ui 镜像、nginx 配置、后端入口脚本
+├── compose.yaml                # 生产式容器编排（PostgreSQL + Redis + backend + ui）
+├── scripts/dev.sh              # 本机一体化启动脚本（up / down / restart / status / logs）
 ├── backend/
 │   ├── pyproject.toml
 │   ├── uv.lock

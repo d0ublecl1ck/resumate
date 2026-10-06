@@ -90,6 +90,28 @@ HTTP 403  { "code": "FORBIDDEN", "message": "审批动作仅限人类会话，Ag
 
 不需要任何外部 API Key 就能把系统跑起来。对话功能要真正驱动模型时，才需在设置页里配一个 OpenAI 兼容端点与密钥（密钥只写不读，落库前加密）。
 
+### 本机一条命令
+
+```bash
+bash scripts/dev.sh up      # 基础设施 → 后端 → 前端 → Agent CLI
+bash scripts/dev.sh status  # 只读：PostgreSQL/Redis、端口、健康检查、Agent CLI
+bash scripts/dev.sh logs backend
+bash scripts/dev.sh down    # 只停本脚本拉起的进程
+```
+
+运行期日志与 PID 落在 `backend/var/dev/`（已 gitignore）。脚本会补上 `createdb`、`alembic upgrade head`、seed，并在缺 `resumate-agent` 时执行 `uv tool install ./agent-core`——后端要靠这个 CLI 跑 Agent 轮次。
+
+### 容器一条命令
+
+```bash
+docker compose up -d --build   # 前端 http://localhost:8081，后端经 /api 反代
+docker compose down            # 停止；PostgreSQL 数据卷保留
+```
+
+镜像为生产式：nginx 托管 `ui/dist` 并把 `/api` 反代到 backend；backend 容器入口自动执行迁移与 seed，并内置 `resumate-agent`。网络拉不动基础镜像时，先给 Docker 配好镜像加速再执行。
+
+### 手动分步（等价于上面）
+
 ```bash
 # 0) 基础设施（本机 Homebrew 为例）
 brew services start postgresql@18
@@ -159,6 +181,9 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ├── backend/     # FastAPI + SQLAlchemy 2 + PostgreSQL；模块按 api → service → dao → models 分层
 ├── agent-core/  # Agent 底座（Python, uv）：公共 API 客户端、轮次会话、工具表、模型无关 Runtime、resumate-agent CLI
 │   └── skills/resumate-api-operations/   # 给外部 Agent 的装载契约（SKILL.md + reference.md + README.md）
+├── scripts/dev.sh   # 本机一体化启动脚本（up / down / restart / status / logs）
+├── docker/      # 容器构建：后端与前端镜像、nginx 配置、后端入口脚本
+├── compose.yaml # 生产式容器编排（PostgreSQL + Redis + backend + ui）
 ├── docs/        # design.md 蓝图、prd/、user-stories/ 公共契约、issues/ Issues-as-Code
 ├── quality-gates/  # 项目自有质量门禁（archkit inspect 执行的就是这里）
 └── ui/prototypes/index.html   # 定稿原型：令牌 / 外壳 / 路由对齐 ui/src，改实现时同步改这里
