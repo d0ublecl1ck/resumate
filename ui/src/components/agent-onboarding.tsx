@@ -11,6 +11,28 @@ export type AgentAvailability = "checking" | "load_failed" | "forbidden" | "mode
 /** panel：个人资料助手抽屉正文；entry：设置页分区入口。 */
 export type AgentAvailabilityPlacement = "panel" | "entry"
 export type AgentAvailabilityAction = "configure_model" | "start_chat" | "retry"
+/** 动作归一后的效果：调用方只按效果执行，不再各自解析 action（否则会再次分叉）。 */
+export type AgentAvailabilityActionEffect = "settings" | "chat" | "retry" | "stay"
+
+/**
+ * 把可用性引导动作归一成调用方要执行的效果。
+ * - start_chat -> chat：进入对话；调用方已经在对话里时聚焦自己的输入框即可；
+ * - configure_model -> settings：去模型配置；
+ * - retry -> retry：重试可用性查询；
+ * - 未知动作（上游新增）-> stay：留在当前页，绝不误触发导航。
+ */
+export function agentAvailabilityActionEffect(action: AgentAvailabilityAction): AgentAvailabilityActionEffect {
+  switch (action) {
+    case "start_chat":
+      return "chat"
+    case "configure_model":
+      return "settings"
+    case "retry":
+      return "retry"
+    default:
+      return "stay"
+  }
+}
 
 const KIND: Record<AgentAvailability, MascotStateKind> = {
   checking: "loading",

@@ -99,6 +99,7 @@ export default {
     baseVersion: "Base version",
     impactLabel: "Impact: ",
     staleReasonLabel: "Expired because: ",
+    closedTurnStaleReason: "This action expired when the turn closed",
     textConfirmPrompt: "This is a high-impact action. Type “{{word}}” to enable it:",
     textConfirmPlaceholder: "confirm",
     textConfirmWord: "confirm",

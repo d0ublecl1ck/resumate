@@ -17,8 +17,25 @@ const STATE_META: Record<PendingAction["state"], { labelKey: string; tone: strin
   consumed: { labelKey: "common.pendingAction.consumed", tone: "text-muted-foreground" },
 }
 
+/**
+ * 轮次已关闭时，历史遗留的 pending 待办必须按失效只读渲染：后端已在所有关轮路径把 pending
+ * 置 stale，这里兜底迁移前/旧数据，避免渲染出点击必得 409 的「批准并应用」。
+ *
+ * 这是「轮次已关闭 -> 待办失效」的唯一一份映射。工作台与主档助手都通过
+ * PendingActionCard 的 turnClosed 使用它，不要在调用方各自复制（两处曾因此分叉）。
+ */
+export function pendingActionForClosedTurn(
+  input: PendingAction,
+  turnClosed: boolean,
+  staleReason: string,
+): PendingAction {
+  if (!turnClosed || input.state !== "pending") return input
+  return { ...input, state: "stale", staleReason: input.staleReason ?? staleReason }
+}
+
 export function PendingActionCard({
   action,
+  turnClosed = false,
   onApprove,
   onReject,
   onDiffAccept,
@@ -26,6 +43,8 @@ export function PendingActionCard({
   busy = false,
 }: {
   action: PendingAction
+  /** 所属轮次已关闭：仍为 pending 的历史待办按失效只读渲染，不给出可点入口。 */
+  turnClosed?: boolean
   onApprove?: (id: string) => void
   onReject?: (id: string) => void
   onDiffAccept?: (actionId: string, diffId: string) => void
@@ -35,9 +54,10 @@ export function PendingActionCard({
 }) {
   const { t } = useTranslation()
   const [confirmText, setConfirmText] = useState("")
-  const meta = STATE_META[action.state]
+  const rendered = pendingActionForClosedTurn(action, turnClosed, t("common.pendingAction.closedTurnStaleReason"))
+  const meta = STATE_META[rendered.state]
   const confirmWord = t("common.pendingAction.textConfirmWord")
-  const confirmReady = !action.requiresTextConfirm || confirmText.trim() === confirmWord
+  const confirmReady = !rendered.requiresTextConfirm || confirmText.trim() === confirmWord
 
   return (
     <div className="card-frame p-4" aria-busy={busy || undefined}>
@@ -47,38 +67,38 @@ export function PendingActionCard({
             <ShieldCheck className="size-4" aria-hidden />
           </span>
           <div>
-            <p className="text-sm font-semibold text-foreground">{action.title}</p>
-            <p className="text-xs text-muted-foreground">{action.targetResource}</p>
+            <p className="text-sm font-semibold text-foreground">{rendered.title}</p>
+            <p className="text-xs text-muted-foreground">{rendered.targetResource}</p>
           </div>
         </div>
         <span className={cn("text-xs font-semibold", meta.tone)}>{t(meta.labelKey)}</span>
       </div>
 
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-        {action.toolCallId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.toolCall")}</dt><dd className="font-mono text-foreground">{action.toolCallId}</dd></div> : null}
-        {action.baseVersionId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.baseVersion")}</dt><dd className="font-mono text-foreground">{action.baseVersionId}</dd></div> : null}
+        {rendered.toolCallId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.toolCall")}</dt><dd className="font-mono text-foreground">{rendered.toolCallId}</dd></div> : null}
+        {rendered.baseVersionId ? <div className="flex gap-1.5"><dt className="text-muted-foreground">{t("common.pendingAction.baseVersion")}</dt><dd className="font-mono text-foreground">{rendered.baseVersionId}</dd></div> : null}
       </dl>
 
-      <p className="mt-2 rounded-md bg-secondary px-2.5 py-1.5 text-xs leading-5 text-secondary-foreground">{t("common.pendingAction.impactLabel")}{action.impactSummary}</p>
+      <p className="mt-2 rounded-md bg-secondary px-2.5 py-1.5 text-xs leading-5 text-secondary-foreground">{t("common.pendingAction.impactLabel")}{rendered.impactSummary}</p>
 
-      {action.staleReason ? <p className="mt-2 text-xs font-medium text-coral">{t("common.pendingAction.staleReasonLabel")}{action.staleReason}</p> : null}
+      {rendered.staleReason ? <p className="mt-2 text-xs font-medium text-coral">{t("common.pendingAction.staleReasonLabel")}{rendered.staleReason}</p> : null}
 
-      {action.diff?.length ? (
+      {rendered.diff?.length ? (
         <div className="mt-3 space-y-2">
-          {action.diff.map((d) => (
+          {rendered.diff.map((d) => (
             <DiffItemCard
               key={d.id}
               item={d}
-              onAccept={onDiffAccept ? (id) => onDiffAccept(action.id, id) : undefined}
-              onReject={onDiffReject ? (id) => onDiffReject(action.id, id) : undefined}
+              onAccept={onDiffAccept ? (id) => onDiffAccept(rendered.id, id) : undefined}
+              onReject={onDiffReject ? (id) => onDiffReject(rendered.id, id) : undefined}
             />
           ))}
         </div>
       ) : null}
 
-      {action.state === "pending" ? (
+      {rendered.state === "pending" ? (
         <div className="mt-3 border-t border-border pt-3">
-          {action.requiresTextConfirm ? (
+          {rendered.requiresTextConfirm ? (
             <label className="mb-2 block text-xs text-muted-foreground">
               {t("common.pendingAction.textConfirmPrompt", { word: confirmWord })}
               <input
@@ -92,14 +112,14 @@ export function PendingActionCard({
           <div className="flex gap-2">
             <button
               disabled={!confirmReady || busy}
-              onClick={() => onApprove?.(action.id)}
+              onClick={() => onApprove?.(rendered.id)}
               className="rounded-md bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("common.actions.approve")}
             </button>
             <button
               disabled={busy}
-              onClick={() => onReject?.(action.id)}
+              onClick={() => onReject?.(rendered.id)}
               className="rounded-md border border-border px-3.5 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t("common.actions.reject")}

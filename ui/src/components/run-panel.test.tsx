@@ -445,7 +445,7 @@ describe("RunPanel 已关闭轮次的待办兜底", () => {
     expect(screen.queryByRole("button", { name: /拒绝/ })).not.toBeInTheDocument()
     expect(screen.getByText(i18n.t("common.pendingAction.stale"))).toBeInTheDocument()
     expect(
-      screen.getByText(i18n.t("workbench.run.closedTurnActionStale"), { exact: false }),
+      screen.getByText(i18n.t("common.pendingAction.closedTurnStaleReason"), { exact: false }),
     ).toBeInTheDocument()
   })
 
