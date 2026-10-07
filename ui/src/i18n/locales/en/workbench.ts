@@ -64,6 +64,7 @@ export default {
     sendAria: "Send",
     actionError: "The approval action failed: {{message}}",
     starting: "Starting the runner…",
+    closedTurnActionStale: "This action expired when the turn closed",
     errors: {
       modelNotConfigured: "No model credential yet. Add an OpenAI-compatible endpoint and API key in Settings, then try again.",
       rateLimited: "Another run is already in progress. Please try again shortly.",

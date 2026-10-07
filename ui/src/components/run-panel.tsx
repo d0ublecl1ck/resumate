@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { approvePendingAction, rejectPendingAction, startRun } from "@/lib/api"
 import { agentErrorKey } from "@/lib/agent-error"
-import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
+import type { AgentRun, ExecutionMode, PendingAction, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
 import { cn } from "@/lib/utils"
@@ -121,6 +121,14 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     start.mutate(prompt)
   }
 
+  // 后端在结束轮次时会把该轮待办置 stale；这里兜底历史遗留的 pending 行，
+  // 已关闭轮次不再渲染可点的「批准并应用」（否则点击必得 409）。
+  const actions = (run?.pendingActions ?? []).map((action): PendingAction =>
+    run?.state === "turn_closed" && action.state === "pending"
+      ? { ...action, state: "stale", staleReason: action.staleReason ?? t("workbench.run.closedTurnActionStale") }
+      : action,
+  )
+
   return (
     <div className="flex h-full flex-col">
       {/* Run 头部：当前模式 + 状态 + 预算 */}
@@ -161,7 +169,7 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
         )}
 
         {/* 待确认动作 */}
-        {run?.pendingActions.map((action) => (
+        {actions.map((action) => (
           <PendingActionCard key={action.id} action={action} onApprove={approve} onReject={reject} busy={submittingId === action.id} />
         ))}
       </div>

@@ -474,6 +474,44 @@ def test_cancel_marks_pending_actions_stale(client: TestClient) -> None:
     assert actions[0]["staleReason"]
 
 
+def test_finalize_marks_pending_actions_stale(client: TestClient) -> None:
+    """A pending action must not outlive the turn it belongs to (issue fe56e)."""
+    resume = _create(client)
+    turn = _begin(client, resume["id"], executionMode="approval")
+    preview = client.post(
+        f"/turns/{turn['id']}/patches:preview",
+        json={"ops": [{"op": "removeSection", "sectionId": "sec_experience"}]},
+    ).json()
+
+    finalized = client.post(f"/turns/{turn['id']}/finalize", json={})
+
+    assert finalized.status_code == 200, finalized.text
+    # The finalize response already reflects the expiry, not just a later read.
+    assert finalized.json()["pendingActions"][0]["id"] == preview["pendingActionId"]
+    assert finalized.json()["pendingActions"][0]["state"] == "stale"
+    actions = client.get(f"/turns/{turn['id']}/pending-actions").json()
+    assert actions[0]["id"] == preview["pendingActionId"]
+    assert actions[0]["state"] == "stale"
+    assert actions[0]["staleReason"]
+
+
+def test_begin_settles_previous_open_turn_pending_actions(client: TestClient) -> None:
+    """Auto-closing the previous open turn expires its pending actions (issue fe56e)."""
+    resume = _create(client)
+    first = _begin(client, resume["id"], executionMode="approval")
+    preview = client.post(
+        f"/turns/{first['id']}/patches:preview",
+        json={"ops": [{"op": "removeSection", "sectionId": "sec_experience"}]},
+    ).json()
+
+    _begin(client, resume["id"], executionMode="full_access")
+
+    actions = client.get(f"/turns/{first['id']}/pending-actions").json()
+    assert actions[0]["id"] == preview["pendingActionId"]
+    assert actions[0]["state"] == "stale"
+    assert actions[0]["staleReason"]
+
+
 def test_validate_reports_section_not_found(client: TestClient) -> None:
     resume = _create(client)
     turn = _begin(client, resume["id"], executionMode="full_access")
