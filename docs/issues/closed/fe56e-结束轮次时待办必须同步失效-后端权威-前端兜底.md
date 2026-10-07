@@ -1,14 +1,15 @@
 ---
 id: fe56e
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:58:44.575Z
-updated_at: 2026-10-07T10:59:01.555Z
+updated_at: 2026-10-07T11:10:37.858Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-10-07T10:59:01.555Z
+closed_at: 2026-10-07T11:10:37.858Z
 ---
 
 # 结束轮次时待办必须同步失效（后端权威 + 前端兜底）
@@ -57,7 +58,7 @@ started_at: 2026-10-07T10:59:01.555Z
 - [x] cancel、自动结算（起新轮次关旧轮）、profile finalize 与 profile supersede 同样生效。
 - [x] 前端在 `turn_closed` 时不渲染可点的「批准/拒绝」，并给出失效说明；未关闭轮次行为不回归。
 - [x] `cd backend && uv run pytest -q`、`pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 全绿。
-- [ ] 合并后真实 5173 E2E：目标场景 DB 待办为 stale，页面无可点「批准并应用」。
+- [x] 合并后真实 5173 E2E：目标场景 DB 待办为 stale，页面无可点「批准并应用」。
 
 ## Implementation
 
@@ -98,7 +99,41 @@ pnpm -C ui run build              → built
 archkit inspect .                 → Quality gates passed.
 ```
 
-合并到 main 后的真实 5173/8000 E2E 见关单提交。
+### 合并后真实 5173/8000 E2E（2026-10-07）
+
+无头 Playwright（`locale=zh-CN`）复用本地 admin 会话打开
+`http://localhost:5173/resumes/res_aeba1b686aa4`。脚本在真实后端上新建 approval 轮次 → preview 造出
+pending → finalize 关轮，再读回 DB 并在页面上断言。
+
+权威路径（后端真失效）：
+
+```text
+POST /resumes/res_aeba1b686aa4/turns            → turn_ad054066b1e4 (open, approval)
+POST /turns/turn_ad054066b1e4/patches:preview   → pa_595ec03588f8 (pending)
+POST /turns/turn_ad054066b1e4/finalize          → state=finalized，响应内待办 state=stale
+GET  /turns/turn_ad054066b1e4/pending-actions   → state=stale, staleReason=轮次已结束
+
+psql resumate：
+ pa_595ec03588f8 | stale | 轮次已结束 | turn_ad054066b1e4 | finalized | res_aeba1b686aa4
+```
+
+页面断言：轮次已关闭=true、批准并应用按钮=0、拒绝按钮=0、已失效标签=true、console error=0；卡片显示
+「失效原因：轮次已结束」。截图 `closed_turn_no_approve.png`（本地临时目录，未入库）。
+
+前端兜底路径（模拟按方案 A 保留的历史遗留 pending 行）：拦截
+`GET /api/resumes/res_aeba1b686aa4/turns`，把 stale 改回 pending 并清空 staleReason 后，页面依旧不渲染可点
+按钮，并显示兜底文案：
+
+```text
+轮次已关闭=true、批准并应用按钮=0、拒绝按钮=0、已失效标签=true
+失效原因文案=该待办已随轮次关闭失效、console error=0
+```
+
+正常路径未回归：对另一个新建的 open 轮次（`turn_4640d9fe5a46`，pending `pa_5770fcb4b36b`）页面渲染出可点的
+「批准并应用」，点击后读回 `state=approved`；随后 cancel 关轮，DB 见
+`pa_5770fcb4b36b | approved | turn_4640d9fe5a46 | cancelled`。
+
+E2E 过程中只在真实后端新建轮次，未回填或改写任何历史 pending 行。
 
 ## Related ADRs
 
