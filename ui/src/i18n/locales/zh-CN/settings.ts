@@ -50,7 +50,6 @@ export default {
     catalogMissingOption: "{{id}}（不在当前目录）",
     catalogLoading: "模型目录加载中…",
     catalogError: "模型目录加载失败，已保留当前配置。",
-    catalogSource: "目录来源：{{source}}",
     endpoint: "Endpoint",
     endpointPlaceholder: "https://api.example.com/v1",
     model: "Model",
