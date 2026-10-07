@@ -66,7 +66,7 @@ export default {
     testing: "Testing…",
     connectionOk: "Connected",
     testFailed: "Test failed",
-    lastTest: "Last: {{message}}",
+    lastTest: "Last tested: {{time}}",
   },
   preferences: {
     title: "Personal preferences",
