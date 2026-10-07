@@ -1,14 +1,15 @@
 ---
 id: 9d6c3
-status: in-progress
+status: closed
 created_at: 2026-10-07T09:31:20.033Z
-updated_at: 2026-10-07T09:31:20.033Z
+updated_at: 2026-10-07T09:36:09.758Z
 started_at: 2026-10-07T09:31:28.000Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 运行体与模型接入
+closed_at: 2026-10-07T09:36:09.758Z
 ---
 
 # 修复 Agent 子进程被系统代理劫持导致运行必失败
@@ -42,7 +43,7 @@ design_section: 运行体与模型接入
 - [x] 本地回环 Endpoint 的主机被收录进 bypass；公网 Endpoint 的主机不被收录。
 - [x] `cd backend && uv run pytest -q` 全绿。
 - [x] 仓库根 `archkit inspect .` 通过。
-- [ ] 合并到 main 后（dev 后端 `--reload` 自动重载）实测：`POST /resumes/{id}/runs` 后 `backend/var/agent-runs/<runId>.log` 出现 model 回复 / finalize / session 事件，而不是那条 502 error。（本条只能在合并后执行，结果记入本工单的交付报告。）
+- [x] 合并到 main 后（dev 后端 `--reload` 自动重载）实测：`run_3a6bb01ab9a1` 的 `backend/var/agent-runs/run_3a6bb01ab9a1.log` 出现 model 回复、`finalize` 与 `session` 事件，且不再出现 502 error。
 
 ## Implementation
 
@@ -79,7 +80,25 @@ Quality gates passed.
 
 机制实证（本机）：最小环境跑 `urllib.request.getproxies()` → `{"http": "http://127.0.0.1:7897", "https": "http://127.0.0.1:7897", "socks": "http://127.0.0.1:7897"}`（回落到 macOS 系统代理）；父进程同样的调用 → `{"no": "localhost,127.0.0.1,..."}`（有 bypass、无 http/https 代理），与上面的根因一致。
 
-合并后端到端实测、以及 `runId` 与 `backend/var/agent-runs/<runId>.log` 关键行，记入本工单的交付报告。
+合并后端到端实测（dev 后端 `--reload` 自动重载后）：
+
+```console
+$ curl -X POST http://127.0.0.1:8000/resumes/res_aeba1b686aa4/runs -d '{"prompt":"回一句话"}'
+HTTP 202  {"runId": "run_3a6bb01ab9a1", "status": "started"}
+
+$ backend/var/agent-runs/run_3a6bb01ab9a1.log
+{"type": "message", "text": "好的，请告诉我你想对这份简历做什么修改，我马上处理。"}
+{"type": "finalize", "turn": {"id": "turn_3e490d9d6ded", ... "state": "finalized", ...}}
+{"type": "session", "sessionId": "sess_399b787caa55"}
+
+$ backend/var/dev/backend.log
+"POST /resumes/res_aeba1b686aa4/runs HTTP/1.1" 202 Accepted
+"POST /sessions HTTP/1.1" 201 Created
+"POST /resumes/res_aeba1b686aa4/turns HTTP/1.1" 201 Created
+"POST /turns/turn_3e490d9d6ded/finalize HTTP/1.1" 200 OK
+```
+
+修复前 backend.log 里根本看不到子进程发出的 `POST /sessions`；现在它落在 201，运行体随后 finalize。
 
 ## Related ADRs
 
