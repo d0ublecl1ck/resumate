@@ -23,7 +23,7 @@ import {
 import { ApiRequestError } from "@/lib/api-client"
 import { agentErrorKey } from "@/lib/agent-error"
 import { useRuntimeStatus } from "@/lib/runtime"
-import { AgentAvailabilityNotice, agentAvailability } from "@/components/agent-onboarding"
+import { AgentAvailabilityNotice, agentAvailability, agentAvailabilityActionEffect } from "@/components/agent-onboarding"
 import { PendingActionCard } from "@/components/kit/pending-action"
 import { Modal } from "@/components/ui/modal"
 import { subscribeTurnEvents } from "@/lib/turn-events"
@@ -122,6 +122,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const [actionErrorKey, setActionErrorKey] = useState<string | null>(null)
   const [submittingActionId, setSubmittingActionId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const optimisticSeq = useRef(0)
   const lastSeqRef = useRef(0)
   const lastTurnIdRef = useRef<string | null>(null)
@@ -162,6 +163,9 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   )
   const activeTurn = turns.find((turn) => turn.state === "open") ?? turns[0]
   const activeTurnId = activeTurn?.id ?? null
+  // 没有 open 轮次时会回退到最近一条已关闭轮次：该轮的历史 pending 待办必须按失效只读渲染，
+  // 由 PendingActionCard 统一兜底（与工作台共享同一份实现），避免点击必得 409。
+  const activeTurnClosed = activeTurn !== undefined && activeTurn.state !== "open"
 
   /** 拉取会话消息：after 之后的增量，按 id 去重，保证 StrictMode 重挂载不产生重复行。 */
   const loadMessages = useCallback(async (sid: string, after: number) => {
@@ -305,12 +309,23 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
             state={availability}
             placement="panel"
             onAction={(action) => {
-              if (action === "retry") {
-                void modelQuery.refetch()
-                void runtimeQuery.refetch()
-                return
+              // 与设置页同一套 AgentAvailabilityAction 语义：只有 configure_model 去设置页；
+              // start_chat 表示「进入对话」，本抽屉本身就是对话入口，聚焦自己的输入框即可；
+              // retry 重试可用性查询；未知动作留在当前页，绝不误触发导航。
+              switch (agentAvailabilityActionEffect(action)) {
+                case "settings":
+                  navigate("/settings")
+                  return
+                case "retry":
+                  void modelQuery.refetch()
+                  void runtimeQuery.refetch()
+                  return
+                case "chat":
+                  composerRef.current?.focus()
+                  return
+                default:
+                  return
               }
-              navigate("/settings")
             }}
           />
         </div>
@@ -360,6 +375,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
               <PendingActionCard
                 key={action.id}
                 action={action}
+                turnClosed={activeTurnClosed}
                 onApprove={(id) => decision.mutate({ actionId: id, kind: "approve" })}
                 onReject={(id) => decision.mutate({ actionId: id, kind: "reject" })}
                 busy={submittingActionId === action.id}
@@ -391,6 +407,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
           >
             <div className="flex items-end gap-2">
               <textarea
+                ref={composerRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

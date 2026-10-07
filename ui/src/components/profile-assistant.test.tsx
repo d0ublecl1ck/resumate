@@ -6,9 +6,10 @@ import { StrictMode, useState } from "react"
 import type { ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, cleanup, createEvent, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
-import { MemoryRouter } from "react-router-dom"
+import { MemoryRouter, useLocation } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { agentAvailabilityActionEffect, type AgentAvailabilityAction } from "@/components/agent-onboarding"
 import { ProfileAssistant } from "@/components/profile-assistant"
 import { ProfilePage } from "@/pages/profile"
 import { MODEL_CONFIG, PROFILE } from "@/lib/content"
@@ -657,5 +658,88 @@ describe("ProfileAssistant 的发送键约定（与 RunPanel 统一）", () => {
     expect(box.value).toBe("第一行")
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(runCalls(calls)).toEqual([])
+  })
+})
+
+describe("ProfileAssistant 对已关闭轮次的待办兜底", () => {
+  const HISTORICAL_PENDING = {
+    id: "pa_hist",
+    userTurnId: "turn_prof_1",
+    kind: "profile_change",
+    title: "主档修改（历史遗留）",
+    targetResource: null,
+    baseVersionId: null,
+    impactSummary: "共 1 处主档改动",
+    requiresTextConfirm: false,
+    state: "pending",
+    staleReason: null,
+    diff: [],
+  }
+
+  function stubTurn(state: "open" | "finalized") {
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([SESSION])),
+      http.get("/api/sessions/sess_1/turns", () =>
+        HttpResponse.json([profileTurn({ state, pendingActions: [HISTORICAL_PENDING] })]),
+      ),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+    )
+  }
+
+  it("最新轮次已关闭且待办仍是历史 pending 时不渲染可点按钮，并显示失效原因", async () => {
+    stubTurn("finalized")
+
+    renderAssistant()
+
+    expect(await screen.findByText("主档修改（历史遗留）")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "批准并应用" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "拒绝" })).not.toBeInTheDocument()
+    expect(screen.getByText("已失效")).toBeInTheDocument()
+    expect(screen.getByText("该待办已随轮次关闭失效", { exact: false })).toBeInTheDocument()
+  })
+
+  it("轮次未关闭时同一待办仍可点", async () => {
+    stubTurn("open")
+
+    renderAssistant()
+
+    expect(await screen.findByText("主档修改（历史遗留）")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "批准并应用" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "拒绝" })).toBeInTheDocument()
+  })
+})
+
+function LocationProbe() {
+  const location = useLocation()
+  return <span data-testid="location">{location.pathname + location.search}</span>
+}
+
+describe("ProfileAssistant 的可用性引导按 action 分流", () => {
+  it("start_chat 进入对话，不跳设置页", () => {
+    expect(agentAvailabilityActionEffect("start_chat")).toBe("chat")
+  })
+
+  it("configure_model 才去设置页", () => {
+    expect(agentAvailabilityActionEffect("configure_model")).toBe("settings")
+  })
+
+  it("retry 与上游新增动作都不会误触发导航", () => {
+    expect(agentAvailabilityActionEffect("retry")).toBe("retry")
+    expect(agentAvailabilityActionEffect("brand_new_action" as unknown as AgentAvailabilityAction)).toBe("stay")
+  })
+
+  it("模型未配置时点「去设置」真的导航到 /settings", async () => {
+    server.use(http.get("/api/models/config", () => HttpResponse.json({ ...MODEL_CONFIG, keyConfigured: false })))
+
+    renderWith(
+      makeClient(),
+      <>
+        <ProfileAssistant open onClose={() => {}} />
+        <LocationProbe />
+      </>,
+    )
+
+    fireEvent.click(await screen.findByRole("button", { name: "去设置" }))
+    expect(screen.getByTestId("location")).toHaveTextContent("/settings")
   })
 })

@@ -99,6 +99,7 @@ export default {
     baseVersion: "基线",
     impactLabel: "影响：",
     staleReasonLabel: "失效原因：",
+    closedTurnStaleReason: "该待办已随轮次关闭失效",
     textConfirmPrompt: "这是高影响操作，请输入「{{word}}」以启用：",
     textConfirmPlaceholder: "确认",
     textConfirmWord: "确认",

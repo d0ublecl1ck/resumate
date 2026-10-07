@@ -578,6 +578,7 @@
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
+          <li>已关闭轮次的待办：即使库里仍是历史 <code>pending</code>，也由 <code>PendingActionCard</code> 按 <code>stale</code> 只读渲染，不出现可点「批准并应用」；这份兜底与主档助手共享，不再各写一份</li>
           <li>轮次结束后保留最近一轮对话：active-run 优先取 open 轮次、否则取最新已结束轮次；对话与工具活动来自会话消息（<code>GET /sessions/{id}/messages</code>），不再回到「还没有对话」</li>
           <li>保存（flush）：有改动时按钮可用，<code>PUT /resumes/{id}/document</code> 提交整份文档 + 基线版本号；成功后徽标取服务端 <code>saveState</code>，并失效简历查询重取基线</li>
           <li>基线过期：409 <code>BASE_VERSION_STALE</code> 就地 coral 报错、保留本地草稿、按钮可重试；不透出服务端原文，也不显示「已保存」</li>
@@ -830,6 +831,8 @@
           <li>事实标题 201 字符：前端 maxLength 与本地守卫拦下；绕过前端直连后端返回 422 VALIDATION_FAILED（不 500），表单展示该 message</li>
           <li>助手抽屉：真模态——焦点入内、Tab 锁定、Esc 关闭、关闭后焦点归还触发按钮、背景 inert；关闭按钮可访问名「关闭助手」，与通用「关闭」区分</li>
           <li>助手可用性：模型配置 500 显示「读取失败 + 重试」，403 显示「无权限」且都不引导去设置；读取中显示骨架而非空白</li>
+          <li>助手可用性引导按 <code>AgentAvailabilityAction</code> 分流：<code>configure_model</code> 去设置页、<code>start_chat</code> 留在对话输入、<code>retry</code> 重试，未知动作不导航</li>
+          <li>助手待办：最新轮次已关闭时，历史 <code>pending</code> 待办按失效只读渲染（无「批准并应用」，显示失效原因）；未关闭轮次仍可点</li>
           <li>助手回复：SSE snapshot 与轮次变化两条路径都补拉会话消息，发完消息无需刷新即可看到回复</li>
         </ul>
       </div>
