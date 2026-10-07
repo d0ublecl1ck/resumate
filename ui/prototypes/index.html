@@ -879,6 +879,16 @@
                   </button>
                 </div>
                 <label class="field"><span>自动保存间隔（秒）</span><input class="input" type="number" min="3" max="120" value="10" /><small>默认 10 秒，可设 3–120 秒；关闭自动保存后本项禁用。</small></label>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-top:8px">
+                  <span>
+                    <span style="display:block;font-size:14px;font-weight:500">自动保存间隔（秒）</span>
+                    <span style="display:block;font-size:12px;color:var(--muted-foreground)">越界态：输入 1（&lt; 3）</span>
+                  </span>
+                  <span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                    <input class="input" type="number" min="3" max="120" value="1" aria-invalid="true" aria-describedby="proto-autosave-interval-error" style="width:96px;border-color:var(--coral)" />
+                    <span id="proto-autosave-interval-error" role="alert" style="font-size:12px;line-height:16px;text-align:right;color:var(--coral)">自动保存间隔需为 3–120 秒的整数。</span>
+                  </span>
+                </div>
                 <p style="margin:12px 0 0;font-size:12px;color:var(--muted-foreground)">显示名、语言、主题也在这个分区（US-13.4）。</p>
               </section>
             </div>
@@ -887,9 +897,10 @@
         <ul class="states">
           <li>分区保存：编辑 → 保存中 → 已保存 / 失败</li>
           <li>模型测试结果行：测试中 / 传输失败 / 业务失败（显示后端 message 原文）；显示持久化的上次结果时补「上次测试：&lt;时间&gt;」，与本次结果区分</li>
-          <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」</li>
+          <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」（configure_model 滚到模型配置区）</li>
+          <li>Agent 可用：Agent 入口显示「开始聊聊」（start_chat 进入 /profile?assistant=1 并打开对话抽屉，不再只滚动页面）</li>
           <li>语言切换在「个人偏好」分区（US-13.4）</li>
-          <li>个人偏好：显示名 / 语言 / 主题 / 空闲自动保存开关与间隔（默认 10 秒，3–120 秒，越界由后端 422 兜底）</li>
+          <li>个人偏好：显示名 / 语言 / 主题 / 空闲自动保存开关与间隔（默认 10 秒，3–120 秒；越界时可见错误 + <code>aria-invalid</code>，点「保存偏好」在提交前拦截，不再静默夹取为 3；后端 422 兜底）</li>
           <li>初始查询失败：Agent 配置 / 模型配置 / 个人偏好 / 模板任一加载失败时显示错误状态块（错误码 + 重试），不渲染空表单</li>
           <li>访问日志用途列：后端 purpose 枚举映射为本地化文案（第八条见公开接入），未知值原样显示</li>
           <li>公共接入能力 URL 卡片 min-w-0：390px 单列时不横向溢出</li>

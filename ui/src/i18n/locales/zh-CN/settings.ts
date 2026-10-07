@@ -85,6 +85,7 @@ export default {
     autosave: "空闲自动保存",
     autosaveInterval: "自动保存间隔（秒）",
     autosaveIntervalHint: "停止输入后多久自动保存，范围 {{min}}–{{max}} 秒。",
+    autosaveIntervalError: "自动保存间隔需为 {{min}}–{{max}} 秒的整数。",
     defaultTemplate: "默认模板",
     defaultTemplateNone: "不设置",
     defaultTemplateUnavailable: "已保存的默认模板不可用，请重新选择",

@@ -13,6 +13,11 @@ export function clampAutosaveSeconds(value: number | string | null | undefined):
   return Math.min(MAX_AUTOSAVE_SECONDS, Math.max(MIN_AUTOSAVE_SECONDS, Math.trunc(parsed)))
 }
 
+/** 合法区间判定：设置页据此做提交前拦截，避免 clamp 静默改写用户输入；后端 Field(ge/le) 继续兜底。 */
+export function isValidAutosaveSeconds(value: number): boolean {
+  return Number.isInteger(value) && value >= MIN_AUTOSAVE_SECONDS && value <= MAX_AUTOSAVE_SECONDS
+}
+
 /**
  * 静默计时器：active 为真时按 seconds 倒计时，归零调用 onIdle；
  * revision 每次变化（有效输入）就重置计时。返回剩余秒数供 UI 展示。

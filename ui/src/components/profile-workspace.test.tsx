@@ -12,11 +12,11 @@ import i18n from "@/i18n"
 
 afterEach(cleanup)
 
-function renderProfile(profile = PROFILE) {
+function renderProfile(profile = PROFILE, initialEntry = "/profile") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <ProfileWorkspace profile={profile} />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -101,6 +101,18 @@ describe("ProfileWorkspace 直接编辑", () => {
 
     expect(await screen.findByRole("heading", { name: "Rust 工程实践" })).toBeInTheDocument()
     expect(screen.queryByText("标题与内容不能为空。")).not.toBeInTheDocument()
+  })
+
+  it("带 ?assistant=1 时直接打开页头对话抽屉", async () => {
+    renderProfile(PROFILE, "/profile?assistant=1")
+
+    expect(await screen.findByRole("dialog", { name: "个人资料助手" })).toBeInTheDocument()
+  })
+
+  it("默认不打开页头对话抽屉", () => {
+    renderProfile()
+
+    expect(screen.queryByRole("dialog", { name: "个人资料助手" })).not.toBeInTheDocument()
   })
 })
 

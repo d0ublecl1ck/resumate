@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it } from "vitest"
+import { MemoryRouter } from "react-router-dom"
 import { SettingsPage } from "@/pages/settings"
 import { AGENT_CONFIG } from "@/lib/content"
 import { server } from "@/test-server"
@@ -16,7 +17,9 @@ function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <SettingsPage />
+      <MemoryRouter>
+        <SettingsPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   )
 }
