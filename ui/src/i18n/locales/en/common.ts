@@ -23,6 +23,7 @@ export default {
     copy: "Copy",
     save: "Save",
     delete: "Delete",
+    retry: "Retry",
   },
   search: {
     placeholder: "Search…",

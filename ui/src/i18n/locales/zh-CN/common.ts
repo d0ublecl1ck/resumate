@@ -23,6 +23,7 @@ export default {
     copy: "复制",
     save: "保存",
     delete: "删除",
+    retry: "重试",
   },
   search: {
     placeholder: "搜索…",
