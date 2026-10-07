@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
-import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, register, resendVerification, updatePreferences, verifyEmail } from "@/lib/api"
+import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, parseJdFromText, register, resendVerification, updatePreferences, verifyEmail } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { server } from "@/test-server"
 
@@ -99,5 +99,43 @@ describe("API 对接", () => {
 
   it("verifyEmail 无效令牌映射为 VERIFICATION_TOKEN_INVALID", async () => {
     await expect(verifyEmail("expired-token")).rejects.toMatchObject({ code: "VERIFICATION_TOKEN_INVALID", status: 400 })
+  })
+
+  it("parseJdFromText 走真实 POST /jds:parse-text 契约", async () => {
+    const seen: { url: string; method: string; body: unknown }[] = []
+    server.use(
+      http.post(/\/api\/jds:parse-text$/, async ({ request }) => {
+        seen.push({ url: request.url, method: request.method, body: await request.json() })
+        return HttpResponse.json({
+          role: "高级前端工程师", // i18n-allow: MSW 演示数据
+          company: "美团", // i18n-allow: MSW 演示数据
+          tags: ["前端"], // i18n-allow: MSW 演示数据
+          body: "岗位正文", // i18n-allow: MSW 演示数据
+          sourceUrl: null,
+          extracted: [],
+          parseConfidence: 0.91,
+          note: "由 AI 整理，请核对后创建。", // i18n-allow: 后端返回原文
+          inputSource: "text",
+        })
+      }),
+    )
+
+    const draft = await parseJdFromText("一段岗位文本") // i18n-allow: MSW 演示数据
+
+    expect(seen).toHaveLength(1)
+    expect(seen[0].method).toBe("POST")
+    expect(seen[0].body).toEqual({ text: "一段岗位文本" }) // i18n-allow: MSW 演示数据
+    expect(draft.role).toBe("高级前端工程师") // i18n-allow: MSW 演示数据
+    expect(draft.parseConfidence).toBe(0.91)
+  })
+
+  it("parseJdFromText 透传 MODEL_NOT_CONFIGURED 机器码", async () => {
+    server.use(
+      http.post(/\/api\/jds:parse-text$/, () =>
+        HttpResponse.json({ code: "MODEL_NOT_CONFIGURED", message: "未配置" }, { status: 409 }),
+      ),
+    )
+
+    await expect(parseJdFromText("x")).rejects.toMatchObject({ code: "MODEL_NOT_CONFIGURED", status: 409 })
   })
 })

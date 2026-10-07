@@ -385,9 +385,12 @@ export async function updateBasics(patch: Partial<ResumeBasics>): Promise<Resume
   return profile.basics
 }
 
-/** POST /jds:parse-text —— 把粘贴的岗位文本整理成结构化 JD 草案 */
+/**
+ * POST /jds:parse-text —— 后端用用户已配置的模型把粘贴文本整理成结构化草案。
+ * 失败时抛携带机器错误码的 ApiRequestError；调用方按码映射文案，不回退启发式。
+ */
 export function parseJdFromText(text: string): Promise<ProposedJd> {
-  return resolve(heuristicParseJd(text, "text"))
+  return request<ProposedJd>("/jds:parse-text", { method: "POST", body: JSON.stringify({ text }) })
 }
 
 /**

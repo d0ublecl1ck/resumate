@@ -8,6 +8,7 @@
 
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import type { JobDescription, ProposedJd } from "@/lib/types"
 import { parseJdFromText, parseJdFromImage, createJd } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
@@ -238,6 +239,7 @@ export function CreateJdModal({
   onClose: () => void
   onCreated: (jd: JobDescription) => void
 }) {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>("text")
   const [text, setText] = useState("")
   const [imageName, setImageName] = useState<string | null>(null)
@@ -321,6 +323,10 @@ export function CreateJdModal({
       onResetDraft={() => setDraft(null)}
       error={error}
       onRetry={runTextParse}
+      onOpenSettings={() => {
+        close()
+        navigate("/settings")
+      }}
       onClose={close}
       onCreate={confirmCreate}
       creating={creating}

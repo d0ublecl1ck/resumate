@@ -43,6 +43,37 @@ class BindingUpdate(ApiModel):
     resume_id: str
 
 
+class JdParseRequest(ApiModel):
+    text: str
+
+    @field_validator("text")
+    @classmethod
+    def _require_text(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("岗位文本不能为空")
+        return stripped
+
+
+class ProposedJdExtracted(ApiModel):
+    label: str
+    value: str
+
+
+class ProposedJdResponse(ApiModel):
+    """Wire shape of the front-end ProposedJd (issue fb67d)."""
+
+    role: str
+    company: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    body: str
+    source_url: str | None = None
+    extracted: list[ProposedJdExtracted] = Field(default_factory=list)
+    parse_confidence: float
+    note: str
+    input_source: str
+
+
 class JobDescriptionResponse(ApiModel):
     id: str
     owner_id: str

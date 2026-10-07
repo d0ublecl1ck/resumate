@@ -1,11 +1,17 @@
 """Spawn the resumate-agent CLI for one run (issue 83c41).
 
-The runner is a separate process: the backend never calls a model itself. The
-model API key is decrypted per run and handed to the child through its
-environment (never argv, so it does not show up in ps). The child exits when the
-run ends, so the credential lives only for that process. The child sees a
-minimal environment that excludes the backend's own secrets (DATABASE_URL,
-SETTINGS_SECRET_KEY, ...).
+Agent runs are a separate process: the backend hands the decrypted model API key
+to the child through its environment (never argv, so it does not show up in ps)
+and never calls a model for them itself. The child exits when the run ends, so
+the credential lives only for that process. The child sees a minimal environment
+that excludes the backend's own secrets (DATABASE_URL, SETTINGS_SECRET_KEY, ...).
+
+One synchronous exception (issue fb67d): POST /jds:parse-text calls the model
+in-process through app/modules/jd/parser.py. It needs a single short, tool-less,
+stateless structuring request that writes nothing and touches no resume, so
+spawning a supervised run for it would only add latency and failure surface. It
+reuses settings' endpoint resolution, timeout budget and HTTP status copy, and
+never logs the key or the upstream body.
 """
 
 from __future__ import annotations
