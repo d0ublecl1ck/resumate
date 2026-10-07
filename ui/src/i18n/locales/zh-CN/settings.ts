@@ -66,7 +66,7 @@ export default {
     testing: "测试中…",
     connectionOk: "连接成功",
     testFailed: "测试失败",
-    lastTest: "上次：{{message}}",
+    lastTest: "上次测试：{{time}}",
   },
   preferences: {
     title: "个人偏好",
