@@ -285,7 +285,7 @@ describe("ProfileAssistant 的真实会话", () => {
     const client = makeClient()
     client.setQueryData(["model-config"], MODEL_CONFIG)
     client.setQueryData(["runtime-status"], { command: "resumate-agent", available: true })
-    client.setQueryData(["agent-sessions"], [SESSION])
+    client.setQueryData(["profile-session"], "sess_1")
     client.setQueryData(["session-turns", "sess_1"], [profileTurn()])
     server.use(
       http.get("/api/sessions", () => HttpResponse.json([SESSION])),
@@ -308,7 +308,7 @@ describe("ProfileAssistant 的真实会话", () => {
     server.use(
       http.get("/api/sessions", () => HttpResponse.json([SESSION])),
       http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
-      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
       http.post("/api/sessions/sess_1/runs", () => HttpResponse.json({ code: "MODEL_NOT_CONFIGURED", message: "provider key missing" }, { status: 409 })),
     )
 
@@ -325,7 +325,7 @@ describe("ProfileAssistant 的真实会话", () => {
     server.use(
       http.get("/api/sessions", () => HttpResponse.json([SESSION])),
       http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
-      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
       http.post("/api/sessions/sess_1/runs", () => HttpResponse.json({ code: "RATE_LIMITED", message: "runner concurrency exceeded" }, { status: 429 })),
     )
 
@@ -336,5 +336,104 @@ describe("ProfileAssistant 的真实会话", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("已有运行体在执行")
     expect(screen.queryByText(/concurrency exceeded/)).not.toBeInTheDocument()
+  })
+})
+
+const RESUME_SESSION = {
+  id: "sess_resume",
+  createdAt: "2026-10-02T00:00:00Z",
+  updatedAt: "2026-10-02T00:00:00Z",
+  lastActiveAt: "2026-10-02T00:00:00Z",
+}
+
+const PROFILE_SESSION = {
+  id: "sess_profile",
+  createdAt: "2026-10-01T00:00:00Z",
+  updatedAt: "2026-10-01T00:00:00Z",
+  lastActiveAt: "2026-10-01T00:00:00Z",
+}
+
+function resumeTurn() {
+  return profileTurn({
+    id: "turn_res_1",
+    scope: "resume",
+    resumeId: "res_aeba1b686aa4",
+    sessionId: "sess_resume",
+    message: "请把简历 res_aeba1b686aa4 的一句话头衔改成「资深后端工程师」",
+  })
+}
+
+describe("ProfileAssistant 按轮次 scope 选取主档会话", () => {
+  it("最新会话含 resume 轮次时不采用它，改用 profile 会话", async () => {
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([RESUME_SESSION, PROFILE_SESSION])),
+      http.get("/api/sessions/sess_resume/turns", () => HttpResponse.json([resumeTurn()])),
+      http.get("/api/sessions/sess_profile/turns", () =>
+        HttpResponse.json([profileTurn({ id: "turn_prof_2", sessionId: "sess_profile", message: "整理我的技能" })]),
+      ),
+      http.get("/api/sessions/sess_resume/messages", () =>
+        HttpResponse.json([
+          {
+            id: "msg_res",
+            sessionId: "sess_resume",
+            seq: 1,
+            role: "user",
+            content: { role: "user", content: "请把简历 res_aeba1b686aa4 的一句话头衔改成「资深后端工程师」" },
+            createdAt: "2026-10-02T00:00:00Z",
+          },
+        ]),
+      ),
+      http.get("/api/sessions/sess_profile/messages", () =>
+        HttpResponse.json([
+          {
+            id: "msg_prof",
+            sessionId: "sess_profile",
+            seq: 1,
+            role: "user",
+            content: { role: "user", content: "我最近在做订单系统重构" },
+            createdAt: "2026-10-01T00:00:00Z",
+          },
+        ]),
+      ),
+    )
+
+    renderAssistant()
+
+    expect(await screen.findByText("我最近在做订单系统重构")).toBeInTheDocument()
+    expect(screen.queryByText(/请把简历 res_aeba1b686aa4/)).not.toBeInTheDocument()
+  })
+
+  it("只有含 resume 轮次的会话时新建会话，不向它起 profile run", async () => {
+    const runs: string[] = []
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([RESUME_SESSION])),
+      http.get("/api/sessions/sess_resume/turns", () => HttpResponse.json([resumeTurn()])),
+      http.get("/api/sessions/sess_resume/messages", () => HttpResponse.json([])),
+      http.post("/api/sessions", () => HttpResponse.json(SESSION, { status: 201 })),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([])),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+      http.post("/api/sessions/sess_1/messages", async ({ request }) => {
+        const body = (await request.json()) as { seq: number; role: string; content: unknown }
+        return HttpResponse.json(
+          { id: "msg_1", sessionId: "sess_1", seq: body.seq, role: body.role, content: body.content, createdAt: "2026-10-01T00:00:00Z" },
+          { status: 201 },
+        )
+      }),
+      http.post("/api/sessions/sess_1/runs", () => {
+        runs.push("sess_1")
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+      http.post("/api/sessions/sess_resume/runs", () => {
+        runs.push("sess_resume")
+        return HttpResponse.json({ runId: "run_x", status: "started" }, { status: 202 })
+      }),
+    )
+
+    renderAssistant()
+    const box = await screen.findByRole("textbox")
+    fireEvent.change(box, { target: { value: "补充一段经历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    await waitFor(() => expect(runs).toEqual(["sess_1"]))
   })
 })
