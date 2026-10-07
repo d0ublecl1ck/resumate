@@ -114,6 +114,17 @@ export default {
     openapi: "OpenAPI",
     mcp: "MCP",
   },
+  access: {
+    forbidden: {
+      title: "No access to open access",
+      description: "Your account cannot read access tokens or the audit log. Ask an administrator to grant access:read.",
+    },
+    writeDenied: "Your account is read-only here, so creating and revoking tokens is disabled.",
+    loadError: {
+      title: "Could not load open access",
+      description: "Access tokens or capability discovery failed to load. Try again.",
+    },
+  },
   pat: {
     title: "Personal access tokens (PAT)",
     create: "Create least-privilege token",
@@ -128,6 +139,10 @@ export default {
       expiring: "Expiring soon",
       revoked: "Revoked",
     },
+    empty: {
+      title: "No personal access tokens yet",
+      description: "Create a least-privilege token for a local MCP client or script.",
+    },
   },
   accessLog: {
     title: "Access audit log",
@@ -137,6 +152,31 @@ export default {
     resource: "Resource",
     purpose: "Purpose",
     result: "Result",
+    loading: "Loading audit log…",
+    errorTitle: "Could not load the audit log",
+    errorDescription: "Check your connection and retry, or adjust the filters.",
+    empty: {
+      title: "No access records yet",
+      description: "Audit entries appear here once open access is used.",
+    },
+    emptyFiltered: {
+      title: "No records match the filters",
+      description: "Adjust purpose, result or keyword and try again.",
+    },
+    filters: {
+      purpose: "Purpose",
+      purposeAll: "All purposes",
+      result: "Result",
+      resultAll: "All results",
+      keyword: "Search client / scope / resource",
+    },
+    pagination: {
+      total: "{{total}} records",
+      page: "Page {{page}} of {{pages}}",
+      pageOnly: "Page {{page}}",
+      previous: "Previous",
+      next: "Next",
+    },
     resultValue: {
       allowed: "Allowed",
       denied: "Denied",

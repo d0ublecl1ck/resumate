@@ -7,6 +7,8 @@
 import { CURRENT_USER, JOB_MATCHES } from "./content"
 import type {
   AccessLogEntry,
+  AccessLogPage,
+  AccessLogQuery,
   AgentConfig,
   AgentSession,
   AgentSessionMessage,
@@ -55,7 +57,7 @@ import type {
   VerificationAccepted,
   WorkbenchSummary,
 } from "./types"
-import { request, requestText } from "./api-client"
+import { request, requestText, requestWithResponse } from "./api-client"
 import { buildRunTimeline } from "./run-conversation"
 import i18n from "@/i18n"
 
@@ -581,9 +583,19 @@ export function revokePat(id: string): Promise<PersonalAccessToken> {
   return request<PersonalAccessToken>(`/access/tokens/${id}/revoke`, { method: "POST" })
 }
 
-/** GET /access/logs */
-export function listAccessLogs(): Promise<AccessLogEntry[]> {
-  return request<AccessLogEntry[]>("/access/logs")
+/** GET /access/logs —— 分页与筛选；响应体仍是裸数组，总条数读 X-Total-Count 响应头。 */
+export async function listAccessLogs(params: AccessLogQuery = {}): Promise<AccessLogPage> {
+  const search = new URLSearchParams()
+  if (params.page) search.set("page", String(params.page))
+  if (params.size) search.set("size", String(params.size))
+  if (params.purpose) search.set("purpose", params.purpose)
+  if (params.result) search.set("result", params.result)
+  if (params.q) search.set("q", params.q)
+  const suffix = search.toString()
+  const { data, response } = await requestWithResponse<AccessLogEntry[]>(`/access/logs${suffix ? `?${suffix}` : ""}`)
+  const header = response.headers.get("X-Total-Count")
+  const total = header !== null && header.trim() !== "" ? Number(header) : Number.NaN
+  return { items: data, total: Number.isFinite(total) ? total : null }
 }
 
 /** GET /.well-known/resume-agent */

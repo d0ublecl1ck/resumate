@@ -1,10 +1,16 @@
 import hashlib
+from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.access.models import PersonalAccessToken
+from app.core.deps import CurrentUser
+from app.main import app
+from app.modules.access.models import AccessLog, PersonalAccessToken
+from app.modules.auth.deps import get_current_user
+
+from conftest import TEST_USER
 
 
 def test_create_token_returns_secret_once_and_stores_hash(client: TestClient, db_session: Session) -> None:
@@ -64,3 +70,127 @@ def test_capability_discovery(client: TestClient) -> None:
     assert body["contractVersion"] == "v0.4"
     assert "backup.export" in body["capabilities"]
     assert body["wellKnownUrl"].endswith("/.well-known/resume-agent")
+
+# ---------------------------------------------------------------------------
+# 访问审计日志：分页 / 筛选 / 排序 / 非法参数 / 权限（c3825）
+# ---------------------------------------------------------------------------
+
+
+def _seed_logs(
+    db_session: Session,
+    rows: list[tuple[str, str, str, str, str]],
+) -> None:
+    """Insert audit rows for the stubbed user, oldest first, one minute apart."""
+    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    for index, (purpose, result, client_id, scope, resource) in enumerate(rows):
+        db_session.add(
+            AccessLog(
+                id=f"log_seed_{index}",
+                owner_id=TEST_USER.id,
+                at=base + timedelta(minutes=index),
+                client_id=client_id,
+                scope=scope,
+                resource=resource,
+                purpose=purpose,
+                result=result,
+            )
+        )
+    db_session.flush()
+
+
+def test_logs_pagination_respects_page_size_and_total_header(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", f"r{index}") for index in range(5)])
+
+    first = client.get("/access/logs", params={"page": 1, "size": 2})
+    assert first.status_code == 200
+    assert first.headers["X-Total-Count"] == "5"
+    assert len(first.json()) == 2
+
+    third = client.get("/access/logs", params={"page": 3, "size": 2})
+    assert third.status_code == 200
+    assert third.headers["X-Total-Count"] == "5"
+    assert len(third.json()) == 1
+
+    beyond = client.get("/access/logs", params={"page": 4, "size": 2})
+    assert beyond.status_code == 200
+    assert beyond.json() == []
+    assert beyond.headers["X-Total-Count"] == "5"
+
+
+def test_logs_are_ordered_by_at_desc(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", f"r{index}") for index in range(3)])
+
+    resources = [row["resource"] for row in client.get("/access/logs").json()]
+
+    assert resources == ["r2", "r1", "r0"]
+
+
+def test_logs_filter_by_purpose_and_result(client: TestClient, db_session: Session) -> None:
+    _seed_logs(
+        db_session,
+        [
+            ("token_create", "allowed", "a", "access:write", "one"),
+            ("token_revoke", "allowed", "b", "access:write", "two"),
+            ("pat_scope", "denied", "c", "resume:read", "three"),
+        ],
+    )
+
+    by_purpose = client.get("/access/logs", params={"purpose": "token_create"}).json()
+    assert [row["purpose"] for row in by_purpose] == ["token_create"]
+
+    by_result = client.get("/access/logs", params={"result": "denied"}).json()
+    assert [row["result"] for row in by_result] == ["denied"]
+
+    combined = client.get("/access/logs", params={"purpose": "token_create", "result": "denied"}).json()
+    assert combined == []
+
+
+def test_logs_keyword_matches_client_scope_and_resource(client: TestClient, db_session: Session) -> None:
+    _seed_logs(
+        db_session,
+        [
+            ("pat_auth", "allowed", "Acme CLI", "resume:read", "/resumes"),
+            ("pat_auth", "allowed", "other", "profile:read", "Acme Profile"),
+            ("pat_auth", "allowed", "third", "jd:write", "/jds"),
+        ],
+    )
+
+    # 大小写不敏感，且 client_id / scope / resource 任一命中都算。
+    assert len(client.get("/access/logs", params={"q": "acme"}).json()) == 2
+    assert len(client.get("/access/logs", params={"q": "resume:read"}).json()) == 1
+    assert client.get("/access/logs", params={"q": "nomatch"}).json() == []
+
+
+def test_logs_reject_invalid_pagination_and_result(client: TestClient) -> None:
+    assert client.get("/access/logs", params={"page": 0}).status_code == 422
+    assert client.get("/access/logs", params={"size": 0}).status_code == 422
+    assert client.get("/access/logs", params={"size": 101}).status_code == 422
+    assert client.get("/access/logs", params={"result": "unknown"}).status_code == 422
+
+
+def test_logs_unknown_purpose_is_normalized_to_empty_result(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", "r0")])
+
+    response = client.get("/access/logs", params={"purpose": "does_not_exist"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+    assert response.headers["X-Total-Count"] == "0"
+
+
+def test_logs_require_access_read_permission(client: TestClient) -> None:
+    app.dependency_overrides[get_current_user] = lambda: CurrentUser(
+        id="user_limited",
+        display_name="受限用户",
+        role="user",
+        roles=("user",),
+        permissions=frozenset({"resume:read"}),
+    )
+    try:
+        response = client.get("/access/logs")
+    finally:
+        app.dependency_overrides[get_current_user] = lambda: TEST_USER
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "FORBIDDEN"
+
