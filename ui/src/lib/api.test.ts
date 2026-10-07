@@ -1,7 +1,9 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
+import * as api from "@/lib/api"
 import { getModelCatalog, getModelConfig, getPreferences, getProfile, getResume, parseJdFromText, register, resendVerification, updatePreferences, verifyEmail } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
+import { RESUMES } from "@/lib/content"
 import { server } from "@/test-server"
 
 describe("API 对接", () => {
@@ -139,3 +141,69 @@ describe("API 对接", () => {
     await expect(parseJdFromText("x")).rejects.toMatchObject({ code: "MODEL_NOT_CONFIGURED", status: 409 })
   })
 })
+
+describe("归档 / 恢复端点接线", () => {
+  it("archiveResume 打 POST /resumes/{id}/archive 并返回 Resume", async () => {
+    const seen: { method: string; url: string }[] = []
+    server.use(
+      http.post("/api/resumes/:id/archive", ({ request, params }) => {
+        seen.push({ method: request.method, url: request.url })
+        return HttpResponse.json({ ...RESUMES[0], id: params.id as string, lifecycle: "archived" })
+      }),
+    )
+
+    const archived = await api.archiveResume("res_fe_lead")
+
+    expect(seen).toHaveLength(1)
+    expect(seen[0].method).toBe("POST")
+    expect(seen[0].url.endsWith("/api/resumes/res_fe_lead/archive")).toBe(true)
+    expect(archived.lifecycle).toBe("archived")
+  })
+
+  it("restoreResume 打 POST /resumes/{id}/restore 并返回 Resume", async () => {
+    const seen: { method: string; url: string }[] = []
+    server.use(
+      http.post("/api/resumes/:id/restore", ({ request, params }) => {
+        seen.push({ method: request.method, url: request.url })
+        return HttpResponse.json({ ...RESUMES[2], id: params.id as string, lifecycle: "active" })
+      }),
+    )
+
+    const restored = await api.restoreResume("res_archived_intern")
+
+    expect(seen).toHaveLength(1)
+    expect(seen[0].method).toBe("POST")
+    expect(seen[0].url.endsWith("/api/resumes/res_archived_intern/restore")).toBe(true)
+    expect(restored.lifecycle).toBe("active")
+  })
+})
+
+describe("api-client 错误归类", () => {
+  it("非 JSON 的 5xx 响应归为 SERVER_ERROR，不再误报 VALIDATION_FAILED", async () => {
+    server.use(http.post("/api/resumes", () => HttpResponse.text("Internal Server Error", { status: 500 })))
+
+    await expect(createResumeDraft()).rejects.toMatchObject({
+      name: "ApiRequestError",
+      code: "SERVER_ERROR",
+      status: 500,
+    })
+  })
+
+  it("JSON 错误体的既有机器码映射保持不变", async () => {
+    server.use(
+      http.post("/api/resumes", () =>
+        HttpResponse.json({ code: "VALIDATION_FAILED", message: "raw-backend-message" }, { status: 422 }),
+      ),
+    )
+
+    await expect(createResumeDraft()).rejects.toMatchObject({
+      code: "VALIDATION_FAILED",
+      status: 422,
+      message: "raw-backend-message",
+    })
+  })
+})
+
+function createResumeDraft() {
+  return api.createResume({ title: "未命名简历", templateId: "tpl_classic" })
+}

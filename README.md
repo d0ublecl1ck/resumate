@@ -197,7 +197,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ```bash
 uv run --directory backend pytest        # → 279 passed
 cd agent-core && uv run pytest -q        # → 110 passed
-cd ui && pnpm test                       # → 49 files / 391 passed
+cd ui && pnpm test                       # → 54 files / 443 passed
 archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证

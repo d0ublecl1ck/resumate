@@ -11,6 +11,7 @@ export default {
     empty: {
       filteredTitle: "没有匹配的简历",
       archivedTitle: "暂无归档简历",
+      archivedDescription: "归档的简历会保留在这里，恢复后可继续编辑。",
       title: "还没有简历",
       filteredDescription: "已保留当前筛选条件，可清除后查看全部。",
       description: "点击右上角新建一份简历开始。",
@@ -25,6 +26,13 @@ export default {
     versionHistory: "版本历史",
     archive: "归档",
     restore: "恢复",
+    errors: {
+      archiveFailed: "归档失败，请稍后重试。",
+      restoreFailed: "恢复失败，请稍后重试。",
+      missing: "这份简历已不存在，请刷新后重试。",
+      permission: "当前账号没有修改这份简历的权限。",
+      network: "无法连接后端服务，请检查网络后重试。",
+    },
   },
   editor: {
     backToLibrary: "返回简历库",

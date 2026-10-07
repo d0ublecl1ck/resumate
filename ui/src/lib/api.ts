@@ -147,6 +147,16 @@ export function duplicateResume(id: string): Promise<Resume> {
   return request<Resume>(`/resumes/${id}/duplicate`, { method: "POST" })
 }
 
+/** POST /resumes/{id}/archive —— 归档只改生命周期元数据，不生成内容版本。 */
+export function archiveResume(id: string): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/archive`, { method: "POST" })
+}
+
+/** POST /resumes/{id}/restore —— 把归档简历恢复为活跃。 */
+export function restoreResume(id: string): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/restore`, { method: "POST" })
+}
+
 /** GET /resumes/{id} */
 export function getResume(id: string): Promise<Resume | undefined> {
   return request<Resume>(`/resumes/${id}`)

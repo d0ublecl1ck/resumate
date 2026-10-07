@@ -14,7 +14,7 @@ import {
   TEMPLATES,
   USER_PREFERENCES,
 } from "@/lib/content"
-import type { AgentSession, AuthUser, Permission, ProfileFact, Role } from "@/lib/types"
+import type { AgentSession, AuthUser, Permission, ProfileFact, Resume, Role } from "@/lib/types"
 
 const AUTH_USER: AuthUser = {
   id: "user_test",
@@ -162,6 +162,15 @@ function createFact(body: Partial<ProfileFact>): ProfileFact {
   }
 }
 
+// e1a80：归档 / 恢复只改元数据。用一层覆盖表模拟后端持久化，
+// 让 Storybook 里点「归档」后卡片真的换 Tab（Vitest 断言请求时用 server.use 覆盖）。
+const LIFECYCLE_OVERRIDES = new Map<string, Resume["lifecycle"]>()
+
+function withLifecycle(resume: Resume): Resume {
+  const lifecycle = LIFECYCLE_OVERRIDES.get(resume.id)
+  return lifecycle ? { ...resume, lifecycle } : resume
+}
+
 export const handlers = [
   http.get("/api/auth/me", () => HttpResponse.json(AUTH_USER)),
   http.post("/api/auth/login", async ({ request }) => {
@@ -233,15 +242,28 @@ export const handlers = [
     const lifecycle = url.searchParams.get("lifecycle")
     const query = url.searchParams.get("query")
     const tag = url.searchParams.get("tag")
-    let items = RESUMES.filter((resume) => resume.lifecycle !== "deleted")
+    let items = RESUMES.map(withLifecycle).filter((resume) => resume.lifecycle !== "deleted")
     if (lifecycle) items = items.filter((resume) => resume.lifecycle === lifecycle)
     if (query) items = items.filter((resume) => resume.title.includes(query) || resume.targetRole.includes(query))
     if (tag) items = items.filter((resume) => resume.tags.includes(tag))
     return HttpResponse.json(items)
   }),
   http.get("/api/resumes/:id", ({ params }) => {
-    const resume = RESUMES.find((item) => item.id === params.id)
+    const resume = RESUMES.map(withLifecycle).find((item) => item.id === params.id)
     return resume ? HttpResponse.json(resume) : notFound(`简历 ${params.id} 不存在`)
+  }),
+  // e1a80：归档 / 恢复端点接线（POST /resumes/{id}/archive、POST /resumes/{id}/restore）。
+  http.post("/api/resumes/:id/archive", ({ params }) => {
+    const resume = RESUMES.find((item) => item.id === params.id)
+    if (!resume) return notFound(`简历 ${params.id} 不存在`)
+    LIFECYCLE_OVERRIDES.set(resume.id, "archived")
+    return HttpResponse.json(withLifecycle(resume))
+  }),
+  http.post("/api/resumes/:id/restore", ({ params }) => {
+    const resume = RESUMES.find((item) => item.id === params.id)
+    if (!resume) return notFound(`简历 ${params.id} 不存在`)
+    LIFECYCLE_OVERRIDES.set(resume.id, "active")
+    return HttpResponse.json(withLifecycle(resume))
   }),
   http.get("/api/resumes/:id/versions", ({ params }) => {
     const resume = RESUMES.find((item) => item.id === params.id)

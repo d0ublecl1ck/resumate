@@ -298,6 +298,21 @@ function renderStateful() {
   )
 }
 
+describe("创建简历 Modal：非 JSON 5xx 的错误归类", () => {
+  it("POST /resumes 返回非 JSON 的 500 时提示服务端失败，而不是「创建参数不合法」", async () => {
+    server.use(http.post("/api/resumes", () => HttpResponse.text("Internal Server Error", { status: 500 })))
+
+    renderModal()
+    fireEvent.click(screen.getByRole("button", { name: /完全新开/ }))
+    fireEvent.click(screen.getByRole("button", { name: "创建" }))
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("创建失败，请稍后重试。")
+    expect(alert).not.toHaveTextContent("创建参数不合法")
+    expect(alert).not.toHaveTextContent("Internal Server Error")
+  })
+})
+
 describe("创建简历 Modal：模态焦点契约", () => {
   it("打开后焦点进入弹窗、Tab 不逃逸、Esc 关闭并把焦点归还触发按钮", async () => {
     renderStateful()

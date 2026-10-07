@@ -27,7 +27,7 @@ import { AgentAvailabilityNotice, agentAvailability, agentAvailabilityActionEffe
 import { PendingActionCard } from "@/components/kit/pending-action"
 import { Modal } from "@/components/ui/modal"
 import { subscribeTurnEvents } from "@/lib/turn-events"
-import type { AgentSessionMessage, MachineErrorCode } from "@/lib/types"
+import type { AgentSessionMessage } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Bot, Loader2, Send, User } from "lucide-react"
 
@@ -60,7 +60,7 @@ function sessionMessageText(content: unknown): string | null {
 }
 
 /** 把查询失败归一成机器错误码：非 ApiRequestError（网络中断等）按 NETWORK_ERROR 处理。 */
-function errorCodeOf(error: unknown): MachineErrorCode | "NETWORK_ERROR" {
+function errorCodeOf(error: unknown): ApiRequestError["code"] {
   return error instanceof ApiRequestError ? error.code : "NETWORK_ERROR"
 }
 
