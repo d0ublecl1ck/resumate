@@ -30,7 +30,7 @@ export function ResumeEditor({
   initialColumn = "edit",
 }: {
   resume: Resume
-  run?: AgentRun
+  run?: AgentRun | null
   templateName: string
   boundJds: JobDescription[]
   initialColumn?: Column

@@ -40,10 +40,10 @@ const TURN = {
 }
 
 describe("getActiveRun", () => {
-  it("returns undefined when the resume has no open turn", async () => {
+  it("returns null when the resume has no open turn", async () => {
     server.use(http.get("/api/resumes/:id/turns", () => HttpResponse.json([])))
 
-    await expect(getActiveRun("res_1")).resolves.toBeUndefined()
+    await expect(getActiveRun("res_1")).resolves.toBeNull()
   })
 
   it("maps the newest open turn into an AgentRun", async () => {

@@ -196,7 +196,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 ```bash
 uv run --directory backend pytest        # → 251 passed
 cd agent-core && uv run pytest -q        # → 101 passed
-cd ui && pnpm test                       # → 35 files / 259 passed
+cd ui && pnpm test                       # → 37 files / 271 passed
 archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
@@ -207,7 +207,7 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 ```bash
 grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 88 个端点
 ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
-ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 20 个 story 文件
+ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 21 个 story 文件
 ```
 
 ## 已知边界

@@ -191,13 +191,14 @@ export function updateDocument(id: string, input: { document: ResumeDocument; ba
  *
  * 用「open 轮次列表」而不是 working-document 发现轮次：approval 下 preview 只建
  * 待办、不落 working copy，只有 open 列表能在首次 apply 前发现待审批轮次。
- * 没有 open 轮次时返回 undefined（无 mock 兜底）。预算来自轮次 checkpoint，
+ * 没有 open 轮次时返回 null：React Query v5 禁止 queryFn resolve 出 undefined，
+ * 用 null 表达「查询成功但没有活动轮次」这一合法空值。预算来自轮次 checkpoint，
  * 该端点不可用时预算退化为 0，不影响运行与待办展示。
  */
-export async function getActiveRun(resumeId: string): Promise<AgentRun | undefined> {
+export async function getActiveRun(resumeId: string): Promise<AgentRun | null> {
   const turns = await request<ApiTurn[]>(`/resumes/${resumeId}/turns?state=open`)
   const turn = turns[0]
-  if (!turn) return undefined
+  if (!turn) return null
   const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
   return mapTurnToRun(turn, state)
 }
