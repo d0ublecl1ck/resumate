@@ -126,6 +126,9 @@
     .states{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
     .states li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted-foreground)}
     .states li::before{content:"";flex:none;width:6px;height:6px;margin-top:6px;border-radius:999px;background:var(--border)}
+    /* 整理中 loader：镜像 ui/src 的 lucide Loader2 animate-spin，仅此一处使用。 */
+    @keyframes proto-spin{to{transform:rotate(360deg)}}
+    .spin{animation:proto-spin 1s linear infinite}
   </style>
 </head>
 <body>
@@ -657,9 +660,107 @@
             </div>
           </div></div>
         </div>
+        <div style="margin-top:18px">
+          <p style="margin:0 0 10px;font-size:13px;font-weight:700">「新增 JD」弹窗（<code>CreateJdModal</code>）· 四态</p>
+          <div class="grid-cards">
+            <div class="card-frame" style="padding:16px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:8px;background:color-mix(in oklab,var(--cobalt) 15%,transparent);color:var(--cobalt)" aria-hidden="true">✦</span>
+                  <span><span style="display:block;font-size:14px;font-weight:600">新增 JD</span><span style="display:block;font-size:12px;color:var(--muted-foreground)">粘贴岗位文本或上传截图，AI 帮你整理成结构化岗位</span></span>
+                </div>
+                <span class="icon-btn" aria-hidden="true">✕</span>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <span class="chip" aria-pressed="true">粘贴文本</span>
+                <span class="chip" aria-pressed="false">上传截图</span>
+              </div>
+              <textarea class="input" rows="3" style="margin-top:10px;resize:none" aria-label="岗位文本">高级前端工程师 · 美团
+职责：负责核心交易链路的前端架构与性能优化。</textarea>
+              <div style="margin-top:10px"><button class="btn btn-primary" type="button">✦ AI 整理</button></div>
+              <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">输入态：有文本 → 按钮可用；无文本 → 按钮 disabled。</p>
+            </div>
+            <div class="card-frame" style="padding:16px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:8px;background:color-mix(in oklab,var(--cobalt) 15%,transparent);color:var(--cobalt)" aria-hidden="true">✦</span>
+                  <span><span style="display:block;font-size:14px;font-weight:600">新增 JD</span><span style="display:block;font-size:12px;color:var(--muted-foreground)">粘贴岗位文本或上传截图，AI 帮你整理成结构化岗位</span></span>
+                </div>
+                <span class="icon-btn" aria-hidden="true">✕</span>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <span class="chip" aria-pressed="true">粘贴文本</span>
+                <span class="chip" aria-pressed="false">上传截图</span>
+              </div>
+              <textarea class="input" rows="3" style="margin-top:10px;resize:none" aria-label="岗位文本">高级前端工程师 · 美团
+职责：负责核心交易链路的前端架构与性能优化。</textarea>
+              <div style="margin-top:10px"><button class="btn btn-primary" type="button" disabled style="opacity:.4" aria-busy="true"><svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>整理中…</button></div>
+              <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">整理中：按钮 <code>disabled</code> + loader 旋转（<code>animate-spin</code>），重复点击不再触发。</p>
+            </div>
+            <div class="card-frame" style="padding:16px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:8px;background:color-mix(in oklab,var(--cobalt) 15%,transparent);color:var(--cobalt)" aria-hidden="true">✦</span>
+                  <span><span style="display:block;font-size:14px;font-weight:600">新增 JD</span><span style="display:block;font-size:12px;color:var(--muted-foreground)">粘贴岗位文本或上传截图，AI 帮你整理成结构化岗位</span></span>
+                </div>
+                <span class="icon-btn" aria-hidden="true">✕</span>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <span class="chip" aria-pressed="true">粘贴文本</span>
+                <span class="chip" aria-pressed="false">上传截图</span>
+              </div>
+              <textarea class="input" rows="3" style="margin-top:10px;resize:none" aria-label="岗位文本">高级前端工程师 · 美团
+职责：负责核心交易链路的前端架构与性能优化。</textarea>
+              <div class="card-soft" style="padding:12px;margin-top:12px;background:var(--background)">
+                <div style="display:flex;justify-content:space-between;gap:8px">
+                  <span style="font-size:13px;font-weight:600">AI 整理结果（可编辑）</span>
+                  <span style="font-size:11px;color:var(--muted-foreground)">解析置信度 86%</span>
+                </div>
+                <div style="display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px">
+                  <label class="field" style="margin-top:0"><span>岗位名称</span><input class="input" value="高级前端工程师" /></label>
+                  <label class="field" style="margin-top:0"><span>公司</span><input class="input" value="美团" /></label>
+                </div>
+                <label class="field"><span>标签（逗号分隔）</span><input class="input" value="前端, 性能优化" /></label>
+                <label class="field"><span>来源链接（可选）</span><input class="input" value="https://example.com/jobs/123" /></label>
+                <label class="field"><span>岗位描述</span><textarea class="input" rows="3" style="resize:none">负责核心交易链路的前端架构与性能优化。</textarea></label>
+                <p style="margin:10px 0 0;font-size:11px;color:var(--muted-foreground)">已从粘贴文本中提取岗位、公司与标签。请核对后创建。</p>
+              </div>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+                <button class="btn btn-outline btn-sm" type="button">重新整理</button>
+                <button class="btn btn-primary btn-sm" type="button">创建 JD</button>
+              </div>
+              <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">成功：AI 草案可编辑，可「重新整理」丢弃草案回输入态，或「创建 JD」提交。</p>
+            </div>
+            <div class="card-frame" style="padding:16px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:8px;background:color-mix(in oklab,var(--cobalt) 15%,transparent);color:var(--cobalt)" aria-hidden="true">✦</span>
+                  <span><span style="display:block;font-size:14px;font-weight:600">新增 JD</span><span style="display:block;font-size:12px;color:var(--muted-foreground)">粘贴岗位文本或上传截图，AI 帮你整理成结构化岗位</span></span>
+                </div>
+                <span class="icon-btn" aria-hidden="true">✕</span>
+              </div>
+              <div class="toolbar" style="margin-top:12px">
+                <span class="chip" aria-pressed="true">粘贴文本</span>
+                <span class="chip" aria-pressed="false">上传截图</span>
+              </div>
+              <textarea class="input" rows="3" style="margin-top:10px;resize:none" aria-label="岗位文本">高级前端工程师 · 美团
+职责：负责核心交易链路的前端架构与性能优化。</textarea>
+              <div style="margin-top:10px"><button class="btn btn-primary" type="button">✦ AI 整理</button></div>
+              <div role="alert" style="margin-top:12px;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);background:color-mix(in oklab,var(--coral) 5%,transparent);border-radius:var(--radius-lg);padding:12px">
+                <p style="margin:0;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--coral)">⚠ 整理失败</p>
+                <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">解析超时，请重试。</p>
+                <div style="margin-top:8px"><button class="btn btn-outline btn-sm" type="button">重试</button></div>
+              </div>
+              <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">失败：coral <code>role="alert"</code>；模型未配置给「去设置模型」，超时 / 上游拒绝 / 输出非法 JSON 给「重试」，文案按机器码映射。</p>
+            </div>
+          </div>
+        </div>
+
         <ul class="states">
           <li>空态：还没有保存的 JD，给「新增 JD」入口</li>
           <li>绑定冲突：换绑前提示会影响原简历的关联</li>
+          <li>新增 JD 弹窗的 AI 整理：输入 → 整理中（按钮 disabled + loader 旋转 + 「整理中…」）→ 成功（AI 草案卡：岗位名称 / 公司 / 标签 / 来源链接 / 岗位描述 可编辑 + 「重新整理」/「创建 JD」）</li>
+          <li>新增 JD 弹窗失败态（coral <code>role="alert"</code>）：模型未配置给「去设置模型」；解析超时 / 上游拒绝 / 模型输出非法 JSON 给「重试」，按机器码映射，不透出后端原文</li>
         </ul>
       </div>
 
