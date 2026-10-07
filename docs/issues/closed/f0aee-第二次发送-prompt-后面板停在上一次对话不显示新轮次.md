@@ -1,14 +1,15 @@
 ---
 id: f0aee
-status: in-progress
+status: closed
 created_at: 2026-10-07T11:10:00.000Z
-updated_at: 2026-10-07T10:51:21.703Z
+updated_at: 2026-10-07T10:55:25.994Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-10-07T10:51:21.703Z
+closed_at: 2026-10-07T10:55:25.994Z
 ---
 
 # 第二次发送 prompt 后面板停在上一次对话不显示新轮次
@@ -38,11 +39,11 @@ started_at: 2026-10-07T10:51:21.703Z
 
 ## Acceptance Criteria
 
-- [ ] 当前显示已关闭轮次的 RunPanel，在点击发送后仍按 1.5s 轮询 active-run，直到新轮次出现或 60s 超时。
-- [ ] 新轮次出现后 `run.id` 变化，面板切到新轮次内容并停止「等待」轮询；未关闭轮次继续常规轮询，已关闭轮次停止轮询（不回归）。
-- [ ] 发起失败（onError）时清理等待状态。
-- [ ] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 全绿。
-- [ ] 合并后真实 5173 E2E：已有一轮结束对话时发第二个 prompt，`/turns` 持续轮询，面板切到新轮次（新 prompt / 工具调用 / 运行中或待确认），新轮次结束后旧对话被新对话取代。
+- [x] 当前显示已关闭轮次的 RunPanel，在点击发送后仍按 1.5s 轮询 active-run，直到新轮次出现或 60s 超时。
+- [x] 新轮次出现后 `run.id` 变化，面板切到新轮次内容并停止「等待」轮询；未关闭轮次继续常规轮询，已关闭轮次停止轮询（不回归）。
+- [x] 发起失败（onError）时清理等待状态。
+- [x] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 全绿。
+- [x] 合并后真实 5173 E2E：已有一轮结束对话时发第二个 prompt，`/turns` 持续轮询，面板切到新轮次（新 prompt / 工具调用 / 运行中或待确认），新轮次结束后旧对话被新对话取代。
 
 ## Implementation
 
@@ -69,7 +70,35 @@ pnpm -C ui run build   → built
 archkit inspect .      → Quality gates passed.
 ```
 
-合并到 main 后的真实 5173 两次发送 E2E（网络 + 面板采样 + 截图）见关单提交。
+### 合并后真实 5173 两次发送 E2E（2026-10-07）
+
+前置：面板已显示一轮已结束对话（header 显示轮次已关闭）。不点批准，连续发两条，避免把已关闭轮次的待办按钮当当前轮次点击（那会产生 409）。
+
+send1「把我的姓名改成「张三」」网络：
+
+```text
+1.09s POST /resumes/res_aeba1b686aa4/runs
+2.10s GET  /resumes/res_aeba1b686aa4/turns   <- 第一次刷新返回旧轮次 turn_028f10589a3b
+3.11s GET  /resumes/res_aeba1b686aa4/turns   <- 轮询继续，拿到新轮次 turn_039e9d30e9ba
+```
+
+send2「把我的电话改成 13900000000」网络：
+
+```text
+6.16s POST /resumes/res_aeba1b686aa4/runs
+7.16s GET  /resumes/res_aeba1b686aa4/turns   x2 -> 旧 turn_039e9d30e9ba + 新 turn_76ba70c4b813
+10.18s GET /resumes/res_aeba1b686aa4/turns   <- 新轮次运行中继续轮询
+```
+
+面板采样：
+
+```text
+send1 t+2.1s :: 轮次已关闭 | ...（仍是旧内容）
+send1 t+3.1s :: 运行中 | 预算 0/0 · 0/0 轮 | 把我的姓名改成「张三」
+send2 t+7.2s :: 运行中 | 预算 0/0 · 0/0 轮 | 把我的电话改成 13900000000
+```
+
+断言：send1_seen=True、send2_seen=True、section[aria-label] 全程为 3、SECTIONS_NOT_3 为空、CONSOLE_ERRORS 为空。截图：headless E2E 输出的 before/after PNG（本地临时目录，未入库）。
 
 ## Related ADRs
 
