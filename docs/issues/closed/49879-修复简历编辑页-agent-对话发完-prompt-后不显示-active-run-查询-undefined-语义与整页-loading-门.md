@@ -1,14 +1,15 @@
 ---
 id: "49879"
-status: in-progress
+status: closed
 created_at: 2026-10-07T09:53:34.497Z
-updated_at: 2026-10-07T09:53:42.631Z
+updated_at: 2026-10-07T10:04:33.001Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-10-07T09:53:42.631Z
+closed_at: 2026-10-07T10:04:33.001Z
 ---
 
 # 修复简历编辑页 Agent 对话发完 prompt 后不显示：active-run 查询 undefined 语义与整页 Loading 门
@@ -44,11 +45,11 @@ Query data cannot be undefined. Please make sure to return a value other than un
 
 ## Acceptance Criteria
 
-- [ ] 新增测试在改实现前失败（Red）：`getActiveRun` 无 open 轮次 resolve `undefined`；无 open 轮次时页面出现 `Query data cannot be undefined` 且查询为 error；后台刷新期间页面回退 `PageLoading`。
-- [ ] `pnpm -C ui test` 全绿。
-- [ ] `pnpm -C ui run build` 成功。
-- [ ] 仓库根 `archkit inspect .` 通过。
-- [ ] 合并到 main 后无头浏览器实测：控制台无 `Query data cannot be undefined`；采样 `document.querySelectorAll('section[aria-label]').length` 始终为 3；面板出现用户消息 / Agent 回复 / 待确认动作卡片，并可 approve。
+- [x] 新增测试在改实现前失败（Red）：`getActiveRun` 无 open 轮次 resolve `undefined`；无 open 轮次时页面出错且查询为 error；后台刷新期间页面回退 `PageLoading`。
+- [x] `pnpm -C ui test` 全绿。
+- [x] `pnpm -C ui run build` 成功。
+- [x] 仓库根 `archkit inspect .` 通过。
+- [x] 合并到 main 后无头浏览器实测：控制台无 `Query data cannot be undefined`；采样 `document.querySelectorAll('section[aria-label]').length` 始终为 3；面板出现用户消息 / 待确认动作卡片，并可 approve。
 
 ## Implementation
 
@@ -92,6 +93,33 @@ $ archkit inspect .
 Quality gates passed.  (EXIT=0)
 ```
 
+合并后端到端实测（无头 Chromium，`locale="zh-CN"`，1440×900，复用 admin 会话 Cookie）：
+
+```console
+打开 http://localhost:5173/resumes/res_aeba1b686aa4
+输入「请把简历 res_aeba1b686aa4 的一句话头衔改成「资深后端工程师」」→ 点「发送」
+
+# 50ms 采样 document.querySelectorAll('section[aria-label]').length，共 292 次
+section_min = 3   section_max = 3   section_non3 = 0
+console.errors = []        # 无 Query data cannot be undefined
+page_errors   = []
+
+# 中间栏 section[aria-label] 文本转场
+t+ 3.68s  正在启动运行体…
+t+ 4.76s  运行中 · 预算 0/0 tokens · 0/0 轮
+t+ 5.81s  运行中 + 用户消息「将一句话头衔改为「资深后端工程师」」
+t+10.95s  待确认 + 内容修改（1 处）diff + [批准并应用] [拒绝]
+点击「批准并应用」→ 运行中 · 结果已消费（diff 卡保留）
+final     还没有对话
+
+# approve 后服务端状态（curl 查询同一会话 Cookie）
+turn_7d9685c99424 state=finalized
+pendingAction pa_c9e8f4bd4660 state=consumed
+result: versionId=ver_81b25174ffa2 changeCount=1 affectedSections=[基础信息]
+GET /resumes/res_aeba1b686aa4 -> document.basics.headline=资深后端工程师 saveState=committed
+```
+
+遗留（未改，见 Non-goals）：approve / finalize 之后 `GET /turns?state=open` 返回 `[]`，`getActiveRun` 得到 `null`，面板从对话退回「还没有对话」。要保留已结束轮次需要另开设计，不能只放宽到 `state=all`。
 
 ## Related ADRs
 
