@@ -1,13 +1,14 @@
 ---
 id: db4d1
-status: in-progress
+status: closed
 created_at: 2026-10-07T11:01:31.477Z
-updated_at: 2026-10-07T11:01:52.811Z
+updated_at: 2026-10-07T11:12:02.026Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-07T11:01:52.811Z
+closed_at: 2026-10-07T11:12:02.026Z
 ---
 
 # 主档助手发送键统一为 ⌘/Ctrl+Enter
@@ -39,13 +40,13 @@ started_at: 2026-10-07T11:01:52.811Z
 
 ## Acceptance Criteria
 
-- [ ] 在输入框按裸 Enter：不触发发送、不触发表单提交，文本插入一个换行。
-- [ ] 在输入框按 Shift+Enter：行为与裸 Enter 相同（换行，不发送）。
-- [ ] 在输入框按 Meta+Enter 或 Ctrl+Enter：触发一次发送（与点击发送按钮等价）。
-- [ ] IME 组合态下按 Enter / Meta+Enter / Ctrl+Enter 不发送（`isComposing` 与 `keyCode === 229` 都被守住）。
-- [ ] `profile.assistant.placeholder` 的 zh-CN 与 en 都与 RunPanel 的按键措辞一致（zh 含「⌘↵ 发送」、en 含 `⌘↵ to send`），且键结构不变。
-- [ ] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 通过。
-- [ ] 无头浏览器在 `http://localhost:5173/profile` 实测：输入文字后裸按 Enter 不发送且保留换行，按 Ctrl/Meta+Enter 才发送。
+- [x] 在输入框按裸 Enter：不触发发送、不触发表单提交，文本插入一个换行。
+- [x] 在输入框按 Shift+Enter：行为与裸 Enter 相同（换行，不发送）。
+- [x] 在输入框按 Meta+Enter 或 Ctrl+Enter：触发一次发送（与点击发送按钮等价）。
+- [x] IME 组合态下按 Enter / Meta+Enter / Ctrl+Enter 不发送（`isComposing` 与 `keyCode === 229` 都被守住）。
+- [x] `profile.assistant.placeholder` 的 zh-CN 与 en 都与 RunPanel 的按键措辞一致（zh 含「⌘↵ 发送」、en 含 `⌘↵ to send`），且键结构不变。
+- [x] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 通过。
+- [x] 无头浏览器在 `http://localhost:5173/profile` 实测：输入文字后裸按 Enter 不发送且保留换行，按 Ctrl/Meta+Enter 才发送。
 
 ## Implementation
 
@@ -67,6 +68,31 @@ AssertionError: expected true to be false // Object.is equality
 ```
 
 TDD Green（实现后）：同命令 `Test Files 1 passed (1)`、`Tests 17 passed (17)`。
+
+### 合并后验证（2026-10-07）
+
+- 分支 `chore/profile-scope-issues-and-enter-send` 先 `git rebase main`（main 已前进到 `c8150e0`），`.freak` 手工合并两侧线索后继续；`git merge --ff-only` 合入 main，main HEAD = `994ae65`。
+- `pnpm -C ui test` → `Test Files 42 passed (42)`、`Tests 313 passed (313)`。
+- `pnpm -C ui run build` → `✓ built`（含 `tsc -b` 类型检查）。
+- `archkit inspect .` → `Quality gates passed.`
+- 无头浏览器（Playwright chromium headless，`locale=zh-CN`，复用 `/tmp/rsm_state.json`）：打开 `http://localhost:5173/profile` →「对话维护资料」，实测结果：
+
+```json
+{
+  "placeholder": "改基本信息，或补充一段经历…（⌘↵ 发送，Shift+↵ 换行）",
+  "placeholderHasCmdEnter": true,
+  "valueAfterEnter": "E2E裸Enter断言-保留换行\n",
+  "bareEnterKeptNewline": true,
+  "bareEnterNotSent": true,
+  "ctrlEnterClearedInput": true,
+  "ctrlEnterTriggeredRun": true,
+  "valueAfterCtrlEnter": "",
+  "consoleErrors": []
+}
+ASSERTIONS_PASSED=True
+```
+
+截图：`/tmp/rsm_profile_assistant_enter.png`。发送产生的 run 请求只有 Ctrl+Enter 触发的那一次（`POST /api/sessions/sess_6d3cf19b4923/runs`），控制台无 error。
 
 ## Related ADRs
 
