@@ -2,6 +2,7 @@
 // 建/复用会话 → 追加用户消息 → 起 run → 订阅 GET /turns/{id}/events 刷新轮次与会话历史。
 // Agent 的文字回复渲染成对话气泡；待确认的主档改动复用 PendingActionCard，
 // approve 之后才由后端写入主档（契约 §21.4），reject 不动主档。
+// 交互契约交给 ui/modal 原语：焦点入内、Tab 锁定、Esc 关闭、焦点归还、背景 inert。
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -19,13 +20,16 @@ import {
   rejectPendingAction,
   startProfileRun,
 } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
 import { agentErrorKey } from "@/lib/agent-error"
 import { useRuntimeStatus } from "@/lib/runtime"
-import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
+import { AgentAvailabilityNotice, agentAvailability } from "@/components/agent-onboarding"
 import { PendingActionCard } from "@/components/kit/pending-action"
+import { Modal } from "@/components/ui/modal"
 import { subscribeTurnEvents } from "@/lib/turn-events"
-import type { AgentSessionMessage } from "@/lib/types"
-import { Bot, Loader2, Send, Sparkles, User, X } from "lucide-react"
+import type { AgentSessionMessage, MachineErrorCode } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import { Bot, Loader2, Send, User } from "lucide-react"
 
 const SUGGESTIONS = [
   "profile.assistant.suggestion.phone",
@@ -53,6 +57,11 @@ function sessionMessageText(content: unknown): string | null {
     if (typeof value === "string") return value.trim() || null
   }
   return null
+}
+
+/** 把查询失败归一成机器错误码：非 ApiRequestError（网络中断等）按 NETWORK_ERROR 处理。 */
+function errorCodeOf(error: unknown): MachineErrorCode | "NETWORK_ERROR" {
+  return error instanceof ApiRequestError ? error.code : "NETWORK_ERROR"
 }
 
 /**
@@ -91,11 +100,17 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const queryClient = useQueryClient()
   const modelQuery = useQuery({ queryKey: ["model-config"], queryFn: getModelConfig, enabled: open })
   const runtimeQuery = useRuntimeStatus(open)
-  const availability = agentAvailabilityFromModelConfig(
-    modelQuery.data ?? { keyConfigured: false },
-    runtimeQuery.data,
-  )
-  const checkingAvailability = open && (modelQuery.isPending || runtimeQuery.isPending)
+  // 可用性六态：加载中 / 读取失败 / 无权限 / 未配置 / 运行体离线 / 可用。
+  // 读取失败与无权限绝不能被当成「未配置」，否则会把用户误导向设置页。
+  const availability = agentAvailability({
+    model: {
+      isPending: modelQuery.isPending,
+      keyConfigured: modelQuery.data?.keyConfigured,
+      errorCode: modelQuery.isError ? errorCodeOf(modelQuery.error) : undefined,
+    },
+    runtime: { isPending: runtimeQuery.isPending, available: runtimeQuery.data?.available },
+  })
+  const checkingAvailability = availability === "checking"
   const canChat = availability === "available"
 
   const [createdSessionId, setCreatedSessionId] = useState<string | null>(null)
@@ -109,7 +124,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const scrollRef = useRef<HTMLDivElement>(null)
   const optimisticSeq = useRef(0)
   const lastSeqRef = useRef(0)
-  const turnCountRef = useRef(0)
+  const lastTurnIdRef = useRef<string | null>(null)
   const sessionRef = useRef<string | null>(null)
 
   /**
@@ -161,7 +176,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     for (const row of rows) lastSeqRef.current = Math.max(lastSeqRef.current, row.seq)
   }, [])
 
-  // 会话切换时重置本地历史并全量拉取；SSE 更新后只用 afterSeq 增量拉取。
+  // 会话切换时重置本地历史并全量拉取；SSE / 轮次变化后只用 afterSeq 增量拉取。
   useEffect(() => {
     if (!open || !canChat || !sessionId) return
     setMessages([])
@@ -170,26 +185,35 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   }, [open, canChat, sessionId, loadMessages])
 
   // StrictMode 安全：每次挂载新建订阅，cleanup 直接关闭 EventSource（不置标志丢弃结果）。
+  // snapshot 是订阅首帧：后端可能在本端订阅前就写完了回复，必须和 turn.updated 一样补拉消息，
+  // 否则「发完消息立刻重连 / 轮次已结束后才订阅」这类时序只能靠刷新才看得到回复。
   useEffect(() => {
     if (!open || !canChat || !activeTurnId) return
-    return subscribeTurnEvents(activeTurnId, {
-      onUpdate: () => {
-        void queryClient.invalidateQueries({ queryKey: ["session-turns", sessionId] })
-        if (sessionId) void loadMessages(sessionId, lastSeqRef.current)
-      },
-    })
+    const refresh = () => {
+      void queryClient.invalidateQueries({ queryKey: ["session-turns", sessionId] })
+      if (sessionId) void loadMessages(sessionId, lastSeqRef.current)
+    }
+    return subscribeTurnEvents(activeTurnId, { onSnapshot: refresh, onUpdate: refresh })
   }, [open, canChat, activeTurnId, sessionId, queryClient, loadMessages])
 
-  // run 起后轮次由子进程创建：轮询发现新轮次，最多 60s。
+  // 轮次集合变化（轮询发现新轮次 / SSE 刷新出新一轮）时补拉消息并结束等待：
+  // 这是「发完消息不用刷新就能看到助手回复」的第二条路径，重复触发也只补拉增量。
+  useEffect(() => {
+    if (!open || !canChat || !sessionId) return
+    const latestTurnId = turns[0]?.id ?? null
+    if (latestTurnId === lastTurnIdRef.current) return
+    lastTurnIdRef.current = latestTurnId
+    if (!latestTurnId) return
+    void loadMessages(sessionId, lastSeqRef.current)
+    setAwaitingTurn(false)
+  }, [open, canChat, sessionId, turns, loadMessages])
+
+  // run 起后轮次由子进程创建：等不到新轮次时最多等 60s，避免无限转圈。
   useEffect(() => {
     if (!awaitingTurn) return
-    if (turns.length > turnCountRef.current) {
-      setAwaitingTurn(false)
-      return
-    }
     const stop = window.setTimeout(() => setAwaitingTurn(false), 60000)
     return () => window.clearTimeout(stop)
-  }, [awaitingTurn, turns.length])
+  }, [awaitingTurn])
 
   const startMutation = useMutation({
     mutationFn: async (prompt: string) => {
@@ -207,7 +231,6 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     },
     onMutate: () => setStartErrorKey(null),
     onSuccess: (sid) => {
-      turnCountRef.current = turns.length
       setAwaitingTurn(true)
       void queryClient.invalidateQueries({ queryKey: ["session-turns", sid] })
       void queryClient.invalidateQueries({ queryKey: ["profile-session"] })
@@ -259,131 +282,140 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const thinking = startMutation.isPending || awaitingTurn
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={t("profile.assistant.aria")}>
-      <button className="absolute inset-0 bg-foreground/30 backdrop-blur-[1px]" aria-label={t("common.actions.close")} onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-md flex-col border-l border-foreground/15 bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-cobalt/15 text-cobalt">
-              <Sparkles className="size-4" aria-hidden />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{t("profile.assistant.title")}</p>
-              <p className="text-xs text-muted-foreground">{t("profile.assistant.description")}</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}>
-            <X className="size-5" aria-hidden />
-          </button>
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose()
+      }}
+      title={t("profile.assistant.title")}
+      description={t("profile.assistant.description")}
+      placement="right"
+      closeLabel={t("profile.assistant.close")}
+    >
+      {checkingAvailability ? (
+        // 加载中不再渲染空白正文：用骨架占位，读屏用 status 播报。
+        <div role="status" aria-label={t("common.pageState.loading")} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          <SkeletonBubble className="w-2/3" />
+          <SkeletonBubble className="w-1/2" />
+          <SkeletonBubble className="w-3/4" />
         </div>
-
-        {checkingAvailability ? null : availability !== "available" ? (
-          <div className="flex-1 overflow-y-auto px-4 py-6">
-            <AgentAvailabilityNotice state={availability} placement="panel" onAction={() => navigate("/settings")} />
-          </div>
-        ) : (
-          <>
-            <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
-              {conversation.length === 0 && !thinking ? (
-                <div className="space-y-4">
-                  <div className="flex gap-2.5">
-                    <AgentAvatar />
-                    <div className="rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground">
-                      {t("profile.assistant.intro")}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <p className="px-1 text-xs font-medium text-muted-foreground">{t("profile.assistant.trySaying")}</p>
-                    {SUGGESTIONS.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => submit(t(s))}
-                        className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-foreground transition-colors hover:border-cobalt/40 hover:bg-secondary"
-                      >
-                        {t(s)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                conversation.map((bubble) =>
-                  bubble.role === "user" ? (
-                    <div key={bubble.id} className="flex justify-end gap-2.5">
-                      <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-cobalt px-3.5 py-2.5 text-sm leading-6 text-primary-foreground">{bubble.text}</div>
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-cobalt">
-                        <User className="size-4" aria-hidden />
-                      </span>
-                    </div>
-                  ) : (
-                    <div key={bubble.id} className="flex gap-2.5">
-                      <AgentAvatar />
-                      <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground">{bubble.text}</div>
-                    </div>
-                  ),
-                )
-              )}
-
-              {pendingActions.map((action) => (
-                <PendingActionCard
-                  key={action.id}
-                  action={action}
-                  onApprove={(id) => decision.mutate({ actionId: id, kind: "approve" })}
-                  onReject={(id) => decision.mutate({ actionId: id, kind: "reject" })}
-                  busy={submittingActionId === action.id}
-                />
-              ))}
-
-              {thinking ? (
+      ) : availability !== "available" ? (
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <AgentAvailabilityNotice
+            state={availability}
+            placement="panel"
+            onAction={(action) => {
+              if (action === "retry") {
+                void modelQuery.refetch()
+                void runtimeQuery.refetch()
+                return
+              }
+              navigate("/settings")
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
+            {conversation.length === 0 && !thinking ? (
+              <div className="space-y-4">
                 <div className="flex gap-2.5">
                   <AgentAvatar />
-                  <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" aria-hidden /> {t("profile.assistant.thinking")}
+                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground break-words">
+                    {t("profile.assistant.intro")}
                   </div>
                 </div>
-              ) : null}
-            </div>
-
-            {startErrorKey || actionErrorKey ? (
-              <p role="alert" className="mx-3 mb-1 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
-                {t(startErrorKey ?? actionErrorKey!)}
-              </p>
-            ) : null}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                submit(input)
-              }}
-              className="border-t border-border p-3"
-            >
-              <div className="flex items-end gap-2">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-                      e.preventDefault()
-                      submit(input)
-                    }
-                  }}
-                  rows={2}
-                  placeholder={t("profile.assistant.placeholder")}
-                  className="min-h-[44px] flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim() || startMutation.isPending}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
-                  aria-label={t("profile.assistant.send")}
-                >
-                  <Send className="size-4" aria-hidden />
-                </button>
+                <div className="space-y-2">
+                  <p className="px-1 text-xs font-medium text-muted-foreground">{t("profile.assistant.trySaying")}</p>
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => submit(t(s))}
+                      className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-foreground transition-colors hover:border-cobalt/40 hover:bg-secondary"
+                    >
+                      {t(s)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
+            ) : (
+              conversation.map((bubble) =>
+                bubble.role === "user" ? (
+                  <div key={bubble.id} className="flex justify-end gap-2.5">
+                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-cobalt px-3.5 py-2.5 text-sm leading-6 text-primary-foreground break-words">{bubble.text}</div>
+                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-cobalt">
+                      <User className="size-4" aria-hidden />
+                    </span>
+                  </div>
+                ) : (
+                  <div key={bubble.id} className="flex gap-2.5">
+                    <AgentAvatar />
+                    <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground break-words">{bubble.text}</div>
+                  </div>
+                ),
+              )
+            )}
+
+            {pendingActions.map((action) => (
+              <PendingActionCard
+                key={action.id}
+                action={action}
+                onApprove={(id) => decision.mutate({ actionId: id, kind: "approve" })}
+                onReject={(id) => decision.mutate({ actionId: id, kind: "reject" })}
+                busy={submittingActionId === action.id}
+              />
+            ))}
+
+            {thinking ? (
+              <div className="flex gap-2.5">
+                <AgentAvatar />
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" aria-hidden /> {t("profile.assistant.thinking")}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {startErrorKey || actionErrorKey ? (
+            <p role="alert" className="mx-3 mb-1 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
+              {t(startErrorKey ?? actionErrorKey!)}
+            </p>
+          ) : null}
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              submit(input)
+            }}
+            className="border-t border-border p-3"
+          >
+            <div className="flex items-end gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                    e.preventDefault()
+                    submit(input)
+                  }
+                }}
+                rows={2}
+                placeholder={t("profile.assistant.placeholder")}
+                className="min-h-[44px] flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || startMutation.isPending}
+                className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
+                aria-label={t("profile.assistant.send")}
+              >
+                <Send className="size-4" aria-hidden />
+              </button>
+            </div>
+          </form>
+        </>
+      )}
+    </Modal>
   )
 }
 
@@ -393,4 +425,9 @@ function AgentAvatar() {
       <Bot className="size-4" aria-hidden />
     </span>
   )
+}
+
+/** 加载占位：只在可用性查询未落定时出现，避免抽屉正文长时间空白。 */
+function SkeletonBubble({ className }: { className?: string }) {
+  return <div aria-hidden className={cn("h-10 max-w-[80%] animate-pulse rounded-2xl bg-secondary", className)} />
 }

@@ -7,6 +7,8 @@
 //     ...表单正文与底部动作...
 //   </Modal>
 // 传入 initialFocus 可指定打开时聚焦的元素；不传则由 Base UI 聚焦第一个可聚焦元素。
+// placement="right" 渲染为右侧抽屉（表格类弹窗仍用默认居中）；
+// closeLabel 覆盖关闭按钮的可访问名，方便与遮罩等「关闭」入口区分。
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { X } from "lucide-react"
@@ -32,6 +34,8 @@ export function Modal({
   children,
   className,
   initialFocus,
+  placement = "center",
+  closeLabel,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -40,6 +44,10 @@ export function Modal({
   children: ReactNode
   className?: string
   initialFocus?: ComponentProps<typeof DialogPrimitive.Popup>["initialFocus"]
+  /** center：居中弹窗（默认）；right：贴右侧的抽屉。 */
+  placement?: "center" | "right"
+  /** 关闭按钮的可访问名；默认沿用通用「关闭」。 */
+  closeLabel?: string
 }) {
   const { t } = useTranslation()
   // portal 内容在挂载后才出现，用回调节点让 inert 标记在挂载后补跑一次。
@@ -70,18 +78,26 @@ export function Modal({
         <DialogPrimitive.Popup
           ref={setPopupElement}
           initialFocus={initialFocus}
+          role="dialog"
+          aria-modal="true"
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 max-h-[88vh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-auto card-frame p-6 outline-none",
+            placement === "right"
+              ? "fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-md flex-col overflow-hidden border-l-2 border-foreground bg-card p-0 outline-none"
+              : "fixed top-1/2 left-1/2 z-50 max-h-[88vh] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 overflow-auto card-frame p-6 outline-none",
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className={cn("flex items-start justify-between gap-4", placement === "right" && "border-b border-border px-4 py-3")}>
             <DialogPrimitive.Title className="font-serif text-xl font-bold text-foreground">{title}</DialogPrimitive.Title>
-            <DialogPrimitive.Close className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}>
+            <DialogPrimitive.Close className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label={closeLabel ?? t("common.actions.close")}>
               <X className="size-5" />
             </DialogPrimitive.Close>
           </div>
-          {description ? <DialogPrimitive.Description className="mt-2 text-sm text-muted-foreground">{description}</DialogPrimitive.Description> : null}
+          {description ? (
+            <DialogPrimitive.Description className={cn("mt-2 text-sm text-muted-foreground", placement === "right" && "mt-0 px-4 pb-2")}>
+              {description}
+            </DialogPrimitive.Description>
+          ) : null}
           {children}
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>

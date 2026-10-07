@@ -1,6 +1,10 @@
 export default {
   title: "Profile",
   subtitlePrefix: "Your career master profile. Resumes draw material from here — completeness ",
+  loadError: {
+    title: "Couldn't load your profile",
+    description: "We couldn't read your master profile. Please try again.",
+  },
   actions: {
     openAssistant: "Maintain via chat",
     generateResume: "Generate resume",
@@ -28,6 +32,8 @@ export default {
     deleteLinkAria: "Remove link {{index}}",
     addLink: "Add link",
     nameRequired: "Name is required.",
+    emailInvalid: "Enter a valid email address.",
+    saveError: "Couldn't save. Please try again.",
   },
   sections: {
     experience: {
@@ -90,9 +96,12 @@ export default {
     tagsPlaceholder: "Performance optimization, React",
     evidenceLabelPlaceholder: "e.g. Quarterly review document",
     required: "Title and content are required.",
+    titleTooLong: "The title can't exceed 200 characters.",
+    saveError: "Couldn't save. Please try again.",
   },
   assistant: {
     aria: "Profile assistant",
+    close: "Close assistant",
     title: "Profile assistant",
     description: "Maintain your basics and experience in natural language; AI organizes it and you confirm",
     intro: "You can ask me to change your basics (for example, “change the city to Beijing”), or add experience, projects, and skills. I will organize them into entries and only write them after you confirm.",

@@ -117,3 +117,27 @@ def test_delete_fact_returns_resume_references(client: TestClient) -> None:
     after = client.get("/profile").json()
     assert after["facts"] == []
     assert client.get(f"/resumes/{resume['id']}").status_code == 200
+
+def test_fact_title_at_200_chars_is_accepted(client: TestClient) -> None:
+    body = _create_fact(client, title="标" * 200)
+
+    assert body["title"] == "标" * 200
+
+
+def test_fact_title_over_200_chars_is_rejected_as_422(client: TestClient) -> None:
+    response = client.post(
+        "/profile/facts",
+        json={"type": "achievement", "title": "W" * 201, "content": "超长标题不能落到数据库。"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_fact_update_title_over_200_chars_is_rejected_as_422(client: TestClient) -> None:
+    fact = _create_fact(client)
+
+    response = client.patch(f"/profile/facts/{fact['id']}", json={"title": "W" * 201})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_FAILED"

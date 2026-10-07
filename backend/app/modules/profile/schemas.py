@@ -25,7 +25,8 @@ class FactReference(ApiModel):
 
 class ProfileFactCreate(ApiModel):
     type: FactType
-    title: str
+    # DB 列是 String(200)；在此拦截超限，让它走 422 VALIDATION_FAILED 而不是数据库 500。
+    title: str = Field(max_length=200)
     content: str
     tags: list[str] = Field(default_factory=list)
     evidence: Evidence | None = None
@@ -34,7 +35,8 @@ class ProfileFactCreate(ApiModel):
 
 class ProfileFactUpdate(ApiModel):
     type: FactType | None = None
-    title: str | None = None
+    # 与 ProfileFactCreate 对齐，更新路径同样不能把超长标题交给数据库。
+    title: str | None = Field(default=None, max_length=200)
     content: str | None = None
     tags: list[str] | None = None
     evidence: Evidence | None = None
