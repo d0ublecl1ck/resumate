@@ -1,14 +1,15 @@
 ---
 id: ee3b5
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:09:23.823Z
-updated_at: 2026-10-07T10:09:39.622Z
+updated_at: 2026-10-07T10:15:20.445Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 核心实体接口
 started_at: 2026-10-07T10:09:39.622Z
+closed_at: 2026-10-07T10:15:20.445Z
 ---
 
 # 修复个人资料助手复用简历 run 会话
@@ -33,10 +34,10 @@ started_at: 2026-10-07T10:09:39.622Z
 
 ## Acceptance Criteria
 
-- [ ] 最新会话只含 resume 轮次而存在更老的 profile 会话时，助手采用 profile 会话，不展示 resume 会话消息
-- [ ] 只有含 resume 轮次的会话时，助手新建会话，不向该会话起 profile run
-- [ ] 助手面板不渲染简历 run 的对话文本
-- [ ] `pnpm -C ui test` 通过
+- [x] 最新会话只含 resume 轮次而存在更老的 profile 会话时，助手采用 profile 会话，不展示 resume 会话消息
+- [x] 只有含 resume 轮次的会话时，助手新建会话，不向该会话起 profile run
+- [x] 助手面板不渲染简历 run 的对话文本
+- [x] `pnpm -C ui test` 通过
 
 ## Implementation
 
@@ -48,7 +49,13 @@ started_at: 2026-10-07T10:09:39.622Z
 
 ## Verification
 
-<!-- Add commands and results after verification. -->
+- TDD Red：`pnpm -C ui test --run src/components/profile-workspace.test.tsx src/components/profile-assistant.test.tsx` → `Tests 4 failed | 16 passed`；会话选取用例在旧实现上失败（`runs` 期望 `sess_1`、实际 `sess_resume`；面板找不到 profile 会话消息）。
+- Green：`pnpm -C ui test` → `37 files / 275 passed`；`cd backend && uv run pytest -q` → `251 passed`；`pnpm -C ui run build` 成功；`archkit inspect .` → `Quality gates passed.`。
+- 合并后端到端（5173 + 8000，Playwright headless、`locale=zh-CN`）：
+  - 用 API 造等价 resume run 会话：`POST /sessions` → `sess_0ad35bf05662`，`POST /sessions/{id}/messages` 写入简历 prompt，`POST /resumes/res_aeba1b686aa4/turns`（`scope=resume`）把它顶到会话列表第一条（`B_first_is_seeded=true`）。
+  - 打开 `/profile` → 「对话维护资料」：面板与整页均不含「请把简历 res_aeba1b686aa4 的一句话头衔改成…」，控制台无 error；截图 `/tmp/e2e-b-1-assistant.png`。
+  - 发送主档消息：捕获 `POST /api/sessions` → 新建 `sess_6d3cf19b4923`；`POST /api/sessions/sess_6d3cf19b4923/runs` → 202；`GET /api/sessions/sess_6d3cf19b4923/turns` 的 scope 全为 `profile`，不含 `resume`；截图 `/tmp/e2e-b-2-after-send.png`。
+- 断言输出：`B_resume_text_absent=true, B_created_is_new=true, B_run_session_is_created=true, B_run_session_has_no_resume=true, B_console_errors=[]`。
 
 ## Related ADRs
 
