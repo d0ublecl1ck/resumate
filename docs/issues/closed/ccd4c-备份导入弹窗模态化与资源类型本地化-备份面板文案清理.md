@@ -1,14 +1,15 @@
 ---
 id: ccd4c
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:57:06.728Z
-updated_at: 2026-10-07T10:57:18.821Z
+updated_at: 2026-10-07T11:17:23.693Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 界面与交互
 started_at: 2026-10-07T10:57:18.821Z
+closed_at: 2026-10-07T11:17:23.693Z
 ---
 
 # 备份导入弹窗模态化与资源类型本地化、备份面板文案清理
