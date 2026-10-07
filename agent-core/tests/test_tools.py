@@ -7,7 +7,7 @@ import json
 import httpx
 import pytest
 
-from conftest import BASE, capability_payload
+from conftest import BASE, capability_payload, turn_payload
 from resumate_agent_core.tools import (
     TOOLS,
     ToolArgumentError,
@@ -107,3 +107,23 @@ def test_resume_scoped_schemas_leave_resume_id_to_the_runtime():
         schema = TOOLS[name].input_schema
         assert "resume_id" in schema["properties"]
         assert "resume_id" not in schema["required"]
+
+
+def test_resume_create_turn_accepts_the_session():
+    """运行体自建轮次也必须挂会话；session_id 由运行时注入，所以列入 required。"""
+    schema = TOOLS["create_turn"].input_schema
+    assert "session_id" in schema["properties"]
+    assert "session_id" in schema["required"]
+
+
+def test_create_turn_tool_passes_the_session_id(make_client):
+    seen: dict[str, object] = {}
+
+    def handler(request):
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(201, json=turn_payload())
+
+    with make_client(handler) as client:
+        call_tool(client, "create_turn", {"resume_id": "res_1", "session_id": "sess_x"})
+
+    assert seen["body"]["sessionId"] == "sess_x"

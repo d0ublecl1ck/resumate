@@ -107,25 +107,49 @@ class Message:
         )
 
 
-def bound_system_prompt(system_prompt: str, *, resume_id: str | None, scope: str) -> str:
-    """Name the bound resume so the model never has to guess a resume id.
+def bound_system_prompt(
+    system_prompt: str,
+    *,
+    resume_id: str | None,
+    scope: str,
+    turn_id: str | None = None,
+) -> str:
+    """Name the bound resume (and open turn) so the model never guesses either.
 
-    The run credential only reaches the resume the spawn bound it to, but the
-    model does not know which one that is; without this line it invents ids and
-    every call comes back FORBIDDEN.
+    The run credential only reaches the resume the spawn bound it to, and the
+    runtime already opened a turn before the first model call. Without these
+    lines the model invents a resume id (every call comes back FORBIDDEN) and
+    opens a second, session-less turn (the conversation stops being readable).
     """
     if scope != "resume" or not resume_id:
         return system_prompt
-    return (
-        f"{system_prompt}\n\nThis run is bound to resume {resume_id}. "
-        "Tools that take a resume_id are pre-filled with it; never guess or invent a resume id."
+    sections = [system_prompt]
+    if turn_id:
+        sections.append(
+            f"An editing turn is already open ({turn_id}). Reuse it: stage patches against it "
+            "and close it with finalize_turn; do not call create_turn."
+        )
+    sections.append(
+        f"This run is bound to resume {resume_id}. Tools that take a resume_id are pre-filled "
+        "with it; never guess or invent a resume id."
     )
+    return "\n\n".join(sections)
 
 
-def opening_messages(system_prompt: str, prompt: str, *, resume_id: str | None, scope: str) -> list[Message]:
+def opening_messages(
+    system_prompt: str,
+    prompt: str,
+    *,
+    resume_id: str | None,
+    scope: str,
+    turn_id: str | None = None,
+) -> list[Message]:
     """The context a fresh run starts from."""
     return [
-        Message(role="system", content=bound_system_prompt(system_prompt, resume_id=resume_id, scope=scope)),
+        Message(
+            role="system",
+            content=bound_system_prompt(system_prompt, resume_id=resume_id, scope=scope, turn_id=turn_id),
+        ),
         Message(role="user", content=prompt),
     ]
 
@@ -562,7 +586,13 @@ class AgentRuntime:
             yield ErrorEvent(code="RUNTIME_ERROR", message=str(exc), detail="begin failed")
             return
 
-        messages = opening_messages(self.system_prompt, prompt, resume_id=resume_id, scope=scope)
+        messages = opening_messages(
+            self.system_prompt,
+            prompt,
+            resume_id=resume_id,
+            scope=scope,
+            turn_id=session.turn_id,
+        )
         # The opening context is journalled before the first model call, so the
         # session reflects the run even if that call fails.
         self._record_session(messages)
@@ -618,7 +648,12 @@ class AgentRuntime:
         messages: list[Message] = restored or [
             Message(
                 role="system",
-                content=bound_system_prompt(self.system_prompt, resume_id=turn.resume_id, scope=resume_scope),
+                content=bound_system_prompt(
+                    self.system_prompt,
+                    resume_id=turn.resume_id,
+                    scope=resume_scope,
+                    turn_id=turn.id,
+                ),
             )
         ]
         budget_snapshot = run_state.get("budget")

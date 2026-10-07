@@ -142,6 +142,18 @@ def done_response() -> ModelResponse:
     return ModelResponse(message=Message(role="assistant", content="Done"))
 
 
+def create_turn_response() -> ModelResponse:
+    return ModelResponse(
+        message=Message(
+            role="assistant",
+            content="Opening a turn",
+            tool_calls=(ToolCall(id="c1", name="create_turn", arguments={}),),
+        ),
+        input_tokens=1,
+        output_tokens=1,
+    )
+
+
 class ScriptedProvider:
     def __init__(self, responses) -> None:
         self._responses = list(responses)
@@ -251,6 +263,23 @@ def test_run_journals_messages_and_associates_the_turn_with_the_session(make_cli
     # The last row is the user-facing reply, not part of the model context.
     assert stored[-1]["content"] == {"text": "Done"}
     assert fake.turn_bodies[0]["sessionId"] == session_id
+
+
+def test_model_created_turn_is_linked_to_the_journal_session(make_client) -> None:
+    """The runtime already opened a turn; if the model opens another anyway it must
+    carry the same session so the conversation stays readable from that turn."""
+    fake = FakeSessionApi()
+    with make_client(fake.handler) as client:
+        runtime = AgentRuntime(
+            client,
+            ScriptedProvider([create_turn_response(), done_response()]),
+            sessions=SessionJournal(client),
+        )
+        list(runtime.run("res_1", "tighten bullets"))
+        session_id = runtime.session_id
+
+    assert len(fake.turn_bodies) == 2
+    assert all(body.get("sessionId") == session_id for body in fake.turn_bodies)
 
 
 def test_resume_continues_the_session_without_duplicate_seq(make_client) -> None:
