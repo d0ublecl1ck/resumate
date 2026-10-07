@@ -5,7 +5,7 @@
 import { StrictMode } from "react"
 import type { ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, createEvent, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -435,5 +435,80 @@ describe("ProfileAssistant 按轮次 scope 选取主档会话", () => {
     fireEvent.click(screen.getByRole("button", { name: "发送" }))
 
     await waitFor(() => expect(runs).toEqual(["sess_1"]))
+  })
+})
+
+describe("ProfileAssistant 的发送键约定（与 RunPanel 统一）", () => {
+  function stubSession(calls: string[]) {
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([])),
+      http.post("/api/sessions", () => HttpResponse.json(SESSION, { status: 201 })),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+      http.post("/api/sessions/sess_1/messages", async ({ request }) => {
+        const body = (await request.json()) as { seq: number; role: string; content: unknown }
+        calls.push("message:" + body.role)
+        return HttpResponse.json(
+          { id: "msg_1", sessionId: "sess_1", seq: body.seq, role: body.role, content: body.content, createdAt: "2026-10-01T00:00:00Z" },
+          { status: 201 },
+        )
+      }),
+      http.post("/api/sessions/sess_1/runs", async ({ request }) => {
+        const body = (await request.json()) as { prompt: string }
+        calls.push("run:" + body.prompt)
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([])),
+    )
+  }
+
+  /** 每次按键用独立的调用记录：上一条异步 run 不会漏进下一条断言。 */
+  async function typeAndPress(calls: string[], init: Record<string, unknown>) {
+    stubSession(calls)
+    renderAssistant()
+    const box = (await screen.findByRole("textbox")) as HTMLTextAreaElement
+    fireEvent.change(box, { target: { value: "第一行" } })
+    const event = createEvent.keyDown(box, init)
+    fireEvent(box, event)
+    return { box, event }
+  }
+
+  const runCalls = (calls: string[]) => calls.filter((call) => call.startsWith("run:"))
+
+  it("Shift+Enter 只换行、不发送", async () => {
+    const calls: string[] = []
+    const { event } = await typeAndPress(calls, { key: "Enter", shiftKey: true })
+    expect(event.defaultPrevented).toBe(false)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(runCalls(calls)).toEqual([])
+  })
+
+  it("Meta+Enter 触发发送", async () => {
+    const calls: string[] = []
+    await typeAndPress(calls, { key: "Enter", metaKey: true })
+    await waitFor(() => expect(runCalls(calls)).toEqual(["run:第一行"]))
+  })
+
+  it("Ctrl+Enter 触发发送", async () => {
+    const calls: string[] = []
+    await typeAndPress(calls, { key: "Enter", ctrlKey: true })
+    await waitFor(() => expect(runCalls(calls)).toEqual(["run:第一行"]))
+  })
+
+  it("IME 组合态下 Meta+Enter 不发送", async () => {
+    const calls: string[] = []
+    const { event } = await typeAndPress(calls, { key: "Enter", metaKey: true, isComposing: true })
+    expect(event.defaultPrevented).toBe(false)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(runCalls(calls)).toEqual([])
+  })
+
+  // 放在最后：当前实现下裸 Enter 会真的起一次 run，避免它的在途请求漏进前面的否定断言。
+  it("裸 Enter 不发送、不拦截默认换行", async () => {
+    const calls: string[] = []
+    const { box, event } = await typeAndPress(calls, { key: "Enter" })
+    expect(event.defaultPrevented).toBe(false)
+    expect(box.value).toBe("第一行")
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(runCalls(calls)).toEqual([])
   })
 })
