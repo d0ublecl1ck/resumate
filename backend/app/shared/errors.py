@@ -17,6 +17,9 @@ class ErrorCode(StrEnum):
     REBASE_CONFLICT = "REBASE_CONFLICT"
     RUN_STATE_CONFLICT = "RUN_STATE_CONFLICT"
     MODEL_NOT_CONFIGURED = "MODEL_NOT_CONFIGURED"
+    UPSTREAM_TIMEOUT = "UPSTREAM_TIMEOUT"
+    UPSTREAM_REJECTED = "UPSTREAM_REJECTED"
+    MODEL_OUTPUT_INVALID = "MODEL_OUTPUT_INVALID"
     SCOPE_INSUFFICIENT = "SCOPE_INSUFFICIENT"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     TOKEN_REVOKED = "TOKEN_REVOKED"
@@ -106,6 +109,21 @@ class RunStateConflict(ApiException):
 class ModelNotConfigured(ApiException):
     status_code = 409
     code = ErrorCode.MODEL_NOT_CONFIGURED
+
+
+class UpstreamTimeout(ApiException):
+    status_code = 504
+    code = ErrorCode.UPSTREAM_TIMEOUT
+
+
+class UpstreamRejected(ApiException):
+    status_code = 502
+    code = ErrorCode.UPSTREAM_REJECTED
+
+
+class ModelOutputInvalid(ApiException):
+    status_code = 502
+    code = ErrorCode.MODEL_OUTPUT_INVALID
 
 
 class Unauthenticated(ApiException):

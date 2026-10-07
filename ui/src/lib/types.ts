@@ -43,6 +43,9 @@ export type MachineErrorCode =
   | "RESEND_TOO_SOON" // 429（d7b99）
   | "RATE_LIMITED" // 429（d7b99）
   | "MODEL_NOT_CONFIGURED" // 409（83c41）
+  | "UPSTREAM_TIMEOUT" // 504（fb67d）
+  | "UPSTREAM_REJECTED" // 502（fb67d）
+  | "MODEL_OUTPUT_INVALID" // 502（fb67d）
   | "PASSWORD_RESET_TOKEN_INVALID" // 400（b5586）
 
 export interface ApiError {

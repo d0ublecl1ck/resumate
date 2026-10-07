@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { ApiRequestError } from "@/lib/api-client"
@@ -30,26 +31,27 @@ const DRAFT: ProposedJd = {
 }
 
 function viewProps(overrides: Partial<CreateJdDialogViewProps> = {}): CreateJdDialogViewProps {
-  return {
+  const base: CreateJdDialogViewProps = {
     mode: "text",
     onModeChange: () => {},
     text: "高级前端工程师 · 美团", // i18n-allow: 测试演示数据
     onTextChange: () => {},
     parsing: false,
+    onTextParse: () => {},
+    onImageParse: () => {},
     draft: null,
     onDraftChange: () => {},
+    onResetDraft: () => {},
     error: null,
     onRetry: () => {},
     onClose: () => {},
-    onResetDraft: () => {},
     onCreate: () => {},
     creating: false,
     imageName: null,
     imagePreview: null,
     onPickImage: () => {},
-    onImageParse: () => {},
-    ...overrides,
   }
+  return Object.assign(base, overrides)
 }
 
 describe("CreateJdDialogView 输入 / 整理中", () => {
@@ -108,10 +110,21 @@ describe("CreateJdDialogView 失败态", () => {
   })
 })
 
+function renderModal() {
+  return render(
+    <MemoryRouter initialEntries={["/jds"]}>
+      <Routes>
+        <Route path="/jds" element={<CreateJdModal open onClose={() => {}} onCreated={() => {}} />} />
+        <Route path="/settings" element={<div>settings-page</div>} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
+
 describe("CreateJdModal 容器失败接线", () => {
   it("解析抛 MODEL_NOT_CONFIGURED 时映射为 i18n 文案，不透出后端原文", async () => {
     parseJdFromText.mockRejectedValueOnce(new ApiRequestError("MODEL_NOT_CONFIGURED", "backend raw english message", 409))
-    render(<CreateJdModal open onClose={() => {}} onCreated={() => {}} />)
+    renderModal()
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "高级前端工程师" } })
     fireEvent.click(screen.getByRole("button", { name: "AI 整理" }))
     const alert = await screen.findByRole("alert")
@@ -120,9 +133,28 @@ describe("CreateJdModal 容器失败接线", () => {
     expect(screen.getByRole("button", { name: "AI 整理" })).toBeEnabled()
   })
 
+  it("「去设置模型」真的导航到 /settings", async () => {
+    parseJdFromText.mockRejectedValueOnce(new ApiRequestError("MODEL_NOT_CONFIGURED", "raw", 409))
+    renderModal()
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "高级前端工程师" } })
+    fireEvent.click(screen.getByRole("button", { name: "AI 整理" }))
+    fireEvent.click(await screen.findByRole("button", { name: "去设置模型" }))
+    expect(await screen.findByText("settings-page")).toBeInTheDocument()
+  })
+
+  it("解析超时映射为「解析超时，请重试。」且不泄露机器码", async () => {
+    parseJdFromText.mockRejectedValueOnce(new ApiRequestError("UPSTREAM_TIMEOUT", "raw", 504))
+    renderModal()
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "高级前端工程师" } })
+    fireEvent.click(screen.getByRole("button", { name: "AI 整理" }))
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("解析超时，请重试。")
+    expect(screen.queryByText(/UPSTREAM_TIMEOUT/)).not.toBeInTheDocument()
+  })
+
   it("解析成功后展示草案", async () => {
     parseJdFromText.mockResolvedValueOnce(DRAFT)
-    render(<CreateJdModal open onClose={() => {}} onCreated={() => {}} />)
+    renderModal()
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "高级前端工程师" } })
     fireEvent.click(screen.getByRole("button", { name: "AI 整理" }))
     await waitFor(() => expect(screen.getByText("AI 整理结果（可编辑）")).toBeInTheDocument())

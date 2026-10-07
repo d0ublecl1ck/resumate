@@ -7,7 +7,14 @@ from app.modules.auth.deps import require_permission
 
 from . import service
 from .models import JobDescription
-from .schemas import BindingUpdate, JobDescriptionCreate, JobDescriptionResponse, JobDescriptionUpdate
+from .schemas import (
+    BindingUpdate,
+    JdParseRequest,
+    JobDescriptionCreate,
+    JobDescriptionResponse,
+    JobDescriptionUpdate,
+    ProposedJdResponse,
+)
 
 router = APIRouter(tags=["jd"])
 
@@ -46,6 +53,15 @@ def create_jd(
     user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> JobDescriptionResponse:
     return _to_response(db, service.create_jd(db, user.id, payload))
+
+
+@router.post("/jds:parse-text", response_model=ProposedJdResponse)
+def parse_jd_text(
+    payload: JdParseRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("jd:write")),
+) -> ProposedJdResponse:
+    return service.parse_text(db, user.id, payload)
 
 
 @router.get("/jds/{jd_id}", response_model=JobDescriptionResponse)

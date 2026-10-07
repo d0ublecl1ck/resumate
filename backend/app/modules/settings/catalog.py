@@ -168,7 +168,7 @@ def list_catalog(*, provider: str | None = None, query: str | None = None) -> li
     return result
 
 
-def _resolve_base_url(*, provider: str | None, api_base: str | None) -> str:
+def resolve_base_url(*, provider: str | None, api_base: str | None) -> str:
     """Configured endpoint, or the OpenAI default for the openai provider."""
     base = (api_base or "").strip().rstrip("/")
     if base:
@@ -187,7 +187,7 @@ _STATUS_MESSAGES = {
 }
 
 
-def _safe_status_message(status: int) -> str:
+def safe_status_message(status: int) -> str:
     """Map an HTTP status to copy that never echoes the raw response or key."""
     if status in _STATUS_MESSAGES:
         return _STATUS_MESSAGES[status]
@@ -216,7 +216,7 @@ def probe_connection(
     read differently, and each one logs only the probe url and exception type —
     never the credential, headers, or request body.
     """
-    base_url = _resolve_base_url(provider=provider, api_base=api_base)
+    base_url = resolve_base_url(provider=provider, api_base=api_base)
     url = base_url + CHAT_COMPLETIONS_PATH
     payload: dict[str, Any] = {
         "model": model,
@@ -242,5 +242,5 @@ def probe_connection(
         logger.warning("模型探测传输层异常：url=%s error=%s", url, type(exc).__name__)
         return False, _PROBE_CONNECT_FAILURE_MESSAGE
     if response.status_code >= 400:
-        return False, _safe_status_message(response.status_code)
+        return False, safe_status_message(response.status_code)
     return True, "连接成功"
