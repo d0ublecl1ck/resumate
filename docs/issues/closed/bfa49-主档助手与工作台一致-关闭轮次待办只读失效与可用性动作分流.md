@@ -1,13 +1,14 @@
 ---
 id: bfa49
-status: in-progress
+status: closed
 created_at: 2026-10-07T11:31:46.340Z
-updated_at: 2026-10-07T11:31:58.061Z
+updated_at: 2026-10-07T11:41:35.615Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-07T11:31:58.061Z
+closed_at: 2026-10-07T11:41:35.615Z
 ---
 
 # 主档助手与工作台一致：关闭轮次待办只读失效与可用性动作分流
@@ -53,7 +54,7 @@ started_at: 2026-10-07T11:31:58.061Z
 - [x] 工作台行为不回归：`turn_closed` 同样只读失效，未关闭轮次仍可点；兜底逻辑只有一份共享实现。
 - [x] 主档助手可用性引导按 action 分流：`start_chat` 不跳 `/settings`，`configure_model` 才跳；`retry` 与未知动作都不误导航。
 - [x] `pnpm -C ui test` 全绿、`pnpm -C ui run build` 成功、`archkit inspect .` 通过。
-- [ ] 合并到 main 后跑真实 5173 E2E：关闭轮次历史 pending 不出现可点按钮且显示失效原因；未关闭轮次待办仍可点。
+- [x] 合并到 main 后跑真实 5173 E2E：关闭轮次历史 pending 不出现可点按钮且显示失效原因；未关闭轮次待办仍可点。
 
 ## Implementation
 
@@ -92,15 +93,39 @@ pnpm -C ui exec vitest run src/components/kit/pending-action.test.tsx src/compon
 Green（改实现后）：
 
 ```text
-pnpm -C ui exec vitest run（同上三个文件） → Test Files 3 passed | Tests 55 passed
-pnpm -C ui test                          → Test Files 49 passed | Tests 384 passed
-pnpm -C ui run build                     → ✓ built
-archkit inspect .                        → Quality gates passed.
+pnpm -C ui exec vitest run（同上三个文件）   → Test Files 3 passed | Tests 55 passed
+pnpm -C ui test（rebase 到最新 main 后最终） → Test Files 50 passed | Tests 402 passed
+pnpm -C ui run build                       → ✓ built
+archkit inspect .                          → Quality gates passed.
 ```
 
 说明：`pnpm -C ui test` 首次因 `.freak` 第 87 条已记录的
 `resume-library.test.tsx` 默认 1s 超时偶发失败一次；单独重跑该文件 3 次均通过、整套重跑通过，
-与本次改动无关。
+与本次改动无关。实现提交 `8302bed` 已 ff-only 合并到 main；rebase 前后各跑一次完整测试、
+构建与门禁，结果一致。
+
+### 合并后真实 5173 E2E（2026-10-07）
+
+无头 Playwright（headless chromium，`locale=zh-CN`，1440×1000）复用本机 admin 会话打开
+`http://localhost:5173/profile`，再打开「对话维护资料」抽屉。通过路由拦截
+`GET /api/sessions/sess_6d3cf19b4923/turns`（真实主档会话，含 11 条 profile 轮次）改写最新轮次的
+`state` 与 `pendingActions` 来构造两种场景；后端与其余请求均走真实服务。
+
+场景 A —— 最新轮次已关闭（`finalized`）且待办仍是历史 `pending`：
+
+```text
+批准并应用按钮数=0、拒绝按钮数=0、已失效标签数=1、失效原因数=1、console错误数=0
+卡片显示「已失效」与「失效原因：该待办已随轮次关闭失效」
+```
+
+场景 B —— 最新轮次未关闭（`open`）时的同一待办：
+
+```text
+批准并应用按钮数=1、批准并应用可用=true、拒绝按钮数=1、已失效标签数=0、console错误数=0
+```
+
+截图 `rsm-e2e-closed-turn.png` 与 `rsm-e2e-open-turn.png`、E2E 脚本均存于本机临时目录，未入库；
+脚本打印以上断言并以退出码 0 结束。
 
 ## Related ADRs
 
