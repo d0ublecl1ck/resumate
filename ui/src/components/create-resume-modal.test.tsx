@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
@@ -275,3 +276,46 @@ describe("创建简历 Modal：两条链路", () => {
     expect(screen.queryByText("未找到该简历")).not.toBeInTheDocument()
   })
 })
+
+/** 常驻挂载 + 受控 open 的测试壳，用来验证 Esc 关闭与焦点归还。 */
+function renderStateful() {
+  function Harness() {
+    const [open, setOpen] = useState(false)
+    return (
+      <>
+        <button onClick={() => setOpen(true)}>生成简历</button>
+        <CreateResumeModal open={open} onClose={() => setOpen(false)} resumes={RESUMES} templates={TEMPLATES} />
+      </>
+    )
+  }
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/resumes"]}>
+        <Harness />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
+describe("创建简历 Modal：模态焦点契约", () => {
+  it("打开后焦点进入弹窗、Tab 不逃逸、Esc 关闭并把焦点归还触发按钮", async () => {
+    renderStateful()
+    const trigger = screen.getByRole("button", { name: "生成简历" })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    const dialog = await screen.findByRole("dialog", { name: "开始一份新的简历" })
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+
+    for (let index = 0; index < 12; index += 1) {
+      fireEvent.keyDown(document.activeElement ?? document, { key: "Tab" })
+      expect(dialog.contains(document.activeElement)).toBe(true)
+    }
+
+    fireEvent.keyDown(document, { key: "Escape" })
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+})
+
