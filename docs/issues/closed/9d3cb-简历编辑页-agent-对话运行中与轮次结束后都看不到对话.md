@@ -1,14 +1,15 @@
 ---
 id: 9d3cb
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:13:16.179Z
-updated_at: 2026-10-07T10:13:31.175Z
+updated_at: 2026-10-07T10:47:52.694Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 关键决策
 started_at: 2026-10-07T10:13:31.175Z
+closed_at: 2026-10-07T10:47:52.694Z
 ---
 
 # 简历编辑页 Agent 对话运行中与轮次结束后都看不到对话
@@ -47,12 +48,12 @@ t+12s..28s :: Agent 对话 | 当前 Run 模式：Approval 逐项确认（服务�
 
 ## Acceptance Criteria
 
-- [ ] 运行中面板能看到用户消息、Agent 文本回复与工具活动行；approval 模式的待确认卡片、approve/reject、预算、`starting` 启动态均不退化。
-- [ ] 轮次 finalize 后面板仍展示该轮对话（不再回到「还没有对话」）。
-- [ ] `ui/src/lib/run-api.test.ts` 覆盖「没有 open 轮次时取最新已结束轮次」与「会话消息进入 timeline 且与轮次投影去重」。
-- [ ] `ui/src/components/run-panel.test.tsx` 覆盖「已结束轮次仍渲染对话」「SSE turn.updated 触发刷新」。
-- [ ] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 全绿。
-- [ ] 合并到 main 后用无头 Playwright 走真实页面：可见用户消息与 Agent 回复；有 pending 时 approve 后确认后续变化；轮次结束后对话仍在；控制台 0 error；`section[aria-label]` 全程为 3。
+- [x] 运行中面板能看到用户消息、Agent 文本回复与工具活动行；approval 模式的待确认卡片、approve/reject、预算、`starting` 启动态均不退化。
+- [x] 轮次 finalize 后面板仍展示该轮对话（不再回到「还没有对话」）。
+- [x] `ui/src/lib/run-api.test.ts` 覆盖「没有 open 轮次时取最新已结束轮次」与「会话消息进入 timeline 且与轮次投影去重」。
+- [x] `ui/src/components/run-panel.test.tsx` 覆盖「已结束轮次仍渲染对话」「SSE turn.updated 触发刷新」。
+- [x] `pnpm -C ui test`、`pnpm -C ui run build`、`archkit inspect .` 全绿。
+- [x] 合并到 main 后用无头 Playwright 走真实页面：可见用户消息与 Agent 回复；有 pending 时 approve 后确认后续变化；轮次结束后对话仍在；控制台 0 error；`section[aria-label]` 全程为 3。
 
 ## Implementation
 
@@ -82,7 +83,24 @@ pnpm -C ui run build   → ✓ built
 archkit inspect .      → Quality gates passed.
 ```
 
-合并到 main 后的真实页面端到端实证见关单提交（截图与采样文本）。
+### 合并后真实页面 E2E（2026-10-07）
+
+无头 Playwright（chromium headless、locale=zh-CN、admin storage_state）打开 `http://localhost:5173/resumes/res_aeba1b686aa4`，输入「把一句话头衔改成「资深后端工程师」，并加上所在地「杭州」」并点发送，按 1s 采样中间栏。
+
+```text
+t+01s sections=3 :: 运行中 | ... | 把一句话头衔改成「资深后端工程师」，并加上所在地「杭州」
+t+03s sections=3 :: 运行中 | ... | I\'ll start by inspecting the open turn and the current working copy. | get_turn · {"turn_id":"turn_4e06aeeb1db9"} | get_working_document · {"resume_id":"res_aeba1b686aa4"}
+t+05s sections=3 :: 待确认 | ... | 内容修改（1 处） | location "" -> "杭州" | 批准并应用 | 拒绝
+t+06s sections=3 :: 已批准 | ...
+t+08s sections=3 :: 运行中 | ... | Pending action `pa_75eb491ccb6a` is approved. Applying the patch now. | apply_patch · {...}
+t+09s sections=3 :: 轮次已关闭 | ... | finalize_turn · {...} | 头衔设为「资深后端工程师」，新增所在地「杭州」
+```
+
+断言：`SEEN_PROMPT: True`、`APPROVED: True`、`STATES: ['运行中','待确认','已批准','轮次已关闭']`、`SECTIONS_NOT_3: [] count=0`、`CONSOLE_ERRORS: []`。
+
+服务端复核：`GET /resumes/res_aeba1b686aa4` → 新版本 `ver_7e8add46e35a`，`basics.location` 为「杭州」；finalized 轮次 `turn_4e06aeeb1db9` 挂会话 `sess_13d880e9db1d`。
+
+截图：headless E2E 输出的 before/after 两张 PNG（本地临时目录，未入库）。
 
 ## Related ADRs
 
