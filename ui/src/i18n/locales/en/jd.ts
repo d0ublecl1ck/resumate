@@ -23,6 +23,16 @@ export default {
     reset: "Re-run",
     confirm: "Create JD",
     creating: "Creating…",
+    retry: "Retry",
+    errorTitle: "Couldn't structure the JD",
+    openSettings: "Open model settings",
+    errors: {
+      MODEL_NOT_CONFIGURED: "No model is configured yet. Pick one in settings, then try again.",
+      UPSTREAM_TIMEOUT: "Structuring timed out. Please retry.",
+      UPSTREAM_REJECTED: "The model service is unavailable right now. Please retry.",
+      MODEL_OUTPUT_INVALID: "The model returned something unreadable. Please retry.",
+      NETWORK_ERROR: "Can't reach the backend service. Make sure it's running.",
+    },
   },
   library: {
     title: "JD library",

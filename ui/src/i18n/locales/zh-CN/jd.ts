@@ -22,6 +22,16 @@ export default {
     reset: "重新整理",
     confirm: "创建 JD",
     creating: "创建中…",
+    retry: "重试",
+    errorTitle: "整理失败",
+    openSettings: "去设置模型",
+    errors: {
+      MODEL_NOT_CONFIGURED: "还没有配置模型，先去设置里选一个再整理。",
+      UPSTREAM_TIMEOUT: "解析超时，请重试。",
+      UPSTREAM_REJECTED: "模型服务暂时不可用，请重试。",
+      MODEL_OUTPUT_INVALID: "模型返回无法解析，请重试。",
+      NETWORK_ERROR: "无法连接后端服务，请确认服务已启动。",
+    },
   },
   library: {
     title: "JD 库",
