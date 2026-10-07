@@ -10,8 +10,9 @@ import { cn } from "@/lib/utils"
 import { createResume, duplicateResume } from "@/lib/api"
 import { resumeCreateErrorMessage } from "@/lib/resume-create"
 import { ResumePickerDialog } from "@/components/resume-picker-dialog"
+import { Modal } from "@/components/ui/modal"
 import type { Resume, ResumeTemplate } from "@/lib/types"
-import { Copy, Plus, X } from "lucide-react"
+import { Copy, Plus } from "lucide-react"
 
 type Method = "copy" | "blank"
 
@@ -34,8 +35,6 @@ export function CreateResumeModal({
   const [sourceId, setSourceId] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  if (!open) return null
 
   const copySources = resumes.filter((resume) => resume.lifecycle === "active")
   const usableTemplates = templates.filter((template) => template.status === "published")
@@ -108,20 +107,16 @@ export function CreateResumeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button className="absolute inset-0 bg-foreground/40" aria-label={t("common.actions.close")} onClick={close} />
-      <div role="dialog" aria-modal="true" aria-labelledby="create-title" className="relative z-10 w-full max-w-lg card-frame max-h-[88vh] overflow-auto p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 id="create-title" className="font-serif text-2xl font-bold text-foreground">{t("resume.create.title")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t("resume.create.description")}</p>
-          </div>
-          <button onClick={close} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}>
-            <X className="size-5" />
-          </button>
-        </div>
-
-        <fieldset className="mt-5">
+    <Modal
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) close()
+      }}
+      title={t("resume.create.title")}
+      description={t("resume.create.description")}
+      className="max-w-lg"
+    >
+      <fieldset className="mt-5">
           <legend className="mb-2 text-sm font-medium text-foreground">{t("resume.create.methodLegend")}</legend>
           <div className="grid gap-2">
             {methods.map((item) => {
@@ -169,7 +164,6 @@ export function CreateResumeModal({
             {submitting ? t("resume.create.submitting") : t("common.actions.create")}
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }
