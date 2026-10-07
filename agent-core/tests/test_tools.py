@@ -99,3 +99,11 @@ def test_turn_scoped_schema_declares_required_turn_id():
     schema = TOOLS["preview_patch"].input_schema
     assert schema["required"] == ["turn_id", "ops"]
     assert schema["properties"]["ops"]["minItems"] == 1
+
+
+def test_resume_scoped_schemas_leave_resume_id_to_the_runtime():
+    """resume_id 由运行体注入：模型即使省略也必须能调用，schema 不标 required。"""
+    for name in ("create_turn", "get_working_document"):
+        schema = TOOLS[name].input_schema
+        assert "resume_id" in schema["properties"]
+        assert "resume_id" not in schema["required"]
