@@ -65,3 +65,41 @@ export const AutosaveLongInterval = {
     )
   },
 }
+
+/** 已 finalize 的最近一轮：active-run 仍取最新轮次，对话与 Agent 最终回复留在面板里。 */
+const FINALIZED_TURN = {
+  id: "turn_now",
+  resumeId: "res_fe_lead",
+  clientId: "external",
+  source: "agent",
+  executionMode: "approval",
+  modeSource: "session",
+  state: "finalized",
+  baseVersionId: "ver_fe_5",
+  sessionId: "sess_now",
+  message: "",
+  createdAt: "2026-09-20T14:30:00+08:00",
+  closedAt: "2026-09-20T14:31:00+08:00",
+  result: {
+    state: "finalized",
+    resumeId: "res_fe_lead",
+    versionId: "ver_fe_6",
+    changeCount: 1,
+    affectedSections: ["职业经历"], // i18n-allow: MSW mock 的服务端章节名，属后端数据不翻译（US-13.4）
+    message: "已提交「强化性能优化量化成果」", // i18n-allow: MSW mock 的轮次结果文案，属后端数据不翻译（US-13.4）
+  },
+  pendingActions: [],
+}
+
+/** 轮次结束后（turn_closed）不再回到空态：会话消息合成的时间线仍是面板内容。 */
+export const ConversationAfterFinalize = {
+  render: () => {
+    applyPreferences(false)
+    worker.use(http.get("/api/resumes/:id/turns", () => HttpResponse.json([FINALIZED_TURN])))
+    return (
+      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+        <ResumeEditorPage />
+      </Screen>
+    )
+  },
+}

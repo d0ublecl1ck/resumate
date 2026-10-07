@@ -90,6 +90,47 @@ const MOCK_TURN = {
   pendingActions: [MOCK_PENDING_ACTION],
 }
 
+// 会话层对话（契约 §19.1 / §21.5）：标准 run 的 prompt、中间回复与最终回复都在这里，
+// 前端 run-panel 从 GET /sessions/{id}/messages 合成时间线。
+const MOCK_SESSION_MESSAGES = [
+  {
+    id: "msg_now_1",
+    sessionId: "sess_now",
+    seq: 1,
+    role: "system",
+    content: { role: "system", content: "You operate a Resumate resume through the public API." },
+    createdAt: "2026-09-20T14:30:00+08:00",
+  },
+  {
+    id: "msg_now_2",
+    sessionId: "sess_now",
+    seq: 2,
+    role: "user",
+    content: { role: "user", content: "帮我根据美团这份 JD 突出性能优化经历。" },
+    createdAt: "2026-09-20T14:30:01+08:00",
+  },
+  {
+    id: "msg_now_3",
+    sessionId: "sess_now",
+    seq: 3,
+    role: "assistant",
+    content: {
+      role: "assistant",
+      content: "先读工作副本，确认当前经历的写法。",
+      toolCalls: [{ id: "call_now_1", name: "get_working_document", arguments: { resume_id: "res_fe_lead" } }],
+    },
+    createdAt: "2026-09-20T14:30:02+08:00",
+  },
+  {
+    id: "msg_now_4",
+    sessionId: "sess_now",
+    seq: 4,
+    role: "assistant",
+    content: { text: "已生成一条待确认的量化改写，批准后即可提交。" },
+    createdAt: "2026-09-20T14:30:03+08:00",
+  },
+]
+
 function createSession(id: string): AgentSession {
   const now = new Date().toISOString()
   return { id: `sess_${id}`, createdAt: now, updatedAt: now, lastActiveAt: now }
@@ -380,7 +421,9 @@ export const handlers = [
   // 会话层与 profile 作用域 run（契约 §19 / §21）：默认空会话，测试按需覆盖。
   http.get("/api/sessions", () => HttpResponse.json([])),
   http.post("/api/sessions", () => HttpResponse.json(createSession(Date.now().toString(36)), { status: 201 })),
-  http.get("/api/sessions/:id/messages", () => HttpResponse.json([])),
+  http.get("/api/sessions/:id/messages", ({ params }) =>
+    HttpResponse.json(params.id === "sess_now" ? MOCK_SESSION_MESSAGES : []),
+  ),
   http.post("/api/sessions/:id/messages", async ({ params, request }) => {
     const body = (await request.json()) as { seq: number; role: string; content: unknown }
     return HttpResponse.json(
