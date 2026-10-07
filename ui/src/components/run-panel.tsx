@@ -2,7 +2,7 @@
 // 当前 Run 模式服务端固化（C-02）；控制事件（批准/拒绝）留在原轮次，不开启新任务轮次。
 // 真实接线：approve/reject 走公共 API，turn.updated 经 SSE 触发 run 查询刷新。
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { approvePendingAction, rejectPendingAction, startRun } from "@/lib/api"
@@ -34,6 +34,9 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
   const [startError, setStartError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [submittingId, setSubmittingId] = useState<string | null>(null)
+  // 点击发送后子进程要 1~3s 才建出新轮次；在这之前不能被当前显示的旧轮次（可能已关闭）短路。
+  const [awaitingNewRun, setAwaitingNewRun] = useState(false)
+  const submittedFromRunId = useRef<string | null>(null)
 
   const decision = useMutation({
     mutationFn: ({ actionId, kind }: { actionId: string; kind: "approve" | "reject" }) =>
@@ -60,6 +63,7 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     },
     onError: (cause) => {
       setStarting(false)
+      setAwaitingNewRun(false)
       setStartError(t(agentErrorKey(cause)))
     },
   })
@@ -74,33 +78,36 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     })
   }, [run?.id, resumeId, queryClient])
 
+  // 新轮次出现（run.id 从提交时的基线变化）即结束等待；超时兜底在轮询 effect 里。
+  useEffect(() => {
+    if (!awaitingNewRun) return
+    if (run?.id === undefined || run.id === submittedFromRunId.current) return
+    setAwaitingNewRun(false)
+    setStarting(false)
+  }, [awaitingNewRun, run?.id])
+
   // SSE 只在轮次投影真实变化时推送；Agent 的中间回复与工具活动写的是会话消息，
   // 不会改变轮次投影。轮次未关闭时轮询 active-run，让对话持续出现；关闭后停止。
+  // 例外：刚点过发送、还在等新轮次时，即使当前显示的旧轮次已关闭也必须继续轮询，
+  // 否则第一次刷新（子进程还没建轮次）拿回旧轮次后就再也不会刷新。最多等 60s。
   useEffect(() => {
-    if (!run?.id || run.state === "turn_closed") return
+    const polling = awaitingNewRun || (run?.id !== undefined && run.state !== "turn_closed")
+    if (!polling) return
     const timer = window.setInterval(() => {
       void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
     }, 1500)
-    return () => window.clearInterval(timer)
-  }, [run?.id, run?.state, resumeId, queryClient])
-
-  // 子进程创建轮次有延迟：run 出现前轮询 active-run，最多 60s，避免立刻显示「无轮次」。
-  useEffect(() => {
-    if (!starting || run?.id) return
-    const timer = window.setInterval(() => {
-      void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
-    }, 1500)
-    const stop = window.setTimeout(() => setStarting(false), 60000)
+    const stop =
+      awaitingNewRun
+        ? window.setTimeout(() => {
+            setAwaitingNewRun(false)
+            setStarting(false)
+          }, 60000)
+        : undefined
     return () => {
       window.clearInterval(timer)
-      window.clearTimeout(stop)
+      if (stop !== undefined) window.clearTimeout(stop)
     }
-  }, [starting, run?.id, resumeId, queryClient])
-
-  // run 出现后结束「正在启动」。
-  useEffect(() => {
-    if (run?.id) setStarting(false)
-  }, [run?.id])
+  }, [awaitingNewRun, run?.id, run?.state, resumeId, queryClient])
 
   const approve = (actionId: string) => decision.mutate({ actionId, kind: "approve" })
   const reject = (actionId: string) => decision.mutate({ actionId, kind: "reject" })
@@ -109,6 +116,8 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     const prompt = input.trim()
     if (!prompt || start.isPending) return
     setInput("")
+    submittedFromRunId.current = run?.id ?? null
+    setAwaitingNewRun(true)
     start.mutate(prompt)
   }
 

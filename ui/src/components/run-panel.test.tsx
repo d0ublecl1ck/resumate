@@ -391,3 +391,45 @@ describe("RunPanel 对话时间线", () => {
     }
   })
 })
+
+describe("RunPanel 第二次发送", () => {
+  it("当前显示已结束轮次时，点击发送后仍持续轮询直到新轮次出现", async () => {
+    vi.useFakeTimers()
+    try {
+      server.use(
+        http.post("/api/resumes/:id/runs", () =>
+          HttpResponse.json({ runId: "run_2", status: "started" }, { status: 202 }),
+        ),
+      )
+      const queryClient = newClient()
+      const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+      const view = renderPanel(FINALIZED_RUN, queryClient)
+      const input = screen.getByRole("textbox", { name: i18n.t("workbench.run.inputAria") })
+      fireEvent.change(input, { target: { value: "把我的姓名改成「张三」" } })
+      fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.sendAria") }))
+      await vi.advanceTimersByTimeAsync(50)
+      invalidate.mockClear()
+
+      // 旧轮次已关闭也必须继续轮询：新轮次是子进程异步建的，第一次刷新看不到。
+      await vi.advanceTimersByTimeAsync(1600)
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ["active-run", "res_1"] })
+
+      const nextRun: AgentRun = {
+        ...RUN,
+        id: "turn_2",
+        state: "running",
+        pendingActions: [],
+        timeline: [{ id: "turn_2:message", kind: "message", at: "2026-10-07T10:05:00Z", role: "user", text: "把我的姓名改成「张三」" }],
+      }
+      view.rerender(
+        <QueryClientProvider client={queryClient}>
+          <RunPanel resumeId="res_1" run={nextRun} mode="approval" />
+        </QueryClientProvider>,
+      )
+      await vi.advanceTimersByTimeAsync(50)
+      expect(screen.getByText("把我的姓名改成「张三」")).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
