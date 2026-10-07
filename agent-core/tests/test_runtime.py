@@ -268,6 +268,17 @@ def test_bound_system_prompt_names_the_resume_only_for_resume_scope():
     assert bound_system_prompt("base prompt", resume_id="res_1", scope="profile") == "base prompt"
 
 
+def test_bound_system_prompt_reuses_the_open_turn():
+    from resumate_agent_core.runtime import bound_system_prompt
+
+    prompt = bound_system_prompt("base prompt", resume_id="res_1", scope="resume", turn_id="turn_1")
+    assert "turn_1" in prompt
+    assert "create_turn" in prompt
+
+    without_turn = bound_system_prompt("base prompt", resume_id="res_1", scope="resume")
+    assert "turn_1" not in without_turn
+
+
 def test_opening_context_tells_the_model_which_resume_it_is_bound_to(make_client):
     provider = ScriptedProvider(
         [ModelResponse(message=Message(role="assistant", content="Done"), input_tokens=1, output_tokens=1)]
@@ -279,6 +290,9 @@ def test_opening_context_tells_the_model_which_resume_it_is_bound_to(make_client
     opening = provider.calls[0]
     assert opening[0].role == "system"
     assert "res_1" in opening[0].content
+    # The runtime already opened turn_1; the model must not open a second one.
+    assert "turn_1" in opening[0].content
+    assert "create_turn" in opening[0].content
     assert opening[1].role == "user"
     assert opening[1].content == "tighten bullets"
 

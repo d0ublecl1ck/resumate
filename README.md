@@ -195,7 +195,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 
 ```bash
 uv run --directory backend pytest        # → 251 passed
-cd agent-core && uv run pytest -q        # → 106 passed
+cd agent-core && uv run pytest -q        # → 110 passed
 cd ui && pnpm test                       # → 38 files / 287 passed
 archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
 

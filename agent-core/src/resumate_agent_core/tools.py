@@ -139,6 +139,7 @@ def _create_turn(client: ResumateClient, args: Mapping[str, Any]) -> Any:
             execution_mode=args.get("execution_mode"),
             client_id=args.get("client_id"),
             source=args.get("source"),
+            session_id=args.get("session_id"),
             message=args.get("message"),
         )
     )
@@ -273,10 +274,15 @@ TOOLS: dict[str, Tool] = {
                     "description": "Untrusted hint; the server does not trust forged values.",
                 },
                 "message": {"type": "string", "description": "Turn description."},
+                "session_id": {
+                    "type": "string",
+                    "description": "Session the turn belongs to; injected by the run.",
+                },
             },
             # resume_id stays visible but optional: a resume-scoped run injects the
-            # bound id, and the model must never be forced to invent one.
-            "required": [],
+            # bound id, and the model must never be forced to invent one. session_id
+            # is injected too, so a model-created turn still carries the journal.
+            "required": ["session_id"],
             "additionalProperties": False,
         },
         handler=_create_turn,
