@@ -574,6 +574,7 @@
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
+          <li>轮次结束后保留最近一轮对话：active-run 优先取 open 轮次、否则取最新已结束轮次；对话与工具活动来自会话消息（<code>GET /sessions/{id}/messages</code>），不再回到「还没有对话」</li>
           <li>保存（flush）：有改动时按钮可用，<code>PUT /resumes/{id}/document</code> 提交整份文档 + 基线版本号；成功后徽标取服务端 <code>saveState</code>，并失效简历查询重取基线</li>
           <li>基线过期：409 <code>BASE_VERSION_STALE</code> 就地 coral 报错、保留本地草稿、按钮可重试；不透出服务端原文，也不显示「已保存」</li>
           <li>校验 / 权限 / 网络失败：同一处 <code>role="alert"</code> 给 i18n 文案</li>

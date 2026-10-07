@@ -341,3 +341,53 @@ describe("RunPanel 发起运行", () => {
     await waitFor(() => expect(screen.queryByText(i18n.t("workbench.run.starting"))).not.toBeInTheDocument())
   })
 })
+
+const FINALIZED_RUN: AgentRun = {
+  ...RUN,
+  state: "turn_closed",
+  pendingActions: [],
+  timeline: [
+    { id: "turn_1:message", kind: "message", at: "2026-10-07T10:00:00Z", role: "user", text: "把一句话头衔改成「资深后端工程师」" },
+    { id: "m3:call:0", kind: "tool_progress", at: "2026-10-07T10:00:01Z", toolName: "get_working_document", text: '{"resume_id":"res_1"}' },
+    { id: "m4", kind: "message", at: "2026-10-07T10:00:02Z", role: "agent", text: "已生成一条待确认的修改。" },
+    { id: "turn_1:result", kind: "finalize", at: "2026-10-07T10:00:03Z", role: "agent", text: "轮次已提交" },
+  ],
+}
+
+describe("RunPanel 对话时间线", () => {
+  it("轮次结束后仍渲染该轮对话，不回退空态", () => {
+    renderPanel(FINALIZED_RUN, newClient())
+
+    expect(screen.getByText("把一句话头衔改成「资深后端工程师」")).toBeInTheDocument()
+    expect(screen.getByText("已生成一条待确认的修改。")).toBeInTheDocument()
+    expect(screen.getByText("轮次已提交")).toBeInTheDocument()
+    expect(screen.queryByText(i18n.t("workbench.run.empty"))).not.toBeInTheDocument()
+  })
+
+  it("渲染工具活动行", () => {
+    renderPanel(FINALIZED_RUN, newClient())
+
+    expect(screen.getByText("get_working_document")).toBeInTheDocument()
+  })
+
+  it("轮次未关闭时轮询 active-run，已结束轮次不再轮询", async () => {
+    vi.useFakeTimers()
+    try {
+      const openClient = newClient()
+      const openInvalidate = vi.spyOn(openClient, "invalidateQueries")
+      renderPanel({ ...RUN, state: "running", pendingActions: [] }, openClient)
+      openInvalidate.mockClear()
+      await vi.advanceTimersByTimeAsync(1600)
+      expect(openInvalidate).toHaveBeenCalledWith({ queryKey: ["active-run", "res_1"] })
+
+      const closedClient = newClient()
+      const closedInvalidate = vi.spyOn(closedClient, "invalidateQueries")
+      renderPanel(FINALIZED_RUN, closedClient)
+      closedInvalidate.mockClear()
+      await vi.advanceTimersByTimeAsync(3200)
+      expect(closedInvalidate).not.toHaveBeenCalledWith({ queryKey: ["active-run", "res_1"] })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})

@@ -56,6 +56,7 @@ import type {
   WorkbenchSummary,
 } from "./types"
 import { request, requestText } from "./api-client"
+import { buildRunTimeline } from "./run-conversation"
 import i18n from "@/i18n"
 
 // 模拟网络延迟，方便页面演示 loading 状态。设为 0 可关闭。
@@ -186,21 +187,37 @@ export function updateDocument(id: string, input: { document: ResumeDocument; ba
 // Agent Run / Conversation：events / cancel / PendingAction approve|reject
 // ---------------------------------------------------------------------------
 
+export interface GetActiveRunOptions {
+  /**
+   * 是否把会话层对话合成进 `timeline`。默认 true；工作台摘要只需要待办数，
+   * 传 false 避免为每份简历多拉一次会话消息。
+   */
+  withConversation?: boolean
+}
+
 /**
- * GET /resumes/{id}/turns?state=open → GET /turns/{turnId}/state
+ * GET /resumes/{id}/turns → GET /turns/{turnId}/state → GET /sessions/{sessionId}/messages
  *
- * 用「open 轮次列表」而不是 working-document 发现轮次：approval 下 preview 只建
- * 待办、不落 working copy，只有 open 列表能在首次 apply 前发现待审批轮次。
- * 没有 open 轮次时返回 null：React Query v5 禁止 queryFn resolve 出 undefined，
- * 用 null 表达「查询成功但没有活动轮次」这一合法空值。预算来自轮次 checkpoint，
- * 该端点不可用时预算退化为 0，不影响运行与待办展示。
+ * 用轮次列表而不是 working-document 发现轮次：approval 下 preview 只建待办、不落
+ * working copy，只有轮次列表能在首次 apply 前发现待审批轮次。**优先 open，没有再取
+ * 最新一轮**：轮次 finalize 后 active-run 不能立刻归空，否则用户刚发起的对话连同
+ * Agent 回复、提出的修改会一起消失。完全没有轮次时返回 null：React Query v5 禁止
+ * queryFn resolve 出 undefined，用 null 表达「查询成功但没有轮次」这一合法空值。
+ *
+ * 对话内容来自会话层（`turn.sessionId`）：`turn.message` 在标准 run 里为空，Agent
+ * 的中间回复与最终回复只写在 `agent_session_messages`。会话不可读时退回轮次投影，
+ * 不阻塞面板。预算来自轮次 checkpoint，该端点不可用时退化为 0。
  */
-export async function getActiveRun(resumeId: string): Promise<AgentRun | null> {
-  const turns = await request<ApiTurn[]>(`/resumes/${resumeId}/turns?state=open`)
-  const turn = turns[0]
+export async function getActiveRun(resumeId: string, options: GetActiveRunOptions = {}): Promise<AgentRun | null> {
+  const turns = await request<ApiTurn[]>(`/resumes/${resumeId}/turns`)
+  const turn = turns.find((item) => item.state === "open") ?? turns[0]
   if (!turn) return null
   const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
-  return mapTurnToRun(turn, state)
+  const run = mapTurnToRun(turn, state)
+  if (options.withConversation === false || !turn.sessionId) return run
+  const messages = await listSessionMessages(turn.sessionId).catch(() => [] as AgentSessionMessage[])
+  if (!messages.length) return run
+  return { ...run, timeline: buildRunTimeline(messages, run.timeline) }
 }
 
 export interface StartRunInput {
@@ -633,8 +650,9 @@ export async function getWorkbenchSummary(): Promise<WorkbenchSummary> {
   const resumes = await listResumes()
   const jds = await listJds()
   const profile = await getProfile()
-  // 没有「列出活动轮次」的端点：逐份简历查询 working-document，累加真实待办数。
-  const runs = await Promise.all(resumes.map((resume) => getActiveRun(resume.id)))
+  // 没有「列出活动轮次」的端点：逐份简历查询最新轮次，累加真实待办数。
+  // 摘要不需要对话正文，跳过会话消息拉取。
+  const runs = await Promise.all(resumes.map((resume) => getActiveRun(resume.id, { withConversation: false })))
   const pendingActionCount = runs.reduce((n, run) => n + (run?.pendingActions.filter((p) => p.state === "pending").length ?? 0), 0)
   return resolve({
     latestResume: resumes[0],

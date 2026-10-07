@@ -74,6 +74,16 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     })
   }, [run?.id, resumeId, queryClient])
 
+  // SSE 只在轮次投影真实变化时推送；Agent 的中间回复与工具活动写的是会话消息，
+  // 不会改变轮次投影。轮次未关闭时轮询 active-run，让对话持续出现；关闭后停止。
+  useEffect(() => {
+    if (!run?.id || run.state === "turn_closed") return
+    const timer = window.setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
+    }, 1500)
+    return () => window.clearInterval(timer)
+  }, [run?.id, run?.state, resumeId, queryClient])
+
   // 子进程创建轮次有延迟：run 出现前轮询 active-run，最多 60s，避免立刻显示「无轮次」。
   useEffect(() => {
     if (!starting || run?.id) return
@@ -193,11 +203,12 @@ function TimelineItem({ ev }: { ev: RunTimelineEvent }) {
   }
   if (ev.kind === "tool_progress") {
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Wrench className="size-3.5 shrink-0" aria-hidden />
-        <span className="font-mono">{ev.toolName}</span>
-        <span>·</span>
-        <span>{ev.text}</span>
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <Wrench className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+        <span className="min-w-0 break-words">
+          <span className="font-mono text-foreground">{ev.toolName}</span>
+          {ev.text ? <span> · {ev.text}</span> : null}
+        </span>
       </div>
     )
   }
