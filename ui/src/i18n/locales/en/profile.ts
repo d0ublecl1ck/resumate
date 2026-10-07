@@ -104,7 +104,7 @@ export default {
       skill: "I am proficient in TypeScript and React, and recently diving into Rust",
     },
     thinking: "Organizing…",
-    placeholder: "Change your basics, or add an experience… (Enter to send, Shift+Enter for a new line)",
+    placeholder: "Change your basics, or add an experience… (⌘↵ to send, Shift+↵ for a new line)",
     send: "Send",
   },
 }

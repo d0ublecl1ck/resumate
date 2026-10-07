@@ -361,7 +361,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                       e.preventDefault()
                       submit(input)
                     }

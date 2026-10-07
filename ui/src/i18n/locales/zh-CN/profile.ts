@@ -104,7 +104,7 @@ export default {
       skill: "我精通 TypeScript 和 React，最近在深入 Rust",
     },
     thinking: "正在整理…",
-    placeholder: "改基本信息，或补充一段经历…（Enter 发送，Shift+Enter 换行）",
+    placeholder: "改基本信息，或补充一段经历…（⌘↵ 发送，Shift+↵ 换行）",
     send: "发送",
   },
 }
