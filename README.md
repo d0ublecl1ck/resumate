@@ -194,7 +194,7 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 247 passed
+uv run --directory backend pytest        # → 251 passed
 cd agent-core && uv run pytest -q        # → 101 passed
 cd ui && pnpm test                       # → 35 files / 259 passed
 archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
