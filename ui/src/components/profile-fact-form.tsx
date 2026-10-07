@@ -32,10 +32,14 @@ export function ProfileFactForm({
   const [evidenceLabel, setEvidenceLabel] = useState(fact?.evidence.label ?? "")
   const [visibility, setVisibility] = useState<FactVisibility>(fact?.visibility ?? "resume_only")
   const [busy, setBusy] = useState(false)
+  // 未提交过（pristine）不是错误：只有用户尝试提交且输入仍非法时才展示必填提示。
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const valid = title.trim().length > 0 && content.trim().length > 0
+  const showRequired = submitAttempted && !valid
 
   async function save() {
+    setSubmitAttempted(true)
     if (!valid || busy) return
     setBusy(true)
     try {
@@ -153,7 +157,7 @@ export function ProfileFactForm({
         <button
           type="button"
           onClick={save}
-          disabled={!valid || busy}
+          disabled={busy}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
         >
           {busy ? t("profile.actions.savingFact") : mode === "update" ? t("profile.actions.saveFact") : t("profile.actions.addFact")}
@@ -166,7 +170,7 @@ export function ProfileFactForm({
         >
           {t("common.actions.cancel")}
         </button>
-        {!valid ? <span className="text-xs text-coral">{t("profile.factForm.required")}</span> : null}
+        {showRequired ? <span className="text-xs text-coral">{t("profile.factForm.required")}</span> : null}
       </div>
     </div>
   )
