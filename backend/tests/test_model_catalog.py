@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import httpx
 import pytest
@@ -142,6 +143,109 @@ def test_probe_maps_network_failure() -> None:
 
     assert ok is False
     assert "无法连接" in message
+
+
+def _raising_client(exc: Exception) -> httpx.Client:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise exc
+
+    return _mock_client(handler)
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        httpx.ReadTimeout("read timed out"),
+        httpx.WriteTimeout("write timed out"),
+        httpx.PoolTimeout("pool timed out"),
+    ],
+)
+def test_probe_maps_response_timeout_to_timeout_message(exc: Exception) -> None:
+    ok, message = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        client=_raising_client(exc),
+    )
+
+    assert ok is False
+    assert message == "模型响应超时，请稍后重试"
+    assert "无法连接" not in message
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        httpx.ConnectError("no route"),
+        httpx.ConnectTimeout("connect timed out"),
+    ],
+)
+def test_probe_keeps_network_message_for_connect_failures(exc: Exception) -> None:
+    ok, message = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        client=_raising_client(exc),
+    )
+
+    assert ok is False
+    assert message == "无法连接模型服务，请检查 Endpoint 与网络"
+
+
+def test_probe_distinguishes_connect_error_from_read_timeout() -> None:
+    _, connect_message = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        client=_raising_client(httpx.ConnectError("no route")),
+    )
+    _, timeout_message = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        client=_raising_client(httpx.ReadTimeout("read timed out")),
+    )
+
+    assert connect_message != timeout_message
+
+
+def test_probe_logs_transport_failure_without_leaking_credentials(caplog) -> None:
+    caplog.set_level(logging.WARNING, logger=catalog.__name__)
+    api_key = "sk-super-secret"
+
+    ok, _ = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        api_key=api_key,
+        client=_raising_client(httpx.ReadTimeout("read timed out")),
+    )
+
+    assert ok is False
+    assert caplog.records
+    logged = "\n".join(record.getMessage() for record in caplog.records)
+    assert "https://api.openai.com/v1/chat/completions" in logged
+    assert "ReadTimeout" in logged
+    assert api_key not in logged
+    assert "Authorization" not in logged
+
+
+def test_probe_default_timeout_is_split_with_relaxed_read() -> None:
+    timeout = catalog.PROBE_TIMEOUT
+
+    assert isinstance(timeout, httpx.Timeout)
+    assert timeout.connect == 5.0
+    assert timeout.read == 30.0
+    assert timeout.write == 10.0
+    assert timeout.pool == 5.0
+    assert timeout.read > timeout.connect
+
+
+def test_probe_accepts_an_explicit_float_timeout() -> None:
+    ok, message = catalog.probe_connection(
+        model="gpt-4o-mini",
+        provider="openai",
+        timeout=1.0,
+        client=_mock_client(lambda request: httpx.Response(200, json={})),
+    )
+
+    assert ok is True
+    assert message == "连接成功"
 
 
 # --- provider whitelist (issue 7aa58) ---------------------------------------
