@@ -7,6 +7,7 @@
 //     ...表单正文与底部动作...
 //   </Modal>
 // 传入 initialFocus 可指定打开时聚焦的元素；不传则由 Base UI 聚焦第一个可聚焦元素。
+// 传入 finalFocus 可指定关闭后的焦点落点；当触发元素在打开前会失焦（例如请求期间 disabled）时必须显式传入。
 // placement="right" 渲染为右侧抽屉（表格类弹窗仍用默认居中）；
 // closeLabel 覆盖关闭按钮的可访问名，方便与遮罩等「关闭」入口区分。
 
@@ -34,6 +35,7 @@ export function Modal({
   children,
   className,
   initialFocus,
+  finalFocus,
   placement = "center",
   closeLabel,
 }: {
@@ -44,6 +46,8 @@ export function Modal({
   children: ReactNode
   className?: string
   initialFocus?: ComponentProps<typeof DialogPrimitive.Popup>["initialFocus"]
+  /** 关闭后的焦点落点；不传则归还打开前的焦点元素（触发元素若在打开前失焦则需显式传入）。 */
+  finalFocus?: ComponentProps<typeof DialogPrimitive.Popup>["finalFocus"]
   /** center：居中弹窗（默认）；right：贴右侧的抽屉。 */
   placement?: "center" | "right"
   /** 关闭按钮的可访问名；默认沿用通用「关闭」。 */
@@ -78,6 +82,7 @@ export function Modal({
         <DialogPrimitive.Popup
           ref={setPopupElement}
           initialFocus={initialFocus}
+          finalFocus={finalFocus}
           role="dialog"
           aria-modal="true"
           className={cn(
