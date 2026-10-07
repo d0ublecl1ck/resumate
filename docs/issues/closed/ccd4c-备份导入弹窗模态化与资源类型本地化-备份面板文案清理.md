@@ -88,7 +88,21 @@ pnpm -C ui build  → built in ~0.4s
 archkit inspect . → Quality gates passed.
 ```
 
-合并后端到端实证（合并到 main 后）：见下方追加记录。
+合并后端到端实证（合并到 main 后，无头 Playwright 1.57.0 打 5173，storage state `/tmp/rsm_state.json`，zh-CN）：
+
+```text
+首轮 24/24 通过：类型本地化、空态、422/500 错误出口、模态焦点与 inert、生成简历弹窗、死按钮与说明
+× 关闭导入预览后焦点未归还触发按钮（真机与 jsdom 差异；触发按钮在预览请求期间 disabled，
+  浏览器把焦点移到 body，Base UI 无「打开前焦点元素」可归还）
+```
+
+该失败由后续工单 `bef52` 修复（`ui/src/components/ui/modal.tsx` 补 `finalFocus`，`backup-panel.tsx` 传触发按钮 ref，commit `0e7158c`）。修复后真机 25/25 全通过：
+
+```text
+PASS 关闭后焦点精确归还触发按钮（disabled 场景） | activeElement: BUTTON/选择备份文件并校验
+PASS 关闭后背景 inert 已移除
+截图：/tmp/ccd4c_e2e_import_preview.png、/tmp/ccd4c_e2e_validation_message.png、/tmp/ccd4c_e2e_create_resume_modal.png
+```
 
 ## Related ADRs
 

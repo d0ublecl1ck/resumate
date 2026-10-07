@@ -1,14 +1,15 @@
 ---
 id: bef52
-status: in-progress
+status: closed
 created_at: 2026-10-07T11:22:47.279Z
-updated_at: 2026-10-07T11:23:11.170Z
+updated_at: 2026-10-07T11:25:53.792Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 界面与交互
 started_at: 2026-10-07T11:23:11.170Z
+closed_at: 2026-10-07T11:25:53.792Z
 ---
 
 # 备份导入预览关闭后焦点未归还触发按钮
@@ -36,9 +37,9 @@ ccd4c（备份导入弹窗模态化）合并到 main 后，合并后端到端实
 
 ## Acceptance Criteria
 
-- [ ] 触发按钮在打开弹窗前失焦（`document.activeElement === document.body`）时，导入预览关闭后焦点仍回到该按钮。
-- [ ] `pnpm -C ui test` 全绿、`pnpm -C ui build` 成功、`archkit inspect .` 通过。
-- [ ] 真机无头 Playwright：选文件触发预览（请求期间按钮 disabled）→ 打开弹窗 → Esc 关闭后焦点回到「选择备份文件并校验」按钮。
+- [x] 触发按钮在打开弹窗前失焦（`document.activeElement === document.body`）时，导入预览关闭后焦点仍回到该按钮。
+- [x] `pnpm -C ui test` 全绿、`pnpm -C ui build` 成功、`archkit inspect .` 通过。
+- [x] 真机无头 Playwright：选文件触发预览（请求期间按钮 disabled）→ 打开弹窗 → Esc 关闭后焦点回到「选择备份文件并校验」按钮。
 
 ## Implementation
 
@@ -67,7 +68,19 @@ pnpm -C ui build  → exit 0
 archkit inspect . → Quality gates passed.
 ```
 
-真机无头 Playwright 实证在关单提交前追加。
+真机无头 Playwright（实现提交 `0e7158c` 后，zh-CN，localhost:5173，storage state `/tmp/rsm_state.json`，25/25 通过）：
+
+```text
+PASS 关闭后焦点精确归还触发按钮（disabled 场景） | activeElement: BUTTON/选择备份文件并校验
+PASS 关闭后背景 inert 已移除
+PASS 新增资源显示中文「个人资料/简历/岗位」，不直出 Profile/Resume/JD
+PASS bindingRestores 为空时不渲染区块
+PASS 422 显后端业务原文 / 500 不泄漏原始报错
+PASS Tab/Shift+Tab 不逃逸、Esc 关闭、背景 inert
+PASS 生成简历弹窗 Esc 关闭 + 焦点锁定
+PASS 无页面未捕获异常
+截图：/tmp/ccd4c_e2e_import_preview.png、/tmp/ccd4c_e2e_validation_message.png、/tmp/ccd4c_e2e_create_resume_modal.png
+```
 
 ## Related ADRs
 
