@@ -2,13 +2,14 @@
 // 凭证仅创建成功时显示一次（BR-D17）；撤销后刷新列表与审计日志。
 // 后端已落地 PAT 签发/撤销/日志/能力发现，界面文案统一走 i18n。
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { createPat, revokePat } from "@/lib/api"
 import type { AccessLogEntry, CapabilityDiscovery, PersonalAccessToken } from "@/lib/types"
+import { Modal } from "@/components/ui/modal"
 import { cn } from "@/lib/utils"
-import { Ban, Copy, KeyRound, Plus, ShieldCheck, X } from "lucide-react"
+import { Ban, Copy, KeyRound, Plus, ShieldCheck } from "lucide-react"
 
 const PAT_STATUS: Record<PersonalAccessToken["status"], { labelKey: string; tone: string }> = {
   active: { labelKey: "settings.pat.status.active", tone: "text-cobalt border-cobalt/40 bg-cobalt/5" },
@@ -49,7 +50,7 @@ export function AccessPanel({
       <section className="card-soft p-5">
         <h2 className="text-sm font-bold text-foreground">{t("settings.capability.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("settings.capability.meta", { version: capability.contractVersion, methods: capability.authMethods.join(separator) })}</p>
-        <dl className="mt-3 grid gap-2 sm:grid-cols-3">
+        <dl className="mt-3 grid min-w-0 gap-2 sm:grid-cols-3">
           <CopyField label={t("settings.capability.discovery")} value={capability.wellKnownUrl} />
           <CopyField label={t("settings.capability.openapi")} value={capability.openapiUrl} />
           <CopyField label={t("settings.capability.mcp")} value={capability.mcpUrl} />
@@ -140,25 +141,42 @@ export function AccessPanel({
         </div>
       </section>
 
-      {createOpen ? <PatModal onClose={() => setCreateOpen(false)} onCreated={onChanged} /> : null}
+      <PatModal open={createOpen} onOpenChange={setCreateOpen} onCreated={onChanged} />
     </div>
   )
 }
 
 function CopyField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border p-2.5">
+    <div className="min-w-0 rounded-lg border border-border p-2.5">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 truncate font-mono text-xs text-foreground" title={value}>{value}</p>
     </div>
   )
 }
 
-function PatModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function PatModal({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCreated: () => void
+}) {
   const { t } = useTranslation()
   const [name, setName] = useState("")
   const [scopes, setScopes] = useState<string[]>(["profile:read", "resume:read"])
   const [secret, setSecret] = useState<string | null>(null)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  // 关闭后清空草稿，下一次打开是一张干净的表单；常驻挂载才能让焦点归还触发按钮。
+  useEffect(() => {
+    if (open) return
+    setName("")
+    setScopes(["profile:read", "resume:read"])
+    setSecret(null)
+  }, [open])
 
   const createMutation = useMutation({
     mutationFn: () => createPat({ name: name.trim(), scopes }),
@@ -173,66 +191,64 @@ function PatModal({ onClose, onCreated }: { onClose: () => void; onCreated: () =
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button className="absolute inset-0 bg-foreground/40" aria-label={t("common.actions.close")} onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-labelledby="pat-title" className="relative z-10 w-full max-w-md card-frame p-6">
-        <div className="flex items-start justify-between">
-          <h2 id="pat-title" className="font-serif text-xl font-bold text-foreground">{t("settings.patModal.title")}</h2>
-          <button onClick={onClose} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label={t("common.actions.close")}><X className="size-5" /></button>
-        </div>
-
-        {secret === null ? (
-          <>
-            <p className="mt-2 text-sm text-muted-foreground">{t("settings.patModal.description")}</p>
-            <label className="mt-4 block">
-              <span className="text-xs font-medium text-muted-foreground">{t("settings.patModal.name")}</span>
-              <input
-                className="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-                value={name}
-                placeholder={t("settings.patModal.namePlaceholder")}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <div className="mt-4 space-y-2">
-              {SCOPES.map((scope) => (
-                <label key={scope} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-                  <input type="checkbox" checked={scopes.includes(scope)} onChange={() => toggleScope(scope)} /> <span className="font-mono text-xs">{scope}</span>
-                </label>
-              ))}
-            </div>
-            <div className="mt-5 flex items-center justify-end gap-2">
-              {createMutation.isError ? <span className="text-xs text-coral">{t("settings.patModal.createFailed")}</span> : null}
-              <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">{t("common.actions.cancel")}</button>
-              <button
-                onClick={() => createMutation.mutate()}
-                disabled={createMutation.isPending || name.trim().length === 0 || scopes.length === 0}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-              >
-                {createMutation.isPending ? t("settings.patModal.creating") : t("common.actions.create")}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="mt-4 flex items-center gap-2 rounded-lg border border-cobalt/40 bg-cobalt/5 p-3 text-sm text-foreground">
-              <ShieldCheck className="size-4 shrink-0 text-cobalt" aria-hidden />
-              {t("settings.patModal.secretOnce")}
-            </div>
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-muted p-3">
-              <code className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">{secret}</code>
-              <button
-                onClick={() => void navigator.clipboard?.writeText(secret)}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
-              >
-                <Copy className="size-3.5" aria-hidden /> {t("common.actions.copy")}
-              </button>
-            </div>
-            <div className="mt-5 flex justify-end">
-              <button onClick={onClose} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">{t("common.actions.done")}</button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("settings.patModal.title")}
+      description={secret === null ? t("settings.patModal.description") : undefined}
+      initialFocus={nameRef}
+    >
+      {secret === null ? (
+        <>
+          <label className="mt-4 block">
+            <span className="text-xs font-medium text-muted-foreground">{t("settings.patModal.name")}</span>
+            <input
+              ref={nameRef}
+              className="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+              value={name}
+              placeholder={t("settings.patModal.namePlaceholder")}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <div className="mt-4 space-y-2">
+            {SCOPES.map((scope) => (
+              <label key={scope} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+                <input type="checkbox" checked={scopes.includes(scope)} onChange={() => toggleScope(scope)} /> <span className="font-mono text-xs">{scope}</span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-5 flex items-center justify-end gap-2">
+            {createMutation.isError ? <span className="text-xs text-coral">{t("settings.patModal.createFailed")}</span> : null}
+            <button onClick={() => onOpenChange(false)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">{t("common.actions.cancel")}</button>
+            <button
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending || name.trim().length === 0 || scopes.length === 0}
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {createMutation.isPending ? t("settings.patModal.creating") : t("common.actions.create")}
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-cobalt/40 bg-cobalt/5 p-3 text-sm text-foreground">
+            <ShieldCheck className="size-4 shrink-0 text-cobalt" aria-hidden />
+            {t("settings.patModal.secretOnce")}
+          </div>
+          <div className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-muted p-3">
+            <code className="min-w-0 flex-1 truncate font-mono text-xs text-foreground">{secret}</code>
+            <button
+              onClick={() => void navigator.clipboard?.writeText(secret)}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-secondary"
+            >
+              <Copy className="size-3.5" aria-hidden /> {t("common.actions.copy")}
+            </button>
+          </div>
+          <div className="mt-5 flex justify-end">
+            <button onClick={() => onOpenChange(false)} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">{t("common.actions.done")}</button>
+          </div>
+        </>
+      )}
+    </Modal>
   )
 }

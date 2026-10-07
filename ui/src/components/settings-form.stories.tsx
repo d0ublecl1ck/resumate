@@ -11,7 +11,8 @@ import { Screen } from "@/storybook/screen"
 
 type CatalogState = "ready" | "loading" | "error"
 
-// Backend result copy for the connection test (not UI copy, so it stays untranslated).
+// Backend result copy for the connection test. The failure message is shown as-is
+// (business copy stays untranslated); the success state renders UI copy via i18n.
 const TEST_SUCCESS_MESSAGE = "Connection OK (HTTP 200)"
 const TEST_FAILURE_MESSAGE = "Connection failed (HTTP 502)"
 
@@ -102,7 +103,7 @@ export const TestPending = {
   },
 }
 
-/** Connection test succeeded: the ok message is shown. */
+/** Connection test succeeded: the localized success copy is shown, not the backend message. */
 export const TestSuccess = { render: () => testResultStory(true, TEST_SUCCESS_MESSAGE) }
 
 /** Connection test failed: only the failure message is shown. */

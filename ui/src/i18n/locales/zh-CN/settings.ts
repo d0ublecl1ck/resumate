@@ -81,7 +81,7 @@ export default {
     theme: "主题",
     themePaper: "纸感（浅色）",
     themeDark: "深色",
-    themeHint: "深色令牌由 ThemeSync 应用；保存偏好后全站生效。",
+    themeHint: "保存偏好后主题立即在全站生效。",
     autosave: "空闲自动保存",
     autosaveInterval: "自动保存间隔（秒）",
     autosaveIntervalHint: "停止输入后多久自动保存，范围 {{min}}–{{max}} 秒。",
@@ -95,7 +95,7 @@ export default {
     shortcutEditHint: "同一按键不能绑定多个动作；冲突会在保存时被后端拒绝并保留原映射。",
     save: "保存偏好",
     shortcutAction: {
-      save_flush: "保存 / flush",
+      save_flush: "保存并提交",
       send_message: "发送对话",
       open_history: "打开版本历史",
       accept_all_diff: "接受全部 Diff",
@@ -144,6 +144,12 @@ export default {
     purposeValue: {
       token_create: "创建访问令牌",
       token_revoke: "撤销访问令牌",
+      pat_auth: "访问令牌认证",
+      pat_scope: "访问令牌权限校验",
+      pat_human_session: "访问令牌人工会话",
+      run_token_auth: "运行令牌认证",
+      run_token_scope: "运行令牌权限校验",
+      run_human_session: "运行令牌人工会话",
     },
   },
   patModal: {

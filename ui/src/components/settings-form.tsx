@@ -423,7 +423,8 @@ export function SettingsForm({
           {!testMutation.isPending && !testMutation.isError && testResult ? (
             <span className={cn("inline-flex items-center gap-1 text-xs", testResult.ok ? "text-cobalt" : "text-coral")}>
               {testResult.ok ? <CheckCircle2 className="size-3.5" aria-hidden /> : <AlertTriangle className="size-3.5" aria-hidden />}
-              {testResult.message}
+              {/* 成功态走 i18n；业务失败态保留后端返回原文（业务文案不翻译）。 */}
+              {testResult.ok ? t("settings.model.connectionOk") : testResult.message}
               {testResultFromLastTest ? (
                 <span className="text-muted-foreground">
                   · {t("settings.model.lastTest", { time: testResult.at.slice(0, 16).replace("T", " ") })}
@@ -523,10 +524,11 @@ export function SettingsForm({
               className={cn(INPUT_CLASS, "w-24 disabled:opacity-60")}
             />
           </label>
-          <div className="rounded-lg border border-border p-3">
+          <label className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.preferences.defaultTemplate")}</FieldLabel>
             <select
               className={INPUT_CLASS}
+              aria-label={t("settings.preferences.defaultTemplate")}
               value={defaultTemplateId}
               onChange={(event) => {
                 setDefaultTemplateId(event.target.value)
@@ -548,7 +550,7 @@ export function SettingsForm({
                 <AlertTriangle className="size-3" aria-hidden /> {t("settings.preferences.defaultTemplateUnavailable")}
               </p>
             ) : null}
-          </div>
+          </label>
         </div>
 
         <div className="mt-4">
