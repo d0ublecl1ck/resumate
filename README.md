@@ -150,9 +150,10 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 模板只读查询与模板预览 | 已实现（管理端写接口未开放） |
 | 开放接入：能力发现、PAT、备份导出/导入 | 已实现 |
 | 界面 i18n（`zh-CN` / `en`） | 已实现，键结构有测试校验 |
-| 内置对话流、自然语言解析、岗位匹配界面 | **未实现，前端仍走 mock**（见 [已知边界](#已知边界)） |
+| 内置对话流、JD 自然语言解析 | 已实现（粘贴文本经 `POST /jds:parse-text` 调用户已配置的模型） |
+| 岗位匹配界面 | **未实现，前端仍走 mock**（见 [已知边界](#已知边界)） |
 
-后端现有 **11 个业务模块、89 个 HTTP 端点**；前端 **20 个页面组件、21 个 Storybook story 文件**。
+后端现有 **11 个业务模块、90 个 HTTP 端点**；前端 **20 个页面组件、22 个 Storybook story 文件**。
 
 ## 它和同类有什么不同
 
@@ -194,9 +195,9 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 254 passed
+uv run --directory backend pytest        # → 269 passed
 cd agent-core && uv run pytest -q        # → 110 passed
-cd ui && pnpm test                       # → 42 files / 308 passed
+cd ui && pnpm test                       # → 44 files / 326 passed
 archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
@@ -205,16 +206,16 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 统计口径：
 
 ```bash
-grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 89 个端点
+grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 90 个端点
 ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
-ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 21 个 story 文件
+ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 22 个 story 文件
 ```
 
 ## 已知边界
 
 诚实清单——这些还没做，或需要你先准备好：
 
-- **Agent Run 与主档助手已接真实端点，JD 解析仍是启发式。** 发起运行、轮次与待办展示、审批、SSE 实时刷新，以及个人资料助手的会话 / 实时刷新 / 审批都已走真实 API；已在本地用启发式与样例数据的只剩 JD 解析（`parseJdFromText` / `parseJdFromImage`）与岗位匹配（[ui/README.md](ui/README.md)）。
+- **Agent Run、主档助手与 JD 文本解析已接真实端点，只剩 JD 截图识别与岗位匹配走本地样例。** 发起运行、轮次与待办展示、审批、SSE 实时刷新、个人资料助手，以及「新增 JD」的粘贴文本解析（`POST /jds:parse-text`，用用户已配置的模型）都已走真实 API；仍在本地用启发式与样例数据的只剩 JD 截图识别（`parseJdFromImage`）与岗位匹配（[ui/README.md](ui/README.md)）。
 - **Agent 轮次 SSE 只推真实状态。** `GET /turns/{turn_id}/events` 目前只推轮次/待办的 `snapshot` 与 `turn.updated`，空闲发心跳；模型进度 / token / 步骤事件需要 Agent run loop 与队列，尚未实现（见 [契约 §18](docs/agent/agent-operation-api.md)）。
 - **没有 MCP server。** 能力发现返回的 `mcpUrl` 是占位，实测 `GET /mcp` 返回 404；外部接入目前走 REST 与 PAT。
 - **后端 spawn 运行体要求 CLI 在 `PATH`。** `POST /resumes/{id}/runs` 默认执行 `resumate-agent`，安装方式：`uv tool install ./agent-core`（或把 `AGENT_RUNNER_COMMAND` 指向其它可执行文件）。注意该工具是安装时的快照，`agent-core` 改动后需要重新安装才会生效。
