@@ -121,7 +121,15 @@ export function SettingsForm({
   })
 
   const testMutation = useMutation({
-    mutationFn: testModelConnection,
+    // 用表单当前值测试，而不是已保存的配置；apiKey 留空时不进 payload，
+    // 让后端沿用已存 key（后端语义：None=沿用、空串=清空）。
+    mutationFn: () =>
+      testModelConnection({
+        provider,
+        endpoint,
+        model: modelName,
+        ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      }),
     onSuccess: (data: ModelTestResult) => {
       queryClient.setQueryData(["model-config"], (prev: ModelConfig | undefined) => (prev ? { ...prev, lastTest: data } : prev))
       queryClient.invalidateQueries({ queryKey: ["model-config"] })
@@ -130,6 +138,9 @@ export function SettingsForm({
 
   const publishedTemplates = templates.filter((tpl) => tpl.status === "published")
   const testResult = testMutation.data ?? model.lastTest
+  // 本次点击还没有结果时才会回落到持久化的 lastTest；回落到它时要标出测试时间，
+  // 否则用户会把上次的旧结果当成刚测出来的结果。
+  const testResultFromLastTest = !testMutation.data && Boolean(model.lastTest)
 
   // 模型目录（契约 §17）：provider / model 只从只读目录选择；目录失败时保留已保存值。
   const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: () => getModelCatalog() })
@@ -413,6 +424,11 @@ export function SettingsForm({
             <span className={cn("inline-flex items-center gap-1 text-xs", testResult.ok ? "text-cobalt" : "text-coral")}>
               {testResult.ok ? <CheckCircle2 className="size-3.5" aria-hidden /> : <AlertTriangle className="size-3.5" aria-hidden />}
               {testResult.message}
+              {testResultFromLastTest ? (
+                <span className="text-muted-foreground">
+                  · {t("settings.model.lastTest", { time: testResult.at.slice(0, 16).replace("T", " ") })}
+                </span>
+              ) : null}
             </span>
           ) : null}
         </div>

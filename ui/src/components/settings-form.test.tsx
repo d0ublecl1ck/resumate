@@ -107,4 +107,69 @@ describe("SettingsForm", () => {
 
     await waitFor(() => expect(saved).toMatchObject({ provider: "anthropic", model: "claude-3-opus" }))
   })
+
+  it("测试连接把当前表单的 provider / endpoint / model 与本次输入的 API Key 一起发送", async () => {
+    let body: Record<string, unknown> | undefined
+    server.use(
+      http.post("/api/models/config:test", async ({ request }) => {
+        const text = await request.text()
+        body = text ? (JSON.parse(text) as Record<string, unknown>) : undefined
+        return HttpResponse.json({ at: "2026-10-07T10:00:00+08:00", ok: true, message: "连接成功（HTTP 200）" })
+      }),
+    )
+
+    const { container } = renderForm()
+
+    fireEvent.change(screen.getByPlaceholderText("https://api.example.com/v1"), { target: { value: "https://api.deepseek.com/v1" } })
+    fireEvent.change(container.querySelector('input[type="password"]') as HTMLInputElement, { target: { value: "sk-current-form" } })
+    fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
+
+    await waitFor(() => expect(body).toBeDefined())
+    expect(body).toEqual({
+      provider: "openai",
+      endpoint: "https://api.deepseek.com/v1",
+      model: "gpt-4o-mini",
+      apiKey: "sk-current-form",
+    })
+  })
+
+  it("API Key 输入框为空时不发送 apiKey，沿用已存 key", async () => {
+    let body: Record<string, unknown> | undefined
+    server.use(
+      http.post("/api/models/config:test", async ({ request }) => {
+        const text = await request.text()
+        body = text ? (JSON.parse(text) as Record<string, unknown>) : undefined
+        return HttpResponse.json({ at: "2026-10-07T10:00:00+08:00", ok: true, message: "连接成功（HTTP 200）" })
+      }),
+    )
+
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
+
+    await waitFor(() => expect(body).toBeDefined())
+    expect(body).not.toHaveProperty("apiKey")
+    expect(body).not.toHaveProperty("api_key")
+    expect(Object.keys(body ?? {}).sort()).toEqual(["endpoint", "model", "provider"])
+  })
+
+  it("显示持久化的上次测试结果时补「上次测试：<时间>」", async () => {
+    renderForm({ ...MODEL_CONFIG, lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" } })
+
+    expect(await screen.findByText("连接成功，延迟 420ms")).toBeInTheDocument()
+    expect(screen.getByText(/上次测试：2026-09-19 20:00/)).toBeInTheDocument()
+  })
+
+  it("本次点击得到的测试结果不带「上次测试」时间", async () => {
+    server.use(
+      http.post("/api/models/config:test", () =>
+        HttpResponse.json({ at: "2026-10-07T10:00:00+08:00", ok: true, message: "连接成功（HTTP 200）" }),
+      ),
+    )
+    renderForm({ ...MODEL_CONFIG, lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" } })
+
+    fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
+
+    expect(await screen.findByText(/HTTP 200/)).toBeInTheDocument()
+    expect(screen.queryByText(/上次测试：/)).not.toBeInTheDocument()
+  })
 })

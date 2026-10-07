@@ -512,9 +512,9 @@ export function updateModelConfig(patch: ModelConfigUpdate): Promise<ModelConfig
   return request<ModelConfig>("/models/config", { method: "PUT", body: JSON.stringify(patch) })
 }
 
-/** POST /models/config:test —— 后端发起连通性测试，响应与错误均不含明文密钥 */
-export function testModelConnection(): Promise<ModelTestResult> {
-  return request<ModelTestResult>("/models/config:test", { method: "POST" })
+/** POST /models/config:test —— 用给定配置发起连通性测试，缺省字段沿用已存配置；响应与错误均不含明文密钥 */
+export function testModelConnection(patch: ModelConfigUpdate = {}): Promise<ModelTestResult> {
+  return request<ModelTestResult>("/models/config:test", { method: "POST", body: JSON.stringify(patch) })
 }
 
 /** GET /settings */
