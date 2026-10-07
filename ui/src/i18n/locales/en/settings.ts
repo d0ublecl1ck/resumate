@@ -81,7 +81,7 @@ export default {
     theme: "Theme",
     themePaper: "Paper (light)",
     themeDark: "Dark",
-    themeHint: "Dark tokens are applied by ThemeSync; save preferences to persist the choice.",
+    themeHint: "Save preferences to apply the theme across the app.",
     autosave: "Idle auto-save",
     autosaveInterval: "Auto-save interval (seconds)",
     autosaveIntervalHint: "How long to wait after you stop typing, {{min}}–{{max}} seconds.",
@@ -95,7 +95,7 @@ export default {
     shortcutEditHint: "A key can bind only one action; the backend rejects conflicts on save and keeps the previous mapping.",
     save: "Save preferences",
     shortcutAction: {
-      save_flush: "Save / flush",
+      save_flush: "Save and commit",
       send_message: "Send message",
       open_history: "Open version history",
       accept_all_diff: "Accept all diffs",
@@ -144,6 +144,12 @@ export default {
     purposeValue: {
       token_create: "Create access token",
       token_revoke: "Revoke access token",
+      pat_auth: "Access token authentication",
+      pat_scope: "Access token scope check",
+      pat_human_session: "Access token human session",
+      run_token_auth: "Run token authentication",
+      run_token_scope: "Run token scope check",
+      run_human_session: "Run token human session",
     },
   },
   patModal: {

@@ -3,11 +3,15 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it } from "vitest"
 import { SettingsForm } from "@/components/settings-form"
+import { changeLocale } from "@/i18n"
 import { AGENT_CONFIG, MODEL_CONFIG, TEMPLATES, USER_PREFERENCES } from "@/lib/content"
 import type { ModelConfig } from "@/lib/types"
 import { server } from "@/test-server"
 
-afterEach(cleanup)
+afterEach(() => {
+  changeLocale("zh-CN")
+  cleanup()
+})
 
 function renderForm(model: ModelConfig = MODEL_CONFIG) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -31,18 +35,49 @@ describe("SettingsForm", () => {
   it("可编辑快捷键并保存", async () => {
     renderForm()
 
-    fireEvent.change(screen.getByRole("textbox", { name: "保存 / flush 快捷键" }), { target: { value: "⌘ K" } })
+    fireEvent.change(screen.getByRole("textbox", { name: "保存并提交 快捷键" }), { target: { value: "⌘ K" } })
     fireEvent.click(screen.getByRole("button", { name: "保存偏好" }))
 
     expect(await screen.findByText("已保存")).toBeInTheDocument()
   })
 
-  it("测试连接展示后端返回结果", async () => {
+  it("测试连接成功态走 i18n 文案，不直出后端中文 message", async () => {
     renderForm()
 
     fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
 
-    expect(await screen.findByText(/HTTP 200/)).toBeInTheDocument()
+    expect(await screen.findByText("连接成功")).toBeInTheDocument()
+    expect(screen.queryByText(/HTTP 200/)).not.toBeInTheDocument()
+  })
+
+  it("en 界面下测试连接成功态显示英文", async () => {
+    changeLocale("en")
+    renderForm()
+
+    fireEvent.click(screen.getByRole("button", { name: /Test connection/ }))
+
+    expect(await screen.findByText("Connected")).toBeInTheDocument()
+    expect(screen.queryByText("连接成功")).not.toBeInTheDocument()
+  })
+
+  it("业务失败态仍显示后端返回的业务原文", async () => {
+    server.use(
+      http.post("/api/models/config:test", () =>
+        HttpResponse.json({ at: "2026-10-07T10:00:00+08:00", ok: false, message: "连接失败 (HTTP 401)" }),
+      ),
+    )
+    renderForm({ ...MODEL_CONFIG, lastTest: undefined })
+
+    fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
+
+    expect(await screen.findByText("连接失败 (HTTP 401)")).toBeInTheDocument()
+    expect(screen.queryByText("连接成功")).not.toBeInTheDocument()
+  })
+
+  it("默认模板下拉具备可访问名", async () => {
+    renderForm()
+
+    expect(await screen.findByRole("combobox", { name: "默认模板" })).toBeInTheDocument()
   })
 
   it("从模型目录加载 provider 与 model，且不再显示目录来源", async () => {
@@ -155,7 +190,8 @@ describe("SettingsForm", () => {
   it("显示持久化的上次测试结果时补「上次测试：<时间>」", async () => {
     renderForm({ ...MODEL_CONFIG, lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" } })
 
-    expect(await screen.findByText("连接成功，延迟 420ms")).toBeInTheDocument()
+    expect(await screen.findByText(/连接成功/)).toBeInTheDocument()
+    expect(screen.queryByText("连接成功，延迟 420ms")).not.toBeInTheDocument()
     expect(screen.getByText(/上次测试：2026-09-19 20:00/)).toBeInTheDocument()
   })
 
@@ -169,7 +205,7 @@ describe("SettingsForm", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /测试连接/ }))
 
-    expect(await screen.findByText(/HTTP 200/)).toBeInTheDocument()
+    expect(await screen.findByText("连接成功")).toBeInTheDocument()
     expect(screen.queryByText(/上次测试：/)).not.toBeInTheDocument()
   })
 })

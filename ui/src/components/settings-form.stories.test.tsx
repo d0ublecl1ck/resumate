@@ -72,14 +72,15 @@ describe("model settings stories", () => {
     expect(screen.getByRole("button", { name: /测试连接/ })).toBeDisabled()
   })
 
-  it("TestSuccess shows the ok result message", async () => {
+  it("TestSuccess shows the localized success copy instead of the backend message", async () => {
     render(TestSuccess.render())
-    expect(await screen.findByText("Connection OK (HTTP 200)")).toBeInTheDocument()
+    expect(await screen.findByText("连接成功")).toBeInTheDocument()
+    expect(screen.queryByText("Connection OK (HTTP 200)")).not.toBeInTheDocument()
   })
 
   it("TestFailure shows only the failure result message", async () => {
     render(TestFailure.render())
     expect(await screen.findByText("Connection failed (HTTP 502)")).toBeInTheDocument()
-    expect(screen.queryByText("Connection OK (HTTP 200)")).not.toBeInTheDocument()
+    expect(screen.queryByText("连接成功")).not.toBeInTheDocument()
   })
 })
