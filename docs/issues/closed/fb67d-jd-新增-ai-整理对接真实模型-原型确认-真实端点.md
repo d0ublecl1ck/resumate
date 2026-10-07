@@ -1,17 +1,18 @@
 ---
 id: fb67d
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:08:17.735Z
-updated_at: 2026-10-07T10:08:51.453Z
+updated_at: 2026-10-07T11:16:08.116Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 核心实体接口
 started_at: 2026-10-07T10:08:51.453Z
+closed_at: 2026-10-07T11:16:08.116Z
 ---
 
-# JD 新增 AI 整理对接真实模型（阶段一：原型与 Storybook 确认）
+# JD 新增 AI 整理对接真实模型（原型确认 + 真实端点）
 
 ## Background
 
@@ -23,30 +24,28 @@ started_at: 2026-10-07T10:08:51.453Z
 - `docs/issues/closed/a74d2-jd-crud-与软绑定-api.md:30` 写明当时**故意不实现** `POST /jds:parse-text` 与 `POST /jds:parse-image`。
 - `ui/src/components/create-jd-modal.tsx:51-57` 的 `runTextParse` **没有 try/catch**：一旦失败 `parsing` 永远为 true、按钮永久「整理中…」；现在没暴露是因为它从不失败。
 
-用户决定把「AI 整理」换成真 AI。仓库规矩要求先「原型 → Storybook 确认 → 才真实开发与后端对接」，因此本 issue 只覆盖**阶段一**（原型补状态 + Storybook 确认件 + 本文末尾冻结的 API 契约草案）。阶段二另起 issue 落地。
+用户决定把「AI 整理」换成真 AI。仓库规矩要求先「原型 → Storybook 确认 → 才真实开发与后端对接」，因此本 issue 分两段落地：**阶段一**（原型补状态 + Storybook 确认件 + 契约草案）先给用户确认；用户 2026-10-07 拍板「1–5 全部按推荐执行」后，**阶段二**（后端真实端点 + 前端接线 + 口径文档）在同一分支顺序完成。
 
 ## Scope
 
-- 阶段一（本 issue 落地范围）：
-  - `ui/prototypes/index.html` 的 `#screen-jds` 补「新增 JD」弹窗的缺失状态（输入 / 整理中 / 成功草案 / 失败可重试），并同步该屏 `<ul class="states">`。
-  - `ui/src` 只加/改 Storybook 确认件（story + 为呈现状态而做的组件拆分），**不接后端**；文案走 i18n（zh-CN 与 en 同步、键结构一致）。
-  - 冻结阶段二要落地的 `POST /jds:parse-text` 契约（见下节），供用户与阶段一并确认。
-- 阶段二（不在本 issue 落地，仅冻结契约）：
-  - 后端实现 `POST /jds:parse-text`（权限 `jd:write`），前端把 `parseJdFromText` 改为真实请求，并给 `runTextParse`/图片链路补失败态与重试。
+- 阶段一（已完成）：原型 `#screen-jds` 补「新增 JD」弹窗四态并同步 `states`；`ui/src` 只加/改 Storybook 确认件（story + 为呈现状态而做的组件拆分），文案走 i18n（zh-CN 与 en 同步）。
+- 阶段二（已完成）：后端实现 `POST /jds:parse-text`（权限 `jd:write`），模型配置取用户级 settings；前端把 `parseJdFromText` 改为真实请求并删掉该路径的启发式回退；容器接线失败态与「去设置模型」导航；同步 `runner.py` 注释与 `docs/design.md` 的口径。
 
 ## Non-goals
 
-- 不实现后端端点（阶段一不动 `backend/`）。
-- 不改 `parseJdFromImage`（截图识别仍是硬编码示例草案，本阶段不假装它是真的）。
+- 不改 `parseJdFromImage`（截图识别仍是硬编码示例草案，本次不假装它是真的）。
 - 不改数据库模型配置、不动 `UserSettings.model_config` 结构。
-- 不合并进 `main`（本阶段只在自己的 worktree 分支提交）。
+- 不做 JD 截图识别（OCR / 多模态），也不给「AI 整理」加裸回车提交（用户已确认维持 Ctrl/Cmd+Enter，裸回车留给 textarea 换行）。
 
 ## Acceptance Criteria
 
-- [ ] `ui/prototypes/index.html` 的 `#screen-jds` 登记「新增 JD」弹窗的输入 / 整理中 / 成功草案 / 失败可重试四态，只用既有令牌与既有组件语法，并同步该屏 `<ul class="states">`。
-- [ ] Storybook 覆盖 输入态 / 整理中 / 成功草案 / 模型未配置 / 解析失败可重试，且 `pnpm -C ui run build-storybook` 通过。
-- [ ] i18n zh-CN 与 en 键结构一致、en 无残留中文。
-- [ ] `pnpm -C ui test` 与 `archkit inspect .` 通过。
+- [x] `ui/prototypes/index.html` 的 `#screen-jds` 登记四态，只用既有令牌与既有组件语法，并同步该屏 `<ul class="states">`。
+- [x] Storybook 覆盖 输入态 / 整理中 / 成功草案 / 模型未配置 / 解析失败可重试，且 `pnpm -C ui run build-storybook` 通过。
+- [x] i18n zh-CN 与 en 键结构一致、en 无残留中文。
+- [x] 后端 `POST /jds:parse-text`：成功解析、模型未配置、上游超时、上游拒绝、输出非法 JSON、置信度 clamp、错误体不含 key 均有测试。
+- [x] 前端 `parseJdFromText` 走真实请求并删掉该路径启发式回退；`MachineErrorCode` 补新码；容器接线失败态与去设置导航。
+- [x] `pnpm -C ui test`、`pnpm -C ui run build`、`cd backend && uv run pytest -q`、`archkit inspect .` 全绿。
+- [x] 合并进 `main` 后用真实页面完成端到端实证。
 
 ### API 契约草案（阶段二落地，供一并确认）
 
@@ -110,14 +109,27 @@ started_at: 2026-10-07T10:08:51.453Z
 - Storybook：`ui/src/components/create-jd-modal.stories.tsx`（5 态：InputReady / Parsing / DraftResult / ModelNotConfigured / ParseRetryable）。
 - 测试：`ui/src/components/create-jd-modal.test.tsx`、`ui/src/components/create-jd-modal.stories.test.tsx`。
 - i18n：`ui/src/i18n/locales/zh-CN/jd.ts` 与 `en/jd.ts` 同步新增 `jd.create.retry`、`errorTitle`、`openSettings`、`errors.{MODEL_NOT_CONFIGURED,UPSTREAM_TIMEOUT,UPSTREAM_REJECTED,MODEL_OUTPUT_INVALID,NETWORK_ERROR}`。
-- 文档口径：`README.md` 更新前端测试与 story 计数。
+- 文档口径：`README.md` 更新端点、测试与 story 计数。
+
+阶段二（真实端点 + 前端接线）：
+
+- 后端：新增 `backend/app/modules/jd/parser.py`（`POST /jds:parse-text` 的模型调用）：`_resolve_config` 从用户级 `user_settings.model_config` 取 model/endpoint/provider，key 经 `settings_service.decrypt_api_key` 解密；`catalog.resolve_base_url` + `catalog.PROBE_TIMEOUT` + `catalog.safe_status_message` 复用 settings 的 endpoint / 超时 / 状态码文案；仅对连接错误与超时重试一次；`body` 固定用用户原文（模型只抽取字段，不改写 / 截断）；`parseConfidence` clamp 到 [0,1]；`note` 固定 `由 AI 整理，请核对后创建。`；日志只记 url / 状态码 / 异常类型。
+- 后端契约：`backend/app/modules/jd/schemas.py` 增 `JdParseRequest` / `ProposedJdExtracted` / `ProposedJdResponse`；`api.py` 增 `POST /jds:parse-text`（`jd:write`）；`service.py` 薄转发；`app/shared/errors.py` 增 `UPSTREAM_TIMEOUT` / `UPSTREAM_REJECTED` / `MODEL_OUTPUT_INVALID` 与对应异常类（504 / 502 / 502）。
+- `settings/catalog.py` 把 `_resolve_base_url` / `_safe_status_message` 提升为公开 `resolve_base_url` / `safe_status_message`，供 jd 模块复用而不碰私有名。
+- 前端：`ui/src/lib/api.ts::parseJdFromText` 改为 `request<ProposedJd>("/jds:parse-text")`（该路径不再回退启发式；`heuristicParseJd` 保留给 `parseJdFromImage` 的截图演示）；`ui/src/lib/types.ts` 的 `MachineErrorCode` 补三个新码；`create-jd-modal.tsx` 容器用 `useNavigate` 把「去设置模型」接到 `/settings`。
+- 口径文档：`backend/app/modules/agent/runner.py:1-9` 改成如实描述（模型调用默认由独立 runner 承担，`POST /jds:parse-text` 是唯一同步例外 + 理由）；`docs/design.md` 的岗位端点清单补 `POST /jds:parse-text`，并在「关键决策」的独立进程条目上补同样的例外说明。
 
 ## Verification
 
-- `pnpm -C ui test`：39 files / 285 passed（新增 14 条：9 条组件 + 5 条 story）。
-- `pnpm -C ui run build-storybook`：completed successfully。
-- `archkit inspect .`：Quality gates passed。
-- 浏览器确认入口：Storybook `Components/CreateJdModal`（见阶段一交付汇报的完整 URL）。
+- TDD Red：后端 `tests/test_jd_parse_text.py` 先因 `app.modules.jd.parser` 不存在而 collection error；前端 `api.test.ts` / `create-jd-modal.test.tsx` 新增断言先失败（旧实现仍返回启发式、未接线导航）。
+- Green（合并后 main `0701f96` 上重跑）：`cd backend && uv run pytest -q` → 269 passed；`pnpm -C ui test` → 44 files / 326 passed；`pnpm -C ui run build` → 成功（仅 chunk 体积警告）；`archkit inspect .` → Quality gates passed。
+- Storybook 阶段一确认件 `Components/CreateJdModal` 5 态（阶段一已由用户确认；Storybook 已收）。
+
+端到端实证（dev 后端 `--reload` + Vite HMR，真实页面 + 真实 DeepSeek）：
+
+- `curl`（admin 会话）`POST /jds:parse-text` → 200：`{"role":"前端工程师","company":"美团","tags":["前端","组件化","构建工具","类型系统"],"body":"<原文>","sourceUrl":null,"extracted":[…],"parseConfidence":0.82,"note":"由 AI 整理，请核对后创建。","inputSource":"text"}`；响应体不含 api key / Authorization / 上游原文。
+- 无头 Playwright（`/usr/bin/python3` + `playwright`，`locale=zh-CN`，1440×1000）：`http://localhost:5173/jds` → 新增 JD → 粘贴无岗位关键词文本 → AI 整理 → 出现模型草案：岗位名称 `前端工程师`、公司 `美团`、标签 `前端, 组件化, 构建工具, 类型系统`、`解析置信度 70%`、note `由 AI 整理，请核对后创建。`。截图文件 `e2e-jds-parse.png`（存于 worktree 外的临时目录，未入库）。
+- 「不是启发式」判定：同一段文本下，旧启发式的确定性输出为 role 空、company 空、tags `["后端"]`、置信度 0.6、note 旧文案（启发式不识别无「工程师 / 岗位」关键词的文本）；真实模型给 role=`前端工程师`、company=`美团`、4 个标签、note 新文案。更强证据：两次实时调用（curl 0.82 / 浏览器 0.70）置信度不同——确定性启发式不可能每次不同。
 
 ## Related ADRs
 
