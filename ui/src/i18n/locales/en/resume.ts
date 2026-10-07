@@ -11,6 +11,7 @@ export default {
     empty: {
       filteredTitle: "No matching resumes",
       archivedTitle: "No archived resumes yet",
+      archivedDescription: "Archived resumes stay here and can be restored for further editing.",
       title: "No resumes yet",
       filteredDescription: "Your current filters are kept; clear them to see everything.",
       description: "Click “New resume” in the top right to get started.",
@@ -25,6 +26,13 @@ export default {
     versionHistory: "Versions",
     archive: "Archive",
     restore: "Restore",
+    errors: {
+      archiveFailed: "Archiving failed. Try again later.",
+      restoreFailed: "Restoring failed. Try again later.",
+      missing: "This resume no longer exists. Refresh and try again.",
+      permission: "Your account cannot modify this resume.",
+      network: "Cannot reach the backend service. Check your connection and try again.",
+    },
   },
   editor: {
     backToLibrary: "Back to resume library",

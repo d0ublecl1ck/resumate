@@ -6,12 +6,15 @@ import type { ApiError, MachineErrorCode } from "@/lib/types"
 
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "/api"
 
+/** 客户端合成码：服务端不会下发，用于网络失败与非 JSON 的 5xx 兜底。 */
+type ClientErrorCode = "NETWORK_ERROR" | "SERVER_ERROR"
+
 export class ApiRequestError extends Error {
-  readonly code: MachineErrorCode | "NETWORK_ERROR"
+  readonly code: MachineErrorCode | ClientErrorCode
   readonly status: number
   readonly latestVersionId?: string
 
-  constructor(code: MachineErrorCode | "NETWORK_ERROR", message: string, status: number, latestVersionId?: string) {
+  constructor(code: MachineErrorCode | ClientErrorCode, message: string, status: number, latestVersionId?: string) {
     super(message)
     this.name = "ApiRequestError"
     this.code = code
@@ -42,8 +45,11 @@ async function parseJson<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     const error = payload as ApiError | null
+    // JSON 错误体按后端机器码原样映射（既有行为不变）；只有「响应体不是 JSON、没有机器码」
+    // 的情况才按状态兜底：5xx 是服务端故障，不能误报成参数校验失败。
+    const fallbackCode: MachineErrorCode | ClientErrorCode = payload === null && response.status >= 500 ? "SERVER_ERROR" : "VALIDATION_FAILED"
     throw new ApiRequestError(
-      error?.code ?? "VALIDATION_FAILED",
+      error?.code ?? fallbackCode,
       error?.message ?? response.statusText ?? i18n.t("common.errors.requestFailed"),
       response.status,
       error?.latestVersionId,

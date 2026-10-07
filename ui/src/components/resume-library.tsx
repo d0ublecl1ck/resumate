@@ -1,6 +1,7 @@
 // SCR-002 简历库。明确活跃 / 归档 / 删除恢复窗口；
 // 网格卡片分层显示「内容版本 / 元数据变化 / 草稿状态」，避免把重命名误解为内容提交。
 // 断点：lg 两列、xl 三列，更窄回落单列（左侧栏固定宽，两列从 1024 起才放得下四个操作）
+// 筛选状态（tab / q / tag）与创建弹窗开关只以 URL 为真源，刷新与深链保持一致。
 // 原型 #resume-library 是视觉依据。
 
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
@@ -8,8 +9,9 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useQueryClient } from "@tanstack/react-query"
 import type { JobDescription, Resume, ResumeTemplate } from "@/lib/types"
-import { duplicateResume } from "@/lib/api"
+import { archiveResume, duplicateResume, restoreResume } from "@/lib/api"
 import { resumeCreateErrorMessage } from "@/lib/resume-create"
+import { resumeLifecycleErrorMessage } from "@/lib/resume-lifecycle"
 import { SaveStateBadge } from "@/components/kit/badges"
 import { FilterToolbar, PageHeader } from "@/components/kit/toolbar"
 import { StateBlock } from "@/components/kit/state-block"
@@ -20,23 +22,45 @@ type Tab = "active" | "archived"
 
 export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; templates: ResumeTemplate[]; jds: JobDescription[] }) {
   const { t } = useTranslation()
-  const [searchParams] = useSearchParams()
-  const [tab, setTab] = useState<Tab>("active")
-  const [query, setQuery] = useState("")
-  const [tag, setTag] = useState<string | undefined>()
-  const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "1")
+  const [searchParams, setSearchParams] = useSearchParams()
+  // URL 是唯一真源：Tab、搜索词、标签、创建弹窗开关都从这里读，刷新与深链才能保持一致。
+  const tab: Tab = searchParams.get("tab") === "archived" ? "archived" : "active"
+  const query = searchParams.get("q") ?? ""
+  const tag = searchParams.get("tag") ?? undefined
+  const createOpen = searchParams.get("create") === "1"
 
-  const allTags = useMemo(() => Array.from(new Set(resumes.flatMap((r) => r.tags))), [resumes])
+  function setParam(key: string, value?: string) {
+    const next = new URLSearchParams(searchParams)
+    if (value) next.set(key, value)
+    else next.delete(key)
+    setSearchParams(next, { replace: true })
+  }
 
+  const tabItems = useMemo(() => resumes.filter((resume) => resume.lifecycle === tab), [resumes, tab])
+  // 标签 chips 只统计当前 Tab 的简历集合：归档 Tab 不再展示只存在于活跃简历的标签。
+  const allTags = useMemo(() => Array.from(new Set(tabItems.flatMap((resume) => resume.tags))), [tabItems])
+
+  const needle = query.trim().toLowerCase()
   const filtered = useMemo(() => {
-    return resumes.filter((r) => {
-      if (tab === "active" && r.lifecycle !== "active") return false
-      if (tab === "archived" && r.lifecycle !== "archived") return false
-      if (query && !r.title.includes(query) && !r.targetRole.includes(query)) return false
-      if (tag && !r.tags.includes(tag)) return false
+    return tabItems.filter((resume) => {
+      // 大小写不敏感：标题与目标岗位一致对待。
+      if (needle && !resume.title.toLowerCase().includes(needle) && !resume.targetRole.toLowerCase().includes(needle)) return false
+      if (tag && !resume.tags.includes(tag)) return false
       return true
     })
-  }, [resumes, tab, query, tag])
+  }, [tabItems, needle, tag])
+
+  const hasFilter = Boolean(needle || tag)
+  const emptyTitle = hasFilter
+    ? t("resume.library.empty.filteredTitle")
+    : tab === "archived"
+      ? t("resume.library.empty.archivedTitle")
+      : t("resume.library.empty.title")
+  const emptyDescription = hasFilter
+    ? t("resume.library.empty.filteredDescription")
+    : tab === "archived"
+      ? t("resume.library.empty.archivedDescription")
+      : t("resume.library.empty.description")
 
   return (
     <div className="space-y-6">
@@ -44,7 +68,7 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
         title={t("resume.library.title")}
         description={t("resume.library.description")}
         actions={
-          <button onClick={() => setCreateOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          <button onClick={() => setParam("create", "1")} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             <Plus className="size-4" aria-hidden /> {t("resume.library.newResume")}
           </button>
         }
@@ -54,7 +78,7 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
         {(["active", "archived"] as Tab[]).map((tabKey) => (
           <button
             key={tabKey}
-            onClick={() => setTab(tabKey)}
+            onClick={() => setParam("tab", tabKey === "active" ? undefined : "archived")}
             aria-pressed={tab === tabKey}
             className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${tab === tabKey ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
           >
@@ -65,28 +89,24 @@ export function ResumeLibrary({ resumes, templates, jds }: { resumes: Resume[]; 
 
       <FilterToolbar
         query={query}
-        onQuery={setQuery}
+        onQuery={(value) => setParam("q", value || undefined)}
         placeholder={t("resume.library.searchPlaceholder")}
-        chips={allTags.map((t) => ({ key: t, label: t }))}
+        chips={allTags.map((label) => ({ key: label, label }))}
         activeChip={tag}
-        onChip={(k) => setTag((prev) => (prev === k ? undefined : k))}
+        onChip={(key) => setParam("tag", tag === key ? undefined : key)}
       />
 
       {filtered.length === 0 ? (
-        <StateBlock
-          kind="empty"
-          title={query || tag ? t("resume.library.empty.filteredTitle") : tab === "archived" ? t("resume.library.empty.archivedTitle") : t("resume.library.empty.title")}
-          description={query || tag ? t("resume.library.empty.filteredDescription") : t("resume.library.empty.description")}
-        />
+        <StateBlock kind="empty" title={emptyTitle} description={emptyDescription} />
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((r) => (
-            <ResumeCard key={r.id} resume={r} jds={jds} />
+          {filtered.map((resume) => (
+            <ResumeCard key={resume.id} resume={resume} jds={jds} />
           ))}
         </ul>
       )}
 
-      <CreateResumeModal open={createOpen} onClose={() => setCreateOpen(false)} resumes={resumes} templates={templates} />
+      <CreateResumeModal open={createOpen} onClose={() => setParam("create", undefined)} resumes={resumes} templates={templates} />
     </div>
   )
 }
@@ -96,12 +116,14 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [copying, setCopying] = useState(false)
-  const [copyError, setCopyError] = useState<string | null>(null)
-  const boundJds = jds.filter((j) => resume.boundByJdIds.includes(j.id))
+  const [lifecycleBusy, setLifecycleBusy] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const boundJds = jds.filter((jd) => resume.boundByJdIds.includes(jd.id))
+  const archived = resume.lifecycle === "archived"
 
   async function copy() {
     if (copying) return
-    setCopyError(null)
+    setActionError(null)
     setCopying(true)
     try {
       const clone = await duplicateResume(resume.id)
@@ -109,9 +131,26 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
       await queryClient.invalidateQueries({ queryKey: ["workbench-summary"] })
       navigate(`/resumes/${clone.id}`)
     } catch (cause) {
-      setCopyError(resumeCreateErrorMessage(cause))
+      setActionError(resumeCreateErrorMessage(cause))
     } finally {
       setCopying(false)
+    }
+  }
+
+  /** 归档 / 恢复：成功后失效列表与工作台摘要，卡片按新的 lifecycle 落到对应 Tab。 */
+  async function toggleLifecycle() {
+    if (lifecycleBusy) return
+    setActionError(null)
+    setLifecycleBusy(true)
+    try {
+      if (archived) await restoreResume(resume.id)
+      else await archiveResume(resume.id)
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+      await queryClient.invalidateQueries({ queryKey: ["workbench-summary"] })
+    } catch (cause) {
+      setActionError(resumeLifecycleErrorMessage(cause, archived ? "restore" : "archive"))
+    } finally {
+      setLifecycleBusy(false)
     }
   }
 
@@ -122,14 +161,18 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
           <Link to={`/resumes/${resume.id}`} className="font-serif text-lg font-bold text-foreground hover:underline">
             {resume.title}
           </Link>
-          {resume.lifecycle === "archived" ? (
-            <span className="ml-2 align-middle rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{t("resume.library.archivedBadge")}</span>
+          {archived ? (
+            <span className="ml-2 inline-block whitespace-nowrap align-middle rounded-md border border-border bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              {t("resume.library.archivedBadge")}
+            </span>
           ) : null}
         </div>
         <SaveStateBadge state={resume.saveState} className="shrink-0" />
       </div>
 
-      <p className="mt-1.5 text-sm text-muted-foreground">{t("resume.library.targetRole", { role: resume.targetRole })}</p>
+      {resume.targetRole.trim() ? (
+        <p className="mt-1.5 text-sm text-muted-foreground">{t("resume.library.targetRole", { role: resume.targetRole })}</p>
+      ) : null}
 
       {resume.tags.length ? (
         <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -175,11 +218,16 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
         >
           {t("common.actions.copy")}
         </button>
-        <button className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary">
-          {resume.lifecycle === "archived" ? t("resume.library.restore") : t("resume.library.archive")}
+        <button
+          onClick={toggleLifecycle}
+          disabled={lifecycleBusy}
+          aria-busy={lifecycleBusy}
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {archived ? t("resume.library.restore") : t("resume.library.archive")}
         </button>
       </div>
-      {copyError ? <p role="alert" className="mt-2 text-xs text-coral">{copyError}</p> : null}
+      {actionError ? <p role="alert" className="mt-2 text-xs text-coral">{actionError}</p> : null}
     </li>
   )
 }
