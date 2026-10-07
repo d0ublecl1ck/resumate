@@ -50,7 +50,6 @@ export default {
     catalogMissingOption: "{{id}} (not in catalog)",
     catalogLoading: "Loading model catalog…",
     catalogError: "Could not load the model catalog; the saved configuration is kept.",
-    catalogSource: "Catalog source: {{source}}",
     endpoint: "Endpoint",
     endpointPlaceholder: "https://api.example.com/v1",
     model: "Model",

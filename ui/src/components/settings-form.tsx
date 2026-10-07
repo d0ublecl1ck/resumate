@@ -135,7 +135,6 @@ export function SettingsForm({
   const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: () => getModelCatalog() })
   const runtimeQuery = useRuntimeStatus()
   const catalogProviders = catalogQuery.data?.providers ?? []
-  const catalogSource = catalogQuery.data?.source
   const selectedProvider = catalogProviders.find((item) => item.id === provider)
   const selectedModel = selectedProvider?.models.find((item) => item.id === modelName)
 
@@ -386,7 +385,6 @@ export function SettingsForm({
             <AlertTriangle className="size-3.5" aria-hidden /> {t("settings.model.catalogError")}
           </p>
         ) : null}
-        {catalogSource ? <p className="mt-3 text-[11px] text-muted-foreground">{t("settings.model.catalogSource", { source: catalogSource })}</p> : null}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="button"

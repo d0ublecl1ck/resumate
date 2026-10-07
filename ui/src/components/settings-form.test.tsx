@@ -45,12 +45,12 @@ describe("SettingsForm", () => {
     expect(await screen.findByText(/HTTP 200/)).toBeInTheDocument()
   })
 
-  it("从模型目录加载 provider 与 model", async () => {
+  it("从模型目录加载 provider 与 model，且不再显示目录来源", async () => {
     renderForm()
 
-    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
-    expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
+    expect(await screen.findByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
+    expect(screen.queryByText(/目录来源|Catalog source/)).not.toBeInTheDocument()
   })
 
   it("还差一步时在 Agent 分区引导去配置模型", async () => {

@@ -24,9 +24,9 @@ afterEach(cleanup)
 describe("model settings stories", () => {
   it("Default loads the catalog", async () => {
     render(Default.render())
-    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
-    expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
+    expect(await screen.findByRole("combobox", { name: "Provider" })).toHaveTextContent("OpenAI")
     expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("GPT-4o mini")
+    expect(screen.queryByText(/目录来源|Catalog source/)).not.toBeInTheDocument()
   })
 
   it("CatalogLoading keeps the loading hint", async () => {
@@ -41,26 +41,26 @@ describe("model settings stories", () => {
 
   it("ModelNotInCatalog marks the saved model as missing", async () => {
     render(ModelNotInCatalog.render())
-    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
-    expect(screen.getByRole("combobox", { name: "Model" })).toHaveTextContent("legacy-model（不在当前目录）")
+    expect(await screen.findByRole("combobox", { name: "Model" })).toHaveTextContent("legacy-model（不在当前目录）")
+    expect(screen.queryByText(/目录来源|Catalog source/)).not.toBeInTheDocument()
   })
 
   // 目录收窄后（issue 7aa58），目录外的已保存 provider 就是「自定义」：下拉换成文本输入，
   // 用户仍能改自己的服务标识，不再是一个禁用下拉。
   it("ProviderNotInCatalog switches the saved provider to custom text inputs", async () => {
     render(ProviderNotInCatalog.render())
-    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("textbox", { name: "Provider" })).toHaveValue("legacy-openai")
     expect(screen.getByRole("textbox", { name: "Model" })).toHaveValue("legacy-model")
+    expect(screen.queryByText(/目录来源|Catalog source/)).not.toBeInTheDocument()
   })
 
 
 
   it("NoProviderSelected shows the empty option", async () => {
     render(NoProviderSelected.render())
-    expect(await screen.findByText("目录来源：models.dev")).toBeInTheDocument()
     expect(screen.getByRole("combobox", { name: "Provider" })).toHaveTextContent("未设置")
     expect(screen.getByRole("combobox", { name: "Model" })).toBeDisabled()
+    expect(screen.queryByText(/目录来源|Catalog source/)).not.toBeInTheDocument()
   })
 
   it("TestPending shows the spinner and the testing hint", async () => {
