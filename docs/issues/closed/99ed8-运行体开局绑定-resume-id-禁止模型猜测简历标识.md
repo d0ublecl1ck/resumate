@@ -1,14 +1,15 @@
 ---
 id: 99ed8
-status: in-progress
+status: closed
 created_at: 2026-10-07T10:20:00.000Z
-updated_at: 2026-10-07T10:18:05.862Z
+updated_at: 2026-10-07T10:48:07.728Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 架构
 started_at: 2026-10-07T10:18:05.862Z
+closed_at: 2026-10-07T10:48:07.728Z
 ---
 
 # 运行体开局绑定 resume_id，禁止模型猜测简历标识
@@ -43,10 +44,10 @@ seq11 assistant 我无法开始编辑，因为缺少目标简历标识……
 
 ## Acceptance Criteria
 
-- [ ] 开局 system prompt 含绑定的 resume id；模型即使给出错误 resume_id，工具调用也落到正确简历。
-- [ ] `resume_id` 不再出现在 `create_turn` / `get_working_document` 的 `required` 中，模型省略时运行时注入。
-- [ ] `agent-core/tests` 全绿（Red→Green）。
-- [ ] 重装 uv tool 后真实 run 的 session 记录里不再出现 `FORBIDDEN: 运行凭据只能访问它所属的简历`，并生成待确认修改。
+- [x] 开局 system prompt 含绑定的 resume id；模型即使给出错误 resume_id，工具调用也落到正确简历。
+- [x] `resume_id` 不再出现在 `create_turn` / `get_working_document` 的 `required` 中，模型省略时运行时注入。
+- [x] `agent-core/tests` 全绿（Red→Green）。
+- [x] 重装 uv tool 后真实 run 的 session 记录里不再出现 `FORBIDDEN: 运行凭据只能访问它所属的简历`，并生成待确认修改。
 
 ## Implementation
 
@@ -74,7 +75,11 @@ Green（实现后）：
 uv run --directory agent-core pytest -q   → 106 passed
 ```
 
-重装 uv tool 后的真实 UI 端到端实证见关单提交（同一轮 session 不再出现 FORBIDDEN，且生成待确认修改）。
+### 合并后真实页面 E2E（2026-10-07）
+
+同一轮会话 `sess_13d880e9db1d` 的 18 条消息里 `FORBIDDEN` 计数为 0（修复前模型会猜 `res_default` / `res_main` / `res_me` / `res_001`，全部被运行凭据 scope 拦成 FORBIDDEN）；`get_working_document` 直接读到绑定简历，生成 pending action，approve 后 `apply_patch` + `finalize_turn` 成功，简历 `basics.location` 变为「杭州」。
+
+采样与截图见 9d3cb 的 Verification。
 
 ## Related ADRs
 
