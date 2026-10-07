@@ -74,4 +74,27 @@ describe("ProfileWorkspace 直接编辑", () => {
     expect(screen.getByRole("button", { name: "手动添加职业经历" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "编辑「商详页性能优化」" })).toBeInTheDocument()
   })
+
+  it("新增事实表单未提交时不显示校验错误", () => {
+    renderProfile()
+    fireEvent.click(screen.getByRole("button", { name: "手动添加技能专长" }))
+
+    expect(screen.queryByText("标题与内容不能为空。")).not.toBeInTheDocument()
+  })
+
+  it("只填标题提交才显示校验错误，补齐内容后保存并消失", async () => {
+    renderProfile()
+    fireEvent.click(screen.getByRole("button", { name: "手动添加技能专长" }))
+    expect(screen.queryByText("标题与内容不能为空。")).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("标题"), { target: { value: "Rust 工程实践" } })
+    fireEvent.click(screen.getByRole("button", { name: "添加事实" }))
+    expect(screen.getByText("标题与内容不能为空。")).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("内容"), { target: { value: "用 Rust 重写数据管道，吞吐提升 3 倍。" } })
+    fireEvent.click(screen.getByRole("button", { name: "添加事实" }))
+
+    expect(await screen.findByRole("heading", { name: "Rust 工程实践" })).toBeInTheDocument()
+    expect(screen.queryByText("标题与内容不能为空。")).not.toBeInTheDocument()
+  })
 })
