@@ -5,12 +5,13 @@
 import { useState, type ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
 import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
 import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
-import { MAX_AUTOSAVE_SECONDS, MIN_AUTOSAVE_SECONDS, clampAutosaveSeconds } from "@/lib/autosave"
+import { MAX_AUTOSAVE_SECONDS, MIN_AUTOSAVE_SECONDS, clampAutosaveSeconds, isValidAutosaveSeconds } from "@/lib/autosave"
 import { useRuntimeStatus } from "@/lib/runtime"
 import { cn } from "@/lib/utils"
 import { AlertTriangle, CheckCircle2, KeyRound, RefreshCw } from "lucide-react"
@@ -37,6 +38,7 @@ export function SettingsForm({
   templates: ResumeTemplate[]
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const [nextMode, setNextMode] = useState<ExecutionMode>(agent.nextRunMode)
@@ -64,6 +66,8 @@ export function SettingsForm({
   const scopes = agent.fullAccessScopes.map((scope) => t("settings.agent.fullAccessScope." + scope, { defaultValue: scope })).join(separator)
   const retained = agent.confirmRetainedOps.map((op) => t("settings.agent.confirmRetainedOp." + op, { defaultValue: op })).join(separator)
   const modeSource = t("settings.agent.source." + agent.modeSource, { defaultValue: agent.modeSource })
+  // 越界时提交前拦截，绝不用 clamp 静默改写用户输入（后端 422 继续兜底）。
+  const autosaveIntervalInvalid = autosave && !isValidAutosaveSeconds(autosaveSeconds)
 
   const agentMutation = useMutation({
     mutationFn: () =>
@@ -102,7 +106,7 @@ export function SettingsForm({
         displayName,
         theme,
         autosave,
-        autosaveIntervalSeconds: clampAutosaveSeconds(autosaveSeconds),
+        autosaveIntervalSeconds: autosaveSeconds,
         defaultTemplateId,
         shortcuts,
       }),
@@ -181,7 +185,16 @@ export function SettingsForm({
             state={agentAvailabilityFromModelConfig(model, runtimeQuery.data)}
             placement="entry"
             className="mb-4"
-            onAction={() => document.getElementById("settings-model-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            onAction={(action) => {
+              // start_chat 必须真的进入可对话入口，而不是像 configure_model 那样只滚到模型配置区；
+              // 真实对话入口是 /profile 页头的受控抽屉，用 query 参数打开。其余动作（configure_model
+              // 以及上游可能新增的 retry）都归到「滚到模型配置区」，不会误触发导航。
+              if (action === "start_chat") {
+                navigate("/profile?assistant=1")
+                return
+              }
+              document.getElementById("settings-model-section")?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }}
           />
         )}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -502,27 +515,36 @@ export function SettingsForm({
               <span className={cn("absolute top-0.5 size-5 rounded-full bg-card transition-transform", autosave ? "translate-x-5" : "translate-x-0.5")} />
             </button>
           </label>
-          <label className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+          <label className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
             <span>
               <span className="block text-sm text-foreground">{t("settings.preferences.autosaveInterval")}</span>
               <span className="block text-xs text-muted-foreground">
                 {t("settings.preferences.autosaveIntervalHint", { min: MIN_AUTOSAVE_SECONDS, max: MAX_AUTOSAVE_SECONDS })}
               </span>
             </span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={MIN_AUTOSAVE_SECONDS}
-              max={MAX_AUTOSAVE_SECONDS}
-              disabled={!autosave}
-              value={autosaveSeconds}
-              onChange={(event) => {
-                setAutosaveSeconds(Number(event.target.value))
-                setPrefsStatus("idle")
-              }}
-              aria-label={t("settings.preferences.autosaveInterval")}
-              className={cn(INPUT_CLASS, "w-24 disabled:opacity-60")}
-            />
+            <span className="flex flex-col items-end gap-1">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={MIN_AUTOSAVE_SECONDS}
+                max={MAX_AUTOSAVE_SECONDS}
+                disabled={!autosave}
+                value={autosaveSeconds}
+                onChange={(event) => {
+                  setAutosaveSeconds(Number(event.target.value))
+                  setPrefsStatus("idle")
+                }}
+                aria-label={t("settings.preferences.autosaveInterval")}
+                aria-invalid={autosaveIntervalInvalid ? true : undefined}
+                aria-describedby={autosaveIntervalInvalid ? "autosave-interval-error" : undefined}
+                className={cn(INPUT_CLASS, "w-24 disabled:opacity-60", autosaveIntervalInvalid && "border-coral focus:border-coral focus:ring-coral/30")}
+              />
+              {autosaveIntervalInvalid ? (
+                <span id="autosave-interval-error" role="alert" className="text-right text-xs leading-4 text-coral">
+                  {t("settings.preferences.autosaveIntervalError", { min: MIN_AUTOSAVE_SECONDS, max: MAX_AUTOSAVE_SECONDS })}
+                </span>
+              ) : null}
+            </span>
           </label>
           <label className="rounded-lg border border-border p-3">
             <FieldLabel>{t("settings.preferences.defaultTemplate")}</FieldLabel>
@@ -585,7 +607,16 @@ export function SettingsForm({
           <p className="mt-2 text-[11px] text-muted-foreground">{t("settings.preferences.shortcutEditHint")}</p>
         </div>
 
-        <SaveRow label={t("settings.preferences.save")} pending={prefsMutation.isPending} state={prefsStatus} error={prefsMutation.error} onSave={() => prefsMutation.mutate()} />
+        <SaveRow
+          label={t("settings.preferences.save")}
+          pending={prefsMutation.isPending}
+          state={prefsStatus}
+          error={prefsMutation.error}
+          onSave={() => {
+            if (autosaveIntervalInvalid) return
+            prefsMutation.mutate()
+          }}
+        />
       </Section>
     </div>
   )

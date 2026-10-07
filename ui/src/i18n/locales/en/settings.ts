@@ -85,6 +85,7 @@ export default {
     autosave: "Idle auto-save",
     autosaveInterval: "Auto-save interval (seconds)",
     autosaveIntervalHint: "How long to wait after you stop typing, {{min}}–{{max}} seconds.",
+    autosaveIntervalError: "Auto-save interval must be a whole number between {{min}} and {{max}} seconds.",
     defaultTemplate: "Default template",
     defaultTemplateNone: "Not set",
     defaultTemplateUnavailable: "The saved default template is unavailable; choose another",

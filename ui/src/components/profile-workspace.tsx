@@ -3,7 +3,7 @@
 // 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
 // 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
 
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
@@ -30,7 +30,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
   const { t } = useTranslation()
   const [basics, setBasics] = useState<ResumeBasics>(profile.basics)
   const [facts, setFacts] = useState<ProfileFact[]>(profile.facts)
-  const [assistantOpen, setAssistantOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  // /profile?assistant=1 是「开始聊聊」等入口打开对话抽屉的方式：参数在时直接展开。
+  const assistantRequested = searchParams.get("assistant") === "1"
+  const [assistantOpen, setAssistantOpen] = useState(assistantRequested)
   const [flashId, setFlashId] = useState<string | null>(null)
   const [editingBasics, setEditingBasics] = useState(false)
   const [factEditor, setFactEditor] = useState<FactEditor | null>(null)
@@ -51,6 +54,20 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
     setBasics(profile.basics)
     setFacts(profile.facts)
   }, [profile])
+
+  // 入口可能在已挂载时再次带参导航进来，参数变 true 就同步打开。
+  useEffect(() => {
+    if (assistantRequested) setAssistantOpen(true)
+  }, [assistantRequested])
+
+  // 关闭抽屉时清掉 query 参数，避免刷新后又自动打开。
+  function closeAssistant() {
+    setAssistantOpen(false)
+    if (!assistantRequested) return
+    const next = new URLSearchParams(searchParams)
+    next.delete("assistant")
+    setSearchParams(next, { replace: true })
+  }
 
   async function handleSaveBasics(next: ResumeBasics) {
     const saved = await updateBasics(next)
@@ -199,7 +216,7 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         )
       })}
 
-      <ProfileAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+      <ProfileAssistant open={assistantOpen} onClose={closeAssistant} />
     </div>
   )
 }
