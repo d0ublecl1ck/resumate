@@ -26,7 +26,7 @@ const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   turn_closed: "text-muted-foreground",
 }
 
-export function RunPanel({ run, mode, resumeId }: { run?: AgentRun; mode: ExecutionMode; resumeId: string }) {
+export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode: ExecutionMode; resumeId: string }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [input, setInput] = useState("")
