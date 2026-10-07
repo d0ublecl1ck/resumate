@@ -2,10 +2,10 @@
 // 可用性引导 / 发消息起 profile run / SSE turn.updated 增量拉取并渲染 / 审批 / StrictMode 连接数。
 // 契约见 docs/agent/agent-operation-api.md §19 / §21，全部由 MSW 按冻结契约造。
 
-import { StrictMode } from "react"
+import { StrictMode, useState } from "react"
 import type { ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, createEvent, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, cleanup, createEvent, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -245,7 +245,8 @@ describe("ProfileAssistant 的真实会话", () => {
 
     await waitFor(() => expect(approved).toBe(true))
     await waitFor(() => expect(profileCalls.length).toBeGreaterThan(before))
-    expect(await screen.findByRole("heading", { name: "订单系统重构" })).toBeInTheDocument()
+    // 抽屉现在是真模态：背景被 inert + aria-hidden，所以刷新后的主档要以 hidden 方式断言。
+    expect(await screen.findByRole("heading", { name: "订单系统重构", hidden: true })).toBeInTheDocument()
     unmount()
   })
 
@@ -435,6 +436,152 @@ describe("ProfileAssistant 按轮次 scope 选取主档会话", () => {
     fireEvent.click(screen.getByRole("button", { name: "发送" }))
 
     await waitFor(() => expect(runs).toEqual(["sess_1"]))
+  })
+})
+
+describe("ProfileAssistant 的可用性状态区分", () => {
+  it("可用性读取中显示加载占位，而不是空白正文", () => {
+    server.use(
+      http.get("/api/models/config", async () => {
+        await new Promise(() => {})
+        return HttpResponse.json(MODEL_CONFIG)
+      }),
+    )
+
+    renderAssistant()
+
+    expect(screen.getByRole("status")).toBeInTheDocument()
+  })
+
+  it("模型配置加载失败时给出可重试的错误态，不引导去设置", async () => {
+    server.use(http.get("/api/models/config", () => HttpResponse.json({ code: "RATE_LIMITED", message: "runner busy" }, { status: 500 })))
+
+    renderAssistant()
+
+    expect(await screen.findByText("助手配置读取失败")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "重试" })).toBeInTheDocument()
+    expect(screen.queryByText("先把助手开起来")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "去设置" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
+  it("模型配置返回 403 时说明无权限，既不引导去设置也不提示重试", async () => {
+    server.use(http.get("/api/models/config", () => HttpResponse.json({ code: "FORBIDDEN", message: "forbidden" }, { status: 403 })))
+
+    renderAssistant()
+
+    expect(await screen.findByText("没有权限读取助手配置")).toBeInTheDocument()
+    expect(screen.queryByText("先把助手开起来")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "去设置" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument()
+  })
+})
+
+describe("ProfileAssistant 的实时回复", () => {
+  it("收到 snapshot 时增量拉取消息并渲染助手回复", async () => {
+    const sources = stubEventSource()
+    let replyReady = false
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([SESSION])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
+      http.get("/api/sessions/sess_1/messages", () =>
+        HttpResponse.json(
+          replyReady
+            ? [{ id: "msg_a", sessionId: "sess_1", seq: 2, role: "assistant", content: { role: "assistant", content: "收到" }, createdAt: "2026-10-01T00:00:00Z" }]
+            : [],
+        ),
+      ),
+    )
+
+    renderAssistant()
+    await waitFor(() => expect(sources.some((source) => source.url.endsWith("/turns/turn_prof_1/events"))).toBe(true))
+    expect(screen.queryByText("收到")).not.toBeInTheDocument()
+
+    replyReady = true
+    sources
+      .find((source) => source.url.endsWith("/turns/turn_prof_1/events"))!
+      .emit("snapshot", JSON.stringify({ id: "turn_prof_1", resumeId: null, state: "finalized" }))
+
+    expect(await screen.findByText("收到")).toBeInTheDocument()
+  })
+
+  it("轮次集合变化时补拉消息，助手回复无需关闭重开即可见", async () => {
+    const client = makeClient()
+    let replyReady = false
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([SESSION])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
+      http.get("/api/sessions/sess_1/messages", ({ request }) => {
+        const after = Number(new URL(request.url).searchParams.get("afterSeq") ?? "0")
+        const user = { id: "msg_u", sessionId: "sess_1", seq: 1, role: "user", content: { role: "user", content: "在" }, createdAt: "2026-10-01T00:00:00Z" }
+        const reply = { id: "msg_a", sessionId: "sess_1", seq: 2, role: "assistant", content: { role: "assistant", content: "收到" }, createdAt: "2026-10-01T00:00:00Z" }
+        if (!replyReady) return HttpResponse.json(after >= 1 ? [] : [user])
+        return HttpResponse.json(after >= 1 ? [reply] : [user, reply])
+      }),
+    )
+
+    renderWith(client, <ProfileAssistant open onClose={() => {}} />)
+    expect(await screen.findByText("在")).toBeInTheDocument()
+    expect(screen.queryByText("收到")).not.toBeInTheDocument()
+
+    replyReady = true
+    act(() => {
+      client.setQueryData(["session-turns", "sess_1"], [profileTurn({ id: "turn_prof_2" })])
+    })
+
+    expect(await screen.findByText("收到")).toBeInTheDocument()
+  })
+})
+
+describe("ProfileAssistant 抽屉的模态契约", () => {
+  function Harness() {
+    const [open, setOpen] = useState(false)
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>
+          对话维护资料
+        </button>
+        <ProfileAssistant open={open} onClose={() => setOpen(false)} />
+      </>
+    )
+  }
+
+  it("打开将焦点移入抽屉，Esc 关闭并把焦点归还触发按钮，背景 inert", async () => {
+    const client = makeClient()
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([])),
+      http.post("/api/sessions", () => HttpResponse.json(SESSION, { status: 201 })),
+    )
+
+    const { container } = renderWith(client, <Harness />)
+    const trigger = screen.getByRole("button", { name: "对话维护资料" })
+    trigger.focus()
+    expect(document.activeElement).toBe(trigger)
+
+    fireEvent.click(trigger)
+    const dialog = await screen.findByRole("dialog")
+    expect(dialog).toHaveAttribute("aria-modal", "true")
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+    await waitFor(() => expect(container).toHaveAttribute("inert"))
+
+    fireEvent.keyDown(dialog, { key: "Escape" })
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    await waitFor(() => expect(document.activeElement).toBe(trigger))
+    expect(container).not.toHaveAttribute("inert")
+  })
+
+  it("关闭按钮使用区别于通用「关闭」的可访问名", async () => {
+    const client = makeClient()
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([])),
+      http.post("/api/sessions", () => HttpResponse.json(SESSION, { status: 201 })),
+    )
+    renderAssistant(client)
+
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByRole("button", { name: "关闭助手" })).toBeInTheDocument()
+    expect(within(dialog).queryByRole("button", { name: "关闭" })).not.toBeInTheDocument()
   })
 })
 

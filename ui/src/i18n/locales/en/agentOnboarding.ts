@@ -1,5 +1,21 @@
 export default {
   state: {
+    checking: {
+      stamp: "Checking",
+      title: "Checking the assistant",
+      description: "Reading the model and runtime setup. This will only take a moment.",
+    },
+    load_failed: {
+      stamp: "Load failed",
+      title: "Couldn't load the assistant setup",
+      description: "We couldn't read your model configuration. The service may be temporarily unavailable. You can retry without opening Settings.",
+      action: "Retry",
+    },
+    forbidden: {
+      stamp: "No access",
+      title: "You don't have access to the assistant setup",
+      description: "Your account isn't allowed to view the assistant configuration. Retrying won't help; contact an administrator.",
+    },
     model_missing: {
       stamp: "One step left",
       title: "Finish setting up",

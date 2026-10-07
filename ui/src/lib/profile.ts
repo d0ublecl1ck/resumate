@@ -4,7 +4,9 @@
 import type { TFunction } from "i18next"
 import type { EvidenceStatus, FactType, FactVisibility } from "@/lib/types"
 
-export const FACT_TYPE_ORDER: FactType[] = ["experience", "project", "skill", "education", "achievement", "certificate"]
+// 事实类型的唯一顺序来源：分区展示（profile-workspace 的 SECTIONS）与类型下拉都从这里取序，
+// 避免「下拉顺序」与「分区顺序」两处各写一遍后漂移。
+export const FACT_TYPE_ORDER: FactType[] = ["experience", "project", "education", "skill", "achievement", "certificate"]
 
 export function factTypeLabel(t: TFunction, type: FactType): string {
   return t(`profile.factType.${type}`)

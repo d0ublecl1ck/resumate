@@ -1,5 +1,21 @@
 export default {
   state: {
+    checking: {
+      stamp: "读取中",
+      title: "正在检查助手状态",
+      description: "正在读取模型与运行体配置，请稍候。",
+    },
+    load_failed: {
+      stamp: "读取失败",
+      title: "助手配置读取失败",
+      description: "没能读到模型配置，可能是服务暂时不可用。可以重试，不需要先去设置页。",
+      action: "重试",
+    },
+    forbidden: {
+      stamp: "无权限",
+      title: "没有权限读取助手配置",
+      description: "当前账号无权查看助手配置，重试也不会改变结果，请联系管理员。",
+    },
     model_missing: {
       stamp: "还差一步",
       title: "先把助手开起来",

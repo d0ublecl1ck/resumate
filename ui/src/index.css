@@ -123,3 +123,9 @@
   border-radius: var(--radius-lg);
   background: var(--card);
 }
+
+/* 用户内容断行：超长无空格文本（URL、连续 W/X）不得撑破卡片与整页宽度。 */
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

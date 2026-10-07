@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
 import { createFactManually, updateBasics, updateFact } from "@/lib/api"
+import { FACT_TYPE_ORDER } from "@/lib/profile"
 import { EvidenceBadge } from "@/components/kit/badges"
 import { ProfileAssistant } from "@/components/profile-assistant"
 import { ProfileBasicsForm } from "@/components/profile-basics-form"
@@ -15,14 +16,12 @@ import { ProfileFactForm } from "@/components/profile-fact-form"
 import { cn } from "@/lib/utils"
 import { Mail, MapPin, MessageSquarePlus, Pencil, Phone, Plus, Link2, Sparkles } from "lucide-react"
 
-const SECTIONS: { type: FactType; titleKey: string; emptyKey: string }[] = [
-  { type: "experience", titleKey: "profile.sections.experience.title", emptyKey: "profile.sections.experience.empty" },
-  { type: "project", titleKey: "profile.sections.project.title", emptyKey: "profile.sections.project.empty" },
-  { type: "education", titleKey: "profile.sections.education.title", emptyKey: "profile.sections.education.empty" },
-  { type: "skill", titleKey: "profile.sections.skill.title", emptyKey: "profile.sections.skill.empty" },
-  { type: "achievement", titleKey: "profile.sections.achievement.title", emptyKey: "profile.sections.achievement.empty" },
-  { type: "certificate", titleKey: "profile.sections.certificate.title", emptyKey: "profile.sections.certificate.empty" },
-]
+// 分区顺序与类型下拉都从 FACT_TYPE_ORDER 取序：两处各写一遍迟早漂移（曾经 education / skill 互换）。
+const SECTIONS: { type: FactType; titleKey: string; emptyKey: string }[] = FACT_TYPE_ORDER.map((type) => ({
+  type,
+  titleKey: `profile.sections.${type}.title`,
+  emptyKey: `profile.sections.${type}.empty`,
+}))
 
 /** 直接编辑中的事实表单：新增或修正某一条。 */
 type FactEditor = { mode: "create"; type: FactType } | { mode: "update"; fact: ProfileFact }
@@ -111,8 +110,8 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
         ) : (
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="font-serif text-2xl font-bold text-foreground">{basics.fullName}</h2>
-              <p className="mt-1 text-sm text-foreground/80">{basics.headline}</p>
+              <h2 className="wrap-anywhere font-serif text-2xl font-bold text-foreground">{basics.fullName}</h2>
+              <p className="wrap-anywhere mt-1 text-sm text-foreground/80">{basics.headline}</p>
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
                 {basics.email ? (
                   <span className="inline-flex items-center gap-1.5"><Mail className="size-3.5" aria-hidden /> {basics.email}</span>
@@ -231,14 +230,14 @@ function FactRow({
   }
 
   return (
-    <li className={cn("card-soft p-4 transition-colors", flash && "border-cobalt bg-cobalt/5")}>
+    <li className={cn("card-soft overflow-hidden p-4 transition-colors", flash && "border-cobalt bg-cobalt/5")}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-foreground">{fact.title}</h3>
+            <h3 className="wrap-anywhere font-semibold text-foreground">{fact.title}</h3>
             <EvidenceBadge status={fact.evidence.status} />
           </div>
-          <p className="mt-1.5 text-sm leading-6 text-foreground/80">{fact.content}</p>
+          <p className="wrap-anywhere mt-1.5 text-sm leading-6 text-foreground/80">{fact.content}</p>
           {fact.tags.length ? (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {fact.tags.map((tag) => (

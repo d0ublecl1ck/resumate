@@ -2,13 +2,16 @@
 // 证据状态默认「待核实」，只有用户显式选择才成为「已核实」（BR-D09）；
 // 可见性默认沿用事实卡片的「仅用于简历」（US-7.10 / BR-D05）。
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { EvidenceStatus, FactType, FactVisibility, ProfileFact, ProfileFactInput } from "@/lib/types"
+import { userFacingError, type UserFacingError } from "@/lib/api-error-text"
 import { evidenceStatusLabel, FACT_TYPE_ORDER, factTypeLabel, factVisibilityLabel } from "@/lib/profile"
 
 const VISIBILITY_ORDER: FactVisibility[] = ["private", "resume_only", "public"]
 const EVIDENCE_STATUS_ORDER: EvidenceStatus[] = ["verified", "unverified", "no_evidence"]
+/** 与后端 ProfileFactCreate / ProfileFactUpdate 的 title max_length=200 对齐。 */
+const TITLE_MAX_LENGTH = 200
 
 export function ProfileFactForm({
   mode,
@@ -32,15 +35,23 @@ export function ProfileFactForm({
   const [evidenceLabel, setEvidenceLabel] = useState(fact?.evidence.label ?? "")
   const [visibility, setVisibility] = useState<FactVisibility>(fact?.visibility ?? "resume_only")
   const [busy, setBusy] = useState(false)
+  const [saveError, setSaveError] = useState<UserFacingError | null>(null)
   // 未提交过（pristine）不是错误：只有用户尝试提交且输入仍非法时才展示必填提示。
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  // busy 是异步 state，同一 tick 的第二次 click 读到的仍是 false；用 ref 做同步守卫，保证只落一条事实。
+  const submittingRef = useRef(false)
 
-  const valid = title.trim().length > 0 && content.trim().length > 0
-  const showRequired = submitAttempted && !valid
+  const titleTooLong = title.trim().length > TITLE_MAX_LENGTH
+  const valid = title.trim().length > 0 && content.trim().length > 0 && !titleTooLong
+  const showRequired = submitAttempted && (title.trim().length === 0 || content.trim().length === 0)
+  const showTitleTooLong = submitAttempted && titleTooLong
 
   async function save() {
     setSubmitAttempted(true)
-    if (!valid || busy) return
+    if (submittingRef.current) return
+    if (!valid) return
+    submittingRef.current = true
+    setSaveError(null)
     setBusy(true)
     try {
       await onSave({
@@ -57,7 +68,11 @@ export function ProfileFactForm({
         },
         visibility,
       })
+    } catch (cause) {
+      // 保存失败必须落到界面上，不能变成未处理的 rejection；422 业务校验直接展示后端 message。
+      setSaveError(userFacingError(cause, t("profile.factForm.saveError")))
     } finally {
+      submittingRef.current = false
       setBusy(false)
     }
   }
@@ -101,8 +116,15 @@ export function ProfileFactForm({
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={TITLE_MAX_LENGTH}
+            aria-invalid={showTitleTooLong || undefined}
             placeholder={t("profile.factForm.titlePlaceholder")}
-            className="w-full rounded-md border border-input bg-card px-2.5 py-1.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+            className={
+              "w-full rounded-md border bg-card px-2.5 py-1.5 text-sm outline-none focus:ring-2 " +
+              (showTitleTooLong
+                ? "border-coral focus:border-coral focus:ring-coral/30"
+                : "border-input focus:border-ring focus:ring-ring/30")
+            }
           />
         </label>
 
@@ -153,6 +175,13 @@ export function ProfileFactForm({
         ) : null}
       </div>
 
+      {saveError ? (
+        <p role="alert" className="mt-3 rounded-md bg-coral/10 px-3 py-2 text-xs font-medium text-coral">
+          <span>{saveError.message}</span>
+          {saveError.code ? <span className="ml-2 font-mono">{saveError.code}</span> : null}
+        </p>
+      ) : null}
+
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -171,6 +200,7 @@ export function ProfileFactForm({
           {t("common.actions.cancel")}
         </button>
         {showRequired ? <span className="text-xs text-coral">{t("profile.factForm.required")}</span> : null}
+        {showTitleTooLong ? <span className="text-xs text-coral">{t("profile.factForm.titleTooLong")}</span> : null}
       </div>
     </div>
   )

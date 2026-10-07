@@ -1,6 +1,10 @@
 export default {
   title: "个人资料",
   subtitlePrefix: "你的职业主档。简历从这里选材生成——完善度 ",
+  loadError: {
+    title: "个人资料加载失败",
+    description: "没能读取主档数据，请重试。",
+  },
   actions: {
     openAssistant: "对话维护资料",
     generateResume: "生成简历",
@@ -28,6 +32,8 @@ export default {
     deleteLinkAria: "删除链接 {{index}}",
     addLink: "添加链接",
     nameRequired: "姓名不能为空。",
+    emailInvalid: "邮箱格式不正确。",
+    saveError: "保存失败，请重试。",
   },
   sections: {
     experience: {
@@ -90,9 +96,12 @@ export default {
     tagsPlaceholder: "性能优化、React",
     evidenceLabelPlaceholder: "例如：季度复盘文档",
     required: "标题与内容不能为空。",
+    titleTooLong: "标题不能超过 200 个字符。",
+    saveError: "保存失败，请重试。",
   },
   assistant: {
     aria: "个人资料助手",
+    close: "关闭助手",
     title: "个人资料助手",
     description: "自然语言维护基本信息与经历，AI 整理后你确认",
     intro: "你可以让我改基本信息（比如「把城市改成北京」），也可以补充经历、项目、技能。我会整理成条目，等你确认后再写入。",
