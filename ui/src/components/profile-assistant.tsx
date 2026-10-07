@@ -112,8 +112,26 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const turnCountRef = useRef(0)
   const sessionRef = useRef<string | null>(null)
 
-  const sessionsQuery = useQuery({ queryKey: ["agent-sessions"], queryFn: listSessions, enabled: open && canChat })
-  const sessionId = createdSessionId ?? sessionsQuery.data?.[0]?.id ?? null
+  /**
+   * 主档会话不是服务端概念：会话只绑 owner、可横跨简历与主档，scope 是轮次属性（契约 §21.1）。
+   * 因此只采用「至少有一条 profile 轮次，且所有轮次都是 profile 作用域」的会话；
+   * 没有这样的会话时返回 null，由提交路径新建，绝不退回「最近一条会话」。
+   */
+  const profileSessionQuery = useQuery({
+    queryKey: ["profile-session"],
+    enabled: open && canChat && !createdSessionId,
+    queryFn: async () => {
+      const candidates = await listSessions()
+      for (const candidate of candidates) {
+        const candidateTurns = await listSessionTurns(candidate.id)
+        if (candidateTurns.length > 0 && candidateTurns.every((turn) => turn.scope === "profile")) {
+          return candidate.id
+        }
+      }
+      return null
+    },
+  })
+  const sessionId = createdSessionId ?? profileSessionQuery.data ?? null
   sessionRef.current = sessionId
 
   const turnsQuery = useQuery({
@@ -122,7 +140,11 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     enabled: Boolean(open && canChat && sessionId),
     refetchInterval: awaitingTurn ? 1500 : false,
   })
-  const turns = useMemo(() => turnsQuery.data ?? [], [turnsQuery.data])
+  // 采用的主档会话理论上只含 profile 轮次；仍过滤 resume 轮次，避免会话后来被简历 run 污染。
+  const turns = useMemo(
+    () => (turnsQuery.data ?? []).filter((turn) => turn.scope !== "resume"),
+    [turnsQuery.data],
+  )
   const activeTurn = turns.find((turn) => turn.state === "open") ?? turns[0]
   const activeTurnId = activeTurn?.id ?? null
 
@@ -173,8 +195,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     mutationFn: async (prompt: string) => {
       let sid = sessionId
       if (!sid) {
-        const existing = sessionsQuery.data ?? (await listSessions())
-        sid = existing[0]?.id ?? (await createSession()).id
+        sid = (await createSession()).id
         setCreatedSessionId(sid)
         sessionRef.current = sid
       }
@@ -189,7 +210,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
       turnCountRef.current = turns.length
       setAwaitingTurn(true)
       void queryClient.invalidateQueries({ queryKey: ["session-turns", sid] })
-      void queryClient.invalidateQueries({ queryKey: ["agent-sessions"] })
+      void queryClient.invalidateQueries({ queryKey: ["profile-session"] })
     },
     onError: (cause) => setStartErrorKey(agentErrorKey(cause)),
   })
