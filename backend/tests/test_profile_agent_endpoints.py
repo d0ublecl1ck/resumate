@@ -81,6 +81,24 @@ def test_profile_finalize_closes_the_turn(client: TestClient) -> None:
     assert body["result"]["resumeId"] is None
 
 
+def test_profile_finalize_marks_pending_actions_stale(client: TestClient) -> None:
+    """A profile turn must expire its pending actions when it closes (issue fe56e)."""
+    session_id = _create_session(client)
+    turn = client.post("/turns", json={"scope": "profile", "sessionId": session_id}).json()
+    proposed = client.post(f"/turns/{turn['id']}/profile-actions", json={"ops": [_create_fact_op()]})
+    assert proposed.status_code == 200, proposed.text
+    pending_id = proposed.json()["pendingActionId"]
+    assert pending_id
+
+    finalized = client.post(f"/turns/{turn['id']}/finalize", json={})
+    assert finalized.status_code == 200, finalized.text
+
+    action = client.get(f"/turns/{turn['id']}/pending-actions").json()[0]
+    assert action["id"] == pending_id
+    assert action["state"] == "stale"
+    assert action["staleReason"]
+
+
 def test_run_credential_can_propose_but_not_approve(session_clients, fake_redis) -> None:
     session = session_clients()
     registered = support.register_verified(

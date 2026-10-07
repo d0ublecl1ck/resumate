@@ -433,3 +433,26 @@ describe("RunPanel 第二次发送", () => {
     }
   })
 })
+
+describe("RunPanel 已关闭轮次的待办兜底", () => {
+  // 后端在结束轮次时会把待办置 stale；历史遗留的 pending 行由前端兜底不渲染可点按钮。
+  const CLOSED_WITH_PENDING: AgentRun = { ...RUN, state: "turn_closed" }
+
+  it("轮次已关闭时不再渲染可点的批准/拒绝，并说明待办已失效", () => {
+    renderPanel(CLOSED_WITH_PENDING, newClient())
+
+    expect(screen.queryByRole("button", { name: /批准/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /拒绝/ })).not.toBeInTheDocument()
+    expect(screen.getByText(i18n.t("common.pendingAction.stale"))).toBeInTheDocument()
+    expect(
+      screen.getByText(i18n.t("workbench.run.closedTurnActionStale"), { exact: false }),
+    ).toBeInTheDocument()
+  })
+
+  it("轮次未关闭时仍渲染可点的批准/拒绝", () => {
+    renderPanel(RUN, newClient())
+
+    expect(screen.getByRole("button", { name: /批准/ })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /拒绝/ })).toBeInTheDocument()
+  })
+})

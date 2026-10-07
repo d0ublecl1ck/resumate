@@ -60,6 +60,9 @@ DEFAULT_CLIENT_ID = "external"
 DEFAULT_MODE = "approval"
 MODE_VALUES = ("approval", "full_access")
 
+# 关轮时把该轮待办置 stale 的默认原因；具体路径可用 stale_reason 覆盖（issue fe56e）。
+TURN_CLOSE_STALE_REASONS = {"finalized": "轮次已结束", "cancelled": "轮次已取消"}
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -313,7 +316,31 @@ def _turn_response(db: Session, turn: AgentTurn, *, base_rebased: bool = False) 
     )
 
 
-def _apply_result(turn: AgentTurn, version: ResumeVersion | None, message: str, state: str) -> None:
+def _expire_pending_actions(db: Session, turn: AgentTurn, reason: str) -> None:
+    """A pending action must never outlive its turn (issue fe56e).
+
+    Every path that closes a turn funnels through here, so a finalized or
+    cancelled turn can never leave an approvable action behind -- which the UI
+    would otherwise render as a clickable "approve" that always fails with 409.
+    """
+    for action in dao.list_actions_for_turn(db, turn.id):
+        if action.state == "pending":
+            action.state = "stale"
+            action.stale_reason = reason
+
+
+def _apply_result(
+    db: Session,
+    turn: AgentTurn,
+    version: ResumeVersion | None,
+    message: str,
+    state: str,
+    *,
+    stale_reason: str | None = None,
+) -> None:
+    _expire_pending_actions(
+        db, turn, stale_reason or TURN_CLOSE_STALE_REASONS.get(state, "轮次已结束")
+    )
     turn.state = state
     turn.closed_at = _now()
     turn.result_state = state
@@ -366,16 +393,19 @@ def _close_open_turn(db: Session, turn: AgentTurn, user: CurrentUser) -> None:
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     _, conflict_reason = _rebase_or_abandon(db, turn, resume)
     if conflict_reason is not None:
-        for action in dao.list_actions_for_turn(db, turn.id):
-            if action.state == "pending":
-                action.state = "stale"
-                action.stale_reason = "基线冲突，旧轮次自动关闭"
-        _apply_result(turn, None, f"基线冲突，旧轮次自动关闭（{conflict_reason}）", "cancelled")
+        _apply_result(
+            db,
+            turn,
+            None,
+            f"基线冲突，旧轮次自动关闭（{conflict_reason}）",
+            "cancelled",
+            stale_reason="基线冲突，旧轮次自动关闭",
+        )
         db.flush()
         return
     message = turn.message or "轮次自动结算"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
-    _apply_result(turn, version, message, "finalized")
+    _apply_result(db, turn, version, message, "finalized")
     db.flush()
 
 
@@ -428,10 +458,7 @@ def begin_scoped_turn(db: Session, user: CurrentUser, payload: TurnCreateRequest
 
 def _close_profile_turn(db: Session, turn: AgentTurn) -> None:
     """C-04 analogue: a new profile turn supersedes the open one in its session."""
-    for action in dao.list_actions_for_turn(db, turn.id):
-        if action.state == "pending":
-            action.state = "stale"
-            action.stale_reason = "轮次已被新的主档轮次取代"
+    _expire_pending_actions(db, turn, "轮次已被新的主档轮次取代")
     turn.state = "cancelled"
     turn.closed_at = _now()
     turn.result_state = "cancelled"
@@ -508,7 +535,7 @@ def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFin
     if turn.scope == "profile":
         # A profile turn has no working copy: finalize only closes it.
         message = payload.message or turn.message or "主档轮次提交"
-        _apply_result(turn, None, message, "finalized")
+        _apply_result(db, turn, None, message, "finalized")
         response = _turn_response(db, turn)
         _store_operation(db, turn, "finalize", payload.idempotency_key, request_hash, response)
         db.commit()
@@ -517,7 +544,7 @@ def finalize_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnFin
     base_rebased = _rebase_if_needed(db, turn, resume)
     message = payload.message or turn.message or "Agent 轮次提交"
     version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
-    _apply_result(turn, version, message, "finalized")
+    _apply_result(db, turn, version, message, "finalized")
     response = _turn_response(db, turn, base_rebased=base_rebased)
     _store_operation(db, turn, "finalize", payload.idempotency_key, request_hash, response)
     db.commit()
@@ -533,22 +560,14 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
         return _replayed_turn(operation)
     _require_open(turn)
     if turn.scope == "profile":
-        for action in dao.list_actions_for_turn(db, turn.id):
-            if action.state == "pending":
-                action.state = "stale"
-                action.stale_reason = "轮次已取消"
         message = payload.reason or "主档轮次取消"
-        _apply_result(turn, None, message, "cancelled")
+        _apply_result(db, turn, None, message, "cancelled")
         response = _turn_response(db, turn)
         _store_operation(db, turn, "cancel", payload.idempotency_key, request_hash, response)
         db.commit()
         return response
     resume = resume_service.get_resume(db, user.id, turn.resume_id)
     base_rebased, conflict_reason = _rebase_or_abandon(db, turn, resume)
-    for action in dao.list_actions_for_turn(db, turn.id):
-        if action.state == "pending":
-            action.state = "stale"
-            action.stale_reason = "轮次已取消"
     if conflict_reason is not None:
         # Explicit abandonment (contract 15.7): the conflicting staged copy is
         # dropped on purpose so the turn can close, and the reason is recorded.
@@ -557,7 +576,7 @@ def cancel_turn(db: Session, user: CurrentUser, turn_id: str, payload: TurnCance
     else:
         message = payload.reason or "Agent 轮次取消"
         version = _settle_working_changes(db, turn, resume, actor_id=user.id, message=message)
-    _apply_result(turn, version, message, "cancelled")
+    _apply_result(db, turn, version, message, "cancelled")
     response = _turn_response(db, turn, base_rebased=base_rebased)
     _store_operation(db, turn, "cancel", payload.idempotency_key, request_hash, response)
     db.commit()
