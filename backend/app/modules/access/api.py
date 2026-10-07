@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser
+from app.core.deps import CurrentUser, PaginationParams, get_pagination
 from app.modules.auth.deps import require_permission
 
 from . import service
 from .schemas import (
     AccessLogResponse,
+    AccessResult,
     CapabilityDiscoveryResponse,
     PersonalAccessTokenCreate,
     PersonalAccessTokenResponse,
@@ -44,10 +45,26 @@ def revoke_token(
 
 @router.get("/access/logs", response_model=list[AccessLogResponse])
 def get_logs(
+    response: Response,
+    purpose: str | None = Query(None, max_length=200),
+    result: AccessResult | None = Query(None),
+    q: str | None = Query(None, max_length=200),
+    pagination: PaginationParams = Depends(get_pagination),
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_permission("access:read")),
 ) -> list[AccessLogResponse]:
-    return service.list_logs(db, user)
+    logs, total = service.list_logs(
+        db,
+        user,
+        purpose=purpose,
+        result=result,
+        query=q,
+        page=pagination.page,
+        size=pagination.size,
+    )
+    # 分页元数据走响应头：响应体保持裸数组，与仓库其它列表端点一致。
+    response.headers["X-Total-Count"] = str(total)
+    return logs
 
 
 @router.get("/.well-known/resume-agent", response_model=CapabilityDiscoveryResponse)

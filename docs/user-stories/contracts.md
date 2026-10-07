@@ -132,6 +132,7 @@ ResumeDocument 覆盖 basics、summary、education、experience、projects、ski
 - **WHEN** 返回模型配置或错误日志 -> **MUST NOT** 回传明文 API Key；凭证加密存储，测试连通性不得泄漏密钥。
 - **WHEN** 发送 Webhook -> **MUST** 只面向已授权订阅者，使用唯一事件 ID 与可验证签名，重复投递可去重；事件覆盖 profile.updated、resume.version.created、export.completed。
 - **WHEN** 能力发现 -> **MUST** 在 `GET /.well-known/resume-agent` 返回契约版本、OpenAPI/MCP 入口、支持能力和认证方式；不得返回用户资源或凭证。
+- **WHEN** 读取访问审计日志 -> **MUST** 支持 `page`/`size` 分页与 `purpose`/`result`/`q` 筛选；响应体保持按页的裸数组，筛选后总条数放 `X-Total-Count` 响应头；`access:read` 权限语义不变。
 
 ## C-11 发布前需冻结的验收参数
 

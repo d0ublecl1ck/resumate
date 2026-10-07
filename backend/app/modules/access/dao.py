@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from .models import AccessLog, PersonalAccessToken
@@ -28,14 +28,40 @@ def add_token(db: Session, token: PersonalAccessToken) -> None:
     db.add(token)
 
 
-def list_logs(db: Session, owner_id: str, *, limit: int = 100) -> list[AccessLog]:
+def list_logs(
+    db: Session,
+    owner_id: str,
+    *,
+    purpose: str | None = None,
+    result: str | None = None,
+    query: str | None = None,
+    page: int = 1,
+    size: int = 20,
+) -> tuple[list[AccessLog], int]:
+    """Return one page of audit rows (newest first) plus the filtered total."""
+    filters = [AccessLog.owner_id == owner_id]
+    if purpose:
+        filters.append(AccessLog.purpose == purpose)
+    if result:
+        filters.append(AccessLog.result == result)
+    if query:
+        pattern = f"%{query}%"
+        filters.append(
+            or_(
+                AccessLog.client_id.ilike(pattern),
+                AccessLog.scope.ilike(pattern),
+                AccessLog.resource.ilike(pattern),
+            )
+        )
+    total = db.scalar(select(func.count()).select_from(AccessLog).where(*filters)) or 0
     statement = (
         select(AccessLog)
-        .where(AccessLog.owner_id == owner_id)
-        .order_by(AccessLog.at.desc())
-        .limit(limit)
+        .where(*filters)
+        .order_by(AccessLog.at.desc(), AccessLog.id.desc())
+        .offset((page - 1) * size)
+        .limit(size)
     )
-    return list(db.scalars(statement))
+    return list(db.scalars(statement)), total
 
 
 def add_log(db: Session, log: AccessLog) -> None:

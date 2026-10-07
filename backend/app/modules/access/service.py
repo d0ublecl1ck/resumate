@@ -151,20 +151,33 @@ def revoke_token(db: Session, user: CurrentUser, token_id: str) -> PersonalAcces
     return _response(token)
 
 
-def list_logs(db: Session, user: CurrentUser) -> list[AccessLogResponse]:
-    return [
-        AccessLogResponse(
-            id=log.id,
-            at=log.at,
-            client_id=log.client_id,
-            scope=log.scope,
-            resource=log.resource,
-            purpose=log.purpose,
-            result=log.result,
-            error_code=log.error_code,
-        )
-        for log in dao.list_logs(db, user.id)
-    ]
+def list_logs(
+    db: Session,
+    user: CurrentUser,
+    *,
+    purpose: str | None = None,
+    result: str | None = None,
+    query: str | None = None,
+    page: int = 1,
+    size: int = 20,
+) -> tuple[list[AccessLogResponse], int]:
+    rows, total = dao.list_logs(db, user.id, purpose=purpose, result=result, query=query, page=page, size=size)
+    return (
+        [
+            AccessLogResponse(
+                id=log.id,
+                at=log.at,
+                client_id=log.client_id,
+                scope=log.scope,
+                resource=log.resource,
+                purpose=log.purpose,
+                result=log.result,
+                error_code=log.error_code,
+            )
+            for log in rows
+        ],
+        total,
+    )
 
 
 def capability(base_url: str) -> CapabilityDiscoveryResponse:

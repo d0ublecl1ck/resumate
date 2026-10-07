@@ -114,6 +114,17 @@ export default {
     openapi: "OpenAPI",
     mcp: "MCP",
   },
+  access: {
+    forbidden: {
+      title: "无权访问开放接入",
+      description: "当前账号缺少读取访问令牌与审计日志的权限，请联系管理员开通 access:read。",
+    },
+    writeDenied: "当前账号只有读取权限，创建与撤销入口已停用。",
+    loadError: {
+      title: "开放接入加载失败",
+      description: "访问令牌或能力发现没能加载成功，请重试。",
+    },
+  },
   pat: {
     title: "个人访问令牌（PAT）",
     create: "创建最小权限 Token",
@@ -128,6 +139,10 @@ export default {
       expiring: "即将到期",
       revoked: "已撤销",
     },
+    empty: {
+      title: "还没有个人访问令牌",
+      description: "创建一个最小权限 Token，供本地 MCP 客户端或脚本调用。",
+    },
   },
   accessLog: {
     title: "访问审计日志",
@@ -137,6 +152,31 @@ export default {
     resource: "资源",
     purpose: "用途",
     result: "结果",
+    loading: "审计日志加载中…",
+    errorTitle: "审计日志加载失败",
+    errorDescription: "请检查网络后重试，或调整筛选条件。",
+    empty: {
+      title: "还没有访问记录",
+      description: "开放接入被调用后，审计日志会显示在这里。",
+    },
+    emptyFiltered: {
+      title: "没有符合筛选条件的记录",
+      description: "调整用途、结果或关键字后重试。",
+    },
+    filters: {
+      purpose: "用途",
+      purposeAll: "全部用途",
+      result: "结果",
+      resultAll: "全部结果",
+      keyword: "搜索客户端 / Scope / 资源",
+    },
+    pagination: {
+      total: "共 {{total}} 条",
+      page: "第 {{page}} / {{pages}} 页",
+      pageOnly: "第 {{page}} 页",
+      previous: "上一页",
+      next: "下一页",
+    },
     resultValue: {
       allowed: "允许",
       denied: "拒绝",

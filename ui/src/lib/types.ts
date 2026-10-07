@@ -664,6 +664,25 @@ export interface AccessLogEntry {
   errorCode?: MachineErrorCode
 }
 
+/** GET /access/logs 查询参数：page/size 与后端 PaginationParams 对齐，其余为筛选。 */
+export interface AccessLogQuery {
+  page?: number
+  size?: number
+  purpose?: string
+  result?: AccessLogEntry["result"]
+  /** 关键字，匹配 clientId / scope / resource。 */
+  q?: string
+}
+
+/**
+ * GET /access/logs 的客户端投影：响应体是裸数组，筛选后的总条数来自
+ * X-Total-Count 响应头；响应头缺失时为 null（前端退化为逐页判断是否还有下一页）。
+ */
+export interface AccessLogPage {
+  items: AccessLogEntry[]
+  total: number | null
+}
+
 export interface CapabilityDiscovery {
   contractVersion: string
   openapiUrl: string

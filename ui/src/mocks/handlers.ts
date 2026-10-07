@@ -22,7 +22,7 @@ const AUTH_USER: AuthUser = {
   displayName: "测试用户",
   role: "super_admin",
   roles: ["super_admin"],
-  permissions: ["account:read", "account:write", "user:read", "role:read"],
+  permissions: ["account:read", "account:write", "access:read", "access:write", "user:read", "role:read"],
   isBanned: false,
   createdAt: "2026-01-01T00:00:00+08:00",
 }
@@ -359,7 +359,23 @@ export const handlers = [
     const base = PATS.find((item) => item.id === params.id) ?? PATS[0]
     return HttpResponse.json({ ...base, status: "revoked" })
   }),
-  http.get("/api/access/logs", () => HttpResponse.json(ACCESS_LOGS)),
+  http.get("/api/access/logs", ({ request }) => {
+    const url = new URL(request.url)
+    const page = Number(url.searchParams.get("page") ?? "1")
+    const size = Number(url.searchParams.get("size") ?? "20")
+    const purpose = url.searchParams.get("purpose")
+    const result = url.searchParams.get("result")
+    const query = url.searchParams.get("q")
+    let rows = ACCESS_LOGS
+    if (purpose) rows = rows.filter((row) => row.purpose === purpose)
+    if (result) rows = rows.filter((row) => row.result === result)
+    if (query) {
+      const needle = query.toLowerCase()
+      rows = rows.filter((row) => [row.clientId, row.scope, row.resource].some((value) => value.toLowerCase().includes(needle)))
+    }
+    const start = (page - 1) * size
+    return HttpResponse.json(rows.slice(start, start + size), { headers: { "X-Total-Count": String(rows.length) } })
+  }),
   http.get("/api/.well-known/resume-agent", () => HttpResponse.json(CAPABILITY)),
   http.get("/api/backup/export", () =>
     HttpResponse.json({
