@@ -447,7 +447,8 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 - 运行凭据只允许运行体必需的端点：建轮次、读工作副本、读写 checkpoint、patch 校验/预演/应用、finalize/cancel、会话消息、能力发现。其余端点 403 并写 `run_token_scope` 拒绝审计；访问非绑定 resume 同样 403 并写同一条审计。
 - `approve` / `reject` 不在白名单里，而是继续落到 `require_human_session`：任何非人类会话凭据一律 403 `FORBIDDEN`，并写 `run_human_session` 拒绝审计（PAT 仍写 `pat_human_session`）。
 - 过期 / 未知 / 次数用尽 -> 401 或 403，并写 `run_token_auth` 拒绝审计；次数用尽时凭据被立即撤销。
-- 子进程使用**最小环境**（PATH / LANG / PYTHONUNBUFFERED + 上述变量），不继承后端自身的 `DATABASE_URL`、`SETTINGS_SECRET_KEY` 等。
+- 子进程使用**最小环境**（PATH / LANG / PYTHONUNBUFFERED / NO_PROXY / no_proxy + 上述变量），不继承后端自身的 `DATABASE_URL`、`SETTINGS_SECRET_KEY` 等。
+- `NO_PROXY` / `no_proxy` 显式列出回环形式（`localhost` / `127.0.0.1` / `::1`）、`base_url` 解析出的后端主机，以及配置为回环地址的模型 Endpoint。子进程的 httpx 默认 `trust_env=True`：最小环境里 bypass 列表为空时会回落到 macOS 系统代理，把发往 `127.0.0.1` 的后端请求也交给代理（实测代理回 502，运行体只能报 `UNKNOWN ... Request failed`）。公网 Endpoint 不进 bypass，仍走系统代理。
 - apiKey 在 spawn 前由 Fernet 解密，只存在于该子进程生命周期；run 凭据同样不写盘、不写日志。
 - 显式 `executionMode` 优先；缺省回退账户 `agent_config.nextRunMode`，都没有时子进程按默认 `approval`。运行凭据本身不能用请求体指定 mode（服务端解析），且来源固定 `agent`。
 

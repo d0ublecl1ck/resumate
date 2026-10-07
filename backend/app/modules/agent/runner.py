@@ -10,11 +10,13 @@ SETTINGS_SECRET_KEY, ...).
 
 from __future__ import annotations
 
+import ipaddress
 import os
 import signal
 import subprocess
 import threading
 from collections.abc import Iterator
+from urllib.parse import urlsplit
 
 import redis
 from pathlib import Path
@@ -130,6 +132,52 @@ def _child_command(
     return argv
 
 
+# httpx in the runner resolves proxies with trust_env=True: it reads NO_PROXY
+# through urllib, and when that environment is empty it falls back to the macOS
+# system proxy. _child_env is built from scratch, so without an explicit bypass
+# list the runner would send its loopback calls to the backend (and to a local
+# model relay) through the system proxy, which answers with an opaque 502.
+_LOOPBACK_HOSTS = ("localhost", "127.0.0.1", "::1")
+
+
+def _url_host(url: str) -> str | None:
+    """Host of a URL, tolerating an endpoint written without a scheme."""
+    if not url:
+        return None
+    candidate = url if "://" in url else f"//{url}"
+    try:
+        return urlsplit(candidate).hostname or None
+    except ValueError:
+        return None
+
+
+def _is_loopback_host(host: str) -> bool:
+    if host == "localhost" or host.endswith(".localhost"):
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _proxy_bypass_hosts(*, base_url: str, endpoint: str) -> list[str]:
+    """Hosts the runner must reach directly, in order and without duplicates.
+
+    The loopback spellings and the backend host are always bypassed. A model
+    endpoint joins them only when it is itself loopback, so a public provider
+    keeps using the system proxy.
+    """
+    candidates = [*_LOOPBACK_HOSTS, _url_host(base_url)]
+    endpoint_host = _url_host(endpoint)
+    if endpoint_host is not None and _is_loopback_host(endpoint_host):
+        candidates.append(endpoint_host)
+    hosts: list[str] = []
+    for candidate in candidates:
+        if candidate and candidate not in hosts:
+            hosts.append(candidate)
+    return hosts
+
+
 def _child_env(
     *,
     base_url: str,
@@ -143,11 +191,18 @@ def _child_env(
     The child receives a short-lived run credential, never the caller's session
     cookie: a leaked child environment is then worth only one resume until the
     credential expires or is revoked.
+
+    NO_PROXY/no_proxy are set explicitly because this environment is built from
+    scratch: httpx (trust_env=True) would otherwise see no bypass list and fall
+    back to the macOS system proxy for the child's loopback requests.
     """
+    bypass = ",".join(_proxy_bypass_hosts(base_url=base_url, endpoint=endpoint))
     env = {
         "PATH": os.environ.get("PATH", ""),
         "LANG": os.environ.get("LANG", "C.UTF-8"),
         "PYTHONUNBUFFERED": "1",
+        "NO_PROXY": bypass,
+        "no_proxy": bypass,
         "RESUME_AGENT_CORE_BASE_URL": base_url,
         "RESUME_AGENT_CORE_TOKEN": token,
         "RESUME_AGENT_CORE_MODEL": model,

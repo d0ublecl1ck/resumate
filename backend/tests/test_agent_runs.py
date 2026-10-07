@@ -216,3 +216,51 @@ def test_run_rejects_pat_callers(session_clients) -> None:
 
     assert response.status_code == 403, response.text
     assert response.json()["code"] == "FORBIDDEN"
+
+
+def _child_env(**overrides) -> dict[str, str]:
+    """Build the runner's child environment with sane defaults for one case."""
+    values = {
+        "base_url": "http://127.0.0.1:8000/",
+        "token": "rsm_run_stub",
+        "model": "stub-model",
+        "endpoint": "https://provider.test/v1",
+        "api_key": "sk-stub-secret",
+    }
+    values.update(overrides)
+    return runner._child_env(**values)
+
+
+def _bypass_hosts(env: dict[str, str]) -> list[str]:
+    return [host.strip() for host in env["NO_PROXY"].split(",") if host.strip()]
+
+
+def test_child_env_bypasses_proxy_for_backend_and_loopback_forms() -> None:
+    env = _child_env()
+
+    # httpx reads NO_PROXY through the environment and the child does not
+    # inherit the parent's bypass list, so both spellings must be set here.
+    assert env["NO_PROXY"] == env["no_proxy"]
+    bypass = _bypass_hosts(env)
+    assert "localhost" in bypass
+    assert "127.0.0.1" in bypass
+    assert "::1" in bypass
+
+
+def test_child_env_bypasses_proxy_for_base_url_host() -> None:
+    env = _child_env(base_url="http://resumate.test:8000/")
+
+    assert "resumate.test" in _bypass_hosts(env)
+
+
+def test_child_env_bypasses_proxy_for_loopback_model_endpoint() -> None:
+    env = _child_env(endpoint="http://127.0.0.1:8787/v1")
+
+    assert "127.0.0.1" in _bypass_hosts(env)
+
+
+def test_child_env_leaves_public_model_endpoint_on_the_proxy() -> None:
+    env = _child_env(endpoint="https://api.deepseek.com/v1")
+
+    assert "api.deepseek.com" not in _bypass_hosts(env)
+    assert env["RESUME_AGENT_CORE_PROVIDER_BASE_URL"] == "https://api.deepseek.com/v1"
