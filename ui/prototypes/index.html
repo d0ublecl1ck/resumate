@@ -756,7 +756,7 @@
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--muted-foreground)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>测试中…（按钮禁用）</span>
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--coral)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>测试失败（请求未到业务层）</span>
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--coral)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>连接失败 (HTTP 401)（业务失败，message 用后端原文）</span>
-                  <span style="display:inline-flex;align-items:center;gap:6px;color:var(--cobalt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>连接成功，延迟 420ms<span style="color:var(--muted-foreground)">· 上次测试：2026-09-19 20:00</span></span>
+                  <span style="display:inline-flex;align-items:center;gap:6px;color:var(--cobalt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>连接成功（成功态用界面文案）<span style="color:var(--muted-foreground)">· 上次测试：2026-09-19 20:00</span></span>
                 </div>
               </section>
               <section class="card-soft" style="padding:16px">
@@ -782,6 +782,10 @@
           <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」</li>
           <li>语言切换在「个人偏好」分区（US-13.4）</li>
           <li>个人偏好：显示名 / 语言 / 主题 / 空闲自动保存开关与间隔（默认 10 秒，3–120 秒，越界由后端 422 兜底）</li>
+          <li>初始查询失败：Agent 配置 / 模型配置 / 个人偏好 / 模板任一加载失败时显示错误状态块（错误码 + 重试），不渲染空表单</li>
+          <li>访问日志用途列：后端 purpose 枚举映射为本地化文案（第八条见公开接入），未知值原样显示</li>
+          <li>公共接入能力 URL 卡片 min-w-0：390px 单列时不横向溢出</li>
+          <li>SCR-111 PAT 弹窗：焦点入弹窗、Tab 锁定、Esc 关闭、关闭后焦点归还触发按钮、背景 inert</li>
         </ul>
       </div>
 
