@@ -75,6 +75,25 @@ describe("BackupPanel 导入预览模态焦点管理", () => {
     await waitFor(() => expect(trigger).toHaveFocus())
     expect(container).not.toHaveAttribute("inert")
   })
+
+  it("触发按钮在打开前失焦（模拟请求期间 disabled）时，关闭后仍把焦点归还它", async () => {
+    server.use(http.post(PREVIEW_URL, () => HttpResponse.json(preview())))
+    renderPanel()
+    const trigger = screen.getByRole("button", { name: "选择备份文件并校验" })
+    trigger.focus()
+    expect(trigger).toHaveFocus()
+    // 请求挂起期间按钮被 disabled，浏览器会把焦点移到 body
+    trigger.blur()
+    expect(document.activeElement).toBe(document.body)
+
+    upload(backupFile({ formatVersion: "resumate-backup/1.0", resources: {} }))
+    const dialog = await screen.findByRole("dialog", { name: "导入预览" })
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true))
+
+    fireEvent.keyDown(document, { key: "Escape" })
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
 })
 
 describe("BackupPanel 校验失败出口", () => {

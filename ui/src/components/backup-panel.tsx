@@ -2,7 +2,7 @@
 // 导出走后端真实 JSON/Markdown；导入先上传校验再确认，始终创建新资源并重映射 ID。
 // 界面文案统一走 i18n；导入预览复用 ui/modal 原语承担焦点入弹窗 / Tab 锁定 / Esc 关闭 / 焦点归还。
 
-import { useRef, useState } from "react"
+import { useRef, useState, type ComponentProps } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { exportBackup, exportBackupMarkdown, importBackup, previewImport } from "@/lib/api"
@@ -36,6 +36,8 @@ function importErrorMessage(error: unknown, fallback: string): string {
 export function BackupPanel() {
   const { t } = useTranslation()
   const fileRef = useRef<HTMLInputElement>(null)
+  // 触发按钮在预览请求期间 disabled 会失焦，Modal 需显式 finalFocus 才能把焦点归还它。
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const [preview, setPreview] = useState<ImportPreview | null>(null)
   const [payload, setPayload] = useState<BackupPayload | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
@@ -117,6 +119,7 @@ export function BackupPanel() {
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onFile} aria-label={t("settings.backup.chooseFile")} />
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button
+            ref={triggerRef}
             onClick={() => fileRef.current?.click()}
             disabled={previewMutation.isPending}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
@@ -146,6 +149,7 @@ export function BackupPanel() {
         onConfirm={() => {
           if (payload) importMutation.mutate(payload)
         }}
+        finalFocus={triggerRef}
       />
     </div>
   )
@@ -158,6 +162,7 @@ function ImportModal({
   failed,
   onClose,
   onConfirm,
+  finalFocus,
 }: {
   open: boolean
   preview: ImportPreview | null
@@ -165,6 +170,7 @@ function ImportModal({
   failed: boolean
   onClose: () => void
   onConfirm: () => void
+  finalFocus?: ComponentProps<typeof Modal>["finalFocus"]
 }) {
   const { t } = useTranslation()
   const counts = preview?.manifest.resourceCounts
@@ -176,6 +182,7 @@ function ImportModal({
       }}
       title={t("settings.importModal.title")}
       className="max-w-xl"
+      finalFocus={finalFocus}
     >
       {preview && counts ? (
         <>
