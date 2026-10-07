@@ -9,6 +9,10 @@ export default {
     title: "Settings & open access",
     description: "Manage Agent execution mode, model credentials, personal preferences, access tokens and data backup.",
   },
+  loadError: {
+    title: "Could not load settings",
+    description: "Some settings data failed to load. Select retry to try again.",
+  },
   agent: {
     title: "Agent execution mode",
     hint: "The running Run keeps its frozen mode; changes here apply only to Runs created afterwards.",

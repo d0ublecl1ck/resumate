@@ -9,6 +9,10 @@ export default {
     title: "设置与开放接入",
     description: "管理 Agent 运行模式、模型凭证、个人偏好、访问令牌与数据备份。",
   },
+  loadError: {
+    title: "设置加载失败",
+    description: "部分设置数据没能加载成功，请重试。",
+  },
   agent: {
     title: "Agent 运行模式",
     hint: "当前运行中的 Run 使用固化模式；这里的更改只对之后创建的 Run 生效。",
