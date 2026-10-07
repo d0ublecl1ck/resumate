@@ -9,6 +9,7 @@ that file only, so catalog reads are fully offline and deterministic.
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -17,6 +18,8 @@ from typing import Any
 import httpx
 
 from app.shared.errors import ValidationFailed
+
+logger = logging.getLogger(__name__)
 
 SNAPSHOT_PATH = Path(__file__).resolve().parent / "data" / "model_catalog.json"
 CATALOG_SOURCE = "models.dev"
@@ -32,8 +35,13 @@ ALLOWED_PROVIDER_IDS = (
     "zhipuai-coding-plan",
 )
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
-PROBE_TIMEOUT_SECONDS = 5.0
+# Split probe budget (issue 2f744): connect/pool stay short so an unreachable
+# endpoint fails fast, while read is relaxed for reasoning models whose first
+# token can take well over the old 5s whole-request cap.
+PROBE_TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
 CHAT_COMPLETIONS_PATH = "/chat/completions"
+_PROBE_CONNECT_FAILURE_MESSAGE = "无法连接模型服务，请检查 Endpoint 与网络"
+_PROBE_TIMEOUT_MESSAGE = "模型响应超时，请稍后重试"
 
 
 class ModelCatalogUnavailable(RuntimeError):
@@ -194,7 +202,7 @@ def probe_connection(
     provider: str | None = None,
     api_key: str | None = None,
     api_base: str | None = None,
-    timeout: float = PROBE_TIMEOUT_SECONDS,
+    timeout: httpx.Timeout | float = PROBE_TIMEOUT,
     client: httpx.Client | None = None,
 ) -> tuple[bool, str]:
     """Probe an OpenAI-compatible /chat/completions endpoint.
@@ -203,6 +211,10 @@ def probe_connection(
     this function additionally maps every failure to a generic message so a
     provider error can never echo the key back to the client. An explicit
     client (for example an httpx.MockTransport client) is used for tests.
+
+    Transport failures are classified: a connect failure and a response timeout
+    read differently, and each one logs only the probe url and exception type —
+    never the credential, headers, or request body.
     """
     base_url = _resolve_base_url(provider=provider, api_base=api_base)
     url = base_url + CHAT_COMPLETIONS_PATH
@@ -220,8 +232,15 @@ def probe_connection(
                 response = owned.post(url, json=payload, headers=headers)
         else:
             response = client.post(url, json=payload, headers=headers)
-    except httpx.HTTPError:
-        return False, "无法连接模型服务，请检查 Endpoint 与网络"
+    except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+        logger.warning("模型探测无法连接：url=%s error=%s", url, type(exc).__name__)
+        return False, _PROBE_CONNECT_FAILURE_MESSAGE
+    except httpx.TimeoutException as exc:
+        logger.warning("模型探测响应超时：url=%s error=%s", url, type(exc).__name__)
+        return False, _PROBE_TIMEOUT_MESSAGE
+    except httpx.HTTPError as exc:
+        logger.warning("模型探测传输层异常：url=%s error=%s", url, type(exc).__name__)
+        return False, _PROBE_CONNECT_FAILURE_MESSAGE
     if response.status_code >= 400:
         return False, _safe_status_message(response.status_code)
     return True, "连接成功"
