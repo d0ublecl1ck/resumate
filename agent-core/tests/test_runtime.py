@@ -256,3 +256,76 @@ def test_run_budget_validation_and_snapshot():
         RunBudget(max_tokens=1).consume(
             ModelResponse(message=Message(role="assistant"), output_tokens=2)
         )
+
+
+def test_bound_system_prompt_names_the_resume_only_for_resume_scope():
+    from resumate_agent_core.runtime import bound_system_prompt
+
+    prompt = bound_system_prompt("base prompt", resume_id="res_1", scope="resume")
+    assert "res_1" in prompt
+    assert "never" in prompt.lower()
+    assert bound_system_prompt("base prompt", resume_id=None, scope="resume") == "base prompt"
+    assert bound_system_prompt("base prompt", resume_id="res_1", scope="profile") == "base prompt"
+
+
+def test_opening_context_tells_the_model_which_resume_it_is_bound_to(make_client):
+    provider = ScriptedProvider(
+        [ModelResponse(message=Message(role="assistant", content="Done"), input_tokens=1, output_tokens=1)]
+    )
+    handler, _ = runtime_router()
+    with make_client(handler) as client:
+        list(AgentRuntime(client, provider).run("res_1", "tighten bullets"))
+
+    opening = provider.calls[0]
+    assert opening[0].role == "system"
+    assert "res_1" in opening[0].content
+    assert opening[1].role == "user"
+    assert opening[1].content == "tighten bullets"
+
+
+def test_runtime_overrides_a_guessed_resume_id(make_client):
+    provider = ScriptedProvider(
+        [
+            ModelResponse(
+                message=Message(
+                    role="assistant",
+                    tool_calls=(
+                        ToolCall(id="c1", name="get_working_document", arguments={"resume_id": "res_wrong"}),
+                    ),
+                ),
+                input_tokens=1,
+                output_tokens=1,
+            ),
+            ModelResponse(message=Message(role="assistant", content="Done"), input_tokens=1, output_tokens=1),
+        ]
+    )
+    handler, calls = runtime_router()
+    with make_client(handler) as client:
+        events = list(AgentRuntime(client, provider).run("res_1", "read the copy"))
+
+    assert any(call["path"] == "/resumes/res_1/working-document" for call in calls)
+    assert not any("res_wrong" in str(call["path"]) for call in calls)
+    tool_events = [event for event in events if isinstance(event, ToolProgressEvent)]
+    assert tool_events
+    assert tool_events[-1].result["resumeId"] == "res_1"
+
+
+def test_runtime_injects_the_bound_resume_id_when_the_model_omits_it(make_client):
+    provider = ScriptedProvider(
+        [
+            ModelResponse(
+                message=Message(
+                    role="assistant",
+                    tool_calls=(ToolCall(id="c1", name="get_working_document", arguments={}),),
+                ),
+                input_tokens=1,
+                output_tokens=1,
+            ),
+            ModelResponse(message=Message(role="assistant", content="Done"), input_tokens=1, output_tokens=1),
+        ]
+    )
+    handler, calls = runtime_router()
+    with make_client(handler) as client:
+        list(AgentRuntime(client, provider).run("res_1", "read the copy"))
+
+    assert any(call["path"] == "/resumes/res_1/working-document" for call in calls)

@@ -107,6 +107,29 @@ class Message:
         )
 
 
+def bound_system_prompt(system_prompt: str, *, resume_id: str | None, scope: str) -> str:
+    """Name the bound resume so the model never has to guess a resume id.
+
+    The run credential only reaches the resume the spawn bound it to, but the
+    model does not know which one that is; without this line it invents ids and
+    every call comes back FORBIDDEN.
+    """
+    if scope != "resume" or not resume_id:
+        return system_prompt
+    return (
+        f"{system_prompt}\n\nThis run is bound to resume {resume_id}. "
+        "Tools that take a resume_id are pre-filled with it; never guess or invent a resume id."
+    )
+
+
+def opening_messages(system_prompt: str, prompt: str, *, resume_id: str | None, scope: str) -> list[Message]:
+    """The context a fresh run starts from."""
+    return [
+        Message(role="system", content=bound_system_prompt(system_prompt, resume_id=resume_id, scope=scope)),
+        Message(role="user", content=prompt),
+    ]
+
+
 @dataclass(frozen=True, slots=True)
 class ModelResponse:
     """A provider completion plus the usage needed for budget accounting."""
@@ -362,10 +385,13 @@ class AgentRuntime:
         if tool is None:
             raise UnknownToolError(call.name)
         args: dict[str, Any] = dict(call.arguments or {})
+        properties = tool.input_schema.get("properties", {})
         required = tool.input_schema.get("required", [])
         if "turn_id" in required and not args.get("turn_id"):
             args["turn_id"] = session.turn_id
-        if "resume_id" in required and not args.get("resume_id"):
+        # The run owns the resume binding: always overwrite whatever the model
+        # supplied, so a guessed id can never reach another resume.
+        if session.resume_id and "resume_id" in properties:
             args["resume_id"] = session.resume_id
         if "session_id" in required and not args.get("session_id"):
             args["session_id"] = self.session_id
@@ -536,10 +562,7 @@ class AgentRuntime:
             yield ErrorEvent(code="RUNTIME_ERROR", message=str(exc), detail="begin failed")
             return
 
-        messages: list[Message] = [
-            Message(role="system", content=self.system_prompt),
-            Message(role="user", content=prompt),
-        ]
+        messages = opening_messages(self.system_prompt, prompt, resume_id=resume_id, scope=scope)
         # The opening context is journalled before the first model call, so the
         # session reflects the run even if that call fails.
         self._record_session(messages)
@@ -592,7 +615,12 @@ class AgentRuntime:
         restored = [
             Message.from_wire(item) for item in (run_state.get("messages") or []) if isinstance(item, Mapping)
         ]
-        messages: list[Message] = restored or [Message(role="system", content=self.system_prompt)]
+        messages: list[Message] = restored or [
+            Message(
+                role="system",
+                content=bound_system_prompt(self.system_prompt, resume_id=turn.resume_id, scope=resume_scope),
+            )
+        ]
         budget_snapshot = run_state.get("budget")
         if isinstance(budget_snapshot, Mapping):
             self.budget = RunBudget.from_snapshot(budget_snapshot)

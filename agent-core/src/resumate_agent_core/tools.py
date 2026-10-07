@@ -274,7 +274,9 @@ TOOLS: dict[str, Tool] = {
                 },
                 "message": {"type": "string", "description": "Turn description."},
             },
-            "required": ["resume_id"],
+            # resume_id stays visible but optional: a resume-scoped run injects the
+            # bound id, and the model must never be forced to invent one.
+            "required": [],
             "additionalProperties": False,
         },
         handler=_create_turn,
@@ -370,7 +372,8 @@ TOOLS: dict[str, Tool] = {
         input_schema={
             "type": "object",
             "properties": {"resume_id": _RESUME_ID},
-            "required": ["resume_id"],
+            # Injected by the run for resume scope; optional here for the same reason.
+            "required": [],
             "additionalProperties": False,
         },
         handler=_get_working_document,
