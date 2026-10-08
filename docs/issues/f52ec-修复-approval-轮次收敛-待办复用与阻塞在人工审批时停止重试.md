@@ -1,12 +1,13 @@
 ---
 id: f52ec
-status: open
+status: in-progress
 created_at: 2026-10-08T14:46:03.181Z
-updated_at: 2026-10-08T14:46:03.181Z
+updated_at: 2026-10-08T15:15:57.567Z
 priority: high
 labels: []
 parent: null
 blocked_by: []
+started_at: 2026-10-08T15:15:57.567Z
 ---
 
 # 修复 approval 轮次收敛：待办复用与阻塞在人工审批时停止重试
