@@ -47,6 +47,10 @@ export function ResumeEditor({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
+  // 服务端工作副本的「签名」：轮次审批或运行时写盘都会让它变化。
+  const serverDoc = resume.draft ?? resume.document
+  const serverSignature = `${resume.id}:${resume.currentVersionId}:${resume.saveState}`
+  const lastServerSignature = useRef(serverSignature)
   // 未落成正式版本的三态都算「有未保存内容」：本地未送达 / 服务端草稿缓冲 / 未提交。
   const dirty = saveState === "local_unsynced" || saveState === "uncommitted" || saveState === "synced_draft"
 
@@ -56,6 +60,19 @@ export function ResumeEditor({
     setSaveState("local_unsynced")
     setRevision((value) => value + 1)
   }
+
+  // 审批通过后服务端工作副本变了，编辑器必须跟着走：非本地未保存时同步文档与保存状态，
+  // 否则编辑区、保存状态徽标、基线与预览都停在旧值（issue a4367）。本地有未保存输入时
+  // 不静默覆盖，保留用户已输入内容，由用户自己决定何时回写。
+  useEffect(() => {
+    if (lastServerSignature.current === serverSignature) return
+    lastServerSignature.current = serverSignature
+    if (dirty) return
+    setDoc(serverDoc)
+    setSaveState(resume.saveState)
+    // serverDoc / resume.saveState 都由 serverSignature 覆盖，只按签名触发。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverSignature])
 
   // C-05：输入停顿后先把草稿同步到服务端缓冲（不建版本），浏览器异常关闭也不会丢。
   useEffect(() => {

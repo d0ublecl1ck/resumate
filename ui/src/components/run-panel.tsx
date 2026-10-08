@@ -47,13 +47,16 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["active-run", resumeId] })
+      // 审批写的是服务端工作副本：不刷新简历查询，编辑器会一直停在旧文档与旧基线（issue a4367）。
+      void queryClient.invalidateQueries({ queryKey: ["resume", resumeId] })
+      void queryClient.invalidateQueries({ queryKey: ["resumes"] })
     },
     onError: (cause) => setActionError(cause instanceof Error ? cause.message : String(cause)),
     onSettled: () => setSubmittingId(null),
   })
 
   const start = useMutation({
-    mutationFn: (prompt: string) => startRun(resumeId, { prompt, executionMode: mode }),
+    mutationFn: (prompt: string) => startRun(resumeId, { prompt, executionMode: mode, sessionId: run?.sessionId }),
     onMutate: () => {
       setStartError(null)
       setStarting(true)
@@ -77,6 +80,20 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
       },
     })
   }, [run?.id, resumeId, queryClient])
+
+  // 审批的真正写入发生在批准之后：Agent 拿到授权才 apply 工作副本，轮次随后结算。
+  // 只按点击时机刷新会漏掉这次写入，所以轮次状态或待办状态一变就刷新简历查询，
+  // 让编辑器的文档、基线与保存状态跟上服务端（issue a4367）。
+  const runStateSignature = `${run?.state ?? ""}:${(run?.pendingActions ?? [])
+    .map((action) => `${action.id}:${action.state}`)
+    .join(",")}`
+  const lastRunStateSignature = useRef(runStateSignature)
+  useEffect(() => {
+    if (lastRunStateSignature.current === runStateSignature) return
+    lastRunStateSignature.current = runStateSignature
+    void queryClient.invalidateQueries({ queryKey: ["resume", resumeId] })
+    void queryClient.invalidateQueries({ queryKey: ["resumes"] })
+  }, [runStateSignature, resumeId, queryClient])
 
   // 新轮次出现（run.id 从提交时的基线变化）即结束等待；超时兜底在轮询 effect 里。
   useEffect(() => {

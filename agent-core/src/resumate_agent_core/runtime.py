@@ -107,6 +107,13 @@ class Message:
         )
 
 
+LANGUAGE_INSTRUCTION = (
+    "Write every user-facing reply in the same language as the user's latest message: "
+    "a Chinese request gets a Chinese reply, including the final summary. Keep tool names, "
+    "field names and identifiers in their original form."
+)
+
+
 def bound_system_prompt(
     system_prompt: str,
     *,
@@ -121,9 +128,9 @@ def bound_system_prompt(
     lines the model invents a resume id (every call comes back FORBIDDEN) and
     opens a second, session-less turn (the conversation stops being readable).
     """
+    sections = [system_prompt, LANGUAGE_INSTRUCTION]
     if scope != "resume" or not resume_id:
-        return system_prompt
-    sections = [system_prompt]
+        return "\n\n".join(sections)
     if turn_id:
         sections.append(
             f"An editing turn is already open ({turn_id}). Reuse it: stage patches against it "

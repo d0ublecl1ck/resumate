@@ -14,14 +14,17 @@ const DIRTY = RESUMES[0]
 
 function renderEditor(resume: Resume = DIRTY) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <ResumeEditor resume={resume} templateName="经典单栏" boundJds={[]} />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  )
-  return { queryClient }
+  function tree(next: Resume) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ResumeEditor resume={next} templateName="经典单栏" boundJds={[]} />
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+  }
+  const { rerender } = render(tree(resume))
+  return { queryClient, rerenderWith: (next: Resume) => rerender(tree(next)) }
 }
 
 describe("简历编辑器：手动保存", () => {
@@ -105,5 +108,33 @@ describe("简历编辑器：手动保存", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("无法连接后端服务，请检查网络后重试。")
     await waitFor(() => expect(button).toBeEnabled())
+  })
+})
+
+describe("服务端工作副本变化后的同步", () => {
+  it("没有本地未保存内容时，审批写入的新文档同步进编辑器", async () => {
+    const { rerenderWith } = renderEditor({ ...DIRTY, saveState: "committed" })
+
+    rerenderWith({
+      ...DIRTY,
+      saveState: "uncommitted",
+      currentVersionId: "v_fe_9",
+      document: { ...DIRTY.document, basics: { ...DIRTY.document.basics, fullName: "黄鹏星" } },
+    })
+
+    await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("黄鹏星"))
+  })
+
+  it("本地有未保存输入时不覆盖，保留用户已输入内容", async () => {
+    const { rerenderWith } = renderEditor({ ...DIRTY, saveState: "committed" })
+    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "本地未保存" } })
+
+    rerenderWith({
+      ...DIRTY,
+      currentVersionId: "v_fe_9",
+      document: { ...DIRTY.document, basics: { ...DIRTY.document.basics, fullName: "服务端值" } },
+    })
+
+    await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("本地未保存"))
   })
 })
