@@ -9,6 +9,8 @@ list, because the model catalog is served by the backend.
 from __future__ import annotations
 
 import json
+import os
+import sys
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -103,6 +105,9 @@ def _message_to_wire(message: Message) -> dict[str, Any]:
             }
             for call in message.tool_calls
         ]
+    if message.role == "assistant" and message.reasoning:
+        # DeepSeek 思考模式要求回传上一轮的 reasoning_content，否则下一次调用 400。
+        payload["reasoning_content"] = message.reasoning
     if message.role == "tool":
         if message.tool_call_id:
             payload["tool_call_id"] = message.tool_call_id
@@ -199,6 +204,9 @@ class OpenAICompatibleProvider:
         if specs:
             payload["tools"] = specs
         payload.update(self._extra)
+        if os.environ.get("RESUMATE_PROVIDER_DEBUG"):
+            # 偶发 400 只有服务端知道原因；这里按需把实际请求体打到 stderr。
+            print("PROVIDER-PAYLOAD " + json.dumps(payload, ensure_ascii=False), file=sys.stderr)
         return payload
 
     def _cost(
@@ -237,6 +245,7 @@ class OpenAICompatibleProvider:
                 role="assistant",
                 content=_text(message.get("content")),
                 tool_calls=_tool_calls(message.get("tool_calls")),
+                reasoning=_text(message.get("reasoning_content")) or None,
             ),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
@@ -256,8 +265,16 @@ class OpenAICompatibleProvider:
         except httpx.HTTPError as exc:
             raise OpenAICompatibleError("model provider request failed") from exc
         if response.status_code >= 400:
+            # 服务端原因只在响应体里；带上它但先抹掉本 provider 自己的 api key，
+            # 避免上游把密钥回显进日志和错误提示。
+            detail = ""
+            if response.text:
+                body = response.text[:500]
+                if self._api_key:
+                    body = body.replace(self._api_key, "***")
+                detail = ": " + body
             raise OpenAICompatibleError(
-                f"model provider returned HTTP {response.status_code}",
+                f"model provider returned HTTP {response.status_code}{detail}",
                 status_code=response.status_code,
             )
         try:

@@ -142,3 +142,33 @@ def test_patch_builder_accumulates_operations():
 def test_builders_accept_model_instances():
     section = ResumeSection(id="sk", kind="skills", title="技能", text="python")
     assert patches.upsert_section(section).section is section
+
+def test_patch_request_keeps_a_partial_set_basics_partial_on_the_wire():
+    body = patches.build_patch(
+        [{"op": "setBasics", "basics": {"headline": "资深后端工程师"}}],
+        reason="只改头衔",
+    )
+
+    assert body.to_wire()["ops"][0]["basics"] == {"headline": "资深后端工程师"}
+
+
+def test_patch_request_still_sends_every_explicit_basics_field():
+    body = patches.build_patch(
+        [
+            {
+                "op": "setBasics",
+                "basics": {"fullName": "黄鹏星", "headline": "h", "email": "", "phone": "", "location": "", "links": []},
+            }
+        ],
+        reason="整块替换",
+    )
+
+    assert body.to_wire()["ops"][0]["basics"] == {
+        "fullName": "黄鹏星",
+        "headline": "h",
+        "email": "",
+        "phone": "",
+        "location": "",
+        "links": [],
+    }
+
