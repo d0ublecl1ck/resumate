@@ -10,8 +10,12 @@ import { agentErrorKey } from "@/lib/agent-error"
 import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
+import { MarkdownMessage } from "@/components/kit/markdown"
+import { Modal } from "@/components/ui/modal"
+import { Button } from "@/components/ui/button"
+import { Collapsible } from "@base-ui/react/collapsible"
 import { cn } from "@/lib/utils"
-import { CircleDashed, MessageSquare, Send, Wrench } from "lucide-react"
+import { ChevronRight, CircleDashed, MessageSquare, Send, Wrench } from "lucide-react"
 
 const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   running: "text-cobalt",
@@ -26,7 +30,57 @@ const RUN_STATE_TONE: Record<AgentRun["state"], string> = {
   turn_closed: "text-muted-foreground",
 }
 
-export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode: ExecutionMode; resumeId: string }) {
+/** 时间线的渲染分块：普通事件，或一段「推理与工具活动」。 */
+type TimelineChunk =
+  | { kind: "event"; ev: RunTimelineEvent }
+  | { kind: "activity"; id: string; events: RunTimelineEvent[] }
+
+/**
+ * 把连续的推理与工具活动合成一个折叠块（issue 3fdec）。
+ *
+ * 数据模型没有独立的 reasoning 事件：最接近的载体是 tool_progress 与中间 assistant
+ * 文本。最后一条 assistant 消息是面向用户的回复，留在折叠块外；其余过程信息默认收起，
+ * 只显示条目数，展开后逐行查看。
+ */
+function groupTimeline(timeline: RunTimelineEvent[]): TimelineChunk[] {
+  let lastAgentMessage: RunTimelineEvent | undefined
+  for (const ev of timeline) {
+    if (ev.kind === "message" && ev.role === "agent") lastAgentMessage = ev
+  }
+  const chunks: TimelineChunk[] = []
+  let activity: RunTimelineEvent[] = []
+  const flush = () => {
+    if (!activity.length) return
+    chunks.push({ kind: "activity", id: "activity:" + activity[0].id, events: activity })
+    activity = []
+  }
+  for (const ev of timeline) {
+    const isActivity =
+      ev.kind === "tool_progress" ||
+      (ev.kind === "message" && ev.role === "agent" && ev !== lastAgentMessage)
+    if (isActivity) {
+      activity.push(ev)
+      continue
+    }
+    flush()
+    chunks.push({ kind: "event", ev })
+  }
+  flush()
+  return chunks
+}
+
+export function RunPanel({
+  run,
+  mode,
+  resumeId,
+  defaultActivityOpen = false,
+}: {
+  run?: AgentRun | null
+  mode: ExecutionMode
+  resumeId: string
+  /** 推理与工具活动块的初始展开态；对话进行中可传 true，历史默认折叠。 */
+  defaultActivityOpen?: boolean
+}) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [input, setInput] = useState("")
@@ -36,7 +90,11 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
   const [submittingId, setSubmittingId] = useState<string | null>(null)
   // 点击发送后子进程要 1~3s 才建出新轮次；在这之前不能被当前显示的旧轮次（可能已关闭）短路。
   const [awaitingNewRun, setAwaitingNewRun] = useState(false)
+  // 当前轮次还有待审批待办时，发送前先显式确认（issue 3fdec）。
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [pendingPrompt, setPendingPrompt] = useState("")
   const submittedFromRunId = useRef<string | null>(null)
+  const timelineRef = useRef<HTMLDivElement | null>(null)
 
   const decision = useMutation({
     mutationFn: ({ actionId, kind }: { actionId: string; kind: "approve" | "reject" }) =>
@@ -126,16 +184,48 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
     }
   }, [awaitingNewRun, run?.id, run?.state, resumeId, queryClient])
 
+  const pendingActions = run?.pendingActions ?? []
+  const pendingCount = pendingActions.filter((action) => action.state === "pending").length
+  const timelineLength = run?.timeline.length ?? 0
+
+  // 对话区自动滚动到最新一条（issue 3fdec）：新消息 / 新待办 / 启动中写入后跟随到底部。
+  // jsdom 没有实现元素的 scrollTo；浏览器里才需要自动滚动。
+  useEffect(() => {
+    const node = timelineRef.current
+    if (node && typeof node.scrollTo === "function") {
+      node.scrollTo({ top: node.scrollHeight, behavior: "smooth" })
+    }
+  }, [run?.id, timelineLength, pendingActions.length, starting])
+
+  // 轮次已关闭时历史 pending 由 PendingActionCard 按失效只读渲染，发送不会再结算它，因此不拦截。
+  const needsSendConfirm = pendingCount > 0 && run?.state !== "turn_closed"
+
   const approve = (actionId: string) => decision.mutate({ actionId, kind: "approve" })
   const reject = (actionId: string) => decision.mutate({ actionId, kind: "reject" })
 
-  function submit() {
-    const prompt = input.trim()
-    if (!prompt || start.isPending) return
+  function launch(prompt: string) {
     setInput("")
     submittedFromRunId.current = run?.id ?? null
     setAwaitingNewRun(true)
     start.mutate(prompt)
+  }
+
+  function submit() {
+    const prompt = input.trim()
+    if (!prompt || start.isPending) return
+    if (needsSendConfirm) {
+      setPendingPrompt(prompt)
+      setConfirmOpen(true)
+      return
+    }
+    launch(prompt)
+  }
+
+  function confirmSend() {
+    const prompt = pendingPrompt
+    setConfirmOpen(false)
+    setPendingPrompt("")
+    if (prompt) launch(prompt)
   }
 
   return (
@@ -165,9 +255,15 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
       </div>
 
       {/* 时间线 */}
-      <div className="flex-1 space-y-3 overflow-auto p-3" aria-live="polite">
+      <div ref={timelineRef} className="flex-1 space-y-3 overflow-auto p-3" aria-live="polite">
         {run ? (
-          run.timeline.map((ev) => <TimelineItem key={ev.id} ev={ev} />)
+          groupTimeline(run.timeline).map((chunk) =>
+            chunk.kind === "activity" ? (
+              <ActivityBlock key={chunk.id} events={chunk.events} defaultOpen={defaultActivityOpen} />
+            ) : (
+              <TimelineItem key={chunk.ev.id} ev={chunk.ev} />
+            ),
+          )
         ) : starting ? (
           <p role="status" className="flex items-center justify-center gap-2 py-8 text-center text-sm text-muted-foreground">
             <CircleDashed className="size-4 animate-spin" aria-hidden />
@@ -178,7 +274,7 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
         )}
 
         {/* 待确认动作：关闭轮次时由 PendingActionCard 统一按失效只读渲染（历史 pending 兜底只此一份） */}
-        {(run?.pendingActions ?? []).map((action) => (
+        {pendingActions.map((action) => (
           <PendingActionCard
             key={action.id}
             action={action}
@@ -219,6 +315,58 @@ export function RunPanel({ run, mode, resumeId }: { run?: AgentRun | null; mode:
           </button>
         </div>
       </div>
+
+      {/* 有待审批待办时的发送确认：确认后当前轮次才会结算，待办随之作废。 */}
+      <Modal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("workbench.run.sendConfirm.title")}
+        description={t("workbench.run.sendConfirm.description")}
+      >
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+            {t("common.actions.cancel")}
+          </Button>
+          <Button onClick={confirmSend}>{t("workbench.run.sendConfirm.confirm")}</Button>
+        </div>
+      </Modal>
+    </div>
+  )
+}
+
+/** 推理与工具活动折叠块：折叠态只显示条目数，展开后逐行查看。 */
+function ActivityBlock({ events, defaultOpen }: { events: RunTimelineEvent[]; defaultOpen: boolean }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <Collapsible.Root open={open} onOpenChange={setOpen} className="rounded-lg border border-border bg-secondary/50 px-2.5 py-1.5">
+      <Collapsible.Trigger className="flex w-full items-center gap-2 rounded-md py-0.5 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+        <ChevronRight className={cn("size-3.5 shrink-0 transition-transform", open && "rotate-90")} aria-hidden />
+        {t("workbench.run.activity.summary", { count: events.length })}
+      </Collapsible.Trigger>
+      <Collapsible.Panel className="mt-1.5 space-y-1.5 border-l border-border pl-3">
+        {events.map((ev) =>
+          ev.kind === "tool_progress" ? (
+            <ToolRow key={ev.id} ev={ev} />
+          ) : (
+            <p key={ev.id} className="wrap-anywhere text-xs leading-5 text-muted-foreground">
+              {ev.text}
+            </p>
+          ),
+        )}
+      </Collapsible.Panel>
+    </Collapsible.Root>
+  )
+}
+
+function ToolRow({ ev }: { ev: RunTimelineEvent }) {
+  return (
+    <div className="flex items-start gap-2 text-xs text-muted-foreground">
+      <Wrench className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+      <span className="min-w-0 break-words">
+        <span className="font-mono text-foreground">{ev.toolName}</span>
+        {ev.text ? <span> · {ev.text}</span> : null}
+      </span>
     </div>
   )
 }
@@ -228,22 +376,14 @@ function TimelineItem({ ev }: { ev: RunTimelineEvent }) {
     const isUser = ev.role === "user"
     return (
       <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
-        <div className={cn("max-w-[85%] rounded-lg px-3 py-2 text-sm leading-6", isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
-          {ev.text}
+        <div className={cn("wrap-anywhere max-w-[85%] rounded-lg px-3 py-2 text-sm leading-6", isUser ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground")}>
+          {isUser ? ev.text : <MarkdownMessage text={ev.text} />}
         </div>
       </div>
     )
   }
   if (ev.kind === "tool_progress") {
-    return (
-      <div className="flex items-start gap-2 text-xs text-muted-foreground">
-        <Wrench className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-        <span className="min-w-0 break-words">
-          <span className="font-mono text-foreground">{ev.toolName}</span>
-          {ev.text ? <span> · {ev.text}</span> : null}
-        </span>
-      </div>
-    )
+    return <ToolRow ev={ev} />
   }
   return (
     <div className="flex items-center gap-2 text-xs text-cobalt">

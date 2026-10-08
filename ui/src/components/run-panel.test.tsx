@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
 import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -71,10 +71,10 @@ function newClient() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } })
 }
 
-function renderPanel(run: AgentRun, queryClient: QueryClient) {
+function renderPanel(run: AgentRun, queryClient: QueryClient, options: { defaultActivityOpen?: boolean } = {}) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <RunPanel resumeId="res_1" run={run} mode="approval" />
+      <RunPanel resumeId="res_1" run={run} mode="approval" defaultActivityOpen={options.defaultActivityOpen} />
     </QueryClientProvider>,
   )
 }
@@ -271,6 +271,9 @@ describe("RunPanel 发起运行", () => {
 
     fireEvent.change(input, { target: { value: "再改一版" } })
     fireEvent.click(screen.getByRole("button", { name: "发送" }))
+    // 当前轮次仍有待审批待办：发送先经过确认框，确认后才带会话 id 发起运行。
+    const dialog = await screen.findByRole("dialog")
+    fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("workbench.run.sendConfirm.confirm") }))
 
     await waitFor(() =>
       expect(bodies).toEqual([{ prompt: "再改一版", executionMode: "approval", sessionId: "sess_1" }]),
@@ -400,10 +403,12 @@ describe("RunPanel 对话时间线", () => {
     expect(screen.queryByText(i18n.t("workbench.run.empty"))).not.toBeInTheDocument()
   })
 
-  it("渲染工具活动行", () => {
+  it("工具活动默认折叠在「推理与工具活动」块里，展开后可见", async () => {
     renderPanel(FINALIZED_RUN, newClient())
 
-    expect(screen.getByText("get_working_document")).toBeInTheDocument()
+    expect(screen.queryByText("get_working_document")).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.activity.summary", { count: 1 }) }))
+    expect(await screen.findByText("get_working_document")).toBeInTheDocument()
   })
 
   it("轮次未关闭时轮询 active-run，已结束轮次不再轮询", async () => {
@@ -490,5 +495,152 @@ describe("RunPanel 已关闭轮次的待办兜底", () => {
 
     expect(screen.getByRole("button", { name: /批准/ })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /拒绝/ })).toBeInTheDocument()
+  })
+})
+
+const MARKDOWN_RUN: AgentRun = {
+  ...RUN,
+  state: "running",
+  pendingActions: [],
+  timeline: [
+    { id: "u1", kind: "message", at: "2026-10-08T10:00:00Z", role: "user", text: "帮我改摘要" },
+    { id: "a1", kind: "message", at: "2026-10-08T10:00:01Z", role: "agent", text: "先读工作副本，确认当前经历的写法。" },
+    { id: "t1", kind: "tool_progress", at: "2026-10-08T10:00:02Z", toolName: "get_working_document", text: '{"resume_id":"res_1"}' },
+    {
+      id: "a2",
+      kind: "message",
+      at: "2026-10-08T10:00:03Z",
+      role: "agent",
+      text: "## 性能优化成果\n\n- 首屏加载从 **3.2s** 降到 `1.1s`\n- 缓存命中率提升到 **92%**\n\n> 依据当前工作副本与 Profile 事实。",
+    },
+  ],
+}
+
+describe("RunPanel 发送前拦截", () => {
+  it("当前轮次仍有待审批待办时先弹确认框，确认后才发起运行", async () => {
+    const bodies: unknown[] = []
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderPanel(RUN, newClient())
+    fireEvent.change(screen.getByRole("textbox", { name: i18n.t("workbench.run.inputAria") }), { target: { value: "重新总结" } })
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.sendAria") }))
+
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(i18n.t("workbench.run.sendConfirm.description"))).toBeInTheDocument()
+    expect(bodies).toEqual([])
+
+    fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("workbench.run.sendConfirm.confirm") }))
+
+    await waitFor(() => expect(bodies).toEqual([{ prompt: "重新总结", executionMode: "approval", sessionId: "sess_1" }]))
+  })
+
+  it("确认框取消后保留输入，且不发请求", async () => {
+    const bodies: unknown[] = []
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderPanel(RUN, newClient())
+    const input = screen.getByRole("textbox", { name: i18n.t("workbench.run.inputAria") })
+    fireEvent.change(input, { target: { value: "重新总结" } })
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.sendAria") }))
+
+    const dialog = await screen.findByRole("dialog")
+    fireEvent.click(within(dialog).getByRole("button", { name: i18n.t("common.actions.cancel") }))
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    expect((input as HTMLTextAreaElement).value).toBe("重新总结")
+    expect(bodies).toEqual([])
+  })
+
+  it("轮次已关闭且没有待办时直接发送，不弹确认框", async () => {
+    const bodies: unknown[] = []
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderPanel({ ...RUN, state: "turn_closed", pendingActions: [] }, newClient())
+    fireEvent.change(screen.getByRole("textbox", { name: i18n.t("workbench.run.inputAria") }), { target: { value: "继续" } })
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.sendAria") }))
+
+    await waitFor(() => expect(bodies).toEqual([{ prompt: "继续", executionMode: "approval", sessionId: "sess_1" }]))
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+})
+
+describe("RunPanel 的 Markdown 与折叠推理", () => {
+  it("Agent 回复按 Markdown 渲染标题、列表、加粗、行内 code 与引用", () => {
+    const { container } = renderPanel(MARKDOWN_RUN, newClient())
+
+    expect(screen.getByRole("heading", { level: 4, name: "性能优化成果" })).toBeInTheDocument()
+    expect(container.querySelector("ul")).not.toBeNull()
+    expect(container.querySelector("strong")?.textContent).toBe("3.2s")
+    expect(container.querySelector("code")?.textContent).toBe("1.1s")
+    expect(container.querySelector("blockquote")).toHaveTextContent("依据当前工作副本与 Profile 事实。")
+  })
+
+  it("原始 HTML 只当纯文本渲染，不注入 DOM", () => {
+    const { container } = renderPanel(
+      {
+        ...MARKDOWN_RUN,
+        timeline: [{ id: "evil", kind: "message", at: "2026-10-08T10:00:00Z", role: "agent", text: "<script>alert(1)</script>" }],
+      },
+      newClient(),
+    )
+
+    expect(container.querySelector("script")).toBeNull()
+    expect(screen.getByText("<script>alert(1)</script>")).toBeInTheDocument()
+  })
+
+  it("中间推理与工具活动默认折叠，展开后可见", async () => {
+    renderPanel(MARKDOWN_RUN, newClient())
+
+    expect(screen.queryByText("get_working_document")).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("workbench.run.activity.summary", { count: 2 }) }))
+
+    expect(await screen.findByText("get_working_document")).toBeInTheDocument()
+    expect(screen.getByText("先读工作副本，确认当前经历的写法。")).toBeInTheDocument()
+  })
+
+  it("defaultActivityOpen 时推理与工具活动直接展开", () => {
+    renderPanel(MARKDOWN_RUN, newClient(), { defaultActivityOpen: true })
+
+    expect(screen.getByText("get_working_document")).toBeInTheDocument()
+  })
+
+  it("新消息到达时把时间线滚到最新一条", async () => {
+    const scrollTo = vi.fn()
+    const original = Object.getOwnPropertyDescriptor(Element.prototype, "scrollTo")
+    Object.defineProperty(Element.prototype, "scrollTo", { configurable: true, writable: true, value: scrollTo })
+    try {
+      const queryClient = newClient()
+      const view = renderPanel(MARKDOWN_RUN, queryClient)
+      const scroller = view.container.querySelector('[aria-live="polite"]') as HTMLElement
+      Object.defineProperty(scroller, "scrollHeight", { configurable: true, value: 720 })
+      scrollTo.mockClear()
+
+      view.rerender(
+        <QueryClientProvider client={queryClient}>
+          <RunPanel
+            resumeId="res_1"
+            mode="approval"
+            run={{ ...MARKDOWN_RUN, timeline: [...MARKDOWN_RUN.timeline, { id: "a3", kind: "message", at: "2026-10-08T10:00:04Z", role: "agent", text: "再补充一条。" }] }}
+          />
+        </QueryClientProvider>,
+      )
+
+      await waitFor(() => expect(scrollTo).toHaveBeenCalledWith({ top: 720, behavior: "smooth" }))
+    } finally {
+      if (original) Object.defineProperty(Element.prototype, "scrollTo", original)
+      else Reflect.deleteProperty(Element.prototype, "scrollTo")
+    }
   })
 })

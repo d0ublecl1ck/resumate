@@ -138,3 +138,33 @@ describe("服务端工作副本变化后的同步", () => {
     await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("本地未保存"))
   })
 })
+
+describe("服务端已更新的提示条", () => {
+  const SERVER_BUMP: Resume = {
+    ...DIRTY,
+    saveState: "uncommitted",
+    currentVersionId: "v_fe_9",
+    document: { ...DIRTY.document, basics: { ...DIRTY.document.basics, fullName: "服务端值" } },
+  }
+
+  it("本地有未保存输入时给出提示条，且不覆盖本地输入", async () => {
+    const { rerenderWith } = renderEditor({ ...DIRTY, saveState: "committed" })
+    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "本地未保存" } })
+
+    rerenderWith(SERVER_BUMP)
+
+    expect(await screen.findByText("服务端已更新，本地有未保存输入。")).toBeInTheDocument()
+    expect(screen.getByLabelText("姓名")).toHaveValue("本地未保存")
+  })
+
+  it("点「载入服务端版本」后采用服务端文档并收起提示条", async () => {
+    const { rerenderWith } = renderEditor({ ...DIRTY, saveState: "committed" })
+    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "本地未保存" } })
+    rerenderWith(SERVER_BUMP)
+
+    fireEvent.click(await screen.findByRole("button", { name: "载入服务端版本" }))
+
+    await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("服务端值"))
+    expect(screen.queryByText("服务端已更新，本地有未保存输入。")).not.toBeInTheDocument()
+  })
+})
