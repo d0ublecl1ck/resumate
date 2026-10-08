@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { getPreferences, saveDraft, updateDocument } from "@/lib/api"
 import { DEFAULT_AUTOSAVE_SECONDS, useIdleAutosave } from "@/lib/autosave"
 import { documentSaveErrorMessage } from "@/lib/resume-document"
-import type { AgentRun, JobDescription, Resume, ResumeDocument } from "@/lib/types"
+import type { AgentRun, JobDescription, Resume, ResumeDocument, SaveState } from "@/lib/types"
 import { StructuredEditor } from "@/components/structured-editor"
 import { RunPanel } from "@/components/run-panel"
 import { PreviewCanvas } from "@/components/preview-canvas"
@@ -47,6 +47,8 @@ export function ResumeEditor({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
+  // 服务端已更新但本地有未保存输入时，先暂存服务端版本，等用户显式「载入服务端版本」（issue 3fdec）。
+  const [pendingServerDoc, setPendingServerDoc] = useState<{ doc: ResumeDocument; saveState: SaveState } | null>(null)
   // 服务端工作副本的「签名」：轮次审批或运行时写盘都会让它变化。
   const serverDoc = resume.draft ?? resume.document
   const serverSignature = `${resume.id}:${resume.currentVersionId}:${resume.saveState}`
@@ -63,16 +65,30 @@ export function ResumeEditor({
 
   // 审批通过后服务端工作副本变了，编辑器必须跟着走：非本地未保存时同步文档与保存状态，
   // 否则编辑区、保存状态徽标、基线与预览都停在旧值（issue a4367）。本地有未保存输入时
-  // 不静默覆盖，保留用户已输入内容，由用户自己决定何时回写。
+  // 不静默覆盖，改为给出「服务端已更新」提示条，由用户点「载入服务端版本」决定何时切换
+  // （issue 3fdec）。
   useEffect(() => {
     if (lastServerSignature.current === serverSignature) return
     lastServerSignature.current = serverSignature
-    if (dirty) return
+    if (dirty) {
+      setPendingServerDoc({ doc: serverDoc, saveState: resume.saveState })
+      return
+    }
+    setPendingServerDoc(null)
     setDoc(serverDoc)
     setSaveState(resume.saveState)
     // serverDoc / resume.saveState 都由 serverSignature 覆盖，只按签名触发。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serverSignature])
+
+  /** 用户显式采纳服务端版本：替换本地文档与保存状态，收起提示条。 */
+  function loadServerVersion() {
+    if (!pendingServerDoc) return
+    setDoc(pendingServerDoc.doc)
+    setSaveState(pendingServerDoc.saveState)
+    setPendingServerDoc(null)
+    setRevision((value) => value + 1)
+  }
 
   // C-05：输入停顿后先把草稿同步到服务端缓冲（不建版本），浏览器异常关闭也不会丢。
   useEffect(() => {
@@ -121,6 +137,8 @@ export function ResumeEditor({
       })
       setDoc(saved.document)
       setSaveState(saved.saveState)
+      // flush 后本地与服务端同源，旧的「服务端已更新」提示条不再成立。
+      setPendingServerDoc(null)
       await queryClient.invalidateQueries({ queryKey: ["resume", resume.id] })
       await queryClient.invalidateQueries({ queryKey: ["resumes"] })
     } catch (cause) {
@@ -172,6 +190,19 @@ export function ResumeEditor({
           </button>
         </div>
       </div>
+
+      {pendingServerDoc ? (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gold/60 bg-gold/10 px-3 py-2">
+          <span className="text-sm text-foreground">{t("resume.editor.serverUpdated")}</span>
+          <button
+            type="button"
+            onClick={loadServerVersion}
+            className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+          >
+            {t("resume.editor.loadServerVersion")}
+          </button>
+        </div>
+      ) : null}
 
       {saveError ? (
         <p role="alert" className="mt-3 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-sm text-foreground">

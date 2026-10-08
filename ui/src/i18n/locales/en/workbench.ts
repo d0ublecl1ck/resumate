@@ -64,6 +64,14 @@ export default {
     sendAria: "Send",
     actionError: "The approval action failed: {{message}}",
     starting: "Starting the runner…",
+    sendConfirm: {
+      title: "Confirm send",
+      description: "Sending will settle the current turn and void the pending actions awaiting approval",
+      confirm: "Send anyway",
+    },
+    activity: {
+      summary: "Reasoning and tool activity ({{count}})",
+    },
     errors: {
       modelNotConfigured: "No model credential yet. Add an OpenAI-compatible endpoint and API key in Settings, then try again.",
       rateLimited: "Another run is already in progress. Please try again shortly.",

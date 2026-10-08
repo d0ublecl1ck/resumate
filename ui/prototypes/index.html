@@ -662,6 +662,11 @@
               <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted-foreground)">
                 <span>目标：高级前端工程师</span><span>基线：<code>ver_609aa102af5e</code></span><span>默认模板</span><span>未关联 JD</span>
               </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border:1px solid color-mix(in oklab,var(--gold) 60%,transparent);background:color-mix(in oklab,var(--gold) 12%,transparent);border-radius:var(--radius-lg);padding:8px 12px">
+                <span style="font-size:13px;font-weight:500">服务端已更新，本地有未保存输入。</span>
+                <button class="btn btn-outline btn-sm" type="button">载入服务端版本</button>
+              </div>
+              <p style="margin:-12px 0 0;font-size:12px;color:var(--muted-foreground)">上面这条是「服务端已更新」提示条：本地 dirty 且服务端签名变化才出现，用户不点「载入服务端版本」就不覆盖本地输入。</p>
               <p role="alert" style="margin:0;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);background:color-mix(in oklab,var(--coral) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">简历内容已在别处更新，请刷新后基于最新版本重试。</p>
               <p style="margin:-12px 0 0;font-size:12px;color:var(--muted-foreground)">上面这条就是保存失败态（基线过期 409），与成功态共用同一位置。</p>
               <div style="display:grid;gap:12px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr)">
@@ -696,6 +701,65 @@
             </div>
           </div></div>
         </div>
+        <div class="card-soft" style="padding:16px;margin-top:12px">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700">对话区状态（#screen-editor）</p>
+          <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">登记 issue 3fdec 的五个对话状态：发送拦截确认、自动滚动到最新、Agent Markdown 渲染、推理与工具活动折叠、服务端已更新提示条。所有视觉复用既有令牌与类，不新增规则。</p>
+          <div class="grid-cards">
+            <div class="card-frame" style="padding:14px">
+              <p style="margin:0;font-size:13px;font-weight:700">① 发送拦截确认（有待办）</p>
+              <p style="margin:6px 0 10px;font-size:12px;color:var(--muted-foreground)">当前轮次仍有 pending 待办时，点发送先出这个确认框；确认才 POST /resumes/{id}/runs。</p>
+              <div class="card-frame" style="padding:12px;max-width:360px;background:var(--background)">
+                <p style="margin:0;font-size:14px;font-weight:700">确认发送</p>
+                <p style="margin:6px 0 0;font-size:12px;color:var(--muted-foreground)">发送会结算当前轮次并作废待审批的待办</p>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+                  <button class="btn btn-outline btn-sm" type="button">取消</button>
+                  <button class="btn btn-primary btn-sm" type="button">仍要发送</button>
+                </div>
+              </div>
+            </div>
+            <div class="card-soft" style="padding:14px">
+              <p style="margin:0;font-size:13px;font-weight:700">② 自动滚动到最新一条</p>
+              <p style="margin:6px 0 10px;font-size:12px;color:var(--muted-foreground)">新消息 / 新待办 / 启动中写入后，时间线容器 scrollTo 到底部。</p>
+              <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);padding:10px;max-height:132px;overflow:auto">
+                <p style="margin:0 0 8px;font-size:12px;color:var(--muted-foreground)">助手：先读一下工作副本。</p>
+                <p style="margin:0 0 8px;font-size:12px;color:var(--muted-foreground)">工具调用：<code>get_working_document</code></p>
+                <p style="margin:0;font-size:13px">助手：已生成一条待确认的量化改写。</p>
+                <p style="margin:8px 0 0;text-align:right"><span class="badge badge-cobalt">最新一条 · 自动滚动到位</span></p>
+              </div>
+            </div>
+            <div class="card-soft" style="padding:14px">
+              <p style="margin:0;font-size:13px;font-weight:700">③ Agent Markdown 渲染</p>
+              <p style="margin:6px 0 10px;font-size:12px;color:var(--muted-foreground)">只处理标题 / 列表 / 加粗 / 行内 code / 引用，用户消息保持原文。</p>
+              <div style="border-radius:var(--radius-lg);background:var(--secondary);padding:10px 12px;color:var(--secondary-foreground)">
+                <p style="margin:0 0 6px;font-size:14px;font-weight:700">性能优化成果</p>
+                <ul style="margin:0;padding-left:18px;font-size:13px">
+                  <li>首屏加载从 <strong>3.2s</strong> 降到 <code>1.1s</code></li>
+                  <li>缓存命中率提升到 <strong>92%</strong></li>
+                </ul>
+                <blockquote style="margin:8px 0 0;border-left:2px solid var(--border);padding-left:10px;font-size:12px;color:var(--muted-foreground)">依据当前工作副本与 Profile 事实。</blockquote>
+              </div>
+            </div>
+            <div class="card-soft" style="padding:14px">
+              <p style="margin:0;font-size:13px;font-weight:700">④ 推理与工具活动折叠块</p>
+              <p style="margin:6px 0 10px;font-size:12px;color:var(--muted-foreground)">中间助手回复与 tool_progress 合成一个可折叠块，默认折叠。</p>
+              <button class="btn btn-ghost btn-sm" type="button" aria-expanded="false">▸ 推理与工具活动（2）</button>
+              <p style="margin:4px 0 0;font-size:11px;color:var(--muted-foreground)">折叠态：只显示条目数与开关</p>
+              <button class="btn btn-ghost btn-sm" type="button" aria-expanded="true" style="margin-top:12px">▾ 推理与工具活动（2）</button>
+              <div style="margin-top:6px;border-left:1px solid var(--border);padding-left:10px;display:grid;gap:6px">
+                <p style="margin:0;font-size:12px;color:var(--muted-foreground)">助手：先读工作副本，确认当前经历的写法。</p>
+                <p style="margin:0;font-size:12px;color:var(--muted-foreground)">工具调用：<code>get_working_document</code></p>
+              </div>
+            </div>
+            <div class="card-soft" style="padding:14px">
+              <p style="margin:0;font-size:13px;font-weight:700">⑤ 服务端已更新提示条</p>
+              <p style="margin:6px 0 10px;font-size:12px;color:var(--muted-foreground)">本地有未保存输入且服务端签名变化时出现在编辑工作台顶部；用户不点就不覆盖本地输入。</p>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border:1px solid color-mix(in oklab,var(--gold) 60%,transparent);background:color-mix(in oklab,var(--gold) 12%,transparent);border-radius:var(--radius-lg);padding:8px 12px">
+                <span style="font-size:13px;font-weight:500">服务端已更新，本地有未保存输入。</span>
+                <button class="btn btn-outline btn-sm" type="button">载入服务端版本</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
@@ -709,6 +773,11 @@
           <li>关闭自动保存：保留服务端草稿并保持「未提交」，暂停静默计时，手动 flush 入口仍有效</li>
           <li>切换简历 / 离开页面 / 显式保存：立即 flush；失败时保留草稿并提示未保存</li>
           <li>已知缺口：导出按钮还没有后端端点（点击无行为）</li>
+          <li>发送拦截（issue 3fdec）：当前轮次仍有 <code>pending</code> 待办时，点发送先弹确认框「发送会结算当前轮次并作废待审批的待办」，确认后才发起运行</li>
+          <li>自动滚动（issue 3fdec）：新消息 / 新待办 / 启动中写入后，时间线容器 <code>scrollTo</code> 到底部</li>
+          <li>Agent Markdown（issue 3fdec）：助手消息按标题 / 列表 / 加粗 / 行内 code / 引用渲染，原始 HTML 只当纯文本，禁止注入</li>
+          <li>折叠推理与工具活动（issue 3fdec）：中间助手回复与 <code>tool_progress</code> 合成「推理与工具活动」可折叠块，默认折叠</li>
+          <li>服务端已更新提示条（issue 3fdec）：本地有未保存输入且服务端签名变化时，顶部金色提示条 + 「载入服务端版本」，用户不点不覆盖本地输入</li>
         </ul>
       </div>
 
