@@ -260,3 +260,36 @@ def test_close_does_not_close_an_injected_client() -> None:
 
     assert http_client.is_closed is False
     http_client.close()
+
+def test_provider_passes_reasoning_content_back_to_thinking_models() -> None:
+    """DeepSeek 思考模式要求回传 reasoning_content，丢掉字段下一次请求直接 400。"""
+    seen: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "先想一下",
+                            "reasoning_content": "内部推理",
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+            },
+        )
+
+    provider = OpenAICompatibleProvider(model="deepseek-flash", http_client=_mock_client(handler))
+    first = provider.complete([Message(role="user", content="hi")], [])
+    assert first.message.reasoning == "内部推理"
+
+    provider.complete([Message(role="user", content="hi"), first.message], [])
+
+    replayed = seen[-1]["messages"][1]
+    assert replayed["reasoning_content"] == "内部推理"
+    assert replayed["content"] == "先想一下"
+
