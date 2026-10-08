@@ -47,6 +47,7 @@ const RUN: AgentRun = {
   id: "turn_1",
   resumeId: "res_1",
   conversationId: "sess_1",
+  sessionId: "sess_1",
   userTurnId: "turn_1",
   executionMode: "approval",
   modeSource: "account",
@@ -105,6 +106,7 @@ describe("RunPanel 审批接线", () => {
 
     await waitFor(() => expect(seen).toEqual(["pa_1"]))
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ["active-run", "res_1"] }))
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["resume", "res_1"] })
   })
 
   it("reject 发出真实 POST 并刷新 active-run 查询", async () => {
@@ -123,6 +125,21 @@ describe("RunPanel 审批接线", () => {
 
     await waitFor(() => expect(seen).toEqual(["pa_1"]))
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ["active-run", "res_1"] }))
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["resume", "res_1"] })
+  })
+
+  it("轮次状态或待办状态变化时刷新简历，接住批准后的真实写入", async () => {
+    const queryClient = newClient()
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+    const { rerender } = renderPanel(RUN, queryClient)
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <RunPanel resumeId="res_1" run={{ ...RUN, state: "turn_closed", pendingActions: [{ ...RUN.pendingActions[0], state: "approved" }] }} mode="approval" />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ["resume", "res_1"] }))
   })
 
   it("approve 失败时就地报错", async () => {
@@ -239,6 +256,25 @@ describe("RunPanel 发起运行", () => {
     )
     expect(screen.getByText(i18n.t("workbench.run.starting"))).toBeInTheDocument()
     expect((input as HTMLTextAreaElement).value).toBe("")
+  })
+
+  it("再次发送时带上当前轮次的会话 id，续用同一会话", async () => {
+    const bodies: unknown[] = []
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        bodies.push(await request.json())
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+    renderPanel(RUN, newClient())
+    const input = screen.getByRole("textbox", { name: "对话输入" })
+
+    fireEvent.change(input, { target: { value: "再改一版" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    await waitFor(() =>
+      expect(bodies).toEqual([{ prompt: "再改一版", executionMode: "approval", sessionId: "sess_1" }]),
+    )
   })
 
   it("MODEL_NOT_CONFIGURED 显示配置引导且不回显服务端原文", async () => {

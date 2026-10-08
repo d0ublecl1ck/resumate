@@ -1,7 +1,7 @@
 import { http, HttpResponse } from "msw"
 import { describe, expect, it } from "vitest"
 
-import { approvePendingAction, getActiveRun, rejectPendingAction } from "@/lib/api"
+import { approvePendingAction, getActiveRun, rejectPendingAction, startRun } from "@/lib/api"
 import { server } from "@/test-server"
 
 const TURN = {
@@ -196,5 +196,88 @@ describe("pending action decisions", () => {
     await rejectPendingAction("pa_1")
 
     expect(seen).toEqual(["approve:pa_1", "reject:pa_1"])
+  })
+})
+
+describe("会话连续性：同一简历多轮共用会话", () => {
+  it("startRun 带上当前轮次的 sessionId", async () => {
+    let body: Record<string, unknown> | null = null
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+
+    await startRun("res_1", { prompt: "突出性能优化", executionMode: "approval", sessionId: "sess_1" })
+
+    expect(body).toEqual({ prompt: "突出性能优化", executionMode: "approval", sessionId: "sess_1" })
+  })
+
+  it("没有已知会话时不发 sessionId，由运行体首次建会话", async () => {
+    let body: Record<string, unknown> | null = null
+    server.use(
+      http.post("/api/resumes/:id/runs", async ({ request }) => {
+        body = (await request.json()) as Record<string, unknown>
+        return HttpResponse.json({ runId: "run_1", status: "started" }, { status: 202 })
+      }),
+    )
+
+    await startRun("res_1", { prompt: "突出性能优化" })
+
+    expect(body).toEqual({ prompt: "突出性能优化" })
+  })
+})
+
+describe("跨轮次聚合历史对话与未决待办", () => {
+  const older = {
+    ...TURN,
+    id: "turn_old",
+    state: "finalized",
+    closedAt: "2026-01-01T00:00:10Z",
+    sessionId: "sess_old",
+    message: null,
+    pendingActions: [
+      { ...TURN.pendingActions[0], id: "pa_old", userTurnId: "turn_old", state: "stale", staleReason: "轮次已结束" },
+      { ...TURN.pendingActions[0], id: "pa_done", userTurnId: "turn_old", state: "consumed" },
+    ],
+  }
+
+  it("合并历史轮次的会话消息与未决待办，切分会话也不丢历史", async () => {
+    server.use(
+      http.get("/api/resumes/:id/turns", () => HttpResponse.json([TURN, older])),
+      http.get("/api/turns/:id/state", () => HttpResponse.json({ turnId: "turn_1", runState: {}, stateVersion: 0 })),
+      http.get("/api/sessions/sess_1/messages", () =>
+        HttpResponse.json([
+          { id: "m2", sessionId: "sess_1", seq: 2, role: "user", content: { role: "user", content: "帮我改简历" }, createdAt: "2026-01-01T00:00:05Z" },
+        ]),
+      ),
+      http.get("/api/sessions/sess_old/messages", () =>
+        HttpResponse.json([
+          { id: "m1", sessionId: "sess_old", seq: 2, role: "user", content: { role: "user", content: "把一句话头衔改成资深后端工程师" }, createdAt: "2026-01-01T00:00:01Z" },
+        ]),
+      ),
+    )
+
+    const run = await getActiveRun("res_1")
+
+    expect(
+      run?.timeline.filter((event) => event.kind === "message" && event.role === "user").map((event) => event.text),
+    ).toEqual(["把一句话头衔改成资深后端工程师", "帮我改简历"])
+    expect(run?.pendingActions.map((action) => action.id)).toEqual(["pa_1", "pa_old"])
+  })
+
+  it("历史轮次会话读不到时仍返回当前轮次", async () => {
+    server.use(
+      http.get("/api/resumes/:id/turns", () => HttpResponse.json([TURN, older])),
+      http.get("/api/turns/:id/state", () => HttpResponse.json({ turnId: "turn_1", runState: {}, stateVersion: 0 })),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+      http.get("/api/sessions/sess_old/messages", () => HttpResponse.json({ code: "FORBIDDEN" }, { status: 403 })),
+    )
+
+    const run = await getActiveRun("res_1")
+
+    expect(run?.id).toBe("turn_1")
+    expect(run?.timeline.some((event) => event.text === "帮我改简历")).toBe(true)
   })
 })

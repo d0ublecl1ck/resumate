@@ -262,10 +262,16 @@ def test_bound_system_prompt_names_the_resume_only_for_resume_scope():
     from resumate_agent_core.runtime import bound_system_prompt
 
     prompt = bound_system_prompt("base prompt", resume_id="res_1", scope="resume")
+    assert "same language as the user's latest message" in prompt
     assert "res_1" in prompt
     assert "never" in prompt.lower()
-    assert bound_system_prompt("base prompt", resume_id=None, scope="resume") == "base prompt"
-    assert bound_system_prompt("base prompt", resume_id="res_1", scope="profile") == "base prompt"
+    # 语言指令对所有 scope 生效；简历绑定段只对 resume scope 生效。
+    unbound = bound_system_prompt("base prompt", resume_id=None, scope="resume")
+    profile = bound_system_prompt("base prompt", resume_id="res_1", scope="profile")
+    for prompt in (unbound, profile):
+        assert "base prompt" in prompt
+        assert "same language as the user's latest message" in prompt
+        assert "This run is bound to resume" not in prompt
 
 
 def test_bound_system_prompt_reuses_the_open_turn():
