@@ -1,13 +1,14 @@
 ---
 id: bb89f
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:47:28.449Z
-updated_at: 2026-10-09T16:47:40.827Z
+updated_at: 2026-10-09T17:00:55.036Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:47:40.827Z
+closed_at: 2026-10-09T17:00:55.036Z
 ---
 
 # 个人资料助手抽屉面板真实接线：新建会话 / 历史切换 / 继续对话 / runError
