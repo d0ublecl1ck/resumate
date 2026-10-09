@@ -151,9 +151,17 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 | 开放接入：能力发现、PAT、备份导出/导入 | 已实现 |
 | 界面 i18n（`zh-CN` / `en`） | 已实现，键结构有测试校验 |
 | 内置对话流、JD 自然语言解析 | 已实现（粘贴文本经 `POST /jds:parse-text` 调用户已配置的模型） |
+| **AI 模拟面试闭环**（建场冻结简历版本与 JD 快照、逐题作答与追问、带证据的结构化评估报告） | 已实现（`/interview/*`，后端 + 界面；出题支持难度 / 题型筛选，报告可导出 Markdown） |
+| **岗位题库**（Java 后端 / Web 前端四类题型与三档难度，题目由生成脚本产出） | 已实现（`/bank/*` 后端 + 题库屏接真，真实 200 题） |
+| **知识库检索**（自建种子语料、确定性 BM25、切片出处与「依据不足」分状态） | 已实现（`/kb/*` 后端 + 题库屏检索面板，无命中即 `no_match`） |
+| **语音作答**（语速 = 转写字数 ÷ 真实时长、代理清晰度、无录音显示不适用） | 已实现（云端 ASR 转写 + 云端 TTS 播报 + 故障演练开关；未配置或失败时降级为纯文字） |
+| **笔试模块**（客观题服务端确定性判分、开放题模型评审、代码题不执行） | 已实现（`/quiz/*` 后端 + 笔试屏） |
+| **面试数据聚合**（成长曲线、口径比较、练习计划与复测、重新生成、洞察） | 已实现（`/interview/growth|comparison|practice-items|insights` 等 + 五个聚合屏） |
+| **评分一致性抽检**（复评脚本 + 流程 + 留档；结论：不通过） | 已实现，可比较维度覆盖率 100% 达标（门槛 0.8）；不通过原因是单点最大偏差 14 分 > 10（四维合并 MAD 3.45、±5 分内 90%），见 [留档](docs/evaluation/rubric-consistency-2026-10-09.md) |
+| 简历编辑器对话区（当前对话 / 历史会话切换并继续对话） | 已实现 |
 | 岗位匹配界面 | **未实现，前端仍走 mock**（见 [已知边界](#已知边界)） |
 
-后端现有 **11 个业务模块、90 个 HTTP 端点**；前端 **20 个页面组件、22 个 Storybook story 文件**。
+后端现有 **15 个业务模块、126 个 HTTP 端点**；前端 **23 个页面组件、42 个 Storybook story 文件**。
 
 ## 它和同类有什么不同
 
@@ -195,10 +203,10 @@ cd ui && pnpm dev                      # Vite 把 /api 代理到 :8000
 在仓库根目录执行；下面每个数字都可以用左侧命令复现：
 
 ```bash
-uv run --directory backend pytest        # → 279 passed
+uv run --directory backend pytest        # → 531 passed
 cd agent-core && uv run pytest -q        # → 110 passed
-cd ui && pnpm test                       # → 54 files / 443 passed
-archkit inspect .                        # → Quality gates passed.（.githooks/pre-commit 在每次提交前自动跑同一批门禁）
+cd ui && pnpm test                       # → 73 files / 520 passed
+node quality-gates/run.js                # → Quality gates passed.（与 archkit inspect . 同源；.githooks/pre-commit 在每次提交前自动跑同一批门禁）
 
 DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁移可在内存 SQLite 上验证
 ```
@@ -206,9 +214,10 @@ DATABASE_URL=sqlite:// uv run --directory backend alembic upgrade head   # 迁�
 统计口径：
 
 ```bash
-grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 90 个端点
-ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 20 个页面组件
-ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # → 22 个 story 文件
+ls -d backend/app/modules/*/ | grep -v __pycache__ | wc -l                    # → 15 个业务模块
+grep -rhoE "@router\.(get|post|put|patch|delete)\(" backend/app | wc -l         # → 126 个端点
+ls ui/src/pages | grep -vE "\.stories\.|\.test\." | wc -l                     # → 23 个页面组件
+find ui/src -name "*.stories.tsx" | wc -l                                     # → 42 个 story 文件
 ```
 
 ## 已知边界
@@ -220,7 +229,7 @@ ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # 
 - **没有 MCP server。** 能力发现返回的 `mcpUrl` 是占位，实测 `GET /mcp` 返回 404；外部接入目前走 REST 与 PAT。
 - **后端 spawn 运行体要求 CLI 在 `PATH`。** `POST /resumes/{id}/runs` 默认执行 `resumate-agent`，安装方式：`uv tool install ./agent-core`（或把 `AGENT_RUNNER_COMMAND` 指向其它可执行文件）。注意该工具是安装时的快照，`agent-core` 改动后需要重新安装才会生效。
 - **模板管理端写接口未开放**，模板当前只读。
-- **Webhook 与题库扩展属 P1/EXT**，未实现；**AI 模拟面试闭环已实现**，见 [用户故事索引](docs/user-stories/README.md)。
+- **Webhook 未实现**；A11 的面试闭环、岗位题库、知识库检索、语音作答（云端 ASR + TTS）、笔试、数据聚合与评分一致性抽检均已实现（见 [用户故事索引](docs/user-stories/README.md)）。**评分一致性抽检结论是不通过**：可比较维度覆盖率 100% 达标（门槛 0.8），不通过原因是单点最大偏差 14 分超过 10 分上限（四维合并 MAD 3.45、±5 分内 90%），因此当前量表分数只能作为相对趋势参考。
 - **必须自备 PostgreSQL 与 Redis**，没有单文件 / 零依赖模式。
 - **仓库未附 LICENSE**，因此当前默认保留所有权利。
 

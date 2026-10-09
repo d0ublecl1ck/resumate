@@ -11,6 +11,13 @@ import { JdsPage } from "@/pages/jds"
 import { JdDetailPage } from "@/pages/jd-detail"
 import { InterviewPage } from "@/pages/interview"
 import { InterviewSessionPage } from "@/pages/interview-session"
+import { BankScreen } from "@/features/interview/bank-screen"
+import { WrittenScreen } from "@/features/interview/written-screen"
+import { GrowthScreen } from "@/features/interview/growth-screen"
+import { HistoryScreen } from "@/features/interview/history-screen"
+import { PlanScreen } from "@/features/interview/plan-screen"
+import { QuestionsScreen } from "@/features/interview/questions-screen"
+import { SetupScreen } from "@/features/interview/setup-screen"
 import { ProfilePage } from "@/pages/profile"
 import { SettingsLayout } from "@/pages/settings-layout"
 import { RbacPage } from "@/pages/rbac"
@@ -61,6 +68,14 @@ function App() {
             <Route path="jds" element={<JdsPage />} />
             <Route path="jds/:id" element={<JdDetailPage />} />
             <Route path="interview" element={<InterviewPage />} />
+            {/* 具体路径必须排在 interview/:id 之前，否则会被参数路由吞掉。 */}
+            <Route path="interview/bank" element={<BankScreen />} />
+            <Route path="interview/written" element={<WrittenScreen />} />
+            <Route path="interview/growth" element={<GrowthScreen />} />
+            <Route path="interview/history" element={<HistoryScreen />} />
+            <Route path="interview/plan" element={<PlanScreen />} />
+            <Route path="interview/questions" element={<QuestionsScreen />} />
+            <Route path="interview/setup" element={<SetupScreen />} />
             <Route path="interview/:id" element={<InterviewSessionPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="settings/*" element={<SettingsLayout />} />

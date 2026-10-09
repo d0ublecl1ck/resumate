@@ -161,7 +161,18 @@
       <a href="#screen-templates">/admin/templates <code>模板库</code></a>
       <a href="#screen-template">/admin/templates/:id <code>模板编辑</code></a>
       <a href="#screen-rbac">/admin/rbac <code>角色与权限</code></a>
+      <a href="#screen-admin-users">/admin/users <code>用户管理</code></a>
       <a href="#screen-404">* <code>404</code></a>
+      <a href="#screen-interview-setup">/interview/setup <code>面试准备</code></a>
+      <a href="#screen-interview-questions">/interview/questions <code>题目生成</code></a>
+      <a href="#screen-interview-session">/interview/session <code>模拟面试会话</code></a>
+      <a href="#screen-interview-voice">/interview/voice <code>语音面试</code></a>
+      <a href="#screen-interview-written">/interview/written <code>笔试练习</code></a>
+      <a href="#screen-interview-report">/interview/report <code>评估报告</code></a>
+      <a href="#screen-interview-history">/interview/history <code>面试历史</code></a>
+      <a href="#screen-interview-growth">/interview/growth <code>成长曲线</code></a>
+      <a href="#screen-interview-bank">/interview/bank <code>岗位题库</code></a>
+      <a href="#screen-interview-plan">/interview/plan <code>练习计划</code></a>
     </nav>
 
     <section class="doc-section" id="tokens">
@@ -656,7 +667,7 @@
                 <div style="display:flex;gap:8px">
                   <button class="btn btn-outline btn-sm" type="button">保存（flush）</button>
                   <button class="btn btn-outline btn-sm" type="button">版本</button>
-                  <button class="btn btn-outline btn-sm" type="button">导出</button>
+                  <button class="btn btn-outline btn-sm" type="button" style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>导出</button>
                 </div>
               </header>
               <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted-foreground)">
@@ -664,6 +675,8 @@
               </div>
               <p role="alert" style="margin:0;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);background:color-mix(in oklab,var(--coral) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">简历内容已在别处更新，请刷新后基于最新版本重试。</p>
               <p style="margin:-12px 0 0;font-size:12px;color:var(--muted-foreground)">上面这条就是保存失败态（基线过期 409），与成功态共用同一位置。</p>
+              <p role="status" style="margin:0;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);background:color-mix(in oklab,var(--cobalt) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">Markdown 文件已导出。</p>
+              <p style="margin:-12px 0 0;font-size:12px;color:var(--muted-foreground)">上面这条就是导出成功态（<code>role="status"</code>，cobalt）；导出失败态见下方相邻块，与成功态共用同一位置。</p>
               <div style="display:grid;gap:12px;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr)">
                 <section class="card-soft" style="padding:16px">
                   <h2 style="margin:0 0 12px;font-size:14px;font-weight:600">结构化编辑</h2>
@@ -675,6 +688,22 @@
                 </section>
                 <section class="card-soft" style="padding:16px">
                   <h2 style="margin:0 0 12px;font-size:14px;font-weight:600">对话与 Run</h2>
+                  <div role="tablist" aria-label="历史会话" style="display:flex;gap:4px;margin-bottom:12px">
+                    <span class="chip" aria-pressed="false">当前对话</span>
+                    <span class="chip" aria-pressed="true">历史会话</span>
+                  </div>
+                  <div style="display:grid;gap:8px">
+                    <div class="card-frame" style="padding:10px;border-color:var(--cobalt);background:color-mix(in oklab,var(--cobalt) 5%,transparent)">
+                      <p style="margin:0;font-size:13px;font-weight:600">会话 2026-10-01 02:10</p>
+                      <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">ID 000000000001 · 当前会话</p>
+                    </div>
+                    <div class="card-frame" style="padding:10px">
+                      <p style="margin:0;font-size:13px;font-weight:600">会话 2026-09-30 18:00</p>
+                      <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">ID 000000000002</p>
+                    </div>
+                  </div>
+                  <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">选中后渲染 <code>GET /sessions/{id}/messages</code> 的消息流；继续输入走 <code>POST /sessions/{id}/messages</code>（seq = 现有最大 seq + 1），再带同一 <code>sessionId</code> 起 resume run，不新建会话。</p>
+                  <p style="margin:12px 0;font-size:12px;color:var(--muted-foreground)">下面这块是「当前对话」标签页的原有内容：</p>
                   <div style="display:grid;gap:8px">
                     <p style="margin:0;font-size:13px">用户：把项目经历第二条改得更量化</p>
                     <p style="margin:0;font-size:13px;color:var(--muted-foreground)">助手：先读一下工作副本。</p>
@@ -696,11 +725,24 @@
             </div>
           </div></div>
         </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：导出中（<code>aria-busy</code>）</p>
+            <button class="btn btn-outline btn-sm" type="button" disabled style="opacity:.6;display:inline-flex;align-items:center;gap:6px"><svg class="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>导出中…</button>
+            <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">导出中按钮禁用并转圈，防止重复触发下载。</p>
+          </div>
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：导出失败（coral <code>role="alert"</code>）</p>
+            <p role="alert" style="margin:0;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);background:color-mix(in oklab,var(--coral) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">导出失败，请重试。</p>
+            <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">失败按机器码映射：资源不存在「这份简历已不存在，请刷新后重试。」/ 无权限「当前账号没有导出这份简历的权限。」/ 网络「无法连接后端服务，请检查网络后重试。」，不透出服务端原文。</p>
+          </div>
+        </div>
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
           <li>已关闭轮次的待办：即使库里仍是历史 <code>pending</code>，也由 <code>PendingActionCard</code> 按 <code>stale</code> 只读渲染，不出现可点「批准并应用」；这份兜底与主档助手共享，不再各写一份</li>
           <li>轮次结束后保留最近一轮对话：active-run 优先取 open 轮次、否则取最新已结束轮次；对话与工具活动来自会话消息（<code>GET /sessions/{id}/messages</code>），不再回到「还没有对话」</li>
+          <li>历史会话：对话区顶部「当前对话 / 历史会话」切换；列表来自 <code>GET /sessions</code>（最近活跃优先，active run 的会话高亮），选中渲染 <code>GET /sessions/{id}/messages</code>；继续输入先 <code>POST /sessions/{id}/messages</code>（seq = 现有最大 seq + 1）再以同一 <code>sessionId</code> 起 <code>POST /resumes/{id}/runs</code>，不新建会话</li>
           <li>保存（flush）：有改动时按钮可用，<code>PUT /resumes/{id}/document</code> 提交整份文档 + 基线版本号；成功后徽标取服务端 <code>saveState</code>，并失效简历查询重取基线</li>
           <li>基线过期：409 <code>BASE_VERSION_STALE</code> 就地 coral 报错、保留本地草稿、按钮可重试；不透出服务端原文，也不显示「已保存」</li>
           <li>校验 / 权限 / 网络失败：同一处 <code>role="alert"</code> 给 i18n 文案</li>
@@ -708,7 +750,7 @@
           <li>空闲自动保存（C-05）：每次有效输入重置静默计时（默认 10 秒，设置里可改），计时期间服务端持草稿缓冲、状态为 <code>synced_draft</code>；到期 flush 成一个 <code>source=manual</code> 版本</li>
           <li>关闭自动保存：保留服务端草稿并保持「未提交」，暂停静默计时，手动 flush 入口仍有效</li>
           <li>切换简历 / 离开页面 / 显式保存：立即 flush；失败时保留草稿并提示未保存</li>
-          <li>已知缺口：导出按钮还没有后端端点（点击无行为）</li>
+          <li>导出：按钮可用，请求后端把已提交文档渲染成 Markdown 附件后由前端触发下载；成功显示 <code>role="status"</code>「Markdown 文件已导出。」，失败显示 <code>role="alert"</code> 并按机器码映射文案，导出中禁用按钮</li>
         </ul>
       </div>
 
@@ -1015,6 +1057,24 @@
                 </div>
                 <p style="margin:12px 0 0;font-size:12px;color:var(--muted-foreground)">显示名、语言、主题也在这个分区（US-13.4）。</p>
               </section>
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600"><span aria-hidden="true" style="color:var(--cobalt)">🔑</span>修改密码</h2>
+                <p style="margin:4px 0 16px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">修改后该账号的全部已登录会话会立即失效，需要使用新密码重新登录。</p>
+                <div style="display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr))">
+                  <label class="field" style="margin-top:0"><span>当前密码</span><input class="input" type="password" value="password" /></label>
+                  <label class="field" style="margin-top:0"><span>新密码</span><input class="input" type="password" value="password" /></label>
+                  <label class="field" style="margin-top:0"><span>确认新密码</span><input class="input" type="password" value="password" /></label>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:14px">
+                  <button class="btn btn-primary btn-sm" type="button">更新密码</button>
+                  <span role="alert" style="font-size:12px;color:var(--coral)">两次输入的新密码不一致。</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:12px;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);background:color-mix(in oklab,var(--cobalt) 5%,transparent);border-radius:var(--radius-lg);padding:8px 12px;font-size:14px">
+                  <span style="display:inline-flex;align-items:center;gap:6px;color:var(--cobalt)">✓ 密码已更新，请使用新密码重新登录。</span>
+                  <button type="button" style="border:0;background:transparent;padding:0;font-size:12px;font-weight:600;color:var(--cobalt)">去登录</button>
+                </div>
+                <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">上排是校验失败态（<code>role="alert"</code>）；提交成功后整个表单替换为下方成功提示条，点「去登录」清理本地用户缓存并由路由守卫送回登录页。</p>
+              </section>
             </div>
           </div></div>
         </div>
@@ -1024,6 +1084,7 @@
           <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」（configure_model 滚到模型配置区）</li>
           <li>Agent 可用：Agent 入口显示「开始聊聊」（start_chat 进入 /profile?assistant=1 并打开对话抽屉，不再只滚动页面）</li>
           <li>语言切换在「个人偏好」分区（US-13.4）</li>
+          <li>修改密码：当前密码 / 新密码 / 确认新密码 + 「更新密码」；校验失败就地 coral 报错，成功后表单替换为「密码已更新，请使用新密码重新登录。」+「去登录」</li>
           <li>个人偏好：显示名 / 语言 / 主题 / 空闲自动保存开关与间隔（默认 10 秒，3–120 秒；越界时可见错误 + <code>aria-invalid</code>，点「保存偏好」在提交前拦截，不再静默夹取为 3；后端 422 兜底）</li>
           <li>初始查询失败：Agent 配置 / 模型配置 / 个人偏好 / 模板任一加载失败时显示错误状态块（错误码 + 重试），不渲染空表单</li>
           <li>访问日志用途列：后端 purpose 枚举映射为本地化文案（第八条见公开接入），未知值原样显示</li>
@@ -1139,6 +1200,174 @@
         <ul class="states"><li>系统内置角色只读；自定义角色可增删改</li><li>删除仍有成员的角色：后端拒绝并保留原状态</li></ul>
       </div>
 
+      <div class="screen" id="screen-admin-users">
+        <div class="screen-head"><h3>用户管理</h3><span class="route">/admin/users</span><p>SCR-114。仅 <code>user:read</code> 可见；封禁 / 解封与角色调整走后端，写操作分别按 <code>user:ban</code> / <code>user:unban</code> / <code>role:assign</code> 与「不能操作自己」控制，错误按机器码映射文案。</p></div>
+        <div class="device" data-shell data-active="/admin/users">
+          <div class="main"><div class="main-inner">
+            <div class="stack">
+              <header class="page-header">
+                <div><h1>用户管理</h1><p>查看全部账号，封禁或解封，并调整账号角色。操作受权限与层级约束。</p></div>
+              </header>
+              <section class="card-soft" style="overflow-x:auto;padding:20px">
+                <table style="width:100%;border-collapse:collapse;text-align:left;font-size:14px">
+                  <thead>
+                    <tr style="border-bottom:1px solid var(--border);font-size:12px;color:var(--muted-foreground)">
+                      <th style="padding:8px 16px 8px 0;font-weight:500">账号</th>
+                      <th style="padding:8px 16px 8px 0;font-weight:500">角色</th>
+                      <th style="padding:8px 16px 8px 0;font-weight:500">状态</th>
+                      <th style="padding:8px 16px 8px 0;font-weight:500">创建时间</th>
+                      <th style="padding:8px 0;font-weight:500">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">陈晓</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">chen.xiao@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option>普通用户</option><option selected>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-08-14</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">林悦</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">lin.yue@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-08-20</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">王浩</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">wang.hao@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存中…</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-09-01</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">张沐</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">you@example.com</p><span style="display:inline-block;margin-top:4px;border-radius:4px;background:var(--secondary);padding:2px 6px;font-size:10px;color:var(--secondary-foreground)">当前登录账号</span></td>
+                      <td style="padding:12px 16px 12px 0"><span style="font-size:12px;color:var(--muted-foreground)">超级管理员</span></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-01-05</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">赵晴</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">zhao.qing@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-coral">已封禁</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-09-12</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm">解封</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">孙宇</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">sun.yu@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option>普通用户</option><option selected>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button> <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--cobalt)">✓ 角色已更新。</span></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-08-30</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">周敏</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">zhou.min@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option>普通用户</option><option>管理员</option><option>超级管理员</option><option selected>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button> <span style="font-size:12px;color:var(--coral)">当前操作超出你的权限层级或被权限策略拒绝。</span></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-09-18</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">吴磊</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">wu.lei@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-coral">已封禁</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-07-22</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm">解封</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">郑爽</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">zheng.shuang@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-09-25</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">冯雪</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">feng.xue@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option>普通用户</option><option selected>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-06-11</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">何俊</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">he.jun@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-09-30</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">高雅</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">gao.ya@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-coral">已封禁</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-05-19</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm">解封</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">罗晨</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">luo.chen@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-10-02</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">梁静</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">liang.jing@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option>普通用户</option><option>管理员</option><option>超级管理员</option><option selected>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-08-08</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid color-mix(in oklab,var(--border) 60%,transparent);vertical-align:top">
+                      <td style="padding:12px 16px 12px 0"><p style="margin:0;font-weight:500">宋涛</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">song.tao@example.com</p></td>
+                      <td style="padding:12px 16px 12px 0"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><select aria-label="角色" style="border:1px solid var(--input);border-radius:6px;background:var(--background);padding:4px 8px;font-size:12px;outline:none"><option selected>普通用户</option><option>管理员</option><option>超级管理员</option><option>内容运营</option></select><button type="button" class="btn btn-outline btn-sm" disabled style="opacity:.5;display:inline-flex;align-items:center;gap:4px">保存角色</button></div></td>
+                      <td style="padding:12px 16px 12px 0"><span class="badge badge-muted">正常</span></td>
+                      <td style="padding:12px 16px 12px 0;font-size:12px;color:var(--muted-foreground)">2026-10-06</td>
+                      <td style="padding:12px 0"><button type="button" class="btn btn-outline btn-sm" style="color:var(--coral);border-color:color-mix(in oklab,var(--coral) 40%,transparent)">封禁</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700">另一种状态：缺少 <code>user:read</code> 时的 forbidden 状态块</p>
+            <div class="state-block">
+              <span class="badge badge-muted">无权访问</span>
+              <h3>无权访问用户管理</h3>
+              <p>当前账号缺少 user:read 权限。</p>
+            </div>
+          </div>
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700">封禁确认弹窗（<code>BanUserDialog</code>）</p>
+            <div class="card-frame" style="padding:16px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="display:flex;width:32px;height:32px;align-items:center;justify-content:center;border-radius:8px;background:color-mix(in oklab,var(--coral) 15%,transparent);color:var(--coral)" aria-hidden="true">⊘</span>
+                  <span><span style="display:block;font-size:14px;font-weight:600">封禁账号</span><span style="display:block;font-size:12px;color:var(--muted-foreground)">封禁「陈晓」后，该账号的全部会话会立即失效。</span></span>
+                </div>
+                <span class="icon-btn" aria-hidden="true">✕</span>
+              </div>
+              <label class="field"><span>封禁原因</span><textarea class="input" rows="3" style="resize:none" placeholder="可选，最多 500 字"></textarea></label>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+                <button class="btn btn-outline btn-sm" type="button">取消</button>
+                <button class="btn btn-primary btn-sm" type="button">确认封禁</button>
+              </div>
+              <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">封禁中按钮文案变「封禁中…」并禁用；超 500 字与接口错误都就地 coral <code>role="alert"</code>，按机器码映射，不透出服务端原文。</p>
+            </div>
+          </div>
+        </div>
+        <ul class="states">
+          <li>可见性：仅 <code>user:read</code> 可见，缺权限整页渲染 <code>StateBlock kind="forbidden"</code>，不发起 <code>/auth/users</code> 请求</li>
+          <li>表格列：账号（显示名 + 邮箱，本人额外标注「当前登录账号」）/ 角色 / 状态 / 创建时间 / 操作</li>
+          <li>角色：<code>role:assign</code> 且非本人且角色列表非空时给下拉 +「保存角色」；保存中「保存中…」，成功「角色已更新。」，失败按机器码映射；无权限时退化为只读文本并提示「当前账号没有分配角色的权限。」</li>
+          <li>封禁：需 <code>user:ban</code> 且非本人，弹窗填可选原因后提交；解封：需 <code>user:unban</code>，「解封中…」禁用；都失效 <code>admin-users</code> 查询</li>
+          <li>加载中 <code>PageLoading</code>；列表加载失败给错误状态块 + 重试；空列表给「没有账号」</li>
+        </ul>
+      </div>
+
       <div class="screen" id="screen-404">
         <div class="screen-head"><h3>404</h3><span class="route">*</span><p>兜底路由与资源不存在共用 <code>PageNotFound</code>。</p></div>
         <div class="device" data-shell data-active="/">
@@ -1152,6 +1381,1080 @@
           </div></div>
         </div>
         <ul class="states"><li>实体版：resume / template / jd / resource 四种说法，标题按当前语言拼接</li></ul>
+      </div>
+
+      <div class="screen" id="screen-interview-setup">
+        <div class="screen-head"><h3>面试准备</h3><span class="route">/interview/setup</span><p>US-14.7。左栏依次选择简历版本、目标 JD、岗位，右栏实时汇总本场快照；三项选齐才能确认开始，确认后快照冻结并生成本场编号。可交互点：简历版本单选卡、JD 单选行与粘贴文本、岗位分段选择、底部确认按钮的禁用与冻结态。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">面试准备</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">创建一场模拟面试</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">本场面试会固定当前简历版本与目标 JD 的快照，面试过程中不会随后续修改而变化。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <span class="badge badge-muted">配置中</span>
+                </div>
+              </header>
+              <div style="display:grid;gap:20px;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">选择简历版本</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">整场面试以选中版本的内容为唯一依据</p>
+                    <div style="display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:12px">
+                      <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                        <span style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">简历 v1 · 校招版</span></span>
+                        <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">更新于 2026-09-28</span>
+                      </div>
+                      <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                        <span style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">简历 v2 · 社招版</span></span>
+                        <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">更新于 2026-10-05</span>
+                      </div>
+                      <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                        <span style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">简历 v3 · 定向版</span></span>
+                        <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">更新于 2026-10-08</span>
+                      </div>
+                    </div>
+                  </section>
+                  <div style="display:grid;gap:16px;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)">
+                    <section class="card-soft" style="padding:18px">
+                      <h2 style="margin:0;font-size:14px;font-weight:600">选择目标 JD</h2>
+                      <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">一场面试只锁定一条目标 JD</p>
+                      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+                        <div style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:500">Java 后端工程师</span><span style="display:block;margin-top:2px;font-size:12px;color:var(--muted-foreground)">星澜科技</span></span>
+                        </div>
+                        <div style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:500">资深后端工程师</span><span style="display:block;margin-top:2px;font-size:12px;color:var(--muted-foreground)">云栖数据</span></span>
+                        </div>
+                        <div style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                          <span style="min-width:0"><span style="display:block;font-size:14px;font-weight:500">Web 前端工程师</span><span style="display:block;margin-top:2px;font-size:12px;color:var(--muted-foreground)">潮汐互动</span></span>
+                        </div>
+                      </div>
+                      <div style="margin-top:12px">
+                        <span style="display:block;font-size:12px;font-weight:500;color:var(--muted-foreground)">粘贴 JD 文本</span>
+                        <textarea class="input" rows="2" style="margin-top:6px;resize:none" placeholder="把 JD 原文粘贴到这里，作为本场的补充背景" aria-label="粘贴 JD 文本"></textarea>
+                        <p style="margin:6px 0 0;font-size:12px;color:var(--muted-foreground)">已输入 0 字</p>
+                      </div>
+                    </section>
+                    <section class="card-soft" style="padding:18px;align-self:start">
+                      <h2 style="margin:0;font-size:14px;font-weight:600">选择岗位</h2>
+                      <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">岗位决定题库范围与评分量表</p>
+                      <div role="group" aria-label="选择岗位" style="display:inline-flex;margin-top:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:4px">
+                        <button class="btn btn-sm" type="button" style="color:var(--muted-foreground)">Java 后端</button>
+                        <button class="btn btn-sm" type="button" style="color:var(--muted-foreground)">Web 前端</button>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">本场快照</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">随左侧选择实时更新，确认后冻结</p>
+                  <dl style="display:flex;flex-direction:column;gap:8px;margin:12px 0 0">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px">
+                      <dt style="flex:none;font-size:12px;color:var(--muted-foreground)">简历版本</dt>
+                      <dd style="min-width:0;margin:0;text-align:right;font-size:14px;font-weight:500;color:var(--muted-foreground)">未选择</dd>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px">
+                      <dt style="flex:none;font-size:12px;color:var(--muted-foreground)">目标 JD</dt>
+                      <dd style="min-width:0;margin:0;text-align:right;font-size:14px;font-weight:500;color:var(--muted-foreground)">未选择</dd>
+                    </div>
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px">
+                      <dt style="flex:none;font-size:12px;color:var(--muted-foreground)">岗位</dt>
+                      <dd style="min-width:0;margin:0;text-align:right;font-size:14px;font-weight:500;color:var(--muted-foreground)">未选择</dd>
+                    </div>
+                  </dl>
+                  <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:16px;display:flex;flex-direction:column;gap:16px">
+                    <section><h3 style="margin:0;font-size:12px;font-weight:600">匹配点</h3><p style="margin:8px 0 0;font-size:12px;color:var(--muted-foreground)">未选择</p></section>
+                    <section><h3 style="margin:0;font-size:12px;font-weight:600">风险点</h3><p style="margin:8px 0 0;font-size:12px;color:var(--muted-foreground)">未选择</p></section>
+                    <section><h3 style="margin:0;font-size:12px;font-weight:600">岗位范围</h3><p style="margin:8px 0 0;font-size:12px;color:var(--muted-foreground)">未选择</p></section>
+                  </div>
+                </section>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:14px 20px">
+                <p style="margin:0;font-size:12px;color:var(--muted-foreground)">还差：简历版本、目标 JD、岗位</p>
+                <button class="btn btn-primary" type="button" disabled style="opacity:.4">确认开始面试</button>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <ul class="states">
+          <li>配置中（默认）：三项未选齐，底部列出缺项且「确认开始面试」禁用；右栏匹配点 / 风险点 / 岗位范围均为「未选择」</li>
+          <li>可开始：三项选齐后徽标变「可开始」，底部提示「三项已选齐，确认后将冻结本场快照」，右栏渲染匹配点、风险点与岗位范围关键词</li>
+          <li>已创建：确认后快照冻结，徽标变「已创建」，底部显示「已冻结快照 · 本场不可变」+ 场次编号 <code>IV-2026-1009-0421</code> 与「重新选择」，三项选择器整体禁用</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-questions">
+        <div class="screen-head"><h3>题目生成</h3><span class="route">/interview/questions</span><p>US-14.1。选定岗位与难度 / 题型筛选后生成面试题，左列结果、右列详情；每道题都能追溯到简历来源。可交互点：生成 / 重新生成（1 秒加载态）、难度与题型多选 chip、行切换详情、参考答案折叠。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">题目生成</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">按简历与岗位生成面试题</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">选定岗位与筛选条件，从简历条目和岗位要求生成面试题；每道题都可以追溯到具体简历来源。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <button class="btn btn-primary" type="button">生成题目</button>
+                  <button class="btn btn-outline" type="button">重新生成</button>
+                </div>
+              </header>
+              <section class="card-soft" style="padding:16px">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 32px">
+                  <span style="display:flex;align-items:center;gap:8px"><span style="flex:none;font-size:12px;font-weight:500;color:var(--muted-foreground)">岗位</span>
+                    <span role="group" aria-label="岗位" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span class="chip" aria-pressed="true">Java 后端</span><span class="chip" aria-pressed="false">Web 前端</span></span>
+                  </span>
+                  <span style="display:flex;align-items:center;gap:8px"><span style="flex:none;font-size:12px;font-weight:500;color:var(--muted-foreground)">难度</span>
+                    <span role="group" aria-label="难度" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span class="chip" aria-pressed="false">简单</span><span class="chip" aria-pressed="false">中等</span><span class="chip" aria-pressed="false">困难</span></span>
+                  </span>
+                  <span style="display:flex;align-items:center;gap:8px"><span style="flex:none;font-size:12px;font-weight:500;color:var(--muted-foreground)">题型</span>
+                    <span role="group" aria-label="题型" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span class="chip" aria-pressed="false">技术知识</span><span class="chip" aria-pressed="false">项目深挖</span><span class="chip" aria-pressed="false">场景</span><span class="chip" aria-pressed="false">行为</span></span>
+                  </span>
+                  <span style="font-size:12px;color:var(--muted-foreground)">未选择即不限</span>
+                </div>
+              </section>
+              <div style="display:grid;align-items:start;gap:20px;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr)">
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">生成结果</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">Java 后端 · 共 5 道题</p>
+                  <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                    <li><div style="width:100%;border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:12px">
+                      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">技术知识</span><span style="display:inline-flex;align-items:center;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);border-radius:6px;background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:2px 8px;font-size:11px;color:var(--cobalt)">中等</span></span>
+                      <span style="display:block;margin-top:8px;font-size:14px;font-weight:500;line-height:1.6">订单服务做分库分表的容量依据是什么？</span>
+                      <span style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">订单中台项目 · 容量评估</span></span>
+                    </div></li>
+                    <li><div style="width:100%;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">项目深挖</span><span style="display:inline-flex;align-items:center;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);border-radius:6px;background:color-mix(in oklab,var(--coral) 5%,transparent);padding:2px 8px;font-size:11px;color:var(--coral)">困难</span></span>
+                      <span style="display:block;margin-top:8px;font-size:14px;font-weight:500;line-height:1.6">分库分表后，跨分片的订单查询与统计你是怎么做的？</span>
+                      <span style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">订单中台项目 · 跨分片查询</span></span>
+                    </div></li>
+                    <li><div style="width:100%;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">场景</span><span style="display:inline-flex;align-items:center;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);border-radius:6px;background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:2px 8px;font-size:11px;color:var(--cobalt)">中等</span></span>
+                      <span style="display:block;margin-top:8px;font-size:14px;font-weight:500;line-height:1.6">大促流量突增十倍时，你会如何保护下游数据库？</span>
+                      <span style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">高并发稳定性设计 · 限流与降级</span></span>
+                    </div></li>
+                    <li><div style="width:100%;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">行为</span><span style="display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:6px;background:var(--muted);padding:2px 8px;font-size:11px;color:var(--muted-foreground)">简单</span></span>
+                      <span style="display:block;margin-top:8px;font-size:14px;font-weight:500;line-height:1.6">讲一次你主导复盘并推动改进的经历。</span>
+                      <span style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">行为评价标准 · 责任与复盘</span></span>
+                    </div></li>
+                    <li><div style="width:100%;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <span style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">技术知识</span><span style="display:inline-flex;align-items:center;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);border-radius:6px;background:color-mix(in oklab,var(--coral) 5%,transparent);padding:2px 8px;font-size:11px;color:var(--coral)">困难</span></span>
+                      <span style="display:block;margin-top:8px;font-size:14px;font-weight:500;line-height:1.6">接口幂等性在技术上如何保证？</span>
+                      <span style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">接口设计 · 幂等保证</span></span>
+                    </div></li>
+                  </ul>
+                </section>
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">题目详情</h2>
+                  <div style="display:flex;flex-direction:column;gap:16px;margin-top:12px">
+                    <div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="tag">技术知识</span><span style="display:inline-flex;align-items:center;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);border-radius:6px;background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:2px 8px;font-size:11px;color:var(--cobalt)">中等</span></div>
+                      <p style="margin:8px 0 0;font-size:16px;font-weight:600;line-height:1.75">订单服务做分库分表的容量依据是什么？</p>
+                      <p style="margin:8px 0 0;font-size:14px;line-height:1.6;color:var(--muted-foreground)">结合简历中订单中台的容量数据，说明你如何推导分片数量与分片键。</p>
+                    </div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <dl style="margin:0;display:flex;flex-direction:column;gap:6px;font-size:12px">
+                        <div style="display:flex;gap:8px"><dt style="width:80px;flex:none;color:var(--muted-foreground)">简历版本</dt><dd style="margin:0;font-weight:500">简历 v3（2026-03-12）</dd></div>
+                        <div style="display:flex;gap:8px"><dt style="width:80px;flex:none;color:var(--muted-foreground)">关联条目</dt><dd style="margin:0">订单中台 · 分库分表改造</dd></div>
+                      </dl>
+                    </div>
+                    <div>
+                      <p style="margin:0;font-size:12px;font-weight:600">证据与参考要点</p>
+                      <ul style="list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px">
+                        <li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5"><span aria-hidden="true" style="flex:none;width:6px;height:6px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span><span>简历记录：订单表日增约 800 万行，单表已超过 2 亿行。</span></li>
+                        <li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5"><span aria-hidden="true" style="flex:none;width:6px;height:6px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span><span>分片键选用户 ID，保证同一用户的订单落在同一分片。</span></li>
+                        <li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;line-height:1.5"><span aria-hidden="true" style="flex:none;width:6px;height:6px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span><span>按三年容量预估，并预留 30% 增长余量。</span></li>
+                      </ul>
+                    </div>
+                    <div style="overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg)">
+                      <div style="display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px">
+                        <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600">参考答案</span>
+                        <span style="display:inline-flex;flex:none;align-items:center;gap:4px;font-size:12px;color:var(--muted-foreground)">展开参考答案 ▾</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <ul class="states">
+          <li>默认：岗位 Java 后端、难度与题型不限，列表 5 道题（Web 前端专属题被岗位过滤掉），选中第 1 题</li>
+          <li>加载态：点「生成题目」或「重新生成」后 1 秒内列表与详情显示骨架，按钮禁用、刷新图标旋转</li>
+          <li>重新生成：切换一批题目并提示「历史练习中的题目快照不会被改写」，保留当前筛选</li>
+          <li>筛选 0 命中：列表显示「当前筛选条件下没有题目，请调整筛选。」，详情显示空态</li>
+          <li>依据：命中知识库的题显示「依据 文档 · 小节」，未命中的题显示「依据不足（知识库未命中）」，不伪造引用</li>
+          <li>参考答案：默认折叠，点击头部展开 / 收起</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-session">
+        <div class="screen-head"><h3>模拟面试会话</h3><span class="route">/interview/session</span><p>US-14.3。语音与文字双通道问答，面试官按回答关键词继续追问，左侧对话流、右侧本场信息与追问依据。可交互点：输入回答后发送（Enter 走文字、按钮走语音/文字）、追问气泡、转写核对标记。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">模拟面试</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">Java 后端 · 模拟面试进行中</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">本场已冻结简历版本与目标 JD，题目取自该岗位题库，并挂载知识条目作为评分依据。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <span class="badge badge-cobalt">语音通道正常</span>
+                  <span class="badge badge-muted">已进行 18 分钟</span>
+                </div>
+              </header>
+              <div style="display:grid;align-items:stretch;gap:16px;grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+                <section class="card-soft" style="display:flex;flex-direction:column;padding:16px">
+                  <header style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">对话流</h2>
+                    <p style="margin:0;font-size:12px;color:var(--muted-foreground)">语音与文字双通道 · 转写可逐句核对</p>
+                  </header>
+                  <ol style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:10px">
+                    <li style="display:flex;justify-content:flex-start"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:10px 16px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">面试官</span><span style="color:var(--muted-foreground)">14:02</span><span class="tag">技术知识</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;line-height:1.6">先说说 JVM 的内存区域划分，以及线上排查内存问题时你最先看哪几块。</p>
+                      <p style="margin:6px 0 0;font-size:12px;color:var(--muted-foreground)">知识来源：JVM 内存模型 · 知识条目 #204</p>
+                    </article></li>
+                    <li style="display:flex;justify-content:flex-end"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 16px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">我</span><span style="color:var(--muted-foreground)">14:05</span><span class="tag" style="color:var(--cobalt)">语音回答</span><span class="tag">转写已核对</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;line-height:1.6">堆和元空间是重点。我一般先看堆的分配速率和 GC 日志，再对比元空间与线程栈的增长趋势。</p>
+                    </article></li>
+                    <li style="display:flex;justify-content:flex-start"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:10px 16px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">面试官</span><span style="color:var(--muted-foreground)">14:09</span><span class="tag">追问</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;line-height:1.6">你提到了分代回收，但没有说明 CMS 与 G1 在停顿和吞吐上的取舍，请补充你项目里为什么选 G1。</p>
+                      <p style="margin:6px 0 0;display:inline-flex;align-items:flex-start;gap:4px;font-size:12px;font-weight:500;color:var(--coral)"><span aria-hidden="true">⚠</span>追问依据：缺失要点：CMS 与 G1 的停顿 / 吞吐取舍</p>
+                    </article></li>
+                    <li style="display:flex;justify-content:flex-end"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 16px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">我</span><span style="color:var(--muted-foreground)">14:12</span><span class="tag">文字回答</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;line-height:1.6">我们服务堆 8G、对延迟敏感，G1 可以设置目标停顿并做可预测的 Mixed GC，所以从 CMS 迁移到了 G1。</p>
+                    </article></li>
+                  </ol>
+                </section>
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">本场信息</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">简历与 JD 在本场冻结</p>
+                    <dl style="margin:12px 0 0">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">岗位</dt><dd style="margin:0;font-weight:500">Java 后端工程师</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">简历版本</dt><dd style="margin:0;font-weight:500">简历 v3 · 已冻结</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">目标 JD</dt><dd style="margin:0;font-weight:500">后端社招 JD · 交易中台</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">量表版本</dt><dd style="margin:0;font-weight:500">能力量表 v1.0</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px"><dt style="color:var(--muted-foreground)">已用时</dt><dd style="margin:0;font-weight:500">18 分钟</dd></div>
+                    </dl>
+                  </section>
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">语音链路</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">双通道并行，异常自动降级</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="display:flex;align-items:flex-start;gap:8px"><span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span><div><p style="margin:0;font-size:12px;font-weight:500">ASR 可用</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">实时转写，回答后可逐句核对</p></div></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px"><span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span><div><p style="margin:0;font-size:12px;font-weight:500">TTS 可用</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">面试官语音播报，可随时暂停</p></div></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px"><span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:6px;border-radius:999px;background:var(--gold)"></span><div><p style="margin:0;font-size:12px;font-weight:500">降级为纯文字</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">语音不可用时保留完整上下文与追问链路</p></div></li>
+                    </ul>
+                  </section>
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">追问依据</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">根据当前回答自动标记的待补要点</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px">
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>CMS 与 G1 的停顿 / 吞吐取舍</span></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>堆外内存与元空间对 GC 的影响</span></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>调优收益的量化口径（P99 / 吞吐）</span></li>
+                    </ul>
+                  </section>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 16px">
+                <span style="display:inline-flex;width:40px;height:40px;flex:none;align-items:center;justify-content:center;border-radius:var(--radius-lg);background:var(--secondary);color:var(--cobalt);font-size:16px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg></span>
+                <input class="input" style="flex:1;min-width:0" placeholder="输入你的回答，或按住麦克风用语音作答" aria-label="输入你的回答" />
+                <button class="btn btn-outline" type="button">语音回答</button>
+                <button class="btn btn-primary" type="button">发送</button>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <ul class="states">
+          <li>默认：已录入 2 轮问答，面试官对「分代回收」给出追问与缺失要点依据</li>
+          <li>提交后：输入框清空，0.6 秒后出现按回答关键词生成的追问气泡；空输入时发送按钮禁用</li>
+          <li>发送失败重试：同一回答只记录一次，不重复生成独立面试记录</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-voice">
+        <div class="screen-head"><h3>语音面试</h3><span class="route">/interview/:id（语音屏）</span><p>US-14.6。题干由云端 TTS 播报（服务端取回音频字节后回传，签名 URL 不外发），回答走云端 ASR 转写（Paraformer，字级时间戳）并支持核对；任一链路失败或未配置时降级为纯文字。可交互点：顶部「模拟语音服务不可用」开关、播放题目、麦克风授权、录音与转写确认、降级文字输入。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">语音面试</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">听题作答，转写可核对</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">题目以 TTS 语音播报，回答可按住说话并实时转写。语音链路不可用时保留既有上下文与追问链路，自动降级为文字作答。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <button type="button" role="switch" aria-checked="false" style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;background:var(--card);padding:6px 12px;font-size:12px;font-weight:500">
+                    <span aria-hidden="true" style="position:relative;display:inline-flex;width:28px;height:16px;flex:none;align-items:center;border-radius:999px;background:var(--secondary)"><span style="display:inline-block;width:12px;height:12px;border-radius:999px;background:var(--card);transform:translateX(2px)"></span></span>
+                    模拟语音服务不可用
+                  </button>
+                </div>
+              </header>
+              <div style="display:grid;align-items:start;gap:16px;grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+                <section style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                  <div class="card-soft" style="padding:16px">
+                    <header style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
+                      <h2 style="margin:0;font-size:14px;font-weight:600">对话流</h2>
+                      <p style="margin:0;font-size:12px;color:var(--muted-foreground)">语音播报 + 转写核对</p>
+                    </header>
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+                      <div style="display:flex;justify-content:flex-start"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:10px 16px">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">面试官</span></div>
+                        <p style="margin:6px 0 0;font-size:14px;line-height:1.6">先讲讲你做过的一次接口性能优化，说明背景、你的动作和最终指标。</p>
+                      </article></div>
+                      <div style="display:flex;justify-content:flex-end"><article style="width:fit-content;max-width:88%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 16px">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">我</span><span class="tag" style="color:var(--cobalt)">语音回答</span><span class="tag">转写已核对</span></div>
+                        <p style="margin:6px 0 0;font-size:14px;line-height:1.6">交易下单接口的 P99 从 800ms 降到 220ms，QPS 从 600 提到 1800。</p>
+                      </article></div>
+                      <div style="display:flex;justify-content:flex-start"><article style="width:fit-content;max-width:92%;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:10px 16px">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px"><span style="font-weight:600">面试官</span><span class="tag" style="color:var(--cobalt)">本轮题目</span></div>
+                        <p style="margin:6px 0 0;font-size:14px;line-height:1.6">你提到把逐条查询收敛成批量查询，请具体说说是怎么定位和改造的，以及怎么验证收益。</p>
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+                          <button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt);border-color:color-mix(in oklab,var(--cobalt) 40%,transparent);background:color-mix(in oklab,var(--cobalt) 5%,transparent)">▶ 播放题目（TTS）</button>
+                          <span style="font-size:11px;color:var(--muted-foreground)">面试官语音播报 · 约 3 秒后自动停止</span>
+                        </div>
+                      </article></div>
+                    </div>
+                  </div>
+                  <div class="card-soft" style="padding:16px">
+                    <header style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding-bottom:10px">
+                      <h2 style="margin:0;font-size:14px;font-weight:600">我的回答</h2>
+                      <p style="margin:0;font-size:12px;color:var(--muted-foreground)">语音作答；语音服务不可用时降级为文字</p>
+                    </header>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:12px;border:1px dashed var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:20px 16px;text-align:center">
+                      <span style="display:flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:999px;background:var(--secondary);color:var(--muted-foreground);font-size:16px">✕</span>
+                      <p style="margin:0;font-size:14px;font-weight:600">需要麦克风权限</p>
+                      <p style="margin:0;max-width:28rem;font-size:12px;line-height:1.6;color:var(--muted-foreground)">授权后音频仅在本地转写，原始录音不上传，也不会写入本轮记录。</p>
+                      <button class="btn btn-primary" type="button" style="margin-top:4px">允许使用麦克风</button>
+                      <p style="margin:0;font-size:11px;color:var(--muted-foreground)">可随时在浏览器里撤销授权</p>
+                    </div>
+                  </div>
+                </section>
+                <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">语音链路状态</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">随顶部「模拟语音服务不可用」开关切换</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:8px 12px">
+                        <span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span>
+                        <div style="min-width:0;flex:1"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;font-size:12px;font-weight:500">ASR 云端转写</p><span class="badge badge-cobalt">云端转写</span></div><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">云端 Paraformer 带字级时间戳，核对确认后写入本轮记录；不可用时回落到浏览器识别或手填时长</p></div>
+                      </li>
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:8px 12px">
+                        <span aria-hidden="true" style="flex:none;width:8px;height:8px;margin-top:6px;border-radius:999px;background:var(--cobalt)"></span>
+                        <div style="min-width:0;flex:1"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;font-size:12px;font-weight:500">TTS 题目播报</p><span class="badge badge-cobalt">云端播报</span></div><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">题目语音播报，可随时停止；失败或未配置时标注「不可用，已降级为纯文字」，题干文本始终保留</p></div>
+                      </li>
+                    </ul>
+                  </section>
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">本场信息</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">简历与 JD 在本场冻结</p>
+                    <dl style="margin:12px 0 0">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">岗位</dt><dd style="margin:0;font-weight:500">Java 后端工程师</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><dt style="color:var(--muted-foreground)">量表版本</dt><dd style="margin:0;font-weight:500">能力量表 v1.0</dd></div>
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;font-size:12px"><dt style="color:var(--muted-foreground)">已用时</dt><dd style="margin:0;font-weight:500">18 分钟</dd></div>
+                    </dl>
+                  </section>
+                  <section class="card-soft" style="padding:16px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">追问依据</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">根据当前回答自动标记的待补要点</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px">
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>批量查询改造前后的 SQL 次数与耗时对比</span></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>本地缓存与数据库的一致性方案（失效顺序）</span></li>
+                      <li style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:6px 12px;font-size:12px"><span aria-hidden="true" style="color:var(--coral)">⚠</span><span>收益的量化口径（P99 与 QPS 的采样窗口）</span></li>
+                    </ul>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：打开「模拟语音服务不可用」后（US-14.6 降级分支）</p>
+            <p style="display:flex;align-items:flex-start;gap:8px;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--coral) 10%,transparent);padding:8px 12px;font-size:12px;font-weight:500;color:var(--coral)"><span aria-hidden="true">⚠</span>语音通道不可用，已降级为文字作答，既有上下文与追问链路已保留</p>
+            <p style="margin:8px 0 0;display:inline-flex;align-items:center;gap:6px;border:1px solid color-mix(in oklab,var(--coral) 40%,transparent);border-radius:999px;background:color-mix(in oklab,var(--coral) 10%,transparent);padding:4px 10px;font-size:12px;font-weight:500;color:var(--coral)">故障演练中：已跳过云端转写与云端播报</p>
+            <div style="display:flex;align-items:flex-start;gap:8px;margin-top:12px">
+              <textarea class="input" rows="3" style="flex:1;min-width:0;width:auto;resize:none" placeholder="输入你的回答…" aria-label="降级文字回答"></textarea>
+              <button class="btn btn-primary" type="button">发送</button>
+            </div>
+            <p style="margin:12px 0 0;font-size:12px;color:var(--muted-foreground)">语音链路状态两行变「不可用」（coral），TTS 播放按钮禁用置灰并显示「已降级为纯文字」，题目仅以文字展示；「重新录制」入口隐藏，出现「故障演练中：已跳过云端转写与云端播报」徽标与降级提示条。</p>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认：麦克风未授权 → 回答区显示「需要麦克风权限」与授权按钮，题目可 TTS 播放</li>
+          <li>已授权：显示「按住说话」；录音中显示红色计时与波形，结束后给出可编辑的转写结果，确认后气泡带「已确认回答」与「重新录制」</li>
+          <li>降级：见上方相邻块；语音服务不可用时仍保留完整上下文与追问链路</li>
+          <li>云端播报：题目播报成功标「云端播报」；失败或未配置时标「已降级为纯文字」，题干文本与文字作答始终保留</li>
+          <li>故障演练：打开顶部开关后跳过云端转写与云端播报，徽标显示「故障演练中：已跳过云端转写与云端播报」</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-written">
+        <div class="screen-head"><h3>岗位笔试练习</h3><span class="route">/interview/written</span><p>US-14.8。客观题、开放题与代码题在同一屏切换：客观题由服务端确定性判分，开放题与代码题走模型评审，代码题只做静态评审、服务端不执行任何用户代码；题目来源与版本随题下发。可交互点：题型 tab、选项勾选与提交判分、开放题作答与参考答案折叠、代码题只读评审结果。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">笔试练习</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">客观题、开放题与代码题</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">题目来自岗位题库，作答、判分与解析在同一屏内完成；客观题由服务端确定性判分，开放题与代码题由模型评审，每道题都记录来源与版本，便于与题库条目逐条对照复核。</p>
+                </div>
+              </header>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 16px">
+                <p style="margin:0;display:flex;min-width:0;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground)"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">▤</span><span style="flex:none">题目来源</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--foreground)">订单中台项目档案 · 容量评估</span></p>
+                <div style="display:flex;flex:none;align-items:center;gap:8px"><span class="tag">版本 v3</span><span style="font-size:12px;color:var(--muted-foreground)">2026-09-18 更新</span></div>
+              </div>
+              <div role="tablist" aria-label="题型" style="display:inline-flex;width:fit-content;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:4px">
+                <button class="btn btn-sm" type="button" role="tab" aria-selected="true" style="background:var(--card);color:var(--cobalt)">客观题</button>
+                <button class="btn btn-sm" type="button" role="tab" aria-selected="false" style="color:var(--muted-foreground)">开放题</button>
+                <button class="btn btn-sm" type="button" role="tab" aria-selected="false" style="color:var(--muted-foreground)">代码题</button>
+              </div>
+              <div style="display:grid;align-items:start;gap:20px;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)">
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">题目</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">根据岗位题库生成的多选题，提交后给出得分与逐项解析。</p>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px"><span class="tag">多选题</span><span class="tag">10 分</span><span style="font-size:12px;color:var(--muted-foreground)">已选 0 项</span></div>
+                  <p style="margin:12px 0 0;font-size:16px;font-weight:500;line-height:1.75">关于订单服务分库分表的容量评估，下列说法正确的有哪些？</p>
+                  <ul style="list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:10px">
+                    <li><div style="display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:10px 14px">
+                      <span aria-hidden="true" style="margin-top:2px;display:flex;width:16px;height:16px;flex:none;align-items:center;justify-content:center;border:1px solid var(--input);border-radius:4px;background:var(--background)"></span>
+                      <span style="min-width:0;flex:1;font-size:14px;line-height:1.6"><strong style="margin-right:6px">A</strong>分片键选订单号，保证同一订单的读写落在同一分片。</span>
+                    </div></li>
+                    <li><div style="display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:10px 14px">
+                      <span aria-hidden="true" style="margin-top:2px;display:flex;width:16px;height:16px;flex:none;align-items:center;justify-content:center;border:1px solid var(--input);border-radius:4px;background:var(--background)"></span>
+                      <span style="min-width:0;flex:1;font-size:14px;line-height:1.6"><strong style="margin-right:6px">B</strong>分片数量一旦确定，后期就不需要再调整。</span>
+                    </div></li>
+                    <li><div style="display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:10px 14px">
+                      <span aria-hidden="true" style="margin-top:2px;display:flex;width:16px;height:16px;flex:none;align-items:center;justify-content:center;border:1px solid var(--input);border-radius:4px;background:var(--background)"></span>
+                      <span style="min-width:0;flex:1;font-size:14px;line-height:1.6"><strong style="margin-right:6px">C</strong>容量评估要同时考虑峰值 QPS、单行大小与索引膨胀系数。</span>
+                    </div></li>
+                    <li><div style="display:flex;align-items:flex-start;gap:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:10px 14px">
+                      <span aria-hidden="true" style="margin-top:2px;display:flex;width:16px;height:16px;flex:none;align-items:center;justify-content:center;border:1px solid var(--input);border-radius:4px;background:var(--background)"></span>
+                      <span style="min-width:0;flex:1;font-size:14px;line-height:1.6"><strong style="margin-right:6px">D</strong>跨分片聚合查询应尽量下沉到离线数仓，而不是在线拼装。</span>
+                    </div></li>
+                  </ul>
+                </section>
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">答题与解析</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">多选题，少选与错选都会扣分。</p>
+                  <p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--muted-foreground)">勾选你认为正确的选项，然后提交判分。</p>
+                  <button class="btn btn-primary" type="button" style="width:100%;justify-content:center;margin-top:16px">提交答案</button>
+                  <p style="margin:10px 0 0;font-size:12px;color:var(--muted-foreground)">未选择任何选项就提交时，这里出现 coral <code>role="alert"</code>「请至少选择一个选项再提交。」</p>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700">另一种题型：开放题（切到「开放题」tab）</p>
+            <p style="margin:0;font-size:14px;line-height:1.6">大促当天订单量突增十倍，数据库连接数逼近上限。请给出你的排查顺序与保护方案，并说明取舍。</p>
+            <label class="field"><span>你的作答</span><textarea class="input" rows="3" style="resize:none" placeholder="按「现象 → 定位 → 处置 → 取舍」的顺序作答，尽量给出可验证的指标。"></textarea><small>0 / 500 字</small></label>
+            <button class="btn btn-outline btn-sm" type="button" style="width:100%;justify-content:space-between;margin-top:12px">查看参考答案 ▾</button>
+          </div>
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700">另一种题型：代码题（切到「代码题」tab）</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:12px;font-weight:500;color:var(--muted-foreground)">代码编辑区</span><span class="badge badge-muted">仅静态评审 · 不执行代码</span></div>
+            <pre class="input" style="margin-top:8px;height:120px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6;white-space:pre-wrap">export function limit(bucket: Bucket, now: number, windowMs: number, threshold: number) {
+  // TODO: fixed-window counting
+  return true
+}</pre>
+            <div style="margin-top:12px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:12px"><p style="margin:0;font-size:12px;color:var(--muted-foreground)">代码题只做静态评审：服务端不执行任何用户代码，提交后给出正确性 / 可读性两维评语，并在作答上标记 executed=false。</p></div>
+            <button class="btn btn-outline btn-sm" type="button" style="width:100%;justify-content:space-between;margin-top:12px">查看参考答案 ▾</button>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认（客观题）：未勾选任何选项，右栏给出作答提示与「提交答案」</li>
+          <li>提交后：右栏显示得分 <code>{{score}} / 10</code>、判语与逐项解析，选项上标注「正确答案 / 选错」；可「重做本题」</li>
+          <li>开放题：作答区 0 / 500 字，参考答案默认折叠，展开后给参考答案与三条评分要点</li>
+          <li>代码题：不提供运行按钮；提交后只回静态评审结果（正确性 / 可读性两维，executed=false），参考答案默认折叠</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-report">
+        <div class="screen-head"><h3>单场评估报告</h3><span class="route">/interview/report</span><p>US-14.4。逐维度附证据、证据不足不给分、量表版本随报告冻结。可交互点：内容维度行点击展开证据原文、「不适用」徽标点击展开说明、顶部纯文本 / 语音场次切换、导出报告。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">评估报告</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">单场评估报告 · Java 后端</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">量表版本 v1.0 已随本次报告冻结；每条结论都能回指到具体回答，证据不足的维度不给分。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <div role="group" aria-label="场次类型" style="display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:4px">
+                    <button class="btn btn-sm" type="button" aria-pressed="true" style="background:var(--foreground);color:var(--background)">纯文本场次</button>
+                    <button class="btn btn-sm" type="button" aria-pressed="false" style="color:var(--muted-foreground)">语音场次</button>
+                  </div>
+                  <span class="badge badge-cobalt">量表版本 v1.0 · 已冻结</span>
+                  <button class="btn btn-primary" type="button">导出报告</button>
+                </div>
+              </header>
+              <div style="display:grid;gap:20px;grid-template-columns:minmax(0,3fr) minmax(0,2fr)">
+                <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">内容维度</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">逐维度附证据：每个分数都挂着一段回答原话，可回指到具体作答。</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0">
+                      <li style="display:grid;grid-template-columns:10rem 1fr;gap:16px;padding:12px 0">
+                        <div>
+                          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">技术正确性</span><span style="font-family:var(--font-serif);font-size:24px;font-weight:700;line-height:1;color:var(--cobalt)">82</span></div>
+                          <div style="margin-top:8px;height:6px;width:100%;overflow:hidden;border-radius:999px;background:var(--muted)"><div style="height:100%;border-radius:999px;background:var(--cobalt);width:82%"></div></div>
+                        </div>
+                        <div style="min-width:0;border-left:1px solid var(--border);padding-left:16px">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted-foreground)">❝ 证据引用</p><span style="font-size:11px;font-weight:500;color:var(--cobalt)">展开证据原文 ▾</span></div>
+                          <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--secondary-foreground)">「我们按订单号做基因法分片，取订单号后四位与用户 ID 哈希拼成分片键，保证同一用户的订单落在同一片。」</p>
+                        </div>
+                      </li>
+                      <li style="display:grid;grid-template-columns:10rem 1fr;gap:16px;padding:12px 0;border-top:1px solid var(--border)">
+                        <div>
+                          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">知识深度</span><span style="font-family:var(--font-serif);font-size:24px;font-weight:700;line-height:1;color:var(--cobalt)">75</span></div>
+                          <div style="margin-top:8px;height:6px;width:100%;overflow:hidden;border-radius:999px;background:var(--muted)"><div style="height:100%;border-radius:999px;background:var(--cobalt);width:75%"></div></div>
+                        </div>
+                        <div style="min-width:0;border-left:1px solid var(--border);padding-left:16px">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted-foreground)">❝ 证据引用</p><span style="font-size:11px;font-weight:500;color:var(--cobalt)">展开证据原文 ▾</span></div>
+                          <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--secondary-foreground)">「跨片查询不放在线拼装：统计类异步同步到 ES，分页用 search_after 避免深分页。」</p>
+                        </div>
+                      </li>
+                      <li style="display:grid;grid-template-columns:10rem 1fr;gap:16px;padding:12px 0;border-top:1px solid var(--border)">
+                        <div>
+                          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">逻辑严谨性</span><span style="font-family:var(--font-serif);font-size:24px;font-weight:700;line-height:1;color:var(--cobalt)">77</span></div>
+                          <div style="margin-top:8px;height:6px;width:100%;overflow:hidden;border-radius:999px;background:var(--muted)"><div style="height:100%;border-radius:999px;background:var(--cobalt);width:77%"></div></div>
+                        </div>
+                        <div style="min-width:0;border-left:1px solid var(--border);padding-left:16px">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted-foreground)">❝ 证据引用</p><span style="font-size:11px;font-weight:500;color:var(--cobalt)">展开证据原文 ▾</span></div>
+                          <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--secondary-foreground)">「容量按单表 3000 万行、三年增长留 30% 余量，2 亿行拆 64 片，写入 P99 从 800ms 降到 220ms。」</p>
+                        </div>
+                      </li>
+                      <li style="display:grid;grid-template-columns:10rem 1fr;gap:16px;padding:12px 0;border-top:1px solid var(--border)">
+                        <div>
+                          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><span style="font-size:14px;font-weight:500">岗位匹配度</span><span style="font-family:var(--font-serif);font-size:24px;font-weight:700;line-height:1;color:var(--cobalt)">88</span></div>
+                          <div style="margin-top:8px;height:6px;width:100%;overflow:hidden;border-radius:999px;background:var(--muted)"><div style="height:100%;border-radius:999px;background:var(--cobalt);width:88%"></div></div>
+                        </div>
+                        <div style="min-width:0;border-left:1px solid var(--border);padding-left:16px">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><p style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--muted-foreground)">❝ 证据引用</p><span style="font-size:11px;font-weight:500;color:var(--cobalt)">展开证据原文 ▾</span></div>
+                          <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--secondary-foreground)">「限流用令牌桶做单机限流，集群维度用 Redis 滑动窗口，按接口和租户两个维度控制。」</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </section>
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">表达维度</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">只做可复核的估计，不从文本推断语音特征。</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                        <div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:500">语速</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">音频场次参考：正常</p></div>
+                        <button class="btn btn-ghost btn-sm" type="button" title="本场为纯文本场次，没有音频轨道，语速无法测量；该维度记为「无法测量」，不参与计分。">不适用</button>
+                      </li>
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                        <div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:500">清晰度</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">音频场次参考：良好</p></div>
+                        <button class="btn btn-ghost btn-sm" type="button" title="本场为纯文本场次，没有音频轨道，清晰度无法测量；该维度记为「无法测量」，不参与计分。">不适用</button>
+                      </li>
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+                        <div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:500">自信度</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">依据 2 处作答措辞给出估计</p></div>
+                        <span class="badge badge-cobalt">有依据的估计</span>
+                      </li>
+                    </ul>
+                    <p style="margin:12px 0 0;display:flex;align-items:flex-start;gap:8px;border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px;font-size:12px;color:var(--secondary-foreground)"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">ⓘ</span>纯文本场次：语速与清晰度标为不适用。</p>
+                    <p style="margin:8px 0 0;display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted-foreground)"><span aria-hidden="true" style="flex:none;color:var(--coral)">⚠</span>证据不足不给分：本场没有音频，语速与清晰度只记录「无法测量」，不参与计分。</p>
+                  </section>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">亮点</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">可回指到具体回答</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">✓</span><span>订单分库分表讲到基因法、ShardingSphere 路由、ES 异步聚合与 search_after 分页，并给出容量与迁移策略。</span></li>
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">✓</span><span>限流阈值来自全链路压测并预留 buffer，熔断用 Sentinel 半开探针，工程可落地。</span></li>
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">✓</span><span>多级缓存对一致性、热点 key、穿透、击穿、雪崩都有对应处理思路。</span></li>
+                    </ul>
+                  </section>
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">不足</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">按对本岗的影响排序</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--coral)">⚠</span><span>未展开订单与库存、支付之间的分布式事务或最终一致边界设计。</span></li>
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--coral)">⚠</span><span>本地缓存与 Redis 之间的失效同步机制未明确说明。</span></li>
+                      <li style="display:flex;gap:8px;font-size:14px;line-height:1.5"><span aria-hidden="true" style="flex:none;color:var(--coral)">⚠</span><span>分片键描述需要进一步验证是否稳定保证同一用户同片。</span></li>
+                    </ul>
+                  </section>
+                  <section class="card-soft" style="padding:18px">
+                    <h2 style="margin:0;font-size:14px;font-weight:600">改进建议</h2>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">每条都已挂到下一轮练习项</p>
+                    <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:8px">
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:12px"><span class="badge badge-cobalt">✦ 练习项 14-2</span><p style="margin:6px 0 0;font-size:14px;line-height:1.5">补充订单-库存-支付链路的分布式事务选型与一致性边界。</p></li>
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:12px"><span class="badge badge-cobalt">✦ 练习项 14-3</span><p style="margin:6px 0 0;font-size:14px;line-height:1.5">明确本地缓存失效同步方案，说明断线重连与最终一致兜底。</p></li>
+                      <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--muted) 40%,transparent);padding:12px"><span class="badge badge-cobalt">✦ 练习项 14-4</span><p style="margin:6px 0 0;font-size:14px;line-height:1.5">完善熔断策略：加入慢调用、异常数、半开探针成功阈值与防抖动。</p></li>
+                    </ul>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：切到「语音场次」（US-14.4 语音表达评估）</p>
+            <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+              <li style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:14px;font-weight:500">语速 <span style="font-weight:400;color:var(--muted-foreground)">· 音频场次实测：落在本岗推荐区间（110–140 字/分）</span></span><span class="badge badge-cobalt">128 字/分</span></li>
+              <li style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:14px;font-weight:500">清晰度 <span style="font-weight:400;color:var(--muted-foreground)">· 音频场次实测：吐字清晰，无口头禅堆积</span></span><span class="badge badge-cobalt">良好</span></li>
+              <li style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:14px;font-weight:500">自信度 <span style="font-weight:400;color:var(--muted-foreground)">· 依据 2 处作答措辞给出估计</span></span><span class="badge badge-cobalt">有依据的估计</span></li>
+            </ul>
+            <p style="margin:12px 0 0;display:flex;align-items:flex-start;gap:8px;border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px;font-size:12px;color:var(--secondary-foreground)"><span aria-hidden="true" style="flex:none;color:var(--cobalt)">ⓘ</span>语音场次：语速、清晰度、自信度均由音频信号实测，三项都参与计分。</p>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认（纯文本场次）：语速与清晰度标「不适用」，点徽标展开无法测量的说明；自信度标「有依据的估计」</li>
+          <li>语音场次：语速与清晰度给音频实测值，底部说明改为三项都参与计分</li>
+          <li>内容维度行：点击展开 / 收起证据原文；量表版本 v1.0 随报告冻结</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-history">
+        <div class="screen-head"><h3>面试历史与口径比较</h3><span class="route">/interview/history</span><p>US-14.5。左侧历史记录多选，右侧按口径给出「连线趋势」或「并列柱」；口径 = 岗位 + 量表版本，两者都一致才允许连线。可交互点：记录多选（最多两条）、仅看同岗位同量表开关、清空选择。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">面试历史</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">口径相同才连成趋势</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">每条记录都标注岗位与量表版本；只有两者都一致，两次练习才能连成同一条趋势。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <button type="button" role="switch" aria-checked="false" style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;background:var(--card);padding:6px 12px;font-size:12px;font-weight:500;color:var(--muted-foreground)">
+                    <span aria-hidden="true" style="position:relative;display:inline-flex;width:28px;height:16px;flex:none;align-items:center;border-radius:999px;background:var(--muted)"><span style="display:inline-block;width:12px;height:12px;border-radius:999px;background:var(--background);transform:translateX(2px)"></span></span>
+                    仅看同岗位同量表
+                  </button>
+                </div>
+              </header>
+              <div style="display:grid;align-items:stretch;gap:20px;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)">
+                <section class="card-soft" style="display:flex;flex-direction:column;padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">历史记录</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">每条含日期、岗位、量表版本、总分与题型构成；点选卡片多选，最多两条用于对比。</p>
+                  <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+                    <div style="border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--cobalt);border-radius:999px;background:var(--cobalt);color:var(--background);font-size:12px;font-weight:600">2</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-09-28</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">后端工程师</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">84</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v3.2</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">基础题 8 · 系统设计 6 · 行为面 4</span></div>
+                    </div>
+                    <div style="border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--cobalt);border-radius:999px;background:var(--cobalt);color:var(--background);font-size:12px;font-weight:600">1</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-09-14</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">后端工程师</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">79</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v3.2</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">基础题 7 · 系统设计 6 · 行为面 5</span></div>
+                    </div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:999px;color:transparent;font-size:12px;font-weight:600">0</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-08-30</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">后端工程师</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">74</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v2.8</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">基础题 10 · 行为面 6</span></div>
+                    </div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:999px;color:transparent;font-size:12px;font-weight:600">0</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-08-16</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">产品经理</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">82</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v3.2</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">案例分析 5 · 行为面 7 · 系统设计 4</span></div>
+                    </div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:999px;color:transparent;font-size:12px;font-weight:600">0</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-08-02</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">产品经理</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">77</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v3.2</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">案例分析 4 · 行为面 8 · 系统设计 4</span></div>
+                    </div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:center;gap:8px"><span aria-hidden="true" style="display:inline-flex;width:20px;height:20px;flex:none;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:999px;color:transparent;font-size:12px;font-weight:600">0</span><span style="flex:none;font-size:12px;color:var(--muted-foreground)">2026-07-19</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:500">产品经理</span><span style="margin-left:auto;flex:none;font-size:16px;font-weight:600;color:var(--cobalt)">71</span></div>
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px"><span class="tag">量表 v2.8</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">案例分析 6 · 行为面 6</span></div>
+                    </div>
+                  </div>
+                </section>
+                <section class="card-soft" style="display:flex;flex-direction:column;padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">口径对比</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">口径一致才连线成趋势；口径不同只并列展示，不连线。</p>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px">
+                    <span style="font-size:12px;font-weight:500;color:var(--muted-foreground)">已选 2 / 2</span>
+                    <span class="badge badge-cobalt">2026-09-14 · 后端工程师 · 量表 v3.2</span>
+                    <span class="badge badge-cobalt">2026-09-28 · 后端工程师 · 量表 v3.2</span>
+                    <button class="btn btn-outline btn-sm" type="button" style="margin-left:auto">清空选择</button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span class="badge badge-cobalt">同口径 · 岗位与量表一致</span><span style="font-size:12px;color:var(--muted-foreground)">2026-09-14 → 2026-09-28</span></div>
+                    <div style="border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--secondary);padding:12px">
+                      <svg viewBox="0 0 560 220" style="display:block;width:100%;height:208px" role="img" aria-label="同口径两次结果的趋势折线">
+                        <line x1="64" y1="138" x2="520" y2="138" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <line x1="64" y1="100" x2="520" y2="100" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <line x1="64" y1="62" x2="520" y2="62" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <line x1="64" y1="24" x2="520" y2="24" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <line x1="64" y1="176" x2="520" y2="176" stroke="var(--border)" stroke-width="1.5"/>
+                        <text x="54" y="142" text-anchor="end" fill="var(--muted-foreground)" font-size="12">70</text>
+                        <text x="54" y="104" text-anchor="end" fill="var(--muted-foreground)" font-size="12">80</text>
+                        <text x="54" y="66" text-anchor="end" fill="var(--muted-foreground)" font-size="12">90</text>
+                        <text x="54" y="28" text-anchor="end" fill="var(--muted-foreground)" font-size="12">100</text>
+                        <text x="20" y="100" transform="rotate(-90 20 100)" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">得分</text>
+                        <line x1="200" y1="103.8" x2="384" y2="84.8" stroke="var(--cobalt)" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="200" y1="103.8" x2="200" y2="176" stroke="var(--muted-foreground)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <line x1="384" y1="84.8" x2="384" y2="176" stroke="var(--muted-foreground)" stroke-width="1" stroke-dasharray="4 4"/>
+                        <circle cx="200" cy="103.8" r="5" fill="var(--cobalt)"/>
+                        <circle cx="384" cy="84.8" r="5" fill="var(--cobalt)"/>
+                        <text x="200" y="91.8" text-anchor="middle" fill="var(--cobalt)" font-size="16" font-weight="600">79</text>
+                        <text x="384" y="72.8" text-anchor="middle" fill="var(--cobalt)" font-size="16" font-weight="600">84</text>
+                        <text x="200" y="196" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">2026-09-14</text>
+                        <text x="384" y="196" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">2026-09-28</text>
+                        <text x="200" y="214" text-anchor="middle" fill="var(--foreground)" font-size="12" font-weight="600">较早</text>
+                        <text x="384" y="214" text-anchor="middle" fill="var(--foreground)" font-size="12" font-weight="600">最近</text>
+                      </svg>
+                      <p style="margin:4px 0 0;text-align:right;font-size:12px;color:var(--muted-foreground)">数据来源：本机面试记录</p>
+                    </div>
+                    <div>
+                      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><p style="margin:0;font-size:14px;font-weight:600">各维度差值</p><p style="margin:0;font-size:12px;color:var(--muted-foreground)">最近一次减去较早一次</p></div>
+                      <ul style="list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                        <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">知识深度</span><span style="flex:none;font-size:12px;font-weight:600;color:var(--cobalt)">↑ +8</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px"><span style="color:var(--muted-foreground)">76</span><span aria-hidden="true" style="color:var(--border)">→</span><span style="font-weight:600">84</span></div></li>
+                        <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">结构表达</span><span style="flex:none;font-size:12px;font-weight:600;color:var(--cobalt)">↑ +6</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px"><span style="color:var(--muted-foreground)">80</span><span aria-hidden="true" style="color:var(--border)">→</span><span style="font-weight:600">86</span></div></li>
+                        <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">节奏控制</span><span style="flex:none;font-size:12px;font-weight:600;color:var(--coral)">↓ -3</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px"><span style="color:var(--muted-foreground)">82</span><span aria-hidden="true" style="color:var(--border)">→</span><span style="font-weight:600">79</span></div></li>
+                        <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--muted-foreground)">沟通表达</span><span style="flex:none;font-size:12px;font-weight:600;color:var(--cobalt)">↑ +9</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:14px"><span style="color:var(--muted-foreground)">78</span><span aria-hidden="true" style="color:var(--border)">→</span><span style="font-weight:600">87</span></div></li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：选到不同口径的两条记录（并列柱，不连线）</p>
+            <p style="display:flex;align-items:flex-start;gap:8px;border:1px solid var(--coral);border-radius:var(--radius-xl);background:color-mix(in oklab,var(--coral) 10%,transparent);padding:12px;font-size:14px;font-weight:500;color:var(--coral)"><span aria-hidden="true">⚠</span>两次练习量表口径不同，不直接连成同一趋势，仅并列展示</p>
+            <p style="margin:6px 0 0 24px;font-size:12px">请选择同岗位、同量表版本的两条记录查看连线趋势。</p>
+            <div style="margin-top:12px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--secondary);padding:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span class="badge badge-coral">不同口径 · 岗位或量表不同</span><span style="font-size:12px;color:var(--muted-foreground)">2026-08-30 · 2026-09-28</span></div>
+              <svg viewBox="0 0 300 220" style="display:block;height:208px;width:auto;margin:8px auto 0" role="img" aria-label="不同口径两次结果的并列柱状">
+                <line x1="24" y1="168" x2="276" y2="168" stroke="var(--border)" stroke-width="1.5"/>
+                <line x1="150" y1="30" x2="150" y2="168" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                <rect x="48" y="123" width="64" height="45" rx="6" fill="var(--cobalt)"/>
+                <text x="80" y="113" text-anchor="middle" fill="var(--foreground)" font-size="16" font-weight="600">74</text>
+                <text x="80" y="188" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">2026-08-30</text>
+                <text x="80" y="206" text-anchor="middle" fill="var(--foreground)" font-size="12" font-weight="600">量表 v2.8</text>
+                <text x="80" y="222" text-anchor="middle" fill="var(--muted-foreground)" font-size="11">后端工程师</text>
+                <rect x="188" y="91" width="64" height="77" rx="6" fill="var(--gold)"/>
+                <text x="220" y="81" text-anchor="middle" fill="var(--foreground)" font-size="16" font-weight="600">84</text>
+                <text x="220" y="188" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">2026-09-28</text>
+                <text x="220" y="206" text-anchor="middle" fill="var(--foreground)" font-size="12" font-weight="600">量表 v3.2</text>
+                <text x="220" y="222" text-anchor="middle" fill="var(--muted-foreground)" font-size="11">后端工程师</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认：选中 r2 → r1（同岗位同量表 v3.2），右栏给出连线趋势、各维度差值与来源说明</li>
+          <li>不同口径：两条记录岗位或量表不同时改为并列柱，并提示「不直接连成同一趋势」</li>
+          <li>空 / 单条：未选时提示「先选两条记录」，仅选一条时提示「还需要再选一条」</li>
+          <li>仅看同岗位同量表：过滤后不可见的记录同步取消选中，并提示已按口径过滤</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-growth">
+        <div class="screen-head"><h3>练习计划与成长曲线</h3><span class="route">/interview/growth</span><p>US-14.5 / US-14.9。左侧练习项按薄弱程度排序，右侧成长曲线只连接同一量表的结果，换口径的分数并列展示、不连线。可交互点：口径切换（同口径 / 全部记录）、练习项「开始复测」标记。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">提升计划</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">练习计划与成长曲线</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">薄弱维度直接映射成练习项，复测结果回写同一条成长记录。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;flex-wrap:wrap;align-items:center;gap:8px">
+                  <div role="group" aria-label="记录口径" style="display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:4px">
+                    <button class="btn btn-sm" type="button" aria-pressed="true" style="background:var(--foreground);color:var(--background)">同口径</button>
+                    <button class="btn btn-sm" type="button" aria-pressed="false" style="color:var(--muted-foreground)">全部记录</button>
+                  </div>
+                  <span class="badge badge-cobalt">同口径 · 同岗位同量表</span>
+                </div>
+              </header>
+              <div style="display:grid;align-items:stretch;gap:20px;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)">
+                <section class="card-soft" style="display:flex;flex-direction:column;padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">练习计划</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">练习项来自评估报告的建议，复测按同一量表发起，结果回写同一条成长记录。</p>
+                  <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+                    <article style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:16px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><h3 style="margin:0;font-size:14px;font-weight:600">知识深度专项</h3><span class="badge badge-coral">薄弱维度 · 知识深度（75 分）</span></div>
+                      <dl style="margin:12px 0 0;display:flex;flex-direction:column;gap:8px;font-size:12px">
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">目标</dt><dd style="margin:0;flex:1;font-weight:500">把知识深度从 75 分提升到 85 分以上</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">练习材料</dt><dd style="margin:0;flex:1">系统设计高频考点 20 题 + 本机错题回放</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">复测入口</dt><dd style="margin:0;display:flex;flex:1;align-items:center;justify-content:space-between;gap:8px"><span>第 4 次复测 · 同岗位同量表</span><button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt)">开始复测</button></dd></div>
+                      </dl>
+                    </article>
+                    <article style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:16px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><h3 style="margin:0;font-size:14px;font-weight:600">结构表达</h3><span class="badge badge-muted">结构表达（86 分）</span></div>
+                      <dl style="margin:12px 0 0;display:flex;flex-direction:column;gap:8px;font-size:12px">
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">目标</dt><dd style="margin:0;flex:1;font-weight:500">保持 86 分，答案框架改为 STAR 四段</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">练习材料</dt><dd style="margin:0;flex:1">3 段满分回答逐句拆解 + 录音跟读</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">复测入口</dt><dd style="margin:0;display:flex;flex:1;align-items:center;justify-content:space-between;gap:8px"><span>第 4 次复测 · 同岗位同量表</span><button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt)">开始复测</button></dd></div>
+                      </dl>
+                    </article>
+                    <article style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:16px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><h3 style="margin:0;font-size:14px;font-weight:600">节奏控制</h3><span class="badge badge-muted">节奏控制（未评分）</span></div>
+                      <dl style="margin:12px 0 0;display:flex;flex-direction:column;gap:8px;font-size:12px">
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">目标</dt><dd style="margin:0;flex:1;font-weight:500">把每题作答压缩到 90 秒内</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">练习材料</dt><dd style="margin:0;flex:1">限时答题 15 题 + 停顿标记回放</dd></div>
+                        <div style="display:flex;gap:12px"><dt style="width:64px;flex:none;color:var(--muted-foreground)">复测入口</dt><dd style="margin:0;display:flex;flex:1;align-items:center;justify-content:space-between;gap:8px"><span>第 4 次复测 · 同岗位同量表</span><button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt)">开始复测</button></dd></div>
+                      </dl>
+                    </article>
+                  </div>
+                </section>
+                <section class="card-soft" style="display:flex;flex-direction:column;padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">成长曲线</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">同岗位同量表各场次的四维平均分，取自真实会话记录。</p>
+                  <div style="margin-top:16px;height:320px;width:100%">
+                    <svg viewBox="0 0 560 300" style="display:block;height:100%;width:100%" role="img" aria-label="练习计划与成长曲线">
+                      <line x1="70" y1="240" x2="520" y2="240" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                      <line x1="70" y1="168" x2="520" y2="168" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                      <line x1="70" y1="96" x2="520" y2="96" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                      <line x1="70" y1="24" x2="520" y2="24" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                      <text x="60" y="244" text-anchor="end" fill="var(--muted-foreground)" font-size="12">70</text>
+                      <text x="60" y="172" text-anchor="end" fill="var(--muted-foreground)" font-size="12">80</text>
+                      <text x="60" y="100" text-anchor="end" fill="var(--muted-foreground)" font-size="12">90</text>
+                      <text x="60" y="28" text-anchor="end" fill="var(--muted-foreground)" font-size="12">100</text>
+                      <line x1="70" y1="240" x2="520" y2="240" stroke="var(--border)" stroke-width="1.5"/>
+                      <line x1="70" y1="24" x2="70" y2="240" stroke="var(--border)" stroke-width="1.5"/>
+                      <text x="18" y="132" transform="rotate(-90 18 132)" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">相对刻度 / 分</text>
+                      <polyline points="118,160.8 208,182.4 298,110.4 388,103.2" fill="none" stroke="var(--cobalt)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                      <circle cx="118" cy="160.8" r="5" fill="var(--cobalt)"/>
+                      <circle cx="208" cy="182.4" r="5" fill="var(--cobalt)"/>
+                      <circle cx="298" cy="110.4" r="5" fill="var(--cobalt)"/>
+                      <circle cx="388" cy="103.2" r="5" fill="var(--cobalt)"/>
+                      <text x="118" y="148.8" text-anchor="middle" fill="var(--cobalt)" font-size="14" font-weight="600">81</text>
+                      <text x="208" y="170.4" text-anchor="middle" fill="var(--cobalt)" font-size="14" font-weight="600">78</text>
+                      <text x="298" y="98.4" text-anchor="middle" fill="var(--cobalt)" font-size="14" font-weight="600">88</text>
+                      <text x="388" y="91.2" text-anchor="middle" fill="var(--cobalt)" font-size="14" font-weight="600">89</text>
+                      <text x="118" y="262" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">10-09</text>
+                      <text x="208" y="262" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">10-09</text>
+                      <text x="298" y="262" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">10-09</text>
+                      <text x="388" y="262" text-anchor="middle" fill="var(--muted-foreground)" font-size="12">10-09</text>
+                      <text x="520" y="288" text-anchor="end" fill="var(--muted-foreground)" font-size="11">数据来源：真实会话记录（Java 后端 · interview-rubric-v1）</text>
+                    </svg>
+                  </div>
+                  <div style="margin-top:12px;border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:12px">
+                    <p style="margin:0;font-size:14px;font-weight:600;color:var(--cobalt)">口径约束</p>
+                    <p style="margin:4px 0 0;font-size:12px;font-weight:500">当前为同口径：只显示同一量表的结果，曲线连续。</p>
+                    <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">曲线只连接同一量表的结果；换口径的分数并列展示，不连线。</p>
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:8px;font-size:12px;color:var(--muted-foreground)">
+                      <span style="display:inline-flex;align-items:center;gap:6px"><span aria-hidden="true" style="height:2px;width:24px;border-radius:999px;background:var(--cobalt)"></span>同口径（连线）</span>
+                      <span style="display:inline-flex;align-items:center;gap:6px"><span aria-hidden="true" style="width:8px;height:8px;transform:rotate(45deg);border:1px solid var(--muted-foreground)"></span>另一口径（不与前段相连）</span>
+                    </div>
+                  </div>
+                  <p style="margin:12px 0 0;border-left:2px solid var(--cobalt);border-radius:var(--radius-lg);background:var(--secondary);padding:8px 12px;font-size:12px;color:var(--secondary-foreground)">共聚合 4 场真实会话；练完从同一条成长记录发起同量表复测，结果回写后续点。</p>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700">另一种状态：切到「全部记录」（出现换口径记录时）</p>
+            <p style="margin:0;font-size:12px;color:var(--muted-foreground)">历史里出现不同量表或不同岗位的场次时，切到「全部记录」会把两段口径并列展示、不连线：另一口径用虚线与菱形标记，中间以分界线隔开，徽标改为「全部记录 · 多口径并列」，提示文案改为「当前为全部记录：两段曲线口径不同，并列展示、不连线。」</p>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认（同口径）：真实 4 场会话的四维平均分 81 / 78 / 88 / 89 连成一条曲线，数据来自 GET /interview/growth（同 role + 同 rubric_version）</li>
+          <li>全部记录（出现换口径记录时）：另一口径用虚线与菱形标记并列展示、不与前段相连，中间以分界线隔开</li>
+          <li>练习项：来自 GET /interview/practice-items；点「开始复测」后标记「已复测」，结果回写同一成长记录</li>
+          <li>薄弱项：带「薄弱维度」coral 标签，其余为 muted</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-bank">
+        <div class="screen-head"><h3>岗位题库与知识库</h3><span class="route">/interview/bank</span><p>US-14.2。三层信息架构：四类题概览 → 题目列表（含依据标识）→ 知识库检索（按题干实时检索，含「依据不足」反例）。已接线：路由 /interview/bank 排在 interview/:id 之前，计数来自真实 GET /bank/stats，列表来自 GET /bank/questions，检索面板按题干发 GET /kb/search。可交互点：岗位切换、四类题卡片筛选、知识库随岗位联动。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">岗位题库</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">岗位题库与知识库</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">覆盖 Java 后端与 Web 前端两个岗位。每个岗位维护技术知识、项目深挖、场景、行为四类题，并按各自岗位的评价标准评分。</p>
+                </div>
+                <div style="display:flex;flex-shrink:0;align-items:center;gap:12px">
+                  <span style="font-size:12px;font-weight:500;color:var(--muted-foreground)">岗位</span>
+                  <div role="group" aria-label="岗位" style="display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--muted);padding:4px">
+                    <button class="btn btn-sm" type="button" aria-pressed="true" style="background:var(--foreground);color:var(--background)">Java 后端</button>
+                    <button class="btn btn-sm" type="button" aria-pressed="false" style="color:var(--muted-foreground)">Web 前端</button>
+                  </div>
+                </div>
+              </header>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 24px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:8px 16px;font-size:12px;color:var(--muted-foreground)">
+                <span>全库共 200 题</span>
+                <span>Java 后端 100 题</span>
+                <span>当前筛选 100 题</span>
+              </div>
+              <div style="display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))">
+                <div style="border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:20px">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><p style="margin:0;font-size:16px;font-weight:600">技术知识</p><span style="display:flex;width:36px;height:36px;flex:none;align-items:center;justify-content:center;border-radius:var(--radius-lg);background:var(--secondary);color:var(--cobalt);font-size:16px">{ }</span></div>
+                  <p style="margin:8px 0 0;font-size:24px;font-weight:600;line-height:1;color:var(--cobalt)">48 题</p>
+                  <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)">语言、框架与底层原理</p>
+                </div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:20px">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><p style="margin:0;font-size:16px;font-weight:600">项目深挖</p><span style="display:flex;width:36px;height:36px;flex:none;align-items:center;justify-content:center;border-radius:var(--radius-lg);background:var(--secondary);color:var(--cobalt);font-size:16px">⌕</span></div>
+                  <p style="margin:8px 0 0;font-size:24px;font-weight:600;line-height:1;color:var(--cobalt)">24 题</p>
+                  <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)">追问项目细节与关键取舍</p>
+                </div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:20px">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><p style="margin:0;font-size:16px;font-weight:600">场景</p><span style="display:flex;width:36px;height:36px;flex:none;align-items:center;justify-content:center;border-radius:var(--radius-lg);background:var(--secondary);color:var(--cobalt);font-size:16px">◎</span></div>
+                  <p style="margin:8px 0 0;font-size:24px;font-weight:600;line-height:1;color:var(--cobalt)">16 题</p>
+                  <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)">真实业务场景的方案设计</p>
+                </div>
+                <div style="border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:20px">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><p style="margin:0;font-size:16px;font-weight:600">行为</p><span style="display:flex;width:36px;height:36px;flex:none;align-items:center;justify-content:center;border-radius:var(--radius-lg);background:var(--secondary);color:var(--cobalt);font-size:16px">◍</span></div>
+                  <p style="margin:8px 0 0;font-size:24px;font-weight:600;line-height:1;color:var(--cobalt)">12 题</p>
+                  <p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)">协作、动机与复盘表达</p>
+                </div>
+              </div>
+              <div style="display:grid;align-items:start;gap:20px;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">题目列表</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">题目全部来自当前岗位题库，每道题都标注了评价依据</p>
+                  <ul style="list-style:none;margin:16px 0 0;padding:0">
+                    <li style="display:flex;align-items:flex-start;gap:12px;padding:12px 0"><span style="margin-top:2px;display:inline-flex;width:5.5rem;flex:none;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--secondary);padding:4px 8px;font-size:12px;font-weight:500">技术知识</span><div style="min-width:0;flex:1"><p style="margin:0;font-size:14px;font-weight:500;line-height:1.6">HashMap 在 JDK 8 中的扩容机制是怎样的？</p><p style="margin:4px 0 0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="font-weight:500;color:var(--foreground)">Java 集合框架 · HashMap 扩容</span></p></div><span class="tag">中等</span></li>
+                    <li style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border)"><span style="margin-top:2px;display:inline-flex;width:5.5rem;flex:none;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--secondary);padding:4px 8px;font-size:12px;font-weight:500">项目深挖</span><div style="min-width:0;flex:1"><p style="margin:0;font-size:14px;font-weight:500;line-height:1.6">订单服务做分库分表的容量依据是什么？</p><p style="margin:4px 0 0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="font-weight:500;color:var(--foreground)">订单中台项目档案 · 容量评估</span></p></div><span class="badge badge-coral">困难</span></li>
+                    <li style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border)"><span style="margin-top:2px;display:inline-flex;width:5.5rem;flex:none;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--secondary);padding:4px 8px;font-size:12px;font-weight:500">行为</span><div style="min-width:0;flex:1"><p style="margin:0;font-size:14px;font-weight:500;line-height:1.6">讲一次你主导复盘并推动改进的经历。</p><p style="margin:4px 0 0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="font-weight:500;color:var(--foreground)">行为评价标准 · 责任与复盘</span></p></div><span class="badge badge-muted">简单</span></li>
+                    <li style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border)"><span style="margin-top:2px;display:inline-flex;width:5.5rem;flex:none;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--secondary);padding:4px 8px;font-size:12px;font-weight:500">场景</span><div style="min-width:0;flex:1"><p style="margin:0;font-size:14px;font-weight:500;line-height:1.6">大促流量突增十倍时，如何保护下游数据库？</p><p style="margin:4px 0 0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="font-weight:500;color:var(--foreground)">高并发稳定性设计 · 限流与降级</span></p></div><span class="tag">中等</span></li>
+                    <li style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--border)"><span style="margin-top:2px;display:inline-flex;width:5.5rem;flex:none;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--secondary);padding:4px 8px;font-size:12px;font-weight:500">技术知识</span><div style="min-width:0;flex:1"><p style="margin:0;font-size:14px;font-weight:500;line-height:1.6">Spring 事务在哪些情况下会失效？</p><p style="margin:4px 0 0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)"><span style="flex:none">依据</span><span style="font-weight:500;color:var(--foreground)">Spring 事务管理 · 失效场景</span></p></div><span class="badge badge-muted">简单</span></li>
+                  </ul>
+                </section>
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">知识库检索</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">按题干实时检索知识库，命中给出处与摘要，未命中不做任何推断</p>
+                  <ul style="list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:12px">
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">题目</span><span class="badge badge-cobalt">引用命中</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;font-weight:500;line-height:1.6">HashMap 在 JDK 8 中的扩容机制是怎样的？</p>
+                      <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)"><span style="font-weight:500">来源</span> · Java 集合框架 · HashMap 扩容</p>
+                      <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)"><span style="font-weight:500">命中摘要</span> · JDK 8 扩容时按高位拆分链表，树化阈值为 8，退化阈值为 6。</p>
+                    </li>
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--background);padding:12px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">题目</span><span class="badge badge-cobalt">引用命中</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;font-weight:500;line-height:1.6">订单服务做分库分表的容量依据是什么？</p>
+                      <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)"><span style="font-weight:500">来源</span> · 分库分表实战 · 分片键与路由算法</p>
+                      <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)"><span style="font-weight:500">命中摘要</span> · 分片键要满足查询命中率最高、分布均匀、尽量少跨片，其余维度用基因法冗余。</p>
+                    </li>
+                    <li style="border:1px solid color-mix(in oklab,var(--coral) 50%,transparent);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--coral) 5%,transparent);padding:12px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">题目</span><span class="badge badge-coral">依据不足 · 不生成引用</span></div>
+                      <p style="margin:6px 0 0;font-size:14px;font-weight:500;line-height:1.6">讲一次你主导复盘并推动改进的经历。</p>
+                      <p style="margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted-foreground)"><span style="font-weight:500">未生成引用</span> · 知识库中没有匹配条目，本题不生成任何引用。</p>
+                      <p style="margin:4px 0 0;font-size:11px;color:var(--muted-foreground)">状态示意：这一行只用于展示「依据不足」状态；当前 200 道题实测 0 未命中（--coverage no_match=0）。</p>
+                    </li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <ul class="states">
+          <li>默认：岗位 Java 后端，四类题计数来自 GET /bank/stats（技术知识 48 / 项目深挖 24 / 场景 16 / 行为 12，共 100 题）；列表来自 GET /bank/questions</li>
+          <li>切到 Web 前端：按 role 重新请求，题量同为 48/24/16/12，题型筛选被重置</li>
+          <li>点四类题卡片：列表按题型筛选并出现「已按「…」筛选」与「清除筛选」，卡片文案变「已筛选 · 再点一次取消」</li>
+          <li>知识条目命中：给出处与摘要；未命中显式标注不生成引用，不伪造知识库引用（面板里那条未命中是状态示意，当前 200 题实测 0 未命中）</li>
+          <li>检索输入是题干本身（面板按当前列表前 3 道题各发一次 GET /kb/search），不再拿已回填的 knowledgeRefs 回指——否则回填结果会「自己命中自己」</li>
+          <li>已接线：App.tsx 的 interview/bank 具体路由排在 interview/:id 之前，模拟面试页入口清单含「岗位题库与知识库」</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-interview-plan">
+        <div class="screen-head"><h3>把评估转成练习计划</h3><span class="route">/interview/plan</span><p>US-14.9。左栏列出本次评估的薄弱维度，右栏是可增删、可完成、可发起复测的练习项；每项都挂在评估记录 #E-2026-1013 上，复测按同一量表对比。可交互点：加入 / 移出计划、目标编辑、标记完成、发起复测与确认。</p></div>
+        <div class="device" data-shell data-active="/interview">
+          <div class="main"><div class="main-inner">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <header style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:20px">
+                <div style="min-width:0">
+                  <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:.18em;color:var(--cobalt)">提升计划</p>
+                  <h1 style="margin:4px 0 0;font-size:24px;font-weight:600">把评估转成下一轮练习</h1>
+                  <p style="margin:8px 0 0;max-width:44rem;font-size:14px;line-height:1.6;color:var(--muted-foreground)">练习项挂在本次评估记录上；复测按同一量表出题，结果回填后可与原分对比。</p>
+                </div>
+              </header>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--card);padding:10px 20px">
+                <span style="display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--muted-foreground)">关联评估记录</span>
+                <span style="font-size:16px;font-weight:600">#E-2026-1013</span>
+                <span style="display:inline-flex;align-items:baseline;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">量表</span><span style="font-size:12px;font-weight:500">v1.0（10-13 题）</span></span>
+                <span style="display:inline-flex;align-items:baseline;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">评估日期</span><span style="font-size:12px;font-weight:500">2026-10-08</span></span>
+                <span style="display:inline-flex;align-items:baseline;gap:8px"><span style="font-size:12px;color:var(--muted-foreground)">目标岗位</span><span style="font-size:12px;font-weight:500">后端开发工程师（Java）</span></span>
+                <span class="badge badge-cobalt">已归档</span>
+              </div>
+              <div style="display:grid;align-items:start;gap:20px;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)">
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">本次评估的薄弱维度</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">得分低于达标线的维度会被列为薄弱项，可加入右侧练习计划。</p>
+                  <ul style="list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:12px">
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:600">技术正确性</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">得分 62 分 · 达标线 80</p></div><button class="btn btn-primary btn-sm" type="button">加入计划</button></div>
+                      <p style="margin:8px 0 0;font-size:12px;line-height:1.5"><span style="color:var(--muted-foreground)">评估依据</span> · 两道并发题锁范围描述错误，结论与官方文档不一致。</p>
+                    </li>
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:600">知识深度</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">得分 68 分 · 达标线 80</p></div><button class="btn btn-primary btn-sm" type="button">加入计划</button></div>
+                      <p style="margin:8px 0 0;font-size:12px;line-height:1.5"><span style="color:var(--muted-foreground)">评估依据</span> · 停留在结论复述，追问实现原理只能给出单层解释。</p>
+                    </li>
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:600">逻辑严谨性</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">得分 71 分 · 达标线 80</p></div><button class="btn btn-primary btn-sm" type="button">加入计划</button></div>
+                      <p style="margin:8px 0 0;font-size:12px;line-height:1.5"><span style="color:var(--muted-foreground)">评估依据</span> · 回答缺少前提与边界，方案对比没有给出取舍依据。</p>
+                    </li>
+                    <li style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:12px">
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:600">岗位匹配度</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted-foreground)">得分 74 分 · 达标线 80</p></div><button class="btn btn-primary btn-sm" type="button">加入计划</button></div>
+                      <p style="margin:8px 0 0;font-size:12px;line-height:1.5"><span style="color:var(--muted-foreground)">评估依据</span> · 项目经历未对齐 JD 的分布式与高并发要求。</p>
+                    </li>
+                  </ul>
+                </section>
+                <section class="card-soft" style="padding:18px">
+                  <h2 style="margin:0;font-size:14px;font-weight:600">练习计划</h2>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)">左侧每加入一个维度，这里生成一项练习；目标可编辑。</p>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><span style="font-size:12px;color:var(--muted-foreground)">本次评估已加入 0 / 4 项</span></div>
+                  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:8px;border:1px dashed var(--border);border-radius:var(--radius-xl);background:var(--muted);padding:32px 24px;text-align:center">
+                    <span style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--cobalt);font-size:18px">▤</span>
+                    <p style="margin:12px 0 0;font-size:14px;font-weight:600">尚未选择练习维度</p>
+                    <p style="margin:4px 0 0;max-width:28rem;font-size:12px;line-height:1.5;color:var(--muted-foreground)">在左侧点击「加入计划」，这里会出现练习项卡片：目标、练习材料与复测入口。</p>
+                    <p style="margin:12px 0 0;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--cobalt)">建议先加入得分最低的两个维度。</p>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div></div>
+        </div>
+        <div class="grid-cards" style="margin-top:12px">
+          <div class="card-soft" style="padding:16px">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700">另一种状态：加入练习项后（进行中 / 复测确认 / 已排队）</p>
+            <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="display:flex;min-width:0;align-items:center;gap:8px"><span aria-hidden="true" style="flex:none;width:8px;height:8px;border-radius:999px;background:var(--coral)"></span><h3 style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600">技术正确性</h3></div><div style="display:flex;flex:none;align-items:center;gap:8px"><span class="badge badge-muted">进行中</span><button class="btn btn-ghost btn-sm" type="button">移出计划</button></div></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="width:40px;flex:none;font-size:12px;color:var(--muted-foreground)">目标</span><input class="input" style="flex:1;padding:4px 10px" value="重做 5 道并发锁题，把锁范围与隔离级别讲对。" /></div>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)"><span style="font-weight:500;color:var(--foreground)">练习材料</span> · 知识库 · Java 并发锁与隔离级别（12 题）</p>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)"><span style="font-weight:500;color:var(--foreground)">来源</span> · 评估 #E-2026-1013</p>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px"><button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt)">标记完成</button><button class="btn btn-outline btn-sm" type="button">发起复测</button></div>
+            </div>
+            <div style="border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:8px;margin-top:10px">
+              <p style="margin:0;font-size:12px;font-weight:500;color:var(--cobalt)">本次复测将与评估 #E-2026-1013（量表 v1.0，10-13）对比</p>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><button class="btn btn-primary btn-sm" type="button">确认发起复测</button><button class="btn btn-outline btn-sm" type="button">取消</button></div>
+            </div>
+            <p style="margin:10px 0 0;display:inline-flex;align-items:flex-start;gap:6px;border:1px solid color-mix(in oklab,var(--cobalt) 40%,transparent);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:6px 10px;font-size:12px">复测已排入队列，按量表 v1.0（10-13）出题，完成后回填对比。</p>
+            <p style="margin:12px 0 0;font-size:12px;font-weight:600;color:var(--muted-foreground)">更早评估的练习项</p>
+            <div style="border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--secondary);padding:8px;margin-top:6px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="display:flex;min-width:0;align-items:center;gap:8px"><span aria-hidden="true" style="flex:none;width:8px;height:8px;border-radius:999px;background:var(--coral)"></span><h3 style="margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600">逻辑严谨性</h3></div><div style="display:flex;flex:none;align-items:center;gap:8px"><span class="badge badge-muted">进行中</span><button class="btn btn-ghost btn-sm" type="button">移出计划</button></div></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="width:40px;flex:none;font-size:12px;color:var(--muted-foreground)">目标</span><input class="input" style="flex:1;padding:4px 10px" value="补充分片键基因法和全局索引设计，说明如何覆盖多查询维度。" /></div>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)"><span style="font-weight:500;color:var(--foreground)">练习材料</span> · 分片键选择未讨论卖家 / 订单号等查询维度和热点买家问题</p>
+              <p style="margin:4px 0 0;font-size:12px;color:var(--muted-foreground)"><span style="font-weight:500;color:var(--foreground)">来源</span> · 评估 #E-2026-0928</p>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px"><button class="btn btn-outline btn-sm" type="button" style="color:var(--cobalt)">标记完成</button><button class="btn btn-outline btn-sm" type="button">发起复测</button></div>
+            </div>
+          </div>
+        </div>
+        <ul class="states">
+          <li>默认：练习计划为空，显示空态与「建议先加入得分最低的两个维度」</li>
+          <li>加入后：卡片含可编辑目标、练习材料与「标记完成 / 发起复测」；完成后状态徽标变「已完成」</li>
+          <li>发起复测：先出现与评估记录对比的确认条，确认后显示「复测已排入队列」</li>
+          <li>移出计划：左侧维度卡片回到未加入态，按钮文案恢复「加入计划」</li>
+          <li>计数口径：分子只数 source_report_id 等于当前评估的练习项，分母是同一份报告的薄弱维度数（本次评估已加入 n / total 项）</li>
+          <li>更早评估的练习项：单独成组展示，每项标注「来源 · 评估 #…」；某份报告确实没有薄弱维度时如实显示 0，不用别的报告的数据凑数</li>
+        </ul>
       </div>
 
     </section>
@@ -1177,6 +2480,7 @@
         <a class="nav-item" data-nav="/jds" href="#screen-jds"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 16l9 5 9-5"/></svg></span>JD 库</a>
         <a class="nav-item" data-nav="/settings" href="#screen-settings"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>设置与 Agent</a>
         <p class="nav-group">管理员</p>
+        <a class="nav-item" data-nav="/admin/users" href="#screen-admin-users"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>用户管理</a>
         <a class="nav-item" data-nav="/admin/templates" href="#screen-templates"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 16l9 5 9-5"/></svg></span>模板库</a>
         <a class="nav-item" data-nav="/admin/rbac" href="#screen-rbac"><span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/></svg></span>角色与权限</a>
         <div class="nav-user">

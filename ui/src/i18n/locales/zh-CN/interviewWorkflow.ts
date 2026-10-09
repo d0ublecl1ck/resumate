@@ -64,6 +64,8 @@ export default {
     questionOrdinal: "第 {{ordinal}} 题",
     kind: {
       technical: "技术题",
+      deep_dive: "项目深挖题",
+      scenario: "场景题",
       behavioral: "行为题",
       situational: "情景题",
       follow_up: "追问",

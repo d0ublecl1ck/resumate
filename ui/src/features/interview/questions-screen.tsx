@@ -1,65 +1,41 @@
-// Epic 14 · US-14.1 根据简历生成面试题（Storybook 先行屏幕）。
-// 左列表 + 右详情：岗位/难度/题型筛选、生成与重新生成（1 秒加载态）、
-// 行切换详情与参考答案折叠全部为本地状态；数据均为文件内 mock，不发任何网络请求。
-// 所有可见文案走 interviewQuestions 命名空间。
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+// Epic 14 · US-14.1 根据简历生成面试题：题目真实来自建场次那一刻生成并落库的题目快照。
+// 本屏读取真实场次（GET /interview/sessions + /{id}），「重新生成」走
+// POST /interview/sessions/{id}/regenerate（已作答返回 409，映射成 i18n 文案）。
+// 岗位 / 难度 / 题型筛选同步驱动重新生成参数；题目记录知识库命中的出处（依据）。
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { BookOpenCheck, ChevronDown, ChevronUp, Info, RefreshCw, Sparkles, Target } from "lucide-react"
-import { Panel, SectionHeader } from "@/features/interview/section-header"
+import { Link } from "react-router-dom"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { BookOpen, BookOpenCheck, Info, Library, RefreshCw, Sparkles, Target } from "lucide-react"
+import { getInterviewSession, listInterviewSessions, regenerateInterviewSession } from "@/lib/interview"
+import type { InterviewQuestionDifficulty, InterviewQuestionKind } from "@/lib/interview"
+import { userFacingError } from "@/lib/api-error-text"
+import { Panel, SectionHeader } from "./section-header"
 
-type PositionId = "java" | "web"
-type DifficultyId = "easy" | "medium" | "hard"
-type TypeId = "technical" | "deepDive" | "scenario" | "behavioral"
-type BatchId = "a" | "b"
+// 四类可出题题型；situational 是 scenario 的历史别名，只从旧数据里读到，不作为筛选项。
+const MAIN_KINDS: InterviewQuestionKind[] = ["technical", "deep_dive", "scenario", "behavioral"]
+const DIFFICULTIES: InterviewQuestionDifficulty[] = ["easy", "medium", "hard"]
 
-const POSITIONS: PositionId[] = ["java", "web"]
-const DIFFICULTIES: DifficultyId[] = ["easy", "medium", "hard"]
-const TYPES: TypeId[] = ["technical", "deepDive", "scenario", "behavioral"]
-
-// 每道题只保留结构性字段；题干、依据、证据与参考答案都在命名空间里。
-// roles 决定岗位筛选是否收录该题，题型/难度由筛选 chip 实时过滤。
-type QuestionSeed = {
-  id: string
-  type: TypeId
-  difficulty: DifficultyId
-  roles: PositionId[]
+/** 历史 situational 与 scenario 同属一类；筛选与重新生成请求都按此归一。 */
+function canonicalKind(kind: InterviewQuestionKind): InterviewQuestionKind {
+  return kind === "situational" ? "scenario" : kind
 }
 
-const BATCHES: Record<BatchId, QuestionSeed[]> = {
-  a: [
-    { id: "q1", type: "technical", difficulty: "medium", roles: ["java", "web"] },
-    { id: "q2", type: "deepDive", difficulty: "hard", roles: ["java"] },
-    { id: "q3", type: "scenario", difficulty: "medium", roles: ["java", "web"] },
-    { id: "q4", type: "behavioral", difficulty: "easy", roles: ["java", "web"] },
-    { id: "q5", type: "deepDive", difficulty: "medium", roles: ["web"] },
-    { id: "q6", type: "technical", difficulty: "hard", roles: ["java", "web"] },
-  ],
-  b: [
-    { id: "q1", type: "deepDive", difficulty: "medium", roles: ["java", "web"] },
-    { id: "q2", type: "scenario", difficulty: "hard", roles: ["java"] },
-    { id: "q3", type: "technical", difficulty: "easy", roles: ["java", "web"] },
-    { id: "q4", type: "behavioral", difficulty: "medium", roles: ["java", "web"] },
-    { id: "q5", type: "deepDive", difficulty: "hard", roles: ["web"] },
-    { id: "q6", type: "scenario", difficulty: "medium", roles: ["java", "web"] },
-  ],
-}
-
-const DIFFICULTY_TONE: Record<DifficultyId, string> = {
-  easy: "border-border bg-muted text-muted-foreground",
-  medium: "border-cobalt/40 bg-cobalt/5 text-cobalt",
-  hard: "border-coral/40 bg-coral/5 text-coral",
+function difficultyClass(value: InterviewQuestionDifficulty | null | undefined) {
+  if (value === "hard") return "border-coral/40 bg-coral/5 text-coral"
+  if (value === "medium") return "border-cobalt/40 bg-cobalt/5 text-cobalt"
+  if (value === "easy") return "border-border bg-muted text-muted-foreground"
+  return "border-border bg-muted text-muted-foreground"
 }
 
 function chipClass(active: boolean) {
   return (
     "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
-    (active
-      ? "border-foreground bg-foreground text-background"
-      : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
+    (active ? "border-foreground bg-foreground text-background" : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")
   )
 }
 
-function ChipGroup({ label, children }: { label: string; children: ReactNode }) {
+function ChipGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2">
       <span className="shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
@@ -70,58 +46,83 @@ function ChipGroup({ label, children }: { label: string; children: ReactNode }) 
   )
 }
 
+function errorText(cause: unknown, t: (key: string, options?: { defaultValue?: string }) => string): string {
+  const fallback = t("interviewQuestions.errors.generic")
+  const { code } = userFacingError(cause, fallback)
+  if (!code) return fallback
+  return t(`interviewQuestions.errors.${code}`, { defaultValue: "" }) || t(`interviewWorkflow.errors.${code}`, { defaultValue: "" }) || fallback
+}
+
 export function QuestionsScreen() {
   const { t } = useTranslation()
-  const [position, setPosition] = useState<PositionId>("java")
-  const [difficulties, setDifficulties] = useState<DifficultyId[]>([])
-  const [types, setTypes] = useState<TypeId[]>([])
-  const [batch, setBatch] = useState<BatchId>("a")
-  const [selectedId, setSelectedId] = useState("q1")
-  const [pending, setPending] = useState<"generate" | "regenerate" | null>(null)
-  const [regenerated, setRegenerated] = useState(false)
-  const [openAnswerKey, setOpenAnswerKey] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const [role, setRole] = useState<string>("")
+  const [kinds, setKinds] = useState<InterviewQuestionKind[]>([])
+  const [difficulty, setDifficulty] = useState<InterviewQuestionDifficulty | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  // 已冻结筛选只在切换会话时回填一次，避免覆盖用户在当前会话里的选择。
+  const seededSession = useRef<string | null>(null)
 
-  const loading = pending !== null
+  const sessionsQuery = useQuery({ queryKey: ["interview", "sessions"], queryFn: () => listInterviewSessions() })
+  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data])
+  const roles = useMemo(() => Array.from(new Set(sessions.map((session) => session.role))), [sessions])
 
-  // 生成 / 重新生成：统一先进入 1 秒加载态，再替换列表；重新生成保留当前筛选。
   useEffect(() => {
-    if (!pending) return
-    const timer = window.setTimeout(() => {
-      if (pending === "regenerate") {
-        setBatch((prev) => (prev === "a" ? "b" : "a"))
-        setRegenerated(true)
-      } else {
-        setBatch("a")
-        setRegenerated(false)
-      }
-      setPending(null)
-    }, 1000)
-    return () => window.clearTimeout(timer)
-  }, [pending])
+    if (role === "" && roles.length > 0) setRole(roles[0])
+  }, [role, roles])
 
-  const batchSeeds = BATCHES[batch]
+  const session = useMemo(
+    () => sessions.find((item) => item.role === role) ?? sessions[0] ?? null,
+    [sessions, role],
+  )
+  const detailQuery = useQuery({
+    queryKey: ["interview", "session", session?.id ?? ""],
+    queryFn: () => getInterviewSession(session!.id),
+    enabled: Boolean(session),
+  })
+  const detail = detailQuery.data
+  const questions = detail?.questions ?? []
+
+  useEffect(() => {
+    if (!detail || seededSession.current === detail.id) return
+    seededSession.current = detail.id
+    const stored = detail.filters
+    if (!stored) {
+      setKinds([])
+      setDifficulty(null)
+      return
+    }
+    setKinds(stored.kinds.map(canonicalKind).filter((kind): kind is InterviewQuestionKind => MAIN_KINDS.includes(kind)))
+    setDifficulty(stored.difficulty ?? null)
+  }, [detail])
+
   const visible = useMemo(() => {
-    const typeFilter = types.length > 0 ? types : TYPES
-    const difficultyFilter = difficulties.length > 0 ? difficulties : DIFFICULTIES
-    return batchSeeds.filter(
-      (q) =>
-        q.roles.includes(position) &&
-        typeFilter.includes(q.type) &&
-        difficultyFilter.includes(q.difficulty),
-    )
-  }, [batchSeeds, position, types, difficulties])
+    if (kinds.length === 0) return questions
+    const selected = new Set(kinds.map(canonicalKind))
+    return questions.filter((question) => selected.has(canonicalKind(question.kind)))
+  }, [questions, kinds])
 
-  const selected = visible.find((q) => q.id === selectedId) ?? visible[0] ?? null
-  const selectedKey = selected ? batch + "." + selected.id : null
-  const keyBase = selected ? "interviewQuestions.batches." + batch + "." + selected.id : null
-  const answerOpen = selectedKey !== null && openAnswerKey === selectedKey
+  const selected = visible.find((question) => question.id === selectedId) ?? visible[0] ?? null
 
-  function toggleDifficulty(value: DifficultyId) {
-    setDifficulties((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]))
+  const regenerate = useMutation({
+    mutationFn: (id: string) =>
+      regenerateInterviewSession(id, {
+        ...(kinds.length > 0 ? { kinds } : {}),
+        ...(difficulty ? { difficulty } : {}),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["interview", "session", data.id], data)
+      void queryClient.invalidateQueries({ queryKey: ["interview", "sessions"] })
+      setSelectedId(data.questions[0]?.id ?? null)
+    },
+  })
+
+  function toggleKind(value: InterviewQuestionKind) {
+    setKinds((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]))
   }
 
-  function toggleType(value: TypeId) {
-    setTypes((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]))
+  function toggleDifficulty(value: InterviewQuestionDifficulty) {
+    setDifficulty((prev) => (prev === value ? null : value))
   }
 
   return (
@@ -132,22 +133,20 @@ export function QuestionsScreen() {
         description={t("interviewQuestions.description")}
         actions={
           <>
-            <button
-              type="button"
-              onClick={() => setPending("generate")}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            <Link
+              to="/interview/setup"
+              className="inline-flex items-center gap-2 rounded-lg border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               <Sparkles className="size-4" aria-hidden />
               {t("interviewQuestions.actions.generate")}
-            </button>
+            </Link>
             <button
               type="button"
-              onClick={() => setPending("regenerate")}
-              disabled={loading}
+              onClick={() => session && regenerate.mutate(session.id)}
+              disabled={!session || regenerate.isPending}
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} aria-hidden />
+              <RefreshCw className={"size-4 " + (regenerate.isPending ? "animate-spin" : "")} aria-hidden />
               {t("interviewQuestions.actions.regenerate")}
             </button>
           </>
@@ -157,42 +156,28 @@ export function QuestionsScreen() {
       <Panel>
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <ChipGroup label={t("interviewQuestions.filters.position")}>
-            {POSITIONS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={position === value}
-                onClick={() => setPosition(value)}
-                className={chipClass(position === value)}
-              >
-                {t("interviewQuestions.positions." + value)}
-              </button>
-            ))}
+            {roles.length === 0 ? (
+              <span className="text-xs text-muted-foreground">{t("interviewQuestions.filters.noRole")}</span>
+            ) : (
+              roles.map((value) => (
+                <button key={value} type="button" aria-pressed={role === value} onClick={() => setRole(value)} className={chipClass(role === value)}>
+                  {value}
+                </button>
+              ))
+            )}
           </ChipGroup>
 
           <ChipGroup label={t("interviewQuestions.filters.difficulty")}>
             {DIFFICULTIES.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={difficulties.includes(value)}
-                onClick={() => toggleDifficulty(value)}
-                className={chipClass(difficulties.includes(value))}
-              >
+              <button key={value} type="button" aria-pressed={difficulty === value} onClick={() => toggleDifficulty(value)} className={chipClass(difficulty === value)}>
                 {t("interviewQuestions.difficulties." + value)}
               </button>
             ))}
           </ChipGroup>
 
           <ChipGroup label={t("interviewQuestions.filters.type")}>
-            {TYPES.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={types.includes(value)}
-                onClick={() => toggleType(value)}
-                className={chipClass(types.includes(value))}
-              >
+            {MAIN_KINDS.map((value) => (
+              <button key={value} type="button" aria-pressed={kinds.includes(value)} onClick={() => toggleKind(value)} className={chipClass(kinds.includes(value))}>
                 {t("interviewQuestions.types." + value)}
               </button>
             ))}
@@ -202,10 +187,15 @@ export function QuestionsScreen() {
         </div>
       </Panel>
 
-      {regenerated ? (
+      {regenerate.isSuccess ? (
         <p className="flex items-center gap-2 rounded-lg border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-xs font-medium text-cobalt">
           <Info className="size-4 shrink-0" aria-hidden />
           {t("interviewQuestions.notice.regenerate")}
+        </p>
+      ) : null}
+      {regenerate.isError ? (
+        <p role="alert" className="rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-xs text-coral">
+          {errorText(regenerate.error, t)}
         </p>
       ) : null}
 
@@ -213,15 +203,12 @@ export function QuestionsScreen() {
         <Panel
           title={t("interviewQuestions.list.title")}
           caption={
-            loading
-              ? t("interviewQuestions.status.generatingHint")
-              : t("interviewQuestions.status.resultMeta", {
-                  role: t("interviewQuestions.positions." + position),
-                  n: visible.length,
-                })
+            detailQuery.isPending
+              ? t("interviewQuestions.status.loading")
+              : t("interviewQuestions.status.resultMeta", { role: session?.role ?? "-", n: visible.length })
           }
         >
-          {loading ? (
+          {sessionsQuery.isPending || detailQuery.isPending ? (
             <div className="mt-4 space-y-3" aria-hidden>
               <p className="inline-flex items-center gap-2 text-xs font-medium text-cobalt">
                 <RefreshCw className="size-3.5 animate-spin" />
@@ -235,49 +222,60 @@ export function QuestionsScreen() {
                 </div>
               ))}
             </div>
+          ) : sessionsQuery.isError || detailQuery.isError ? (
+            <p className="mt-4 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-xs text-coral">
+              {errorText(sessionsQuery.error ?? detailQuery.error, t)}
+            </p>
+          ) : sessions.length === 0 ? (
+            <div className="mt-4 rounded-lg border border-dashed border-border px-3 py-8 text-center">
+              <p className="text-sm font-medium text-foreground">{t("interviewQuestions.list.noSession")}</p>
+              <Link to="/interview/setup" className="mt-2 inline-flex text-xs font-medium text-cobalt">
+                {t("interviewQuestions.list.createSession")}
+              </Link>
+            </div>
           ) : visible.length === 0 ? (
             <p className="mt-4 rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
               {t("interviewQuestions.list.empty")}
             </p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {visible.map((q) => {
-                const active = selected?.id === q.id
-                const base = "interviewQuestions.batches." + batch + "." + q.id
+              {visible.map((question) => {
+                const active = selected?.id === question.id
+                const refs = question.knowledgeRefs ?? []
                 return (
-                  <li key={q.id}>
+                  <li key={question.id}>
                     <button
                       type="button"
                       aria-pressed={active}
-                      onClick={() => setSelectedId(q.id)}
+                      onClick={() => setSelectedId(question.id)}
                       className={
                         "w-full rounded-lg border p-3 text-left transition-colors " +
-                        (active
-                          ? "border-cobalt bg-cobalt/5"
-                          : "border-border bg-background hover:bg-secondary")
+                        (active ? "border-cobalt bg-cobalt/5" : "border-border bg-background hover:bg-secondary")
                       }
                     >
                       <span className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                          {t("interviewQuestions.types." + q.type)}
+                          {t("interviewQuestions.types." + question.kind)}
                         </span>
-                        <span
-                          className={
-                            "rounded-md border px-2 py-0.5 text-xs font-medium " +
-                            DIFFICULTY_TONE[q.difficulty]
-                          }
-                        >
-                          {t("interviewQuestions.difficulties." + q.difficulty)}
+                        {question.difficulty ? (
+                          <span className={"rounded-md border px-2 py-0.5 text-xs font-medium " + difficultyClass(question.difficulty)}>
+                            {t("interviewQuestions.difficulties." + question.difficulty)}
+                          </span>
+                        ) : null}
+                        <span className="text-xs text-muted-foreground">
+                          {t("interviewQuestions.list.ordinal", { n: question.ordinal })}
                         </span>
                       </span>
-                      <span className="mt-2 block text-sm font-medium leading-6 text-foreground">
-                        {t(base + ".text")}
-                      </span>
-                      <span className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <BookOpenCheck className="size-3.5 shrink-0 text-cobalt" aria-hidden />
-                        <span className="shrink-0">{t("interviewQuestions.list.sourceLabel")}</span>
-                        <span className="truncate font-medium text-foreground">{t(base + ".source")}</span>
-                      </span>
+                      <span className="mt-2 block text-sm font-medium leading-6 text-foreground">{question.prompt}</span>
+                      {refs.length > 0 ? (
+                        <span className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <BookOpen className="size-3.5 shrink-0 text-cobalt" aria-hidden />
+                          <span className="shrink-0">{t("interviewQuestions.list.basisLabel")}</span>
+                          <span className="truncate font-medium text-foreground">{refs[0]}</span>
+                        </span>
+                      ) : (
+                        <span className="mt-2 block text-xs text-muted-foreground">{t("interviewQuestions.list.basisEmpty")}</span>
+                      )}
                     </button>
                   </li>
                 )
@@ -287,15 +285,14 @@ export function QuestionsScreen() {
         </Panel>
 
         <Panel title={t("interviewQuestions.detail.title")}>
-          {loading ? (
+          {detailQuery.isPending ? (
             <div className="mt-4 space-y-3" aria-hidden>
               <div className="h-5 w-2/3 animate-pulse rounded bg-muted" />
               <div className="h-4 w-full animate-pulse rounded bg-muted" />
               <div className="h-4 w-5/6 animate-pulse rounded bg-muted" />
               <div className="h-20 w-full animate-pulse rounded bg-muted" />
-              <div className="h-16 w-full animate-pulse rounded bg-muted" />
             </div>
-          ) : keyBase === null ? (
+          ) : !selected || !detail ? (
             <p className="mt-4 rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">
               {t("interviewQuestions.detail.empty")}
             </p>
@@ -304,80 +301,84 @@ export function QuestionsScreen() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-md border border-border bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                    {t("interviewQuestions.types." + selected.type)}
+                    {t("interviewQuestions.types." + selected.kind)}
                   </span>
-                  <span
-                    className={
-                      "rounded-md border px-2 py-0.5 text-xs font-medium " +
-                      DIFFICULTY_TONE[selected.difficulty]
-                    }
-                  >
-                    {t("interviewQuestions.difficulties." + selected.difficulty)}
+                  {selected.difficulty ? (
+                    <span className={"rounded-md border px-2 py-0.5 text-xs font-medium " + difficultyClass(selected.difficulty)}>
+                      {t("interviewQuestions.difficulties." + selected.difficulty)}
+                    </span>
+                  ) : null}
+                  <span className="text-xs text-muted-foreground">
+                    {t("interviewQuestions.list.ordinal", { n: selected.ordinal })}
                   </span>
                 </div>
-                <p className="mt-2 text-base font-semibold leading-7 text-foreground">{t(keyBase + ".text")}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{t(keyBase + ".description")}</p>
+                <p className="mt-2 text-base font-semibold leading-7 text-foreground">{selected.prompt}</p>
               </div>
 
               <div className="rounded-lg border border-border bg-secondary p-3">
                 <dl className="space-y-1.5 text-xs">
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-muted-foreground">
-                      {t("interviewQuestions.detail.resumeVersion")}
-                    </dt>
-                    <dd className="font-medium text-foreground">{t(keyBase + ".resumeVersion")}</dd>
+                    <dt className="w-20 shrink-0 text-muted-foreground">{t("interviewQuestions.detail.resumeVersion")}</dt>
+                    <dd className="font-medium text-foreground">{detail.contextSnapshot.resumeTitle}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-muted-foreground">
-                      {t("interviewQuestions.detail.resumeEntry")}
-                    </dt>
-                    <dd className="text-foreground">{t(keyBase + ".resumeEntry")}</dd>
+                    <dt className="w-20 shrink-0 text-muted-foreground">{t("interviewQuestions.detail.targetRole")}</dt>
+                    <dd className="text-foreground">
+                      {detail.contextSnapshot.jdRole}
+                      {detail.contextSnapshot.jdCompany ? " · " + detail.contextSnapshot.jdCompany : ""}
+                    </dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="w-20 shrink-0 text-muted-foreground">{t("interviewQuestions.detail.rubric")}</dt>
+                    <dd className="text-foreground">{detail.rubricVersion}</dd>
                   </div>
                 </dl>
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-card-foreground">
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-card-foreground">
+                  <Target className="size-4 shrink-0 text-cobalt" aria-hidden />
                   {t("interviewQuestions.detail.evidenceLabel")}
                 </p>
-                <ul className="mt-2 space-y-1.5">
-                  {["e1", "e2", "e3"].map((evidence) => (
-                    <li key={evidence} className="flex items-start gap-2 text-xs leading-5 text-foreground">
-                      <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-cobalt" />
-                      <span className="min-w-0">{t(keyBase + ".evidence." + evidence)}</span>
-                    </li>
-                  ))}
-                </ul>
+                {selected.referencePoints.length === 0 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">{t("interviewQuestions.detail.evidenceEmpty")}</p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {selected.referencePoints.map((point) => (
+                      <li key={point} className="flex items-start gap-2 text-xs leading-5 text-foreground">
+                        <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-cobalt" />
+                        <span className="min-w-0">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
-              <div className="overflow-hidden rounded-lg border border-border">
-                <button
-                  type="button"
-                  aria-expanded={answerOpen}
-                  onClick={() => setOpenAnswerKey(answerOpen ? null : selectedKey)}
-                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left transition-colors hover:bg-muted"
-                >
-                  <span className="inline-flex items-center gap-2 text-xs font-semibold text-card-foreground">
-                    <Target className="size-4 shrink-0 text-cobalt" aria-hidden />
-                    {t("interviewQuestions.detail.answerLabel")}
-                  </span>
-                  <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
-                    {answerOpen
-                      ? t("interviewQuestions.detail.answerOpen")
-                      : t("interviewQuestions.detail.answerClosed")}
-                    {answerOpen ? (
-                      <ChevronUp className="size-3.5" aria-hidden />
-                    ) : (
-                      <ChevronDown className="size-3.5" aria-hidden />
-                    )}
-                  </span>
-                </button>
-                {answerOpen ? (
-                  <p className="border-t border-border px-3 py-2 text-xs leading-5 text-foreground">
-                    {t(keyBase + ".answer")}
-                  </p>
-                ) : null}
+              <div>
+                <p className="flex items-center gap-1.5 text-xs font-semibold text-card-foreground">
+                  <Library className="size-4 shrink-0 text-cobalt" aria-hidden />
+                  {t("interviewQuestions.detail.knowledgeLabel")}
+                </p>
+                {(selected.knowledgeRefs ?? []).length === 0 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">{t("interviewQuestions.detail.knowledgeEmpty")}</p>
+                ) : (
+                  <ul className="mt-2 space-y-1.5">
+                    {(selected.knowledgeRefs ?? []).map((ref) => (
+                      <li key={ref} className="flex items-start gap-2 text-xs leading-5 text-foreground">
+                        <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-cobalt" />
+                        <span className="min-w-0">{ref}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
+
+              {selected.answer ? (
+                <p className="inline-flex items-start gap-1.5 rounded-lg border border-border bg-secondary px-3 py-2 text-xs text-foreground">
+                  <BookOpenCheck className="mt-0.5 size-3.5 shrink-0 text-cobalt" aria-hidden />
+                  {t("interviewQuestions.detail.answered")}
+                </p>
+              ) : null}
             </div>
           )}
         </Panel>
