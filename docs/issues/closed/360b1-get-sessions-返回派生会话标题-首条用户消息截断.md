@@ -1,13 +1,14 @@
 ---
 id: 360b1
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:47:45.982Z
-updated_at: 2026-10-09T16:47:57.517Z
+updated_at: 2026-10-09T16:57:43.419Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:47:57.517Z
+closed_at: 2026-10-09T16:57:43.419Z
 ---
 
 # GET /sessions 返回派生会话标题（首条用户消息截断）
