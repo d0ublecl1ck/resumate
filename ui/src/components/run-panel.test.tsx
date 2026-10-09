@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { MemoryRouter } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -515,6 +516,52 @@ const MARKDOWN_RUN: AgentRun = {
     },
   ],
 }
+
+describe("RunPanel 运行失败可见性", () => {
+  const FAILED_RUN: AgentRun = {
+    ...RUN,
+    state: "turn_closed",
+    pendingActions: [],
+    error: {
+      code: "MODEL_ERROR",
+      category: "auth",
+      message: "model provider returned HTTP 401: Authentication Fails, Your api key: ****be21 is invalid",
+      provider: "deepseek",
+      model: "deepseek-flash",
+      keyHint: "****be21",
+    },
+  }
+
+  // 错误块里的「去设置更新 Key」走 useNavigate，只有渲染错误块时才需要 Router 上下文。
+  function renderFailed() {
+    return render(
+      <MemoryRouter>
+        <QueryClientProvider client={newClient()}>
+          <RunPanel resumeId="res_1" run={FAILED_RUN} mode="approval" />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+  }
+
+  it("轮次带 runError 时显示类别、provider/model、key 尾号与去设置入口", () => {
+    renderFailed()
+
+    const block = screen.getByTestId("run-error")
+    expect(within(block).getByText(/模型鉴权失败/)).toBeInTheDocument()
+    expect(within(block).getByText(/deepseek \/ deepseek-flash/)).toBeInTheDocument()
+    expect(within(block).getByText(/出问题的 Key：\*\*\*\*be21/)).toBeInTheDocument()
+    expect(within(block).getByRole("button", { name: "去设置更新 Key" })).toBeInTheDocument()
+    // 负向断言：完整 key 与 Authorization 头一律不得出现在界面上。
+    expect(block.textContent ?? "").not.toContain("sk-live")
+    expect(block.textContent ?? "").not.toContain("Authorization")
+  })
+
+  it("没有 runError 的已关闭轮次不显示错误块", () => {
+    renderPanel({ ...RUN, state: "turn_closed", pendingActions: [] }, newClient())
+
+    expect(screen.queryByTestId("run-error")).not.toBeInTheDocument()
+  })
+})
 
 describe("RunPanel 发送前拦截", () => {
   it("当前轮次仍有待审批待办时先弹确认框，确认后才发起运行", async () => {

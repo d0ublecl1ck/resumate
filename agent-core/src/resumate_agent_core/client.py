@@ -31,6 +31,8 @@ from .models import (
     ProfileActionPreview,
     ProfileFact,
     ProfileSummary,
+    ReportRunErrorRequest,
+    RunErrorReport,
     TurnState,
     UserTurn,
     WorkingDocument,
@@ -214,6 +216,27 @@ class ResumateClient:
             json_body=body.to_wire(),
         )
         return self._decode(UserTurn, payload)
+
+    def report_run_error(
+        self,
+        turn_id: str,
+        *,
+        code: str,
+        message: str = "",
+        detail: str | None = None,
+    ) -> RunErrorReport:
+        """Record the terminal failure on the turn (issue 4ff97).
+
+        Called before cancel_turn so the turn projection keeps a structured
+        error instead of collapsing every failure into a plain cancellation.
+        """
+        body = ReportRunErrorRequest(code=code, message=message, detail=detail)
+        payload = self._request(
+            "POST",
+            f"{self._turn_path(turn_id)}/run-errors",
+            json_body=body.to_wire(),
+        )
+        return self._decode(RunErrorReport, payload)
 
     def cancel_turn(
         self,

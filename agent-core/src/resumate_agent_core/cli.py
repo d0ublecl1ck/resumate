@@ -34,6 +34,7 @@ from .checkpoint import CheckpointStore
 from .client import ResumateClient
 from .compaction import CompactionPolicy
 from .config import ENV_PREFIX, AgentCoreSettings
+from .redaction import redact_secrets
 from .openai_provider import DEFAULT_OPENAI_BASE_URL, OpenAICompatibleProvider
 from .runtime import (
     AgentRuntime,
@@ -194,6 +195,27 @@ def _build_provider(
     if args.provider_max_tokens is not None:
         kwargs["max_tokens"] = args.provider_max_tokens
     return factory(**kwargs)
+
+
+class _RedactingProvider:
+    """Wraps a provider so a raised error never carries the plaintext key.
+
+    The runtime copies the exception text into both the reported failure and the
+    event stream, so redacting at the provider boundary covers both (issue 4ff97).
+    """
+
+    def __init__(self, inner: ModelProvider, api_key: str | None) -> None:
+        self._inner = inner
+        self._api_key = api_key
+
+    def complete(self, messages, tools):
+        try:
+            return self._inner.complete(messages, tools)
+        except Exception as exc:  # noqa: BLE001 - re-raised redacted below
+            raise RuntimeError(redact_secrets(str(exc), api_key=self._api_key)) from exc
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
 
 
 def _build_compaction(args: argparse.Namespace) -> CompactionPolicy:
@@ -384,6 +406,8 @@ def main(
     settings = _build_settings(args, source)
     if provider is None:
         provider = _build_provider(args, provider_factory)
+    # 运行体上报与 stdout 日志共用同一份文案：这里先把完整 key 从异常里抹掉。
+    provider = _RedactingProvider(provider, args.api_key)
 
     started_at = clock()
     if args.state:
@@ -426,7 +450,8 @@ def main(
                     line = event_to_text(event)
                 else:
                     line = json.dumps(event_to_wire(event), ensure_ascii=False)
-                print(line, file=out)
+                # 运行日志由这段 stdout 生成：写出去之前先抹掉完整 key 与凭证头。
+                print(redact_secrets(line, api_key=args.api_key), file=out)
                 out.flush()
             resolved_session = runtime.session_id
             if resolved_session:

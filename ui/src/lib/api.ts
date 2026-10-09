@@ -63,7 +63,6 @@ import type {
 } from "./types"
 import { request, requestText, requestTextWithResponse, requestWithResponse } from "./api-client"
 import { buildRunTimeline } from "./run-conversation"
-import i18n from "@/i18n"
 
 // 模拟网络延迟，方便页面演示 loading 状态。设为 0 可关闭。
 const LATENCY = 0
@@ -435,6 +434,8 @@ export function mapTurnToRun(turn: ApiTurn, state?: TurnStateResponse): AgentRun
     id: turn.id,
     // AgentRun 目前只服务简历工作台；profile 轮次不带简历，这里退化为空串。
     resumeId: turn.resumeId ?? "",
+    // 终态失败跟着轮次投影走：cancelled 不再等于「什么都没发生」（issue 4ff97）。
+    error: turn.runError ?? undefined,
     conversationId: turn.sessionId ?? turn.id,
     sessionId: turn.sessionId ?? undefined,
     userTurnId: turn.id,
@@ -514,16 +515,39 @@ export function parseJdFromText(text: string): Promise<ProposedJd> {
   return request<ProposedJd>("/jds:parse-text", { method: "POST", body: JSON.stringify({ text }) })
 }
 
+/** 把二进制图片编成 base64（分块拼接，避免超长参数打爆调用栈）。 */
+async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  let binary = ""
+  const chunkSize = 0x8000
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize))
+  }
+  return btoa(binary)
+}
+
+export interface ParseJdImageInput {
+  /** 岗位截图；只上传一次，后端不落盘。 */
+  image: Blob
+  contentType?: string
+  filename?: string
+}
+
 /**
- * POST /jds:parse-image —— 上传截图，OCR + 结构化。
- * 真实实现走图片识别；此处为前端演示，返回基于文件名的示例草案。
+ * POST /jds:parse-image —— 上传真实图片字节，交给支持图像的模型结构化。
+ * 图片走 base64 JSON（仓库无 multipart 依赖）；模型不支持看图时后端返回 MODEL_NO_VISION，
+ * 调用方据此引导用户换模型，绝不回退本地示例数据。
  */
-export function parseJdFromImage(fileName: string): Promise<ProposedJd> {
-  const demo =
-    "高级前端工程师\n某科技有限公司\n职责：负责 C 端核心页面开发，主导性能优化；参与前端工程化与团队规范建设。\n要求：5 年以上经验，精通 React 与 TypeScript，有大型项目性能调优与团队带教经验。"
-  const parsed = heuristicParseJd(demo, "image")
-  parsed.note = i18n.t("api.jd.note.imageDemo", { fileName })
-  return resolve(parsed)
+export async function parseJdFromImage(input: ParseJdImageInput): Promise<ProposedJd> {
+  const imageBase64 = await blobToBase64(input.image)
+  return request<ProposedJd>("/jds:parse-image", {
+    method: "POST",
+    body: JSON.stringify({
+      imageBase64,
+      contentType: input.contentType ?? input.image.type ?? undefined,
+      filename: input.filename,
+    }),
+  })
 }
 
 /** POST /jds —— 用户确认后创建 JD */
@@ -538,58 +562,6 @@ export function createJd(input: ProposedJd): Promise<JobDescription> {
       tags: input.tags,
     }),
   })
-}
-
-// —— 启发式 JD 结构化解析 ——
-function heuristicParseJd(raw: string, inputSource: "text" | "image"): ProposedJd {
-  const text = raw.trim()
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean)
-  const extracted: { label: string; value: string }[] = []
-
-  const roleRe = /(前端|后端|全栈|算法|数据|产品|测试|运维|移动端|客户端)?[\u4e00-\u9fa5A-Za-z]*?(架构师|工程师|经理|设计师|总监|专家|开发)/
-  let role = ""
-  const roleLine = lines.find((l) => /(岗位|职位|title)/i.test(l) && roleRe.test(l)) || lines.find((l) => roleRe.test(l))
-  if (roleLine) {
-    const cleaned = roleLine.replace(/^.*?(岗位|职位|title)[：: ]*/i, "")
-    role = (cleaned.match(roleRe)?.[0] || roleLine.match(roleRe)?.[0] || "").trim()
-  }
-  if (role) extracted.push({ label: i18n.t("api.jd.extracted.role"), value: role })
-
-  let company: string | undefined
-  const cm = text.match(/([\u4e00-\u9fa5A-Za-z]{2,20}?(?:集团|科技(?:有限)?公司|信息技术(?:有限)?公司|有限公司|公司))/)
-  if (cm) company = cm[1]
-  if (company) extracted.push({ label: i18n.t("api.jd.extracted.company"), value: company })
-
-  const url = text.match(/https?:\/\/\S+/)
-  const sourceUrl = url?.[0]
-  if (sourceUrl) extracted.push({ label: i18n.t("api.jd.extracted.source"), value: sourceUrl })
-
-  const tagRules: [string, RegExp][] = [
-    [i18n.t("api.jd.tags.frontend"), /前端|react|vue|typescript|javascript/i],
-    [i18n.t("api.jd.tags.backend"), /后端|java|golang|\bgo\b|python|node/i],
-    [i18n.t("api.jd.tags.performance"), /性能|优化|调优|lcp|首屏|加载/i],
-    [i18n.t("api.jd.tags.team"), /团队|带领|带教|管理|leader|负责人/i],
-    [i18n.t("api.jd.tags.cEnd"), /c ?端|用户端|海量|高并发|交易链路/i],
-    [i18n.t("api.jd.tags.architecture"), /架构|基础设施|中台|框架|工程化/i],
-  ]
-  const tags = tagRules.filter(([, re]) => re.test(text)).map(([t]) => t)
-
-  const parseConfidence = Math.min(0.95, 0.5 + (role ? 0.2 : 0) + (company ? 0.15 : 0) + (tags.length ? 0.1 : 0))
-
-  return {
-    role,
-    company,
-    tags,
-    body: text,
-    sourceUrl,
-    extracted,
-    parseConfidence,
-    note:
-      inputSource === "image"
-        ? i18n.t("api.jd.note.image")
-        : i18n.t("api.jd.note.text"),
-    inputSource,
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -626,9 +598,45 @@ export function deleteJd(id: string): Promise<void> {
   return request<void>(`/jds/${id}`, { method: "DELETE" })
 }
 
+/** PUT /jds/{id}/binding —— 把简历显式绑定为该 JD 的当前绑定，返回更新后的 JD。 */
+export function setJdBinding(id: string, resumeId: string): Promise<JobDescription> {
+  return request<JobDescription>(`/jds/${id}/binding`, {
+    method: "PUT",
+    body: JSON.stringify({ resumeId }),
+  })
+}
+
 /** DELETE /jds/{id}/binding —— 解除 JD 与简历的软绑定，返回更新后的 JD。 */
 export function releaseJdBinding(id: string): Promise<JobDescription> {
   return request<JobDescription>(`/jds/${id}/binding`, { method: "DELETE" })
+}
+
+/**
+ * 构造「岗位微调」Agent run 的 prompt。
+ *
+ * 契约里 Agent run/turn 没有 jd_id 字段：run 绑简历（+可选 session），JD 绑定是
+ * `job_descriptions.bound_resume_id`。所以 JD 上下文只能经 prompt 携带，prompt 里
+ * 带 revision，防止用旧 revision 做微调。
+ */
+export function jdTuningPrompt(
+  jd: Pick<JobDescription, "role" | "company" | "body" | "revision">,
+  operation: "direct" | "copy",
+): string {
+  const lines = [
+    `请按目标岗位 JD 微调这份简历（JD revision rev.${jd.revision}）。`,
+    "",
+    `岗位：${jd.role}${jd.company ? " · " + jd.company : ""}`,
+    "JD 原文：",
+    jd.body,
+    "",
+    "要求：",
+    "- 只围绕该岗位的要求调整简历内容与措辞，不得编造简历里不存在的事实。",
+    "- 产出可审阅的领域 Patch；未确认前不要覆盖已有内容。",
+  ]
+  if (operation === "copy") {
+    lines.push("- 目标是刚创建的简历副本，原稿保持不变。")
+  }
+  return lines.join("\n")
 }
 
 // ---------------------------------------------------------------------------

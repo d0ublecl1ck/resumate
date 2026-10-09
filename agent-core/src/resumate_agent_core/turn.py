@@ -263,6 +263,25 @@ class TurnSession:
         )
         return self._turn
 
+    def report_error(
+        self,
+        *,
+        code: str,
+        message: str = "",
+        detail: str | None = None,
+    ) -> None:
+        """Record the terminal failure before the cancel that settles the turn.
+
+        Best effort by design (issue 4ff97): a reporting failure must never block
+        the cancel, and the runtime's ErrorEvent still stands on its own.
+        """
+        if not self.open:
+            return
+        try:
+            self.client.report_run_error(self.turn_id, code=code, message=message, detail=detail)
+        except Exception:  # noqa: BLE001 - settlement must not depend on reporting
+            return
+
     def cancel(
         self,
         *,

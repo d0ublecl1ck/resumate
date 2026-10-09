@@ -101,6 +101,24 @@ def shortest_path_router(*, turns_status: int = 201):
             return httpx.Response(200, json={"turnId": "turn_1", "runState": {}, "stateVersion": 0})
         if path == "/turns/turn_1/state" and request.method == "PUT":
             return httpx.Response(200, json={"turnId": "turn_1", "runState": {}, "stateVersion": 1})
+        if path == "/turns/turn_1/run-errors":
+            reported = body or {}
+            return httpx.Response(
+                200,
+                json={
+                    "code": reported.get("code", "RUN_FAILED"),
+                    "category": "auth",
+                    "message": reported.get("message", ""),
+                    "provider": "deepseek",
+                    "model": "deepseek-flash",
+                    "keyHint": "****be21",
+                },
+            )
+        if path == "/turns/turn_1/cancel":
+            return httpx.Response(
+                200,
+                json=turn_payload(state="cancelled", result=result_payload(state="cancelled", versionId=None)),
+            )
         raise AssertionError(f"unexpected {request.method} {path}")
 
     return handler, calls
@@ -299,6 +317,53 @@ def test_cli_reads_connection_and_model_defaults_from_the_environment() -> None:
     assert turn_call["headers"]["authorization"] == "Bearer pat-from-env"
     body = turn_call.get("body")
     assert body is None or body.get("executionMode") == "full_access"
+
+
+class FailingProvider:
+    """A provider whose call raises, standing in for an upstream 401."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def complete(self, messages, tools):
+        raise RuntimeError(self.message)
+
+
+FULL_KEY = "sk-test-abcdefbe21"
+
+
+def test_cli_never_prints_the_full_key_when_a_run_fails() -> None:
+    """运行日志由 stdout 生成：完整 key / Authorization 头绝不能写进去（4ff97）。"""
+    handler, calls = shortest_path_router()
+    provider = FailingProvider(f"model provider returned HTTP 401: api key {FULL_KEY} is invalid")
+
+    code, stdout, stderr = run_cli(
+        ["--resume-id", "res_1", "--prompt", "go", "--api-key", FULL_KEY],
+        transport=httpx.MockTransport(handler),
+        provider=provider,
+    )
+
+    assert code == 1, stderr
+    assert FULL_KEY not in stdout
+    assert FULL_KEY not in stderr
+    events = json_events(stdout)
+    assert events[0]["type"] == "error"
+    assert events[0]["code"] == "MODEL_ERROR"
+    # 上报给后端的 message 也必须是脱敏后的版本。
+    reported = next(call for call in calls if call["path"] == "/turns/turn_1/run-errors")
+    assert FULL_KEY not in json.dumps(reported["body"], ensure_ascii=False)
+    paths = [call["path"] for call in calls]
+    assert paths.index("/turns/turn_1/run-errors") < paths.index("/turns/turn_1/cancel")
+
+
+def test_redact_secrets_masks_key_and_authorization_header() -> None:
+    from resumate_agent_core.redaction import redact_secrets
+
+    text = f"Authorization: Bearer {FULL_KEY} api key {FULL_KEY} is invalid"
+    redacted = redact_secrets(text, api_key=FULL_KEY)
+    assert FULL_KEY not in redacted
+    assert "Authorization" not in redacted
+    assert "****be21" in redacted
 
 
 def test_cli_text_mode_is_human_readable() -> None:

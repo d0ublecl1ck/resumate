@@ -80,6 +80,37 @@ describe("getActiveRun", () => {
     expect(run?.timeline.some((event) => event.text === "帮我改简历")).toBe(true)
   })
 
+  it("carries the persisted run error so a failed turn is not silent", async () => {
+    const failed = {
+      ...TURN,
+      id: "turn_failed",
+      state: "cancelled",
+      closedAt: "2026-01-01T00:02:00Z",
+      result: { state: "cancelled", message: "runtime aborted: MODEL_ERROR" },
+      runError: {
+        code: "MODEL_ERROR",
+        category: "auth",
+        message: "model provider returned HTTP 401: Authentication Fails, Your api key: ****be21 is invalid",
+        provider: "deepseek",
+        model: "deepseek-flash",
+        keyHint: "****be21",
+      },
+    }
+    server.use(
+      http.get("/api/resumes/:id/turns", () => HttpResponse.json([failed])),
+      http.get("/api/turns/:id/state", () => HttpResponse.json({ turnId: "turn_failed", runState: {}, stateVersion: 2 })),
+    )
+
+    const run = await getActiveRun("res_1")
+
+    expect(run?.state).toBe("turn_closed")
+    expect(run?.error?.category).toBe("auth")
+    expect(run?.error?.provider).toBe("deepseek")
+    expect(run?.error?.model).toBe("deepseek-flash")
+    expect(run?.error?.keyHint).toBe("****be21")
+    expect(JSON.stringify(run)).not.toContain("sk-live")
+  })
+
   it("finds a preview-only open turn while the working copy is still empty", async () => {
     const previewOnly = {
       ...TURN,

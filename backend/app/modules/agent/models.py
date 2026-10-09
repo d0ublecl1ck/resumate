@@ -38,6 +38,13 @@ class AgentTurn(Base):
     session_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     run_state: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     state_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # The supervised run that created this turn (issue 4ff97). Recorded from the
+    # run credential so a child that dies without settling can still be matched
+    # to its turn by the supervisor.
+    run_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    # Structured terminal failure, already sanitized before it is written here.
+    # None for a turn that settled cleanly or was closed by a human.
+    run_error: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
 class PendingAction(Base):

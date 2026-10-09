@@ -46,6 +46,7 @@ export type MachineErrorCode =
   | "UPSTREAM_TIMEOUT" // 504（fb67d）
   | "UPSTREAM_REJECTED" // 502（fb67d）
   | "MODEL_OUTPUT_INVALID" // 502（fb67d）
+  | "MODEL_NO_VISION" // 409（e0457）：配置的模型不支持图像输入
   | "PASSWORD_RESET_TOKEN_INVALID" // 400（b5586）
   | "MAIL_DELIVERY_FAILED" // 502（19ea1）
 
@@ -320,6 +321,24 @@ export type RunState =
   | "frozen"
   | "turn_closed"
 
+/**
+ * 运行失败的归一化投影（issue 4ff97）。
+ *
+ * 后端持久化时已脱敏：message 里只可能出现已掩码的 key 尾号，不会出现完整 key、
+ * Authorization 头或堆栈。keyHint 形如 ****be21。
+ */
+export type RunErrorCategory = "auth" | "timeout" | "quota" | "runner" | "approval" | "unknown"
+
+export interface RunError {
+  code: string
+  category: RunErrorCategory
+  message: string
+  provider?: string | null
+  model?: string | null
+  keyHint?: string | null
+  at?: string
+}
+
 export interface AgentRun {
   id: string
   resumeId: string
@@ -333,6 +352,8 @@ export interface AgentRun {
   budget: { usedTokens: number; maxTokens: number; usedTurns: number; maxTurns: number; costUsd: number }
   timeline: RunTimelineEvent[]
   pendingActions: PendingAction[]
+  /** 终态失败；有值时必须在对话区显示错误块，不能再静默当成轮次已关闭。 */
+  error?: RunError
 }
 
 /** GET /turns/{id} 返回的后端轮次投影（契约 §4.1）。 */
@@ -369,6 +390,8 @@ export interface ApiTurn {
   closedAt?: string | null
   result?: { state: string; versionId?: string | null; changeCount?: number; message?: string } | null
   pendingActions?: ApiTurnPendingAction[]
+  /** 后端持久化的结构化失败（契约 §4.1，issue 4ff97）。 */
+  runError?: RunError | null
 }
 
 /** GET /sessions 返回的会话（契约 §19.1）。只绑 owner，一个会话可横跨多份简历与主档。 */
