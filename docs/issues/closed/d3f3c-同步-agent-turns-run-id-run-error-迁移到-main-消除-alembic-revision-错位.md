@@ -1,13 +1,14 @@
 ---
 id: d3f3c
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:44:31.746Z
-updated_at: 2026-10-09T16:44:40.298Z
+updated_at: 2026-10-09T16:46:12.226Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:44:40.298Z
+closed_at: 2026-10-09T16:46:12.226Z
 ---
 
 # 同步 agent_turns run_id/run_error 迁移到 main，消除 alembic revision 错位
