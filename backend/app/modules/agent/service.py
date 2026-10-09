@@ -16,6 +16,7 @@ from app.modules.profile.schemas import ProfileBasicsUpdate, ProfileFactCreate, 
 from app.modules.resume import service as resume_service
 from app.modules.resume.models import Resume, ResumeVersion
 from app.modules.settings import dao as settings_dao
+from app.modules.settings import service as settings_service
 from app.shared.errors import (
     BaseVersionStale,
     IdempotencyConflict,
@@ -31,6 +32,7 @@ from app.shared.errors import (
 
 from . import dao, patch, rebase
 from .models import AgentOperation, AgentSession, AgentSessionMessage, AgentTurn, PendingAction
+from .run_errors import RunErrorInput, RunErrorResponse, build_run_error
 from .schemas import (
     DiffItem,
     PatchApplyRequest,
@@ -313,7 +315,83 @@ def _turn_response(db: Session, turn: AgentTurn, *, base_rebased: bool = False) 
         closed_at=turn.closed_at,
         result=_turn_result(turn, base_rebased=base_rebased),
         pending_actions=[_pending_action_response(action) for action in dao.list_actions_for_turn(db, turn.id)],
+        run_error=RunErrorResponse.model_validate(turn.run_error) if turn.run_error else None,
     )
+
+
+def _owner_model_context(db: Session, owner_id: str) -> tuple[str | None, str | None, str | None]:
+    """(provider, model, api_key) the owner's run used, for error enrichment (4ff97).
+
+    This is the only place the plaintext key is read while reporting a failure;
+    the caller immediately masks it and never writes the raw value anywhere.
+    """
+    settings_row = settings_dao.get_by_owner(db, owner_id)
+    config = (settings_row.model_config if settings_row is not None else {}) or {}
+    provider = str(config.get("provider") or "").strip() or None
+    model = str(config.get("model") or "").strip() or None
+    api_key = settings_service.decrypt_api_key(config.get("apiKey"))
+    return provider, model, api_key
+
+
+def _store_run_error(db: Session, turn: AgentTurn, payload: RunErrorInput) -> RunErrorResponse:
+    """Persist one sanitized terminal failure; the first one wins.
+
+    A turn has a single terminal failure. A more specific runtime error must not
+    be overwritten by a broader one (for example a later RUNNER_EXIT), and a
+    duplicate report must be a no-op rather than a new write.
+    """
+    if turn.run_error:
+        return RunErrorResponse.model_validate(turn.run_error)
+    provider, model, api_key = _owner_model_context(db, turn.owner_id)
+    error = build_run_error(payload, provider=provider, model=model, api_key=api_key)
+    turn.run_error = error.model_dump(by_alias=True, mode="json")
+    db.flush()
+    return error
+
+
+def report_run_error(
+    db: Session, user: CurrentUser, turn_id: str, payload: RunErrorInput
+) -> RunErrorResponse:
+    """Record the runtime's terminal failure on its turn (issue 4ff97).
+
+    The runtime calls this immediately before it cancels the turn, so the
+    failure survives the cancel that used to erase every trace of it.
+    """
+    turn = _require_turn(db, user.id, turn_id)
+    error = _store_run_error(db, turn, payload)
+    db.commit()
+    return error
+
+
+def record_run_failure(
+    db: Session,
+    run_id: str,
+    *,
+    code: str,
+    message: str,
+    detail: str | None = None,
+) -> bool:
+    """Backend-side fallback for a run that died without reporting (issue 4ff97).
+
+    A child killed by the hard timeout or crashing before its ErrorEvent leaves
+    an open turn behind; the supervisor matches it by run id and settles it as a
+    failed cancel so the failure is still visible. Returns whether a turn was
+    marked.
+    """
+    turn = dao.get_open_turn_by_run(db, run_id)
+    if turn is None:
+        return False
+    provider, model, api_key = _owner_model_context(db, turn.owner_id)
+    error = build_run_error(
+        RunErrorInput(code=code, message=message, detail=detail),
+        provider=provider,
+        model=model,
+        api_key=api_key,
+    )
+    turn.run_error = error.model_dump(by_alias=True, mode="json")
+    _apply_result(db, turn, None, message or code, "cancelled")
+    db.commit()
+    return True
 
 
 def _expire_pending_actions(db: Session, turn: AgentTurn, reason: str) -> None:
@@ -436,6 +514,8 @@ def begin_turn(db: Session, user: CurrentUser, resume_id: str, payload: TurnCrea
         message=payload.message,
         result_message="",
         created_at=_now(),
+        # Only a run credential carries a run id; a human-created turn has none.
+        run_id=user.run_id if user.auth_kind == "run" else None,
     )
     if session is not None:
         _touch_session(session)
@@ -492,6 +572,7 @@ def _begin_profile_turn(db: Session, user: CurrentUser, payload: TurnCreateReque
         message=payload.message,
         result_message="",
         created_at=_now(),
+        run_id=user.run_id if user.auth_kind == "run" else None,
     )
     _touch_session(session)
     dao.add_turn(db, turn)

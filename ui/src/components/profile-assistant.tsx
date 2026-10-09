@@ -25,6 +25,7 @@ import { agentErrorKey } from "@/lib/agent-error"
 import { useRuntimeStatus } from "@/lib/runtime"
 import { AgentAvailabilityNotice, agentAvailability, agentAvailabilityActionEffect } from "@/components/agent-onboarding"
 import { PendingActionCard } from "@/components/kit/pending-action"
+import { RunErrorBlock } from "@/components/kit/run-error"
 import { Modal } from "@/components/ui/modal"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import type { AgentSessionMessage } from "@/lib/types"
@@ -119,6 +120,8 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const [input, setInput] = useState("")
   const [awaitingTurn, setAwaitingTurn] = useState(false)
   const [startErrorKey, setStartErrorKey] = useState<string | null>(null)
+  // 失败后重试要能重放这次输入；会话历史里虽有镜像，但重试入口用最新一次发送更直接。
+  const [lastPrompt, setLastPrompt] = useState("")
   const [actionErrorKey, setActionErrorKey] = useState<string | null>(null)
   const [submittingActionId, setSubmittingActionId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -278,6 +281,7 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     const value = text.trim()
     if (!value || startMutation.isPending) return
     setInput("")
+    setLastPrompt(value)
     optimisticSeq.current += 1
     setOptimistic((prev) => [...prev, { id: `optimistic_${optimisticSeq.current}`, text: value }])
     startMutation.mutate(value)
@@ -381,6 +385,14 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
                 busy={submittingActionId === action.id}
               />
             ))}
+
+            {/* 运行失败必须可见（issue 4ff97）：与简历工作台共用同一份错误块实现。 */}
+            {activeTurn?.runError ? (
+              <RunErrorBlock
+                error={activeTurn.runError}
+                onRetry={lastPrompt ? () => submit(lastPrompt) : undefined}
+              />
+            ) : null}
 
             {thinking ? (
               <div className="flex gap-2.5">

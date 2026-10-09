@@ -130,6 +130,8 @@ _ALLOWED_ENDPOINTS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("PUT", re.compile(r"^/turns/[^/]+/state$")),
     ("POST", re.compile(r"^/turns/[^/]+/patches:(?:validate|preview|apply)$")),
     ("POST", re.compile(r"^/turns/[^/]+/(?:finalize|cancel)$")),
+    # Terminal failure reporting, so a failed run is never a silent cancel (4ff97).
+    ("POST", re.compile(r"^/turns/[^/]+/run-errors$")),
     ("POST", re.compile(r"^/sessions$")),
     ("GET", re.compile(r"^/sessions$")),
     ("GET", re.compile(r"^/sessions/[^/]+/messages$")),

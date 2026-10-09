@@ -453,6 +453,29 @@ class CancelTurnRequest(ApiModel):
     reason: str | None = None
 
 
+class ReportRunErrorRequest(ApiModel):
+    """Body for POST /turns/{turn_id}/run-errors (issue 4ff97).
+
+    Sent immediately before the cancel that settles a failed run, so the
+    terminal failure survives as a structured, queryable field.
+    """
+
+    code: str
+    message: str = ""
+    detail: str | None = None
+
+
+class RunErrorReport(ApiModel):
+    """The server's sanitized projection of one reported failure."""
+
+    code: str
+    category: str
+    message: str
+    provider: str | None = None
+    model: str | None = None
+    key_hint: str | None = None
+
+
 # --- Capability discovery (C-10 / contract section 1) -----------------------
 
 

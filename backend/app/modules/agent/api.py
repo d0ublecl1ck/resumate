@@ -10,6 +10,7 @@ from app.core.redis import get_redis
 from app.modules.auth.deps import require_human_session, require_permission
 
 from . import events, runner, service
+from .run_errors import RunErrorInput, RunErrorResponse
 from .schemas import (
     PatchApplyRequest,
     PatchApplyResponse,
@@ -142,6 +143,17 @@ def cancel_turn(
     user: CurrentUser = Depends(require_permission("resume:write")),
 ) -> UserTurnResponse:
     return service.cancel_turn(db, user, turn_id, payload)
+
+
+@router.post("/turns/{turn_id}/run-errors", response_model=RunErrorResponse)
+def report_run_error(
+    turn_id: str,
+    payload: RunErrorInput,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> RunErrorResponse:
+    """Record the runtime's terminal failure before it cancels (issue 4ff97)."""
+    return service.report_run_error(db, user, turn_id, payload)
 
 
 @router.post("/turns/{turn_id}/patches:validate", response_model=PatchValidationResponse)

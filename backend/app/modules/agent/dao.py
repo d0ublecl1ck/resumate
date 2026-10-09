@@ -17,6 +17,22 @@ def get_open_turn(db: Session, resume_id: str) -> AgentTurn | None:
     return db.scalars(statement).first()
 
 
+def get_open_turn_by_run(db: Session, run_id: str) -> AgentTurn | None:
+    """The still-open turn a supervised run created, matched by run id (4ff97).
+
+    Only used by the supervisor after a child dies without settling: an already
+    closed turn (a reported failure cancels it) must never be re-marked.
+    """
+    if not run_id:
+        return None
+    statement = (
+        select(AgentTurn)
+        .where(AgentTurn.run_id == run_id, AgentTurn.state == "open")
+        .order_by(AgentTurn.created_at)
+    )
+    return db.scalars(statement).first()
+
+
 def list_turns(
     db: Session,
     resume_id: str,

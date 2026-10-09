@@ -10,6 +10,7 @@ import { agentErrorKey } from "@/lib/agent-error"
 import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
+import { RunErrorBlock } from "@/components/kit/run-error"
 import { MarkdownMessage } from "@/components/kit/markdown"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
@@ -84,6 +85,8 @@ export function RunPanel({
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [input, setInput] = useState("")
+  // 失败后重试要能重放这次输入；轮次投影里没有 prompt（标准 run 的 turn.message 为空）。
+  const [lastPrompt, setLastPrompt] = useState("")
   const [actionError, setActionError] = useState<string | null>(null)
   const [startError, setStartError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
@@ -205,6 +208,7 @@ export function RunPanel({
 
   function launch(prompt: string) {
     setInput("")
+    setLastPrompt(prompt)
     submittedFromRunId.current = run?.id ?? null
     setAwaitingNewRun(true)
     start.mutate(prompt)
@@ -284,6 +288,14 @@ export function RunPanel({
             busy={submittingId === action.id}
           />
         ))}
+
+        {/* 运行失败必须可见（issue 4ff97）：类别 + provider/model + key 尾号 + 下一步入口。 */}
+        {run?.error ? (
+          <RunErrorBlock
+            error={run.error}
+            onRetry={lastPrompt ? () => launch(lastPrompt) : undefined}
+          />
+        ) : null}
       </div>
 
       {/* 输入 */}
