@@ -6,9 +6,16 @@ export default {
   untitled: "Untitled conversation",
   untitledWithTime: "Untitled conversation · {{time}}",
   derivedLabel: "Session {{time}}",
-  derivedHint: "The backend does not store a session title yet, so the last active time stands in for it.",
+  derivedHint: "The title is derived from this session's first user message; a fallback shows until the backend returns it.",
   idLabel: "ID {{id}}",
   relativeTime: "Last active {{time}}",
+  groups: {
+    today: "Today",
+    yesterday: "Yesterday",
+    last7Days: "Previous 7 days",
+    last30Days: "Previous 30 days",
+    earlier: "Earlier",
+  },
   relative: {
     justNow: "just now",
     minutes: "{{n}} min ago",

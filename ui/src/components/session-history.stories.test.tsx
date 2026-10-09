@@ -10,19 +10,41 @@ import {
   ListDefault,
   ListEmpty,
   ListError,
+  ListGroupedByTime,
   ListLoading,
+  ListSingleSession,
+  ListUntitledFallback,
 } from "@/components/session-history.stories"
 
 afterEach(cleanup)
 
 describe("session history stories", () => {
-  it("ListDefault renders one row per session with a time-derived label", () => {
+  it("ListDefault renders one row per session and never shows the session id", () => {
     render(ListDefault.render())
     const rows = screen.getAllByRole("button")
     expect(rows).toHaveLength(2)
-    // Local time (UTC+8) puts both sessions on the same calendar day.
-    expect(screen.getAllByText(/2026-10-01/).length).toBeGreaterThan(0)
-    expect(screen.getByText(/000000000001/)).toBeInTheDocument()
+    expect(screen.getAllByText("未命名对话")).toHaveLength(2)
+    expect(screen.queryByText(/000000000001/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/ID /)).not.toBeInTheDocument()
+  })
+
+  it("ListUntitledFallback keeps a readable fallback title", () => {
+    render(ListUntitledFallback.render())
+    expect(screen.getAllByText("未命名对话")).toHaveLength(2)
+  })
+
+  it("ListGroupedByTime renders the five time groups in order", () => {
+    render(ListGroupedByTime.render())
+    for (const label of ["今天", "昨天", "7 天内", "30 天内", "更早"]) {
+      expect(screen.getByRole("region", { name: label })).toBeInTheDocument()
+    }
+  })
+
+  it("ListSingleSession renders one group with a single row", () => {
+    render(ListSingleSession.render())
+    expect(screen.getAllByRole("button")).toHaveLength(1)
+    expect(screen.getByRole("region", { name: "昨天" })).toBeInTheDocument()
+    expect(screen.queryByRole("region", { name: "今天" })).not.toBeInTheDocument()
   })
 
   it("ListEmpty explains that no session exists yet", () => {
@@ -75,8 +97,8 @@ describe("session history stories", () => {
     expect(screen.getByText(/500/)).toBeInTheDocument()
   })
 
-  it("both views disclose that a session has no backend title", () => {
+  it("the detail view discloses where the title comes from", () => {
     render(DetailDefault.render())
-    expect(screen.getByText(/后端暂未保存会话标题/)).toBeInTheDocument()
+    expect(screen.getByText(/首条用户消息派生/)).toBeInTheDocument()
   })
 })

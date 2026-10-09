@@ -6,9 +6,16 @@ export default {
   untitled: "未命名对话",
   untitledWithTime: "未命名对话 · {{time}}",
   derivedLabel: "会话 {{time}}",
-  derivedHint: "后端暂未保存会话标题，这里用最近活跃时间代替。",
+  derivedHint: "标题由这个会话的首条用户消息派生；后端还没返回标题时显示兜底文案。",
   idLabel: "ID {{id}}",
   relativeTime: "最近活跃 {{time}}",
+  groups: {
+    today: "今天",
+    yesterday: "昨天",
+    last7Days: "7 天内",
+    last30Days: "30 天内",
+    earlier: "更早",
+  },
   relative: {
     justNow: "刚刚",
     minutes: "{{n}} 分钟前",

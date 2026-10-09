@@ -69,7 +69,7 @@ function relativeTime(value: string): { unit: RelativeUnit; n: number } | "justN
   return { unit: "years", n: Math.floor(diff / (365 * DAY_MS)) }
 }
 
-/** 列表项第二行：相对时间 +（可选）消息数 + id 尾巴；字段缺失直接跳过。 */
+/** 列表项第二行：最近活跃相对时间 +（可选）消息数；克制到两段，不出现会话 ID。 */
 function SessionMeta({ session }: { session: SessionSummary }) {
   const { t } = useTranslation()
   const relative = relativeTime(session.lastActiveAt)
@@ -84,9 +84,42 @@ function SessionMeta({ session }: { session: SessionSummary }) {
   if (session.messageCount !== undefined) {
     parts.push(t("sessionHistory.messageCount", { n: session.messageCount }))
   }
-  parts.push(t("sessionHistory.idLabel", { id: shortSessionId(session.id) }))
 
   return <span className="mt-1 block text-xs text-muted-foreground">{parts.join(" · ")}</span>
+}
+
+/** 时间分组：按最近活跃时间与「今天零点」的日历日差归档。 */
+export type SessionBucket = "today" | "yesterday" | "last7Days" | "last30Days" | "earlier"
+
+const SESSION_BUCKETS: SessionBucket[] = ["today", "yesterday", "last7Days", "last30Days", "earlier"]
+
+export function sessionBucket(lastActiveAt: string, now: dayjs.Dayjs = dayjs()): SessionBucket {
+  const parsed = dayjs(lastActiveAt)
+  // 无效时间不能丢行：归入「更早」。
+  if (!parsed.isValid()) return "earlier"
+  const days = now.startOf("day").diff(parsed.startOf("day"), "day")
+  if (days <= 0) return "today"
+  if (days === 1) return "yesterday"
+  if (days <= 7) return "last7Days"
+  if (days <= 30) return "last30Days"
+  return "earlier"
+}
+
+/** 分组顺序固定：今天 → 昨天 → 7 天内 → 30 天内 → 更早；空组由调用方跳过。 */
+export function groupSessionsByTime(
+  sessions: SessionSummary[],
+  now: dayjs.Dayjs = dayjs(),
+): { bucket: SessionBucket; sessions: SessionSummary[] }[] {
+  const grouped = new Map<SessionBucket, SessionSummary[]>()
+  for (const session of sessions) {
+    const bucket = sessionBucket(session.lastActiveAt, now)
+    const bucketItems = grouped.get(bucket)
+    if (bucketItems) bucketItems.push(session)
+    else grouped.set(bucket, [session])
+  }
+  return SESSION_BUCKETS.map((bucket) => ({ bucket, sessions: grouped.get(bucket) ?? [] })).filter(
+    (group) => group.sessions.length > 0,
+  )
 }
 
 function messageText(message: SessionMessage): string {
@@ -149,6 +182,8 @@ export function SessionList({ sessions, error, activeId, onSelect }: SessionList
 
   // 选中一个「刚创建还没发消息」的会话时，提示这不是空列表而是空会话。
   const showNewSessionHint = sessions.some((session) => session.id === activeId && session.messageCount === 0)
+  // 一行一个会话（一个会话含若干轮消息）；按最近活跃时间分组，空组不渲染。
+  const groups = groupSessionsByTime(sessions)
 
   return (
     <>
@@ -160,29 +195,39 @@ export function SessionList({ sessions, error, activeId, onSelect }: SessionList
           description={t("sessionHistory.list.emptyConversationDescription")}
         />
       ) : null}
-      <ul aria-label={t("sessionHistory.title")} className="space-y-2">
-        {sessions.map((session) => {
-          const active = session.id === activeId
-          const title =
-            session.title?.trim() || t("sessionHistory.untitledWithTime", { time: formatTime(session.lastActiveAt) })
+      <div className="space-y-4">
+        {groups.map((group) => {
+          const groupLabel = t(`sessionHistory.groups.${group.bucket}`)
           return (
-            <li key={session.id}>
-              <button
-                type="button"
-                onClick={() => onSelect?.(session.id)}
-                aria-current={active ? "true" : undefined}
-                className={cn(
-                  "w-full rounded-lg border border-input bg-card px-3 py-2.5 text-left transition-colors hover:bg-secondary",
-                  active && "border-cobalt bg-cobalt/5",
-                )}
-              >
-                <span className="wrap-anywhere block font-serif text-base font-bold text-foreground">{title}</span>
-                <SessionMeta session={session} />
-              </button>
-            </li>
+            <section key={group.bucket} aria-label={groupLabel}>
+              <h3 className="mb-2 text-xs font-semibold text-muted-foreground">{groupLabel}</h3>
+              <ul className="space-y-2">
+                {group.sessions.map((session) => {
+                  const active = session.id === activeId
+                  // 行主文案是话题标题；后端还没返回标题时用「未命名对话」兜底，绝不渲染 undefined。
+                  const title = session.title?.trim() || t("sessionHistory.untitled")
+                  return (
+                    <li key={session.id}>
+                      <button
+                        type="button"
+                        onClick={() => onSelect?.(session.id)}
+                        aria-current={active ? "true" : undefined}
+                        className={cn(
+                          "w-full rounded-lg border border-input bg-card px-3 py-2.5 text-left transition-colors hover:bg-secondary",
+                          active && "border-cobalt bg-cobalt/5",
+                        )}
+                      >
+                        <span className="wrap-anywhere block font-serif text-base font-bold text-foreground">{title}</span>
+                        <SessionMeta session={session} />
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
           )
         })}
-      </ul>
+      </div>
     </>
   )
 }
