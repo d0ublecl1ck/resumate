@@ -5,6 +5,7 @@ from app.core.db import Base, engine
 from app.modules.access import models as access_models  # noqa: F401
 from app.modules.agent import models as agent_models  # noqa: F401
 from app.modules.auth import models as auth_models  # noqa: F401
+from app.modules.interview import models as interview_models  # noqa: F401
 from app.modules.jd import models as jd_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401

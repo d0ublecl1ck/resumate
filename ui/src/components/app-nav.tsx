@@ -15,12 +15,14 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessagesSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
   ShieldCheck,
   Sparkles,
   UserRound,
+  Users,
   X,
 } from "lucide-react"
 
@@ -29,10 +31,12 @@ const MAIN = [
   { href: "/resumes", labelKey: "nav.items.resumes", icon: FileText },
   { href: "/profile", labelKey: "nav.items.profile", icon: UserRound },
   { href: "/jds", labelKey: "nav.items.jds", icon: Boxes },
+  { href: "/interview", labelKey: "nav.items.interview", icon: MessagesSquare },
   { href: "/settings", labelKey: "nav.items.settings", icon: Settings },
 ]
 
 const ADMIN = [
+  { href: "/admin/users", labelKey: "nav.items.users", icon: Users, permission: "user:read" },
   { href: "/admin/templates", labelKey: "nav.items.templates", icon: Boxes, permission: "user:read" },
   { href: "/admin/rbac", labelKey: "nav.items.rbac", icon: ShieldCheck, permission: "role:write" },
 ]

@@ -1,0 +1,98 @@
+// Locale: interviewReport - single-session assessment report.
+export default {
+  eyebrow: "Assessment report",
+  title: "Single-session assessment · {{role}}",
+  role: "Java backend",
+  description: "Rubric v1.0 is frozen with this report; every conclusion points back to a specific answer, and dimensions without evidence are not scored.",
+  actions: {
+    rubricVersion: "Rubric {{version}}",
+    rubricFrozen: "frozen",
+    export: "Export report",
+  },
+  mode: {
+    label: "Session type",
+    text: "Text-only",
+    voice: "Voice",
+  },
+  content: {
+    title: "Content dimensions",
+    caption: "Evidence per dimension: each score carries the answer excerpt it points back to.",
+    scoreLabel: "Score",
+    scoreAria: "{{dimension}} scored {{score}} out of 100",
+    evidenceLabel: "Evidence",
+    expand: "Show full evidence",
+    collapse: "Hide full evidence",
+    dims: {
+      correctness: "Technical correctness",
+      depth: "Depth of knowledge",
+      rigor: "Logical rigor",
+      fit: "Role fit",
+    },
+    evidence: {
+      correctness: "“We shard orders by the order-id gene method, hashing the last four digits with the user id so all orders of one user stay on the same shard.”",
+      depth: "“Cross-shard queries are never assembled online: analytics sync to Elasticsearch asynchronously and paging uses search_after.”",
+      rigor: "“Capacity is planned at 30M rows per shard with 30% growth headroom: 200M rows over 64 shards, write P99 from 800ms to 220ms.”",
+      fit: "“Rate limiting uses a per-node token bucket and a Redis sliding window for the cluster, controlled by both API and tenant.”",
+    },
+    evidenceMore: {
+      correctness: "“Consistency follows Cache Aside: delete the cache after updating the database, then subscribe to binlog for delayed double delete, tolerating a sub-second window.”",
+      depth: "“Circuit breaking uses Sentinel: trip above a 50% error rate sustained for 10 seconds, and let five probe requests through in half-open state.”",
+      rigor: "“Thresholds come from a full-link load test: press to 1.5x the forecast peak, then take 80% as the limit and keep a buffer.”",
+            fit: "“Stop the bleeding first: rate-limit and degrade non-critical paths by the runbook, shift traffic, scale the core service, and keep checkout and payment alive.”",
+    },
+  },
+  expression: {
+    title: "Expression dimensions",
+    caption: "Reviewable estimates only; no speech traits are inferred from text.",
+    metrics: {
+      pace: "Pace",
+      clarity: "Clarity",
+      confidence: "Confidence",
+    },
+    audioReference: "Audio-session reference: {{value}}",
+    paceNormal: "normal",
+    clarityGood: "good",
+    confidenceEstimate: "evidence-based estimate",
+    confidenceBasis: "Estimated from wording in 2 answers",
+    notApplicable: "Not applicable",
+    voiceValuePace: "128 wpm",
+    voiceValueClarity: "Good",
+    voiceBasisPace: "Measured from audio: inside this role's 110-140 wpm band",
+    voiceBasisClarity: "Measured from audio: clean articulation, no filler pile-up",
+    voiceNote: "Voice session: pace, clarity, and confidence are all measured from the audio signal and all three count toward the score.",
+    notApplicableDetail: {
+      pace: "This is a text-only session with no audio track, so pace cannot be measured; it is recorded as not measurable and does not count toward the score.",
+      clarity: "This is a text-only session with no audio track, so clarity cannot be measured; it is recorded as not measurable and does not count toward the score.",
+    },
+    textOnlyNote: "Text-only session: pace and clarity are marked not applicable.",
+    insufficientNote: "No evidence, no score: this session has no audio, so pace and clarity record “not measurable” and do not count.",
+  },
+  highlights: {
+    title: "Highlights",
+    caption: "Each points back to a specific answer",
+    items: {
+      jmm: "Sharded orders by order-id gene method, hashing the last four digits with the user id so one user's orders stay on one shard.",
+      index: "Rate-limit thresholds come from a full-link load test with buffer, and circuit breaking uses Sentinel half-open probes.",
+      aop: "Multi-level cache covers consistency, hot keys, penetration, breakdown and avalanche with concrete handling.",
+    },
+  },
+  gaps: {
+    title: "Gaps",
+    caption: "Ordered by impact on this role",
+    items: {
+      depth: "Did not expand the distributed-transaction or eventual-consistency boundary between order, inventory and payment.",
+      fit: "Cache invalidation sync between the local cache and Redis was not made explicit.",
+      vague: "The shard-key description still needs proof that one user always lands on the same shard.",
+    },
+  },
+  suggestions: {
+    title: "Improvements",
+    caption: "Each is already linked to a next-round practice item",
+    practiceItem: "Practice item {{item}}",
+    items: {
+      gc: "Add the distributed-transaction choice and consistency boundary for order, inventory and payment.",
+      star: "State the local-cache invalidation sync plan, including reconnect and eventual-consistency fallback.",
+      numbers: "Strengthen circuit breaking: slow-call ratio, exception count, half-open success threshold and anti-flapping.",
+    },
+  },
+}

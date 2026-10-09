@@ -27,8 +27,10 @@ export default {
     resumes: "简历库",
     profile: "个人资料",
     jds: "JD 库",
+    interview: "模拟面试",
     settings: "设置与 Agent",
     templates: "模板库",
+    users: "用户管理",
     rbac: "角色与权限",
   },
 }

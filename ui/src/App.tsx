@@ -9,9 +9,12 @@ import { ResumeEditorPage } from "@/pages/resume-editor"
 import { ResumeVersionsPage } from "@/pages/resume-versions"
 import { JdsPage } from "@/pages/jds"
 import { JdDetailPage } from "@/pages/jd-detail"
+import { InterviewPage } from "@/pages/interview"
+import { InterviewSessionPage } from "@/pages/interview-session"
 import { ProfilePage } from "@/pages/profile"
 import { SettingsLayout } from "@/pages/settings-layout"
 import { RbacPage } from "@/pages/rbac"
+import { UsersPage } from "@/pages/users"
 import { TemplatesPage } from "@/pages/templates"
 import { TemplateEditorPage } from "@/pages/template-editor"
 import { NotFoundPage } from "@/pages/not-found"
@@ -57,10 +60,13 @@ function App() {
             <Route path="resumes/:id/versions" element={<ResumeVersionsPage />} />
             <Route path="jds" element={<JdsPage />} />
             <Route path="jds/:id" element={<JdDetailPage />} />
+            <Route path="interview" element={<InterviewPage />} />
+            <Route path="interview/:id" element={<InterviewSessionPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="settings/*" element={<SettingsLayout />} />
             <Route path="admin/templates" element={<TemplatesPage />} />
             <Route path="admin/templates/:id" element={<TemplateEditorPage />} />
+            <Route path="admin/users" element={<UsersPage />} />
             <Route path="admin/rbac" element={<RbacPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
