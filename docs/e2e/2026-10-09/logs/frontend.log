@@ -1787,3 +1787,389 @@ dsh-desktop: pnpm terminated with SIGKILL.
 4:05:25 PM [vite] (client) page reload prototypes/index.html
 4:05:25 PM [vite] (client) page reload prototypes/index.html
 4:05:40 PM [vite] (client) page reload prototypes/index.html
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             4:12:51 PM [vite] (client) hmr update /src/index.css
+4:12:51 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 19 more
+4:12:51 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 19 more
+4:13:08 PM [vite] (client) page reload prototypes/index.html
+4:22:16 PM [vite] (client) hmr update /src/index.css
+4:28:19 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:28:19 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:28:25 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:28:25 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:28:34 PM [vite] (client) hmr update /src/index.css
+4:28:34 PM [vite] (client) hmr update /src/index.css
+4:28:42 PM [vite] (client) hmr update /src/index.css
+4:28:53 PM [vite] (client) hmr update /src/index.css
+4:29:33 PM [vite] (client) hmr update /src/index.css
+4:29:38 PM [vite] (client) hmr update /src/index.css
+4:29:55 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:29:55 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:03 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:03 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:05 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:05 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:14 PM [vite] (client) hmr update /src/index.css
+4:30:14 PM [vite] (client) hmr update /src/index.css
+4:30:16 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:16 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:17 PM [vite] (client) hmr update /src/index.css
+4:30:19 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:23 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:23 PM [vite] (client) hmr update /src/index.css
+4:30:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:30:45 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+4:30:53 PM [vite] (client) hmr update /src/index.css
+4:30:55 PM [vite] (client) hmr update /src/index.css
+4:31:06 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx, /src/pages/interview-session.tsx
+4:31:06 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx, /src/pages/interview-session.tsx
+4:31:24 PM [vite] (client) hmr update /src/index.css
+4:31:28 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:31:28 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:31:28 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:31:34 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+4:31:34 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+4:31:36 PM [vite] (client) hmr update /src/index.css
+4:31:40 PM [vite] (client) hmr update /src/index.css
+4:31:49 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:31:49 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:32:09 PM [vite] (client) hmr update /src/index.css
+4:32:17 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:32:17 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 21 more
+4:32:33 PM [vite] (client) hmr update /src/index.css
+4:32:38 PM [vite] (client) hmr update /src/index.css
+4:32:48 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:32:48 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:33:02 PM [vite] (client) hmr update /src/index.css
+4:33:05 PM [vite] (client) hmr update /src/index.css
+4:33:08 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:33:08 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:33:13 PM [vite] (client) hmr update /src/index.css
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+4:33:30 PM [vite] (client) hmr update /src/index.css
+4:33:32 PM [vite] (client) hmr update /src/index.css
+4:33:34 PM [vite] (client) hmr update /src/index.css
+4:33:38 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:33:38 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
+4:33:39 PM [vite] (client) hmr invalidate /src/components/profile-assistant.tsx Could not Fast Refresh ("buildConversation" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+4:33:39 PM [vite] (client) hmr update /src/components/profile-workspace.tsx
+4:33:47 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+4:34:41 PM [vite] (client) hmr update /src/index.css
+4:34:41 PM [vite] (client) hmr update /src/index.css
+4:34:50 PM [vite] (client) hmr update /src/index.css
+4:34:51 PM [vite] (client) hmr update /src/index.css
+4:34:51 PM [vite] (client) hmr update /src/index.css
+4:34:53 PM [vite] (client) hmr update /src/index.css
+4:35:28 PM [vite] (client) hmr update /src/index.css
+4:35:33 PM [vite] (client) hmr update /src/index.css
+4:35:33 PM [vite] (client) hmr update /src/index.css
+4:35:47 PM [vite] (client) hmr update /src/index.css
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+4:36:48 PM [vite] (client) hmr update /src/index.css
+4:37:24 PM [vite] (client) hmr update /src/index.css
+4:37:24 PM [vite] (client) hmr update /src/index.css
+4:37:25 PM [vite] (client) hmr update /src/index.css
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+4:41:57 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx
+4:44:29 PM [vite] (client) hmr update /src/index.css
+4:44:29 PM [vite] (client) hmr update /src/index.css
+4:44:29 PM [vite] (client) hmr update /src/index.css
+4:51:00 PM [vite] (client) hmr update /src/index.css
+4:51:07 PM [vite] (client) hmr update /src/index.css
+4:51:12 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+4:51:13 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+4:51:24 PM [vite] (client) hmr update /src/index.css
+4:51:39 PM [vite] (client) hmr update /src/index.css
+4:51:54 PM [vite] (client) hmr update /src/index.css
+4:53:17 PM [vite] (client) hmr update /src/index.css
+4:53:17 PM [vite] (client) hmr update /src/index.css
+4:55:20 PM [vite] (client) page reload storybook-static/index.html
+4:55:26 PM [vite] (client) page reload storybook-static/iframe.html
+4:56:52 PM [vite] (client) hmr update /src/index.css
+4:56:52 PM [vite] (client) hmr update /src/index.css
+5:00:29 PM [vite] (client) hmr update /src/index.css
+5:00:29 PM [vite] (client) hmr update /src/index.css, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/profile.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/workbench.tsx, /src/pages/verify-email.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx, /src/components/resume-editor.tsx and 18 more
+5:00:30 PM [vite] (client) hmr update /src/index.css, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/profile.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/workbench.tsx, /src/pages/verify-email.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx, /src/components/resume-editor.tsx and 18 more
+5:00:40 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:53 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:53 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:54 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:54 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:54 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:54 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:54 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:55 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:00:55 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:01:06 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:01:10 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:01:10 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:01:10 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:01:39 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:01:40 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:01:40 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:01:40 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:01:56 PM [vite] (client) hmr update /src/index.css, /src/components/settings-form.tsx
+5:01:57 PM [vite] (client) hmr update /src/index.css, /src/components/settings-form.tsx
+5:01:58 PM [vite] (client) hmr update /src/index.css, /src/components/settings-form.tsx
+5:02:02 PM [vite] (client) hmr update /src/index.css, /src/components/settings-form.tsx
+5:02:22 PM [vite] (client) hmr update /src/index.css
+5:02:23 PM [vite] (client) hmr update /src/index.css
+5:02:23 PM [vite] (client) hmr update /src/index.css
+5:02:23 PM [vite] (client) hmr update /src/index.css
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+5:02:36 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+5:03:07 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:03:07 PM [vite] (client) hmr update /src/index.css
+5:03:08 PM [vite] (client) hmr update /src/index.css
+5:03:12 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:04:04 PM [vite] (client) hmr update /src/index.css
+5:05:14 PM [vite] (client) hmr update /src/index.css, /src/features/interview/plan-screen.tsx
+5:05:26 PM [vite] (client) hmr update /src/index.css, /src/features/interview/plan-screen.tsx
+5:05:35 PM [vite] (client) hmr update /src/index.css, /src/features/interview/plan-screen.tsx
+5:05:36 PM [vite] (client) hmr update /src/index.css, /src/features/interview/plan-screen.tsx
+5:05:45 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:05:45 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 27 more
+5:05:51 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+5:05:51 PM [vite] (client) hmr update /src/App.tsx, /src/index.css
+5:05:51 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx
+5:05:51 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx
+5:06:01 PM [vite] vite.config.ts changed, restarting server...
+5:06:01 PM [vite] server restarted.
+5:06:23 PM [vite] (client) hmr update /src/index.css
+5:07:34 PM [vite] (client) page reload storybook-static/index.html
+5:07:34 PM [vite] (client) page reload storybook-static/iframe.html
+5:07:36 PM [vite] (client) page reload storybook-static/index.html
+5:07:49 PM [vite] (client) page reload storybook-static/iframe.html
+5:11:08 PM [vite] (client) page reload prototypes/index.html
+5:11:25 PM [vite] (client) page reload prototypes/index.html
+5:11:30 PM [vite] (client) page reload prototypes/index.html
+5:11:30 PM [vite] (client) page reload prototypes/index.html
+5:12:07 PM [vite] (client) page reload prototypes/index.html
+5:12:07 PM [vite] (client) page reload prototypes/index.html
+5:12:07 PM [vite] (client) page reload prototypes/index.html
+5:12:07 PM [vite] (client) page reload prototypes/index.html
+5:12:07 PM [vite] (client) page reload prototypes/index.html
+5:12:08 PM [vite] (client) page reload prototypes/index.html
+5:12:08 PM [vite] (client) page reload prototypes/index.html
+5:12:15 PM [vite] (client) page reload prototypes/index.html
+5:12:15 PM [vite] (client) page reload prototypes/index.html
+5:12:26 PM [vite] (client) page reload prototypes/index.html
+5:12:26 PM [vite] (client) page reload prototypes/index.html
+5:12:26 PM [vite] (client) page reload prototypes/index.html
+5:12:27 PM [vite] (client) page reload prototypes/index.html
+5:12:27 PM [vite] (client) page reload prototypes/index.html
+5:12:37 PM [vite] (client) page reload prototypes/index.html
+5:12:37 PM [vite] (client) page reload prototypes/index.html
+5:12:37 PM [vite] (client) page reload prototypes/index.html
+5:12:37 PM [vite] (client) page reload prototypes/index.html
+5:13:12 PM [vite] (client) hmr update /src/index.css
+5:13:23 PM [vite] (client) hmr update /src/index.css
+5:13:23 PM [vite] (client) hmr update /src/index.css
+5:17:22 PM [vite] (client) page reload storybook-static/iframe.html
+5:17:22 PM [vite] (client) page reload storybook-static/index.html
+5:17:23 PM [vite] (client) page reload storybook-static/index.html
+5:17:30 PM [vite] (client) page reload storybook-static/iframe.html
+5:19:06 PM [vite] (client) hmr update /src/index.css
+5:19:19 PM [vite] (client) hmr update /src/index.css
+5:19:26 PM [vite] (client) page reload prototypes/index.html
+5:19:26 PM [vite] (client) page reload prototypes/index.html
+5:20:30 PM [vite] (client) page reload storybook-static/iframe.html
+5:20:30 PM [vite] (client) page reload storybook-static/index.html
+5:20:31 PM [vite] (client) page reload storybook-static/index.html
+5:20:36 PM [vite] (client) page reload storybook-static/iframe.html
+5:21:19 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:19 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:19 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:20 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:26 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:27 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:21:56 PM [vite] (client) hmr update /src/index.css
+5:22:02 PM [vite] (client) hmr update /src/index.css
+5:22:29 PM [vite] (client) hmr update /src/index.css
+5:22:48 PM [vite] (client) hmr update /src/index.css
+5:22:53 PM [vite] (client) hmr update /src/index.css
+5:23:06 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:23:16 PM [vite] (client) hmr update /src/index.css
+5:23:37 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/interview-session.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx and 27 more
+5:23:52 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:24:18 PM [vite] (client) hmr update /src/index.css
+5:24:31 PM [vite] (client) hmr update /src/index.css
+5:24:35 PM [vite] (client) hmr update /src/index.css
+5:24:53 PM [vite] (client) page reload storybook-static/index.html
+5:24:53 PM [vite] (client) page reload storybook-static/iframe.html
+5:24:53 PM [vite] (client) page reload storybook-static/index.html
+5:24:56 PM [vite] (client) page reload storybook-static/iframe.html
+5:25:09 PM [vite] (client) hmr update /src/index.css
+5:25:09 PM [vite] (client) hmr update /src/index.css
+5:25:09 PM [vite] (client) hmr update /src/index.css
+5:25:39 PM [vite] (client) page reload storybook-static/index.html
+5:25:39 PM [vite] (client) page reload storybook-static/iframe.html
+5:25:39 PM [vite] (client) page reload storybook-static/index.html
+5:25:42 PM [vite] (client) page reload storybook-static/iframe.html
+5:28:09 PM [vite] (client) hmr update /src/index.css, /src/features/interview/report-screen.tsx
+5:28:09 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:28:09 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:28:09 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:28:23 PM [vite] (client) hmr update /src/index.css
+5:28:51 PM [vite] (client) page reload storybook-static/index.html
+5:28:51 PM [vite] (client) page reload storybook-static/iframe.html
+5:28:51 PM [vite] (client) page reload storybook-static/index.html
+5:28:53 PM [vite] (client) page reload storybook-static/iframe.html
+5:34:56 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:34:59 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx, /src/features/interview/voice-screen.tsx
+5:35:02 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx, /src/pages/interview-session.tsx, /src/features/interview/growth-screen.tsx, /src/features/interview/history-screen.tsx, /src/features/interview/plan-screen.tsx, /src/features/interview/questions-screen.tsx, /src/features/interview/setup-screen.tsx
+5:35:02 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx, /src/pages/interview-session.tsx, /src/features/interview/growth-screen.tsx, /src/features/interview/history-screen.tsx, /src/features/interview/plan-screen.tsx, /src/features/interview/questions-screen.tsx, /src/features/interview/setup-screen.tsx
+5:35:15 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx
+5:35:22 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
+5:35:22 PM [vite] (client) hmr update /src/index.css, /src/features/interview/session-screen.tsx
+5:35:22 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:41 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:45 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:48 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:48 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:54 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:35:54 PM [vite] (client) hmr update /src/index.css, /src/features/interview/voice-screen.tsx
+5:36:04 PM [vite] (client) hmr update /src/index.css, /src/features/interview/report-screen.tsx
+5:36:04 PM [vite] (client) hmr update /src/index.css, /src/features/interview/report-screen.tsx
+5:36:14 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:14 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:17 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:17 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:21 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:21 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 28 more
+5:36:35 PM [vite] (client) hmr update /src/index.css
+5:36:42 PM [vite] (client) hmr update /src/index.css
+5:36:53 PM [vite] (client) hmr update /src/index.css
+5:37:54 PM [vite] (client) page reload storybook-static/iframe.html
+5:37:54 PM [vite] (client) page reload storybook-static/index.html
+5:37:54 PM [vite] (client) page reload storybook-static/index.html
+5:37:57 PM [vite] (client) page reload storybook-static/iframe.html
+5:48:30 PM [vite] (client) hmr update /src/index.css, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 18 more
+5:48:33 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:48:33 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:48:44 PM [vite] (client) hmr update /src/index.css, /src/components/resume-editor.tsx
+5:48:44 PM [vite] (client) hmr update /src/index.css, /src/components/resume-editor.tsx
+5:49:14 PM [vite] (client) hmr update /src/index.css
+5:49:35 PM [vite] (client) hmr update /src/index.css
+5:49:54 PM [vite] (client) page reload prototypes/index.html
+5:49:54 PM [vite] (client) page reload prototypes/index.html
+5:50:34 PM [vite] (client) page reload storybook-static/index.html
+5:50:34 PM [vite] (client) page reload storybook-static/iframe.html
+5:50:34 PM [vite] (client) page reload storybook-static/index.html
+5:50:38 PM [vite] (client) page reload storybook-static/iframe.html
+5:52:09 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx, /src/pages/interview-session.tsx, /src/features/interview/growth-screen.tsx, /src/features/interview/history-screen.tsx, /src/features/interview/plan-screen.tsx, /src/features/interview/questions-screen.tsx, /src/features/interview/setup-screen.tsx, /src/features/interview/report-screen.tsx
+5:52:27 PM [vite] (client) hmr update /src/index.css, /src/features/interview/questions-screen.tsx
+5:52:31 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:31 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:35 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:35 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:35 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:37 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:37 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/users.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/workbench.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/interview.tsx, /src/pages/jd-detail.tsx, /src/features/interview/setup-screen.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/rbac.tsx, /src/components/app-nav.tsx and 30 more
+5:52:43 PM [vite] (client) hmr update /src/index.css
+5:53:00 PM [vite] (client) hmr update /src/index.css
+5:53:05 PM [vite] (client) hmr update /src/index.css
+5:53:05 PM [vite] (client) hmr update /src/index.css
+5:53:11 PM [vite] (client) hmr update /src/index.css
+5:54:08 PM [vite] (client) page reload prototypes/index.html
+5:54:19 PM [vite] (client) page reload storybook-static/iframe.html
+5:54:19 PM [vite] (client) page reload storybook-static/index.html
+5:54:20 PM [vite] (client) page reload storybook-static/index.html
+5:54:22 PM [vite] (client) page reload storybook-static/iframe.html
+6:00:46 PM [vite] (client) dependency optimized: dayjs
+6:00:46 PM [vite] (client) optimized dependencies changed. reloading
+6:04:31 PM [vite] (client) page reload prototypes/index.html
+6:06:21 PM [vite] (client) hmr update /src/index.css
+6:06:26 PM [vite] (client) hmr update /src/index.css

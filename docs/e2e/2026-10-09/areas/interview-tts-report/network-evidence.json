@@ -1,0 +1,46 @@
+{
+  "web": "http://127.0.0.1:5174",
+  "voice": {
+    "session": "ivs_e9b340197020",
+    "synthesizeRequestPath": "/api/speech/synthesize",
+    "synthesizeStatus": 200,
+    "synthesizeContentType": "audio/x-wav",
+    "responseBodyBytesViaPlaywright": 0,
+    "directFetchStatus": 200,
+    "directFetchContentType": "audio/x-wav",
+    "audioBytes": 234284,
+    "audioFormat": {
+      "channels": 1,
+      "sampleRate": 24000,
+      "bits": 16,
+      "payloadBytes": 234240,
+      "declaredDataSize": 2147483547
+    },
+    "audioDurationSeconds": 4.88,
+    "outcome": "cloud",
+    "statusText": "云端播报"
+  },
+  "export": {
+    "session": "ivs_814176d3982c",
+    "requestPath": "/api/interview/sessions/ivs_814176d3982c/report/export?format=markdown",
+    "status": 200,
+    "contentType": "text/markdown; charset=utf-8",
+    "contentDisposition": "attachment; filename=\"interview-report.md\"; filename*=UTF-8''%E9%9D%A2%E8%AF%95%E8%AF%84%E4%BC%B0%E6%8A%A5%E5%91%8A-%E8%B5%84%E6%B7%B1%E5%90%8E%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%B8%88.md",
+    "markdownBytes": 1733,
+    "markdownHead": "# 面试评估报告 · 资深后端工程师\n\n- 岗位：资深后端工程师\n- 量表版本：interview-rubric-v1（已冻结）\n- 报告生成时间：2026-10-09T17:27+08:00\n- 会话编号：ivs_814176d3982c",
+    "downloadSuggestedFilename": "面试评估报告-资深后端工程师.md",
+    "notice": "报告已导出为 Markdown。"
+  },
+  "console": [
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  ]
+}

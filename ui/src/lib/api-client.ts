@@ -98,6 +98,35 @@ export async function requestTextWithResponse(path: string, init: RequestInit = 
   return { text, response }
 }
 
+/**
+ * 请求二进制响应（如服务端取回的 TTS 音频）并保留原始 Response；
+ * 失败时与 request 一样解析 JSON 错误体，把机器码与状态带回调用方。
+ */
+export async function requestBlobWithResponse(
+  path: string,
+  init: RequestInit = {},
+): Promise<{ blob: Blob; response: Response }> {
+  const response = await send(path, init)
+  if (!response.ok) {
+    const text = await response.text()
+    let payload: ApiError | null = null
+    try {
+      payload = JSON.parse(text) as ApiError
+    } catch {
+      payload = null
+    }
+    const fallbackCode: MachineErrorCode | ClientErrorCode =
+      payload === null && response.status >= 500 ? "SERVER_ERROR" : "VALIDATION_FAILED"
+    throw new ApiRequestError(
+      payload?.code ?? fallbackCode,
+      payload?.message ?? response.statusText ?? i18n.t("common.errors.requestFailed"),
+      response.status,
+      payload?.latestVersionId,
+    )
+  }
+  return { blob: await response.blob(), response }
+}
+
 /** 请求纯文本响应（如 Markdown 备份索引）。 */
 export async function requestText(path: string, init: RequestInit = {}): Promise<string> {
   let response: Response
