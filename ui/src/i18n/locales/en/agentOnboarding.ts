@@ -22,6 +22,13 @@ export default {
       description: "Complete the setup in Settings, then come back to start shaping your experience into a resume.",
       action: "Open Settings",
     },
+    auth_failed: {
+      stamp: "Credential rejected",
+      title: "The model service rejected this key",
+      description: "The saved key was rejected upstream, usually with a 401. Update it under Settings > Agent > Model configuration, save, then come back and try again.",
+      action: "Update key",
+      credentialHint: "Rejected credential: {{credential}} (masked upstream)",
+    },
     runtime_offline: {
       stamp: "Not available",
       title: "The assistant is unavailable",

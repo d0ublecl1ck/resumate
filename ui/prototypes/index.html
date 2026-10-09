@@ -802,6 +802,37 @@
             </div>
           </div>
         </div>
+        <div class="card-soft" style="padding:16px;margin-top:12px">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700">对话区 AI 引导（#screen-editor，issue 05fa6）</p>
+          <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">AI 是本平台最重要的能力：AI 未配置（<code>model_missing</code>）或凭据被拒（<code>auth_failed</code>）时，对话区必须就地给出引导与跳转，而不是留一个不能用的输入框。四态渲染同一个 <code>AgentAvailabilityNotice</code>，与个人资料助手抽屉、设置页 Agent 入口只差尺寸档（panel 默认 / entry 紧凑），文案与动作一致；令牌与类沿用既有 <code>.state-block</code> / <code>.badge</code> / <code>.btn</code>，不新增视觉规则。</p>
+          <div class="grid-cards">
+            <div class="state-block" style="padding:16px">
+              <span class="badge" style="color:var(--gold);border-color:color-mix(in oklab,var(--gold) 40%,transparent);background:color-mix(in oklab,var(--gold) 5%,transparent)">还差一步</span>
+              <h3>先把助手开起来</h3>
+              <p>去设置里把助手需要的信息填好，回来就能开始整理你的经历。</p>
+              <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去设置</button>
+            </div>
+            <div class="state-block is-error" role="alert" style="padding:16px">
+              <span class="badge badge-coral">凭据失效</span>
+              <h3>这把 Key 被模型服务拒绝了</h3>
+              <p>已保存的 Key 被上游拒绝（通常是 401）。去「设置与 Agent → 模型配置」更新 Key，保存后回来再试。</p>
+              <p style="margin-top:8px;font-weight:500">被拒凭据：****be21（上游已掩码）</p>
+              <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去更新 Key</button>
+            </div>
+            <div class="state-block" style="padding:16px">
+              <span class="badge badge-muted">暂不可用</span>
+              <h3>助手暂时不可用</h3>
+              <p>助手现在还不能聊天，请稍后再试。</p>
+            </div>
+            <div class="state-block" style="padding:16px">
+              <span class="badge badge-cobalt">可以开始</span>
+              <h3>说说你的经历</h3>
+              <p>把想到的经历直接告诉我就好，我会先整理一版给你看；你确认后，才会写进个人资料。</p>
+              <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">开始聊聊</button>
+            </div>
+          </div>
+          <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:var(--muted-foreground)">动作契约：<code>auth_failed</code> 与 <code>model_missing</code> 都给 <code>configure_model</code>，经 <code>agentAvailabilityActionEffect</code> 归一成 <code>settings</code>；<code>auth_failed</code> 只透出上游已掩码的尾号（<code>****be21</code>），未掩码明文一律不渲染。运行体未接入与可用态沿用既有 <code>runtime_offline</code> / <code>available</code> 文案。</p>
+        </div>
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
           <li>有待办：中间栏展示 PendingAction，approval 模式必须先批准再 apply</li>
@@ -821,6 +852,7 @@
           <li>Agent Markdown（issue 3fdec）：助手消息按标题 / 列表 / 加粗 / 行内 code / 引用渲染，原始 HTML 只当纯文本，禁止注入</li>
           <li>折叠推理与工具活动（issue 3fdec）：中间助手回复与 <code>tool_progress</code> 合成「推理与工具活动」可折叠块，默认折叠</li>
           <li>服务端已更新提示条（issue 3fdec）：本地有未保存输入且服务端签名变化时，顶部金色提示条 + 「载入服务端版本」，用户不点不覆盖本地输入</li>
+          <li>对话区 AI 引导（issue 05fa6）：AI 未配置 / 凭据被拒 / 运行体未接入 / 可用四态就地渲染 <code>AgentAvailabilityNotice</code>（panel 档）；未配置给「去设置」，凭据被拒给「去更新 Key」并只显示上游已掩码尾号，两者都归一成 <code>settings</code></li>
         </ul>
       </div>
 
@@ -1278,6 +1310,25 @@
                     </div>
                   </section>
                 </div>
+                <section class="card-soft" style="padding:16px">
+                  <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">抽屉内的 AI 引导（AI 未配置 / 凭据无效）</h2>
+                  <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">抽屉正文用 <code>panel</code> 档渲染同一个 <code>AgentAvailabilityNotice</code>；四态与简历编辑器对话区、设置页 Agent 入口共用，文案与动作一致，只差尺寸档。凭据被拒时同样只显示上游已掩码尾号。</p>
+                  <div class="grid-cards">
+                    <div class="state-block" style="padding:16px">
+                      <span class="badge" style="color:var(--gold);border-color:color-mix(in oklab,var(--gold) 40%,transparent);background:color-mix(in oklab,var(--gold) 5%,transparent)">还差一步</span>
+                      <h3>先把助手开起来</h3>
+                      <p>去设置里把助手需要的信息填好，回来就能开始整理你的经历。</p>
+                      <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去设置</button>
+                    </div>
+                    <div class="state-block is-error" role="alert" style="padding:16px">
+                      <span class="badge badge-coral">凭据失效</span>
+                      <h3>这把 Key 被模型服务拒绝了</h3>
+                      <p>已保存的 Key 被上游拒绝（通常是 401）。去「设置与 Agent → 模型配置」更新 Key，保存后回来再试。</p>
+                      <p style="margin-top:8px;font-weight:500">被拒凭据：****be21（上游已掩码）</p>
+                      <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去更新 Key</button>
+                    </div>
+                  </div>
+                </section>
               </div>
 
         <ul class="states">
@@ -1289,6 +1340,7 @@
           <li>助手抽屉：真模态——焦点入内、Tab 锁定、Esc 关闭、关闭后焦点归还触发按钮、背景 inert；关闭按钮可访问名「关闭助手」，与通用「关闭」区分</li>
           <li>助手可用性：模型配置 500 显示「读取失败 + 重试」，403 显示「无权限」且都不引导去设置；读取中显示骨架而非空白</li>
           <li>助手可用性引导按 <code>AgentAvailabilityAction</code> 分流：<code>configure_model</code> 去设置页、<code>start_chat</code> 留在对话输入、<code>retry</code> 重试，未知动作不导航</li>
+          <li>助手可用性 · 凭据被拒（<code>auth_failed</code>）：<code>keyConfigured=true</code> 但上游拒绝这把 key 时显示「凭据失效」+「去更新 Key」，只透出上游已掩码尾号（<code>****be21</code>），未掩码明文不渲染；与 <code>model_missing</code> 共用 <code>configure_model</code> -> <code>settings</code></li>
           <li>助手待办：最新轮次已关闭时，历史 <code>pending</code> 待办按失效只读渲染（无「批准并应用」，显示失效原因）；未关闭轮次仍可点</li>
           <li>助手回复：SSE snapshot 与轮次变化两条路径都补拉会话消息，发完消息无需刷新即可看到回复</li>
           <li>助手抽屉 · 新建对话入口（<code>NewConversationEntry</code>）：可用态触发 <code>onCreate</code>；运行中 / 创建中 <code>disabled</code> 并切文案「正在新建对话…」，重复点击不发起第二次请求</li>
@@ -1330,6 +1382,25 @@
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--coral)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>测试失败（请求未到业务层）</span>
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--coral)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>连接失败 (HTTP 401)（业务失败，message 用后端原文）</span>
                   <span style="display:inline-flex;align-items:center;gap:6px;color:var(--cobalt)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>连接成功（成功态用界面文案）<span style="color:var(--muted-foreground)">· 上次测试：2026-09-19 20:00</span></span>
+                </div>
+              </section>
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">Agent 入口 AI 引导（AI 未配置 / 凭据无效）</h2>
+                <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">入口用 <code>entry</code> 档（紧凑）渲染同一个 <code>AgentAvailabilityNotice</code>：AI 未配置给「去设置」，凭据被拒给「去更新 Key」，两者都归一到 <code>configure_model</code> 并滚到本页模型配置区；凭据被拒只透出上游已掩码尾号。</p>
+                <div class="grid-cards">
+                  <div class="state-block" style="padding:16px">
+                    <span class="badge" style="color:var(--gold);border-color:color-mix(in oklab,var(--gold) 40%,transparent);background:color-mix(in oklab,var(--gold) 5%,transparent)">还差一步</span>
+                    <h3>先把助手开起来</h3>
+                    <p>去设置里把助手需要的信息填好，回来就能开始整理你的经历。</p>
+                    <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去设置</button>
+                  </div>
+                  <div class="state-block is-error" role="alert" style="padding:16px">
+                    <span class="badge badge-coral">凭据失效</span>
+                    <h3>这把 Key 被模型服务拒绝了</h3>
+                    <p>已保存的 Key 被上游拒绝（通常是 401）。去「设置与 Agent → 模型配置」更新 Key，保存后回来再试。</p>
+                    <p style="margin-top:8px;font-weight:500">被拒凭据：****be21（上游已掩码）</p>
+                    <button class="btn btn-primary btn-sm" type="button" style="margin-top:12px">去更新 Key</button>
+                  </div>
                 </div>
               </section>
               <section class="card-soft" style="padding:16px">
@@ -1381,6 +1452,7 @@
           <li>分区保存：编辑 → 保存中 → 已保存 / 失败</li>
           <li>模型测试结果行：测试中 / 传输失败 / 业务失败（显示后端 message 原文）；显示持久化的上次结果时补「上次测试：&lt;时间&gt;」，与本次结果区分</li>
           <li>模型未配置：Agent 入口显示「先配置一个模型」+「去设置模型」（configure_model 滚到模型配置区）</li>
+          <li>凭据被拒：Agent 入口显示「凭据失效」+「去更新 Key」（同样滚到模型配置区），只显示上游已掩码尾号；<code>keyConfigured=true</code> 不再被当成可用</li>
           <li>Agent 可用：Agent 入口显示「开始聊聊」（start_chat 进入 /profile?assistant=1 并打开对话抽屉，不再只滚动页面）</li>
           <li>语言切换在「个人偏好」分区（US-13.4）</li>
           <li>修改密码：当前密码 / 新密码 / 确认新密码 + 「更新密码」；校验失败就地 coral 报错，成功后表单替换为「密码已更新，请使用新密码重新登录。」+「去登录」</li>
