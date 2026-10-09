@@ -95,6 +95,7 @@ export default {
     requiredName: "Enter your name.",
     verificationTokenInvalid: "This verification link is invalid. Request a new one.",
     passwordResetTokenInvalid: "This reset link is invalid. Request a new one.",
+    mailDeliveryFailed: "We could not send the email. Try again later or contact an administrator.",
     resendTooSoon: "You requested a resend too recently. Try again shortly.",
     rateLimited: "Too many attempts. Try again later.",
   },

@@ -217,6 +217,7 @@ class PendingPasswordReset:
     email: str
     link: str | None
     status: str = "reset_sent"
+    token: str | None = None
 
 
 def _password_reset_link(token: str) -> str:
@@ -250,7 +251,12 @@ def forgot_password(db: Session, client: redis.Redis, payload: ForgotPasswordReq
         email,
         seconds=settings.password_reset_resend_cooldown_seconds,
     )
-    return PendingPasswordReset(email, _password_reset_link(token))
+    return PendingPasswordReset(email, _password_reset_link(token), token=token)
+
+
+def release_failed_reset(client: redis.Redis, email: str, token: str) -> None:
+    """Roll back a reset whose mail delivery failed so a retry is not swallowed by cooldown."""
+    password_reset_store.discard_reset(client, email, token)
 
 
 def reset_password(db: Session, client: redis.Redis, payload: PasswordResetRequest) -> None:

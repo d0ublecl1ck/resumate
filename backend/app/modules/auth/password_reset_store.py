@@ -55,6 +55,16 @@ def consume_reset(client: redis.Redis, token: str) -> str | None:
     return json.loads(payload)["userId"]
 
 
+def discard_reset(client: redis.Redis, email: str, token: str) -> None:
+    """Undo an issued token and its cooldown after the mail could not be delivered.
+
+    Without this, the next attempt would hit the cooldown and be answered with the
+    neutral 202 while nothing was sent, silently reintroducing the false success.
+    """
+    token_hash = _token_hash(token)
+    client.delete(f"{RESET_PREFIX}{token_hash}", f"{LOOKUP_PREFIX}{token_hash}", f"{RESEND_COOLDOWN_PREFIX}{email}")
+
+
 def in_resend_cooldown(client: redis.Redis, email: str) -> bool:
     return client.exists(f"{RESEND_COOLDOWN_PREFIX}{email}") == 1
 

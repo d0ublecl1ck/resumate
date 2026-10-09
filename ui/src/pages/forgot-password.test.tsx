@@ -83,6 +83,28 @@ describe("ForgotPasswordPage", () => {
     expect(screen.getByRole("button", { name: "发送重置邮件" })).toBeEnabled()
   })
 
+  it("发信失败显示通用文案，不显示已发送也不泄漏服务端 message", async () => {
+    server.use(
+      http.post("/api/auth/password/forgot", () =>
+        HttpResponse.json(
+          { code: "MAIL_DELIVERY_FAILED", message: "SMTP 未配置：请设置 SMTP_HOST 与 SMTP_FROM_EMAIL" },
+          { status: 502 },
+        ),
+      ),
+    )
+    renderForgot()
+
+    fireEvent.change(screen.getByLabelText("邮箱"), { target: { value: "reset@example.com" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送重置邮件" }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("邮件发送失败，请稍后重试或联系管理员。")
+    // 负向断言：后端原始报错关键字不得出现在界面上。
+    expect(screen.queryByText(/SMTP/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/SMTP_HOST/)).not.toBeInTheDocument()
+    expect(screen.queryByText("去邮箱查收重置链接")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "发送重置邮件" })).toBeEnabled()
+  })
+
   it("返回登录跳回登录页", async () => {
     renderForgot()
 

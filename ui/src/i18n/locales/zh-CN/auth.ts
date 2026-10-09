@@ -95,6 +95,7 @@ export default {
     requiredName: "请输入昵称。",
     verificationTokenInvalid: "验证链接无效，请重新获取。",
     passwordResetTokenInvalid: "重置链接无效，请重新获取。",
+    mailDeliveryFailed: "邮件发送失败，请稍后重试或联系管理员。",
     resendTooSoon: "重发过于频繁，请稍后再试。",
     rateLimited: "操作过于频繁，请稍后再试。",
   },
