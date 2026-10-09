@@ -35,6 +35,7 @@ class ErrorCode(StrEnum):
     PASSWORD_RESET_TOKEN_INVALID = "PASSWORD_RESET_TOKEN_INVALID"
     RESEND_TOO_SOON = "RESEND_TOO_SOON"
     RATE_LIMITED = "RATE_LIMITED"
+    MAIL_DELIVERY_FAILED = "MAIL_DELIVERY_FAILED"
 
 
 class ApiError(ApiModel):
@@ -184,3 +185,10 @@ class ResendTooSoon(ApiException):
 class RateLimited(ApiException):
     status_code = 429
     code = ErrorCode.RATE_LIMITED
+
+
+class MailDeliveryFailed(ApiException):
+    """A reset/verification mail could not be handed to SMTP; never report success."""
+
+    status_code = 502
+    code = ErrorCode.MAIL_DELIVERY_FAILED

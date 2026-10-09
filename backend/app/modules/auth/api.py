@@ -1,3 +1,5 @@
+import logging
+
 import redis
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from sqlalchemy.orm import Session
@@ -6,6 +8,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser
 from app.core.redis import get_redis
+from app.shared.errors import MailDeliveryFailed
 
 from . import dao, service
 from .deps import require_permission
@@ -31,6 +34,8 @@ from .schemas import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+logger = logging.getLogger(__name__)
 
 
 def _set_session_cookie(response: Response, token: str) -> None:
@@ -163,14 +168,32 @@ def change_password(
 @router.post("/password/forgot", response_model=PasswordResetAccepted, status_code=status.HTTP_202_ACCEPTED)
 def forgot_password(
     payload: ForgotPasswordRequest,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     client: redis.Redis = Depends(get_redis),
     mailer: Mailer = Depends(get_mailer),
 ) -> PasswordResetAccepted:
+    """Deliver the reset mail synchronously so a failure cannot be reported as success.
+
+    Unknown addresses, the resend cooldown and the hourly quota still answer the
+    neutral 202 without mailing, so the endpoint cannot be used to enumerate
+    accounts. Only a delivery failure on a known address turns into 502; that
+    difference is the accepted trade-off documented in issue 19ea1.
+    """
     pending = service.forgot_password(db, client, payload)
     if pending.link is not None:
-        background_tasks.add_task(mailer.send_password_reset_email, pending.email, pending.link)
+        try:
+            mailer.send_password_reset_email(pending.email, pending.link)
+        except Exception as exc:  # noqa: BLE001 - SMTP failures span RuntimeError/OSError/SMTPException
+            logger.warning(
+                "密码重置邮件投递失败：email=%s reason=%s: %s",
+                pending.email,
+                type(exc).__name__,
+                exc,
+                exc_info=True,
+            )
+            if pending.token is not None:
+                service.release_failed_reset(client, pending.email, pending.token)
+            raise MailDeliveryFailed("邮件发送失败，请稍后重试或联系管理员") from exc
     return PasswordResetAccepted(status=pending.status, email=pending.email)
 
 

@@ -33,6 +33,8 @@ function errorKeyForCode(code?: string): string {
       return "auth.errors.verificationTokenInvalid"
     case "PASSWORD_RESET_TOKEN_INVALID":
       return "auth.errors.passwordResetTokenInvalid"
+    case "MAIL_DELIVERY_FAILED":
+      return "auth.errors.mailDeliveryFailed"
     case "RESEND_TOO_SOON":
       return "auth.errors.resendTooSoon"
     case "RATE_LIMITED":

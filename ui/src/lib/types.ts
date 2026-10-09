@@ -47,6 +47,7 @@ export type MachineErrorCode =
   | "UPSTREAM_REJECTED" // 502（fb67d）
   | "MODEL_OUTPUT_INVALID" // 502（fb67d）
   | "PASSWORD_RESET_TOKEN_INVALID" // 400（b5586）
+  | "MAIL_DELIVERY_FAILED" // 502（19ea1）
 
 export interface ApiError {
   code: MachineErrorCode

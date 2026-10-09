@@ -4,6 +4,7 @@ Mirrors test_email_verification.py: the token never reaches the client, so the
 outgoing mail is captured through the shared FakeMailer.
 """
 
+import logging
 import time
 
 import support
@@ -175,3 +176,95 @@ def test_reset_enforces_the_shared_password_length_contract(session_clients) -> 
 
     assert response.status_code == 422
     assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+# --- 19ea1：发信失败必须如实上报，不能假装 202 -----------------------------------
+
+SMTP_UNCONFIGURED = "SMTP 未配置：请设置 SMTP_HOST 与 SMTP_FROM_EMAIL"
+
+
+def _raising_reset_mailer(monkeypatch, message: str = SMTP_UNCONFIGURED) -> None:
+    """让共享 FakeMailer 的重置发信固定抛错，模拟 SMTP 未配置或连不上。"""
+
+    def boom(to: str, link: str) -> None:
+        raise RuntimeError(message)
+
+    monkeypatch.setattr(support.MAILER, "send_password_reset_email", boom)
+
+
+def test_forgot_password_reports_delivery_failure_as_502_without_leaking_smtp_details(
+    session_clients, monkeypatch, caplog
+) -> None:
+    client = session_clients()
+    _verified_user(client, email="reset@example.com")
+    _raising_reset_mailer(monkeypatch)
+
+    with caplog.at_level(logging.WARNING):
+        response = support.forgot_password(client, "reset@example.com")
+
+    assert response.status_code == 502, response.text
+    assert response.json()["code"] == "MAIL_DELIVERY_FAILED"
+    # 响应体是通用文案：既不回 SMTP 配置项名，也不回原始异常类名与堆栈。
+    assert "SMTP" not in response.text
+    assert "RuntimeError" not in response.text
+    assert "Traceback" not in response.text
+    # 日志侧必须留有目标邮箱与失败原因，供运维定位。
+    logged = "\n".join(record.getMessage() for record in caplog.records)
+    assert "reset@example.com" in logged
+    assert "SMTP 未配置" in logged
+
+
+def test_forgot_password_never_calls_the_mailer_for_an_unknown_address(session_clients, monkeypatch) -> None:
+    client = session_clients()
+    calls: list[tuple[str, str]] = []
+
+    def spy(to: str, link: str) -> None:
+        calls.append((to, link))
+
+    monkeypatch.setattr(support.MAILER, "send_password_reset_email", spy)
+
+    response = support.forgot_password(client, "nobody@example.com")
+
+    assert response.status_code == 202, response.text
+    assert response.json()["status"] == "reset_sent"
+    assert calls == []
+
+
+def test_forgot_password_releases_the_cooldown_after_a_delivery_failure(session_clients, monkeypatch) -> None:
+    client = session_clients()
+    _verified_user(client, email="reset@example.com")
+    attempts: list[str] = []
+    deliver = support.MAILER.send_password_reset_email
+
+    def flaky(to: str, link: str) -> None:
+        attempts.append(to)
+        if len(attempts) == 1:
+            raise RuntimeError(SMTP_UNCONFIGURED)
+        deliver(to, link)
+
+    monkeypatch.setattr(support.MAILER, "send_password_reset_email", flaky)
+
+    first = support.forgot_password(client, "reset@example.com")
+    second = support.forgot_password(client, "reset@example.com")
+
+    # 第一次失败后不能保留冷却，否则第二次点击会静默 202 却不发信。
+    assert first.status_code == 502, first.text
+    assert second.status_code == 202, second.text
+    assert second.json()["status"] == "reset_sent"
+    assert len(attempts) == 2
+    mails = support.MAILER.mails("password_reset")
+    assert len(mails) == 1
+    assert mails[0]["to"] == "reset@example.com"
+
+
+def test_forgot_password_discards_the_issued_token_after_a_delivery_failure(
+    session_clients, fake_redis, monkeypatch
+) -> None:
+    client = session_clients()
+    _verified_user(client, email="reset@example.com")
+    _raising_reset_mailer(monkeypatch)
+
+    assert support.forgot_password(client, "reset@example.com").status_code == 502
+
+    leftover = [key for key in fake_redis.scan_iter("auth:password_reset:*") if "quota" not in key]
+    assert leftover == []
