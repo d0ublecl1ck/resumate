@@ -39,6 +39,19 @@ services:
       # 非本地部署必须覆盖：轮换它会让已加密的模型密钥不可读。
       SETTINGS_SECRET_KEY: ${SETTINGS_SECRET_KEY:-resumate-local-dev-secret}
       PUBLIC_WEB_BASE_URL: ${PUBLIC_WEB_BASE_URL:-http://localhost:8081}
+      # 邮件配置从宿主环境或仓库根 .env 透传（compose 的变量替换只读这两个来源，
+      # 不读 backend/.env）；缺失即空串，交给后端启动自检判定。禁止在本文件写任何
+      # SMTP 密钥/密码字面值。
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      # 本地 / demo 容器默认禁用邮件相关功能（不发送验证与重置邮件），因此显式打开
+      # 启动自检逃生阀。生产必须提供完整 SMTP_*，并且不要设置
+      # RESUMATE_ALLOW_MISSING_ENV（或显式设为 0），让缺配置直接拒绝启动。
+      RESUMATE_ALLOW_MISSING_ENV: ${RESUMATE_ALLOW_MISSING_ENV:-1}
     depends_on:
       postgres:
         condition: service_healthy
