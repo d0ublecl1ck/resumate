@@ -323,6 +323,8 @@ export interface AgentRun {
   id: string
   resumeId: string
   conversationId: string
+  /** 该轮次绑定的会话；新的一轮续用它，避免同一简历每轮另起一个会话。 */
+  sessionId?: string
   userTurnId: string
   executionMode: ExecutionMode // 服务端固化（C-02）
   modeSource: "session" | "agent" | "account"

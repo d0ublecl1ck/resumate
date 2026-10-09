@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, runtime_checkable
@@ -72,6 +73,9 @@ class Message:
     tool_calls: tuple[ToolCall, ...] = ()
     tool_call_id: str | None = None
     name: str | None = None
+    # DeepSeek 思考模式要求把上一轮 assistant 的 reasoning_content 原样传回，
+    # 丢字段会让下一次请求直接 400（实测：The reasoning_content ... must be passed back）。
+    reasoning: str | None = None
 
     def to_wire(self) -> dict[str, Any]:
         """JSON-ready message for a provider that wants plain mappings."""
@@ -85,6 +89,8 @@ class Message:
             payload["toolCallId"] = self.tool_call_id
         if self.name is not None:
             payload["name"] = self.name
+        if self.reasoning is not None:
+            payload["reasoning"] = self.reasoning
         return payload
 
     @classmethod
@@ -104,7 +110,15 @@ class Message:
             tool_calls=tool_calls,
             tool_call_id=payload.get("toolCallId"),
             name=payload.get("name"),
+            reasoning=payload.get("reasoning"),
         )
+
+
+LANGUAGE_INSTRUCTION = (
+    "Write every user-facing reply in the same language as the user's latest message: "
+    "a Chinese request gets a Chinese reply, including the final summary. Keep tool names, "
+    "field names and identifiers in their original form."
+)
 
 
 def bound_system_prompt(
@@ -121,9 +135,9 @@ def bound_system_prompt(
     lines the model invents a resume id (every call comes back FORBIDDEN) and
     opens a second, session-less turn (the conversation stops being readable).
     """
+    sections = [system_prompt, LANGUAGE_INSTRUCTION]
     if scope != "resume" or not resume_id:
-        return system_prompt
-    sections = [system_prompt]
+        return "\n\n".join(sections)
     if turn_id:
         sections.append(
             f"An editing turn is already open ({turn_id}). Reuse it: stage patches against it "
@@ -152,6 +166,16 @@ def opening_messages(
         ),
         Message(role="user", content=prompt),
     ]
+
+
+APPROVAL_WAIT_REPLY = "已生成待审批的改动，等你在界面上批准后我再写入，不需要再重复调用工具。"
+
+APPROVAL_BLOCKED_MESSAGES = {
+    "rejected": "用户拒绝了待办 {id}；不要重试 apply_patch，按用户意见调整或结束本轮。",
+    "stale": "待办 {id} 已失效；不要重试 apply_patch，重新确认需求后再继续。",
+    "timeout": "待办 {id} 在 {seconds:.0f} 秒内没有得到批准；本轮先停在这里，等你在界面上批准。",
+    "cancelled": "运行被取消；待办 {id} 仍等待处理。",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -375,6 +399,8 @@ class AgentRuntime:
         sessions: SessionJournal | None = None,
         compaction: CompactionPolicy | None = None,
         scope: str = "resume",
+        approval_poll_seconds: float = 2.0,
+        approval_timeout_seconds: float = 0.0,
     ) -> None:
         self.client = client
         self.provider = provider
@@ -391,6 +417,12 @@ class AgentRuntime:
         # None means "compact with the defaults"; a caller that wants a different
         # trigger passes its own policy.
         self.compaction = compaction if compaction is not None else CompactionPolicy()
+        # Approval mode blocks on the human: poll the pending-action projection
+        # instead of letting the model retry apply_patch until the budget is gone.
+        self.approval_poll_seconds = max(0.0, approval_poll_seconds)
+        # 0 表示不接管等待（库内默认，保持调用方原有行为）；命令行运行体传真实秒数，
+        # 于是 approval 模式在人工批准期间不再消耗模型 token（issue f52ec）。
+        self.approval_timeout_seconds = max(0.0, approval_timeout_seconds)
         self._compaction: dict[str, Any] | None = None
         # Resolved by run()/resume(); exposed so a caller can report where the
         # conversation history was written (issue d2e4a).
@@ -666,6 +698,55 @@ class AgentRuntime:
         self._record_session(messages)
         yield from self._drive_and_reply(session, messages)
 
+    def _append_runtime_note(self, messages: list[Message], text: str) -> None:
+        """Tell the model what the runtime did on its own.
+
+        This is deliberately a `user` message: DeepSeek 的 thinking 模式要求每条
+        assistant 消息都回传它自己的 `reasoning_content`，运行体伪造的 assistant
+        tool_call 没有这段推理，会直接 400（实测 MODEL_ERROR）。用户消息没有这个约束。
+        """
+        messages.append(Message(role="user", content=text))
+
+    def _await_approval(self, session: TurnSession, pending_action_id: str) -> str:
+        """Block on the human decision without spending model turns.
+
+        Approval mode used to let the model retry apply_patch until the token
+        budget was exhausted (issue f52ec). Polling the pending-action projection
+        costs no model tokens and keeps the existing workflow: the run stays alive,
+        the user approves in the UI, and the staged patch is applied here.
+        """
+        deadline = time.monotonic() + self.approval_timeout_seconds
+        while True:
+            if self._is_cancelled():
+                return "cancelled"
+            try:
+                actions = self.client.list_pending_actions(session.turn_id)
+            except ApiClientError:
+                actions = []
+            state = next((action.state for action in actions if action.id == pending_action_id), None)
+            if state in {"approved", "consumed"}:
+                return "approved"
+            if state in {"rejected", "stale"}:
+                return state
+            if time.monotonic() >= deadline:
+                return "timeout"
+            time.sleep(self.approval_poll_seconds)
+
+    def _apply_pending(self, session: TurnSession, pending_action_id: str, arguments: Any) -> Any:
+        """Apply the ops that produced an approved pending action."""
+        ops = arguments.get("ops") if isinstance(arguments, Mapping) else None
+        if not ops:
+            return None
+        try:
+            return self.client.apply_patch(
+                session.turn_id,
+                ops,
+                pending_action_id=pending_action_id,
+                idempotency_key=f"{pending_action_id}:apply",
+            )
+        except ApiClientError as exc:
+            return {"error": exc.code, "message": exc.message}
+
     def _save_checkpoint(
         self,
         session: TurnSession,
@@ -755,6 +836,8 @@ class AgentRuntime:
             messages.append(response.message)
             terminal: str | None = None
             finalize_result: TurnResult | None = None
+            stop_for_approval = False
+            approval_preview_call: ToolCall | None = None
 
             for call in tool_calls:
                 yield ToolProgressEvent(
@@ -762,6 +845,23 @@ class AgentRuntime:
                     name=call.name,
                     phase="started",
                 )
+                # 同一处改动已经开出待办时不要再 preview 一次：第二个待办会与第一个
+                # 互相抢批准，实测就是这么把预算烧穿的（issue f52ec）。
+                if call.name == "preview_patch" and pending_action_id:
+                    blocked = (
+                        f"ERROR [PENDING_ACTION_OPEN]: 待办 {pending_action_id} 还在等待用户批准，"
+                        "不要重复 preview_patch；等它被批准或拒绝后再继续。"
+                    )
+                    yield ToolProgressEvent(
+                        tool_call_id=call.id,
+                        name=call.name,
+                        phase="failed",
+                        detail=blocked,
+                    )
+                    messages.append(
+                        Message(role="tool", content=blocked, tool_call_id=call.id, name=call.name)
+                    )
+                    continue
                 try:
                     result = self._invoke(session, call)
                 except ApiClientError as exc:
@@ -814,6 +914,7 @@ class AgentRuntime:
                         pending_action_id=pending_action_id,
                         preview=PatchPreviewResponse.model_validate(payload),
                     )
+                    approval_preview_call = call
                 elif call.name == "apply_patch":
                     pending_action_id = None
                 messages.append(
@@ -824,6 +925,29 @@ class AgentRuntime:
                         name=call.name,
                     )
                 )
+                # 人工闸口必须在 preview 的 tool 结果写进消息之后再处理：否则 assistant 的
+                # tool_call 后面直接跟着另一条 assistant 消息，OpenAI 兼容端点会 400（实测）。
+                if approval_preview_call is not None and self.approval_timeout_seconds > 0:
+                    decision = self._await_approval(session, pending_action_id)
+                    if decision == "approved":
+                        applied = self._apply_pending(session, pending_action_id, approval_preview_call.arguments)
+                        if applied is not None:
+                            # 运行体自己发起的 apply 也写成「assistant tool_call + tool 结果」成对出现：
+                            # 孤立的 tool 消息同样会让 OpenAI 兼容端点 400。
+                            self._append_runtime_note(
+                                messages,
+                                "（运行体已按用户批准自动应用补丁）apply_patch 结果："
+                                + self._stringify(applied),
+                            )
+                            pending_action_id = None
+                    elif decision is not None:
+                        reason = APPROVAL_BLOCKED_MESSAGES.get(decision, APPROVAL_BLOCKED_MESSAGES["stale"])
+                        self._append_runtime_note(
+                            messages,
+                            reason.format(id=pending_action_id, seconds=self.approval_timeout_seconds),
+                        )
+                        stop_for_approval = True
+                    approval_preview_call = None
                 if call.name == "finalize_turn":
                     terminal = "finalize"
                     finalize_result = self._turn_result(payload)
@@ -831,6 +955,12 @@ class AgentRuntime:
                     terminal = "cancel"
 
             self._save_checkpoint(session, messages, self._phase(pending_action_id), pending_action_id)
+
+            if stop_for_approval:
+                # 停在人工闸口：不结算轮次（待办仍然可批准），也不再多花模型 token。
+                self._save_checkpoint(session, messages, "awaiting_approval", pending_action_id)
+                yield MessageEvent(text=APPROVAL_WAIT_REPLY)
+                return
 
             if terminal == "finalize":
                 try:

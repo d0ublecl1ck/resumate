@@ -205,6 +205,15 @@ def _build_compaction(args: argparse.Namespace) -> CompactionPolicy:
     return CompactionPolicy(**overrides)
 
 
+def _approval_wait_seconds() -> float:
+    """Approval mode waits for the human instead of letting the model burn the budget."""
+    raw = os.environ.get("RESUMATE_APPROVAL_WAIT_SECONDS", "900")
+    try:
+        return max(0.0, float(raw))
+    except ValueError:
+        return 900.0
+
+
 def _build_budget(args: argparse.Namespace) -> RunBudget:
     overrides: dict[str, Any] = {}
     if args.max_turns is not None:
@@ -393,6 +402,7 @@ def main(
                 checkpoint=CheckpointStore(client),
                 sessions=SessionJournal(client),
                 compaction=_build_compaction(args),
+                approval_timeout_seconds=_approval_wait_seconds(),
             )
             if args.resume:
                 stream = runtime.resume(args.resume)

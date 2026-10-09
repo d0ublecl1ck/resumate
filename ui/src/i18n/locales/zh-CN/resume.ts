@@ -91,6 +91,8 @@ export default {
     manualSaveMessage: "手动编辑",
     autosaveMessage: "自动保存",
     autosaveHint: "空闲自动保存：{{seconds}} 秒后",
+    serverUpdated: "服务端已更新，本地有未保存输入。",
+    loadServerVersion: "载入服务端版本",
     saveErrors: {
       stale: "简历内容已在别处更新，请刷新后基于最新版本重试。",
       validation: "文档内容不合法，请检查后重试。",

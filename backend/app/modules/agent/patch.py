@@ -39,7 +39,11 @@ def _apply_one(document: dict, op: PatchOp) -> str | None:
     data = _payload(op)
     kind = data["op"]
     if kind == "setBasics":
-        document["basics"] = data["basics"]
+        # 只覆盖请求里显式给出的字段：缺少的字段沿用当前值，避免部分 setBasics 把姓名 /
+        # 邮箱 / 手机等静默清空（issue f52ec 实测清空过一次），显式给空串仍然能清空该字段。
+        merged = dict(document.get("basics") or {})
+        merged.update(op.basics.model_dump(by_alias=True, exclude_unset=True, exclude_none=False))
+        document["basics"] = merged
         return None
     sections = document.setdefault("sections", [])
     if kind == "upsertSection":

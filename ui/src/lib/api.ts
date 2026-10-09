@@ -277,18 +277,49 @@ export async function getActiveRun(resumeId: string, options: GetActiveRunOption
   if (!turn) return null
   const state = await request<TurnStateResponse>(`/turns/${turn.id}/state`).catch(() => undefined)
   const run = mapTurnToRun(turn, state)
-  if (options.withConversation === false || !turn.sessionId) return run
-  const messages = await listSessionMessages(turn.sessionId).catch(() => [] as AgentSessionMessage[])
-  if (!messages.length) return run
-  return { ...run, timeline: buildRunTimeline(messages, run.timeline) }
+  const pendingActions = mergePendingActions(turns, run.pendingActions)
+  if (options.withConversation === false) return { ...run, pendingActions }
+  // 历史轮次各自绑定独立会话（运行体每轮新建），只读最新一轮会让上一轮对话、工具活动
+  // 与待办整段消失（issue a4367）。这里把本简历所有轮次的会话消息并成一条按时间排序的
+  // 时间线，切分会话也不丢历史；会话不可读时静默跳过，不阻塞当前轮次。
+  const sessionIds = [...new Set(turns.map((item) => item.sessionId).filter((id): id is string => Boolean(id)))]
+  const messages = (
+    await Promise.all(sessionIds.map((id) => listSessionMessages(id).catch(() => [] as AgentSessionMessage[])))
+  ).flat()
+  if (!messages.length) return { ...run, pendingActions }
+  messages.sort(compareSessionMessages)
+  return { ...run, pendingActions, timeline: buildRunTimeline(messages, run.timeline) }
+}
+
+/** 跨会话合并后按时间排序；同一时间戳用 seq 兜底，保证顺序稳定。 */
+function compareSessionMessages(a: AgentSessionMessage, b: AgentSessionMessage): number {
+  if (a.createdAt === b.createdAt) return a.seq - b.seq
+  return a.createdAt < b.createdAt ? -1 : 1
+}
+
+/**
+ * 未决待办跨轮次保留：已拒绝与已消费的不再回显，pending / approved / stale 等状态
+ * 即使在历史轮次里也要让用户看到（轮次关闭时由 PendingActionCard 按失效只读渲染）。
+ */
+function mergePendingActions(turns: ApiTurn[], current: PendingAction[]): PendingAction[] {
+  const merged = new Map<string, PendingAction>()
+  for (const action of current) merged.set(action.id, action)
+  for (const turn of turns) {
+    for (const action of (turn.pendingActions ?? []).map(mapPendingAction)) {
+      if (action.state === "rejected" || action.state === "consumed") continue
+      if (!merged.has(action.id)) merged.set(action.id, action)
+    }
+  }
+  return [...merged.values()]
 }
 
 export interface StartRunInput {
   prompt: string
   executionMode?: ExecutionMode
   /**
-   * 在既有会话里继续：运行体以 --session <id> 启动，把历史追加到该会话，不新建会话。
-   * 缺省时后端新建会话（契约 §19.1 / §21.1：会话只绑 owner，scope 是轮次属性）。
+   * 已知会话 id 时续用该会话：运行体以 --session <id> 启动，把这一轮追加到该会话，不新建会话，
+   * 让同一简历的多轮对话留在一条会话里。缺省时后端新建会话
+   * （契约 §19.1 / §21.1：会话只绑 owner，scope 是轮次属性）。
    */
   sessionId?: string
 }
@@ -405,6 +436,7 @@ export function mapTurnToRun(turn: ApiTurn, state?: TurnStateResponse): AgentRun
     // AgentRun 目前只服务简历工作台；profile 轮次不带简历，这里退化为空串。
     resumeId: turn.resumeId ?? "",
     conversationId: turn.sessionId ?? turn.id,
+    sessionId: turn.sessionId ?? undefined,
     userTurnId: turn.id,
     executionMode: turn.executionMode,
     modeSource: turn.modeSource,
