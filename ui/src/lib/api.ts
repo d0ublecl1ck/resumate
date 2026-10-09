@@ -4,11 +4,12 @@
 // 后端已实现的端点走真实 HTTP（api-client.ts）；未实现的端点仍从 lib/content.ts
 // 读取 mock，待对应后端能力落地后再替换，函数签名与入参、返回类型保持不变。
 
-import { CURRENT_USER, JOB_MATCHES } from "./content"
+import { CURRENT_USER } from "./content"
 import type {
   AccessLogEntry,
   AccessLogPage,
   AccessLogQuery,
+  AdminUser,
   AgentConfig,
   AgentSession,
   AgentSessionMessage,
@@ -57,7 +58,7 @@ import type {
   VerificationAccepted,
   WorkbenchSummary,
 } from "./types"
-import { request, requestText, requestWithResponse } from "./api-client"
+import { request, requestText, requestTextWithResponse, requestWithResponse } from "./api-client"
 import { buildRunTimeline } from "./run-conversation"
 import i18n from "@/i18n"
 
@@ -111,6 +112,14 @@ export function logout(): Promise<void> {
   return request<void>("/auth/logout", { method: "POST" })
 }
 
+/**
+ * POST /auth/password —— 校验当前密码后换新密码。
+ * 成功为 204，且后端会注销该账号的全部会话（含当前 Cookie），需要重新登录。
+ */
+export function changePassword(input: { currentPassword: string; newPassword: string }): Promise<void> {
+  return request<void>("/auth/password", { method: "POST", body: JSON.stringify(input) })
+}
+
 // ---------------------------------------------------------------------------
 // Resume：CRUD / duplicate / archive / document / render / export
 // ---------------------------------------------------------------------------
@@ -157,6 +166,22 @@ export function restoreResume(id: string): Promise<Resume> {
   return request<Resume>(`/resumes/${id}/restore`, { method: "POST" })
 }
 
+/**
+ * PATCH /resumes/{id} —— 只改元数据（标题 / 目标岗位 / 标签 / 模板），不生成内容版本。
+ * 与 PUT /resumes/{id}/document 分开：重命名不应被误解为一次内容提交。
+ */
+export function updateResume(
+  id: string,
+  patch: { title?: string; targetRole?: string; tags?: string[]; templateId?: string },
+): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
+}
+
+/** DELETE /resumes/{id} —— 软删除，进入恢复窗口；返回删除后的 Resume（lifecycle=deleted）。 */
+export function deleteResume(id: string): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}`, { method: "DELETE" })
+}
+
 /** GET /resumes/{id} */
 export function getResume(id: string): Promise<Resume | undefined> {
   return request<Resume>(`/resumes/${id}`)
@@ -165,6 +190,20 @@ export function getResume(id: string): Promise<Resume | undefined> {
 /** GET /resumes/{id}/versions */
 export function listResumeVersions(id: string) {
   return request<ResumeVersion[]>(`/resumes/${id}/versions`)
+}
+
+/**
+ * POST /resumes/{id}/versions/{versionId}/restore —— 恢复到历史版本（C-03）。
+ *
+ * 服务端以 source=restore 生成新版本，历史版本不被覆盖；若存在未提交的手动草稿，
+ * 服务端会先把它 flush 成一个 manual 版本，避免恢复吞掉用户刚编辑的内容。
+ * message 由调用方传入本地化文案，服务端在缺省时兜底。
+ */
+export function restoreVersion(id: string, versionId: string, message: string): Promise<Resume> {
+  return request<Resume>(`/resumes/${id}/versions/${versionId}/restore`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  })
 }
 
 /**
@@ -193,6 +232,15 @@ export function updateDocument(id: string, input: { document: ResumeDocument; ba
       message: input.message,
     }),
   })
+}
+
+/**
+ * GET /resumes/{id}/export?format=markdown —— 服务端把当前已提交文档渲染成 Markdown 附件。
+ * 返回纯文本正文；调用方负责触发下载并按机器错误码映射失败文案。
+ */
+export async function exportResumeMarkdown(id: string): Promise<string> {
+  const { text } = await requestTextWithResponse(`/resumes/${id}/export?format=markdown`)
+  return text
 }
 
 // ---------------------------------------------------------------------------
@@ -373,9 +421,15 @@ export function getProfile(): Promise<Profile> {
   return request<Profile>("/profile")
 }
 
-/** POST /profile/match-job */
+/**
+ * POST /profile/match-job —— 用确定性规则把 JD 要求与职业事实对齐。
+ * 后端不调用模型：同输入同输出，结果含事实级 relevance 与要求级 gap。
+ */
 export function matchJob(jdId: string): Promise<{ results: JobMatchResult[]; gaps: MatchGap[] }> {
-  return resolve(JOB_MATCHES[jdId] ?? { results: [], gaps: [] })
+  return request<{ results: JobMatchResult[]; gaps: MatchGap[] }>("/profile/match-job", {
+    method: "POST",
+    body: JSON.stringify({ jdId }),
+  })
 }
 
 /**
@@ -389,6 +443,20 @@ export function createFactManually(input: ProfileFactInput): Promise<ProfileFact
 /** PATCH /profile/facts/{id} —— 用户确认后更新事实（对话与直接编辑共用） */
 export function updateFact(id: string, patch: Partial<ProfileFact>): Promise<ProfileFact> {
   return request<ProfileFact>(`/profile/facts/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
+}
+
+/**
+ * DELETE /profile/facts/{id} 的返回：删除前被哪些简历版本引用。
+ * 后端在删除时一并返回，调用方据此在确认弹窗里提示反向引用影响。
+ */
+export interface FactDeletionImpact {
+  factId: string
+  referencedBy: { resumeId: string; resumeTitle: string; versionId: string }[]
+}
+
+/** DELETE /profile/facts/{id} —— 删除事实，并返回引用了它的简历版本。 */
+export function deleteFact(id: string): Promise<FactDeletionImpact> {
+  return request<FactDeletionImpact>(`/profile/facts/${id}`, { method: "DELETE" })
 }
 
 /** PATCH /profile/basics —— 用户确认后更新基本信息 */
@@ -501,6 +569,27 @@ export function getJd(id: string): Promise<JobDescription | undefined> {
   return request<JobDescription>(`/jds/${id}`)
 }
 
+/**
+ * PATCH /jds/{id} —— 编辑 JD，后端把 revision 加一，历史 revision 语义不变。
+ * 可改字段与后端 JobDescriptionUpdate 对齐。
+ */
+export function updateJd(
+  id: string,
+  patch: { role?: string; company?: string; body?: string; sourceUrl?: string; tags?: string[] },
+): Promise<JobDescription> {
+  return request<JobDescription>(`/jds/${id}`, { method: "PATCH", body: JSON.stringify(patch) })
+}
+
+/** DELETE /jds/{id} —— 删除 JD；后端返回 204，无响应体。 */
+export function deleteJd(id: string): Promise<void> {
+  return request<void>(`/jds/${id}`, { method: "DELETE" })
+}
+
+/** DELETE /jds/{id}/binding —— 解除 JD 与简历的软绑定，返回更新后的 JD。 */
+export function releaseJdBinding(id: string): Promise<JobDescription> {
+  return request<JobDescription>(`/jds/${id}/binding`, { method: "DELETE" })
+}
+
 // ---------------------------------------------------------------------------
 // 配置：agent/config / models / settings
 // ---------------------------------------------------------------------------
@@ -601,6 +690,8 @@ export async function listAccessLogs(params: AccessLogQuery = {}): Promise<Acces
   if (params.purpose) search.set("purpose", params.purpose)
   if (params.result) search.set("result", params.result)
   if (params.q) search.set("q", params.q)
+  if (params.from) search.set("from", params.from)
+  if (params.to) search.set("to", params.to)
   const suffix = search.toString()
   const { data, response } = await requestWithResponse<AccessLogEntry[]>(`/access/logs${suffix ? `?${suffix}` : ""}`)
   const header = response.headers.get("X-Total-Count")
@@ -640,6 +731,30 @@ export function deleteRole(id: string): Promise<void> {
 /** GET /auth/permissions —— 只读权限目录，权限码由代码声明 */
 export function listPermissions(): Promise<Permission[]> {
   return request<Permission[]>("/auth/permissions")
+}
+
+// ---------------------------------------------------------------------------
+// 用户管理：列表 / 封禁 / 解封 / 改角色（权限 user:read + user:ban/unban + role:assign）
+// ---------------------------------------------------------------------------
+
+/** GET /auth/users —— 全部账号的用户管理投影。 */
+export function listUsers(): Promise<AdminUser[]> {
+  return request<AdminUser[]>("/auth/users")
+}
+
+/** POST /auth/users/{id}/ban —— reason 可选，最长 500 字；成功后目标账号全部会话失效。 */
+export function banUser(id: string, reason?: string): Promise<AdminUser> {
+  return request<AdminUser>(`/auth/users/${id}/ban`, { method: "POST", body: JSON.stringify({ reason: reason?.trim() ? reason.trim() : null }) })
+}
+
+/** POST /auth/users/{id}/unban */
+export function unbanUser(id: string): Promise<AdminUser> {
+  return request<AdminUser>(`/auth/users/${id}/unban`, { method: "POST" })
+}
+
+/** POST /auth/users/{id}/role —— 用单个角色码替换目标用户的角色集合。 */
+export function changeUserRole(id: string, role: string): Promise<AdminUser> {
+  return request<AdminUser>(`/auth/users/${id}/role`, { method: "POST", body: JSON.stringify({ role }) })
 }
 
 // ---------------------------------------------------------------------------

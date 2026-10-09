@@ -194,3 +194,85 @@ def test_logs_require_access_read_permission(client: TestClient) -> None:
     assert response.status_code == 403
     assert response.json()["code"] == "FORBIDDEN"
 
+# ---------------------------------------------------------------------------
+# 访问审计日志：时间范围 from/to（闭区间、时区归一化、边界校验）
+# ---------------------------------------------------------------------------
+
+
+def test_logs_time_range_is_inclusive_on_both_bounds(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", f"r{index}") for index in range(5)])
+
+    response = client.get(
+        "/access/logs",
+        params={"from": "2026-01-01T00:01:00Z", "to": "2026-01-01T00:03:00Z"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Total-Count"] == "3"
+    assert [row["resource"] for row in response.json()] == ["r3", "r2", "r1"]
+
+
+def test_logs_time_range_supports_single_sided_filters(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", f"r{index}") for index in range(4)])
+
+    from_only = client.get("/access/logs", params={"from": "2026-01-01T00:02:00Z"})
+    to_only = client.get("/access/logs", params={"to": "2026-01-01T00:01:00Z"})
+
+    assert [row["resource"] for row in from_only.json()] == ["r3", "r2"]
+    assert from_only.headers["X-Total-Count"] == "2"
+    assert [row["resource"] for row in to_only.json()] == ["r1", "r0"]
+    assert to_only.headers["X-Total-Count"] == "2"
+
+
+def test_logs_naive_and_offset_times_are_normalized_to_utc(client: TestClient, db_session: Session) -> None:
+    _seed_logs(db_session, [("pat_auth", "allowed", "cli", "resume:read", f"r{index}") for index in range(3)])
+
+    naive = client.get(
+        "/access/logs",
+        params={"from": "2026-01-01T00:01:00", "to": "2026-01-01T00:01:00"},
+    )
+    aware = client.get(
+        "/access/logs",
+        params={"from": "2026-01-01T00:01:00+00:00", "to": "2026-01-01T00:01:00+00:00"},
+    )
+    offset = client.get(
+        "/access/logs",
+        params={"from": "2026-01-01T08:01:00+08:00", "to": "2026-01-01T08:01:00+08:00"},
+    )
+
+    assert naive.status_code == 200
+    assert [row["resource"] for row in naive.json()] == ["r1"]
+    # naive 被当作 UTC，与显式 UTC / +08:00 入参结果一致，不会出现 naive vs aware 运行期错误。
+    assert naive.json() == aware.json()
+    assert naive.json() == offset.json()
+
+
+def test_logs_reject_reversed_time_range(client: TestClient) -> None:
+    response = client.get(
+        "/access/logs",
+        params={"from": "2026-01-01T00:05:00Z", "to": "2026-01-01T00:01:00Z"},
+    )
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["code"] == "VALIDATION_FAILED"
+    assert "时间范围" in body["message"]
+    # 负向：不能把内部异常原文透出给客户端。
+    assert "Traceback" not in body["message"]
+    assert "ValueError" not in body["message"]
+
+
+def test_logs_reject_malformed_iso_datetime(client: TestClient) -> None:
+    response = client.get("/access/logs", params={"from": "not-a-date"})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_access_logs_openapi_exposes_from_and_to(client: TestClient) -> None:
+    spec = client.get("/openapi.json").json()
+
+    names = {parameter["name"] for parameter in spec["paths"]["/access/logs"]["get"]["parameters"]}
+
+    assert {"from", "to"} <= names
+

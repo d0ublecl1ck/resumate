@@ -2,7 +2,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { http, HttpResponse } from "msw"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { BackupPanel } from "@/components/backup-panel"
 import { IMPORT_PREVIEW_SAMPLE } from "@/lib/content"
 import { server } from "@/test-server"
@@ -144,5 +144,38 @@ describe("BackupPanel 死按钮与导入说明", () => {
     renderPanel()
     expect(screen.queryByText(/ID 映射/)).not.toBeInTheDocument()
     expect(screen.getByText(/绑定关系恢复/)).toBeInTheDocument()
+  })
+})
+
+describe("BackupPanel 导入预览同名资源", () => {
+  it("同名同类型资源不触发 React duplicate key 警告", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {})
+    server.use(
+      http.post(PREVIEW_URL, () =>
+        HttpResponse.json(
+          preview({
+            newResources: [
+              { type: "Resume", title: "同名简历" },
+              { type: "Resume", title: "同名简历" },
+              { type: "JD", title: "同名岗位" },
+              { type: "JD", title: "同名岗位" },
+            ],
+          }),
+        ),
+      ),
+    )
+    renderPanel()
+    upload(backupFile({ formatVersion: "resumate-backup/1.0", resources: {} }))
+
+    const dialog = await screen.findByRole("dialog", { name: "导入预览" })
+    await waitFor(() => expect(within(dialog).getAllByRole("listitem").length).toBeGreaterThan(0))
+    const rendered = within(dialog)
+      .getAllByRole("listitem")
+      .filter((item) => (item.textContent ?? "").includes("同名简历")).length
+    const dupKeyWarnings = spy.mock.calls.filter((call) => String(call[0]).includes("same key"))
+    expect(rendered, `同名资源渲染条数=${rendered}`).toBe(2)
+    spy.mockRestore()
+
+    expect(dupKeyWarnings).toHaveLength(0)
   })
 })

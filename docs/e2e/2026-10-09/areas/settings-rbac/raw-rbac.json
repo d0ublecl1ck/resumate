@@ -1,0 +1,323 @@
+{
+  "permissions": [
+    {
+      "id": "perm_access_read",
+      "code": "access:read",
+      "group": "access",
+      "name": "读取访问令牌与审计"
+    },
+    {
+      "id": "perm_access_write",
+      "code": "access:write",
+      "group": "access",
+      "name": "签发与撤销访问令牌"
+    },
+    {
+      "id": "perm_account_read",
+      "code": "account:read",
+      "group": "account",
+      "name": "读取自己的账号"
+    },
+    {
+      "id": "perm_account_write",
+      "code": "account:write",
+      "group": "account",
+      "name": "修改自己的账号"
+    },
+    {
+      "id": "perm_backup_read",
+      "code": "backup:read",
+      "group": "backup",
+      "name": "导出备份"
+    },
+    {
+      "id": "perm_backup_write",
+      "code": "backup:write",
+      "group": "backup",
+      "name": "导入备份"
+    },
+    {
+      "id": "perm_jd_read",
+      "code": "jd:read",
+      "group": "jd",
+      "name": "读取岗位"
+    },
+    {
+      "id": "perm_jd_write",
+      "code": "jd:write",
+      "group": "jd",
+      "name": "编辑岗位"
+    },
+    {
+      "id": "perm_profile_read",
+      "code": "profile:read",
+      "group": "profile",
+      "name": "读取职业事实"
+    },
+    {
+      "id": "perm_profile_write",
+      "code": "profile:write",
+      "group": "profile",
+      "name": "编辑职业事实"
+    },
+    {
+      "id": "perm_resume_read",
+      "code": "resume:read",
+      "group": "resume",
+      "name": "读取简历"
+    },
+    {
+      "id": "perm_resume_write",
+      "code": "resume:write",
+      "group": "resume",
+      "name": "编辑简历"
+    },
+    {
+      "id": "perm_role_assign",
+      "code": "role:assign",
+      "group": "role",
+      "name": "分配用户角色"
+    },
+    {
+      "id": "perm_role_read",
+      "code": "role:read",
+      "group": "role",
+      "name": "读取角色与权限"
+    },
+    {
+      "id": "perm_role_write",
+      "code": "role:write",
+      "group": "role",
+      "name": "维护角色"
+    },
+    {
+      "id": "perm_settings_read",
+      "code": "settings:read",
+      "group": "settings",
+      "name": "读取设置"
+    },
+    {
+      "id": "perm_settings_write",
+      "code": "settings:write",
+      "group": "settings",
+      "name": "修改设置"
+    },
+    {
+      "id": "perm_user_ban",
+      "code": "user:ban",
+      "group": "user",
+      "name": "封禁用户"
+    },
+    {
+      "id": "perm_user_read",
+      "code": "user:read",
+      "group": "user",
+      "name": "读取用户列表"
+    },
+    {
+      "id": "perm_user_unban",
+      "code": "user:unban",
+      "group": "user",
+      "name": "解除封禁"
+    }
+  ],
+  "roles_after_create": [
+    {
+      "id": "role_super_admin",
+      "code": "super_admin",
+      "name": "超级管理员",
+      "description": "拥有全部权限，可分配角色。",
+      "rank": 3,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "role:assign",
+        "role:read",
+        "role:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ]
+    },
+    {
+      "id": "role_admin",
+      "code": "admin",
+      "name": "管理员",
+      "description": "在普通用户之上可查看与封禁普通用户。",
+      "rank": 2,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ]
+    },
+    {
+      "id": "role_user",
+      "code": "user",
+      "name": "普通用户",
+      "description": "只能操作自己的简历、岗位、事实与设置。",
+      "rank": 1,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ]
+    },
+    {
+      "id": "role_e2e_rbac_1791528987_519143",
+      "code": "e2e_rbac_1791528987",
+      "name": "E2E 权限测试角色",
+      "description": "E2E 自动化创建的临时角色",
+      "rank": 0,
+      "isSystem": false,
+      "permissions": [
+        "jd:read",
+        "resume:read",
+        "resume:write"
+      ]
+    }
+  ],
+  "role_after_update": {
+    "id": "role_e2e_rbac_1791528987_519143",
+    "code": "e2e_rbac_1791528987",
+    "name": "E2E 权限测试角色-改",
+    "description": "E2E 自动化创建的临时角色",
+    "rank": 0,
+    "isSystem": false,
+    "permissions": [
+      "account:read",
+      "jd:read",
+      "resume:read"
+    ]
+  },
+  "roles_after_delete": [
+    {
+      "id": "role_super_admin",
+      "code": "super_admin",
+      "name": "超级管理员",
+      "description": "拥有全部权限，可分配角色。",
+      "rank": 3,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "role:assign",
+        "role:read",
+        "role:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ]
+    },
+    {
+      "id": "role_admin",
+      "code": "admin",
+      "name": "管理员",
+      "description": "在普通用户之上可查看与封禁普通用户。",
+      "rank": 2,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ]
+    },
+    {
+      "id": "role_user",
+      "code": "user",
+      "name": "普通用户",
+      "description": "只能操作自己的简历、岗位、事实与设置。",
+      "rank": 1,
+      "isSystem": true,
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ]
+    }
+  ],
+  "system_role_patch": {
+    "status": 422,
+    "body": {
+      "code": "VALIDATION_FAILED",
+      "message": "系统角色不可修改"
+    }
+  }
+}

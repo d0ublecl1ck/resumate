@@ -1,0 +1,19 @@
+[
+  {
+    "id": "pat_e75dda128b12",
+    "name": "E2E-BAK-20261009-145552 只读Token-150305",
+    "scopes": [
+      "resume:read"
+    ],
+    "resources": [
+      "全部简历"
+    ],
+    "fields": [],
+    "purpose": "",
+    "createdAt": "2026-10-09T15:03:14.370810+08:00",
+    "expiresAt": "2027-01-07T15:03:14.370810+08:00",
+    "lastUsedAt": null,
+    "status": "active",
+    "secretOnce": null
+  }
+]

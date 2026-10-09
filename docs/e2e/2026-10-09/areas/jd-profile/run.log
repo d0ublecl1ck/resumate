@@ -1,0 +1,690 @@
+PREFIX e2e-jd-profile-20261009-150054
+JD_A jd_99d72625952a JD_B jd_649d532f4f89 RESUME res_0b9fb8439661
+[PASS] JD 库页面加载 | expected=标题「JD 库」+ 列表可见 | actual=含「JD 库」=True；含预置 JD=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/01-jd-library.png
+[PASS] 新建 JD 弹窗可打开 | expected=出现「新增 JD」对话框 | actual=dialog 可见=True；弹窗内含 AI 整理入口=True；解析前可手工填写的字段=无（必须先 AI 整理） | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/02-jd-create-modal.png
+[FAIL] 粘贴中文 JD 解析（POST /jds:parse-text） | expected=解析出 岗位/公司/标签/正文 字段 | actual=BLOCKED：模型调用失败，status=502 body={"code":"UPSTREAM_REJECTED","message":"模型服务拒绝凭证，请检查 API Key 与 provider 配置"}；UI 显示错误='整理失败\n\n模型服务暂时不可用，请重试。\n\n重试' | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/03-jd-parse-text.png
+[PASS] 解析失败的错误态映射 | expected=显示映射文案且不透出后端 message 原文 | actual=alert='整理失败\n\n模型服务暂时不可用，请重试。\n\n重试'；后端原文未出现在页面=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/03-jd-parse-text.png
+[PASS] JD 详情页渲染（预置数据） | expected=显示 岗位名 / 公司 / 正文 / rev.1 | actual=role=True company=True body=True rev=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/04-jd-detail.png
+[FAIL] 编辑 JD（生成新 revision） | expected=点击后出现编辑表单或发出 PATCH /jds/{id} | actual=按钮可点=True；点击后新增写请求=无；弹窗=0；页面 textarea=0 | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/05-jd-edit-click.png
+[FAIL] 删除 JD | expected=JD 列表或详情存在删除入口（DELETE /jds/{id}） | actual=列表按钮=['Resumate\n对话式简历工作台', '工作台', '简历库', '个人资料', 'JD 库', '模拟面试', '设置与 Agent', '模板库', '角色与权限', '退出登录', '新增 JD', 'e2e-jd-profile-20261009-150054-tag', 'e2e-jd-profile-20261009-150054-B', '发起岗位微调', 'e2e-jd-profile-20261009-150054-A', '发起岗位微调']；详情按钮=['Resumate\n对话式简历工作台', '工作台', '简历库', '个人资料', 'JD 库', '模拟面试', '设置与 Agent', '模板库', '角色与权限', '退出登录', '返回 JD 库', '编辑（生成新 revision）', '直接微调所选简历\n在该简历上产生新版本', '复制后微调\n创建副本，原稿不变（需确认创建）', '发起岗位微调']；命中删除入口=无 | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/06-jd-delete-scan.png
+[PASS] JD 详情未绑定态 | expected=未绑定 JD 的关系区不显示「当前绑定」徽标 | actual=REST boundResumeId=None；页面绑定徽标=本次改选；关系徽标=False | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/07-jd-binding-unbound.png
+[PASS] 绑定简历后详情显示绑定关系 | expected=显示「当前绑定 · <简历名>」徽标 | actual=REST PUT status=200 boundResumeId=res_0b9fb8439661；绑定徽标=True，含简历名=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/08-jd-binding-bound.png
+[FAIL] 解绑（DELETE /jds/{id}/binding） | expected=详情存在解绑入口 | actual=详情按钮=['Resumate\n对话式简历工作台', '工作台', '简历库', '个人资料', 'JD 库', '模拟面试', '设置与 Agent', '模板库', '角色与权限', '退出登录', '返回 JD 库', '编辑（生成新 revision）', '直接微调所选简历\n在该简历上产生新版本', '复制后微调\n创建副本，原稿不变（需确认创建）', '发起岗位微调']；命中解绑入口=无 | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/09-jd-unbind-scan.png
+[PASS] 解绑后关系消失（REST 解绑 + 页面反映） | expected=详情不再显示「当前绑定」徽标 | actual=REST DELETE status=200 boundResumeId=None；绑定徽标=False | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/10-jd-binding-released.png
+[FAIL] 岗位匹配结果展示 | expected=详情页展示匹配得分/差距项 | actual=详情页命中匹配关键字=无；POST /profile/match-job -> 404 {"detail": "Not Found"} | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/11-jd-match-scan.png
+[PASS] 不存在的 JD 详情路由（空态/错误态） | expected=显示 404 未找到状态块 | actual=含「未找到」=True；含 404=True；页面摘要='Resumate 对话式简历工作台 工作台 简历库 个人资料 JD 库 模拟面试 设置与 Agent 管理员 模板库 角色与权限 管  管理员  超级管理员  退出登录  未找到该岗位 JD  它可能已被删除或从未存在。  错误码：404  返回工作台' | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/12-jd-not-found.png
+[PASS] Profile 页面加载 | expected=标题「个人资料」+ 完整度 + 分区 | actual=含「个人资料」=True；含「完善度」=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/13-profile-overview.png
+[PASS] 资料基础信息（basics）修改持久化 | expected=保存后即时可见，刷新后仍存在 | actual=保存后含城市=True；刷新后含城市=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/15-profile-basics-saved.png
+[PASS] 事实（fact）新增 | expected=技能分区出现新事实卡片 | actual=含标题=True；含内容=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/17-profile-fact-created.png
+[PASS] 事实（fact）编辑 | expected=卡片内容更新为新值 | actual=含新内容=True；旧内容已消失=True | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/19-profile-fact-edited.png
+[FAIL] 事实（fact）删除 | expected=事实卡片存在删除入口（DELETE /profile/facts/{id}） | actual=页面按钮=['Resumate\n对话式简历工作台', '工作台', '简历库', '个人资料', 'JD 库', '模拟面试', '设置与 Agent', '模板库', '角色与权限', '退出登录', '对话维护资料', '生成简历', '编辑', '手动添加', '编辑', '手动添加', '描述一个你主导或参与的项目及其成果。', '手动添加', '填写你的学历，例如「2018 年硕士毕业于某大学计算机专业」。', '手动添加', '编辑', '编辑', '手动添加', '记录一次获奖或亮眼的量化成果。', '手动添加', '补充你考取的证书或资格认证。']；命中删除入口=无 | <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/20-profile-fact-delete-scan.png
+  PUT document -> 200 current_version_id= None
+[PASS] 事实反向引用删除影响（后端契约） | expected=DELETE 返回 FactDeletionImpact.referencedBy 非空，且事实被删 | actual=GET referencedBy=[{"resumeId": "res_5eae880be17b", "resumeTitle": "e2e-jd-profile-20261009-150054-简历-ref", "versionId": "ver_5618cf5ecfef"}]；DELETE status=200 body={"factId": "fact_08d08275f14d", "referencedBy": [{"resumeId": "res_5eae880be17b", "resumeTitle": "e2e-jd-profile-20261009-150054-简历-ref", "versionId": "ver_5618cf5ecfef"}]}；删除后 GET=404 {"code": "RESOURCE_NOT_FOUND", "message": "事实 fact_08d08275f14d 不存在"} | 
+[FAIL] 事实反向引用影响提示（UI） | expected=UI 可见被引用影响提示并让用户确认 | actual=UI 无删除入口（见缺陷 5），无法触发；后端契约可用（上一步） | 
+
+===== CLEANUP =====
+  DEL jd jd_649d532f4f89 -> 204
+  DEL jd jd_99d72625952a -> 204
+  DEL resume res_5eae880be17b -> 200
+  DEL resume res_0b9fb8439661 -> 200
+
+===== NETWORK EVENTS =====
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/jds.tsx");const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-005 JD 库（Page）。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { listJds, listResumes } from "/src/lib/api.ts?t=1791529153824";
+import { JdLibrary } from "/src/components/jd-library.tsx?t=1791529153824";
+import { PageLoading } from "/src/pages/states.tsx";
+var _jsxFileName = "<本机用户名>/resumate-worktrees/zj-fwwb-2026/ui/src/pa
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/profile.tsx");const _jsxDEV = __vite__cjsImport7_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（Page）。
+// 查询失败必须走统一错误状态块（错误码 + 重试），不能把 undefined 交给 ProfileWorkspace 永久停在加载中。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { useTranslation } from "/node_modules/.vite/deps/react-i18next.js?v=b43e8095";
+import { getProfile } from "/src/lib/api.ts?t=1791529153824";
+import { ApiRequestError } from "/src/lib/api-client.ts?t
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-workspace.tsx");const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];const _jsxDEV = __vite__cjsImport11_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
+// 两条维护路径：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
+// 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
+import { Link, useSearchParam
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 200
+    export default {
+	title: "Profile",
+	subtitlePrefix: "Your career master profile. Resumes draw material from here — completeness ",
+	loadError: {
+		title: "Couldn't load your profile",
+		description: "We couldn't read your master profile. Please try again."
+	},
+	actions: {
+		openAssistant: "Maintain via chat",
+		generateResume: "Generate resume",
+		edit: "Edit",
+		editBasics: "Edit basics",
+		saveBasics: "Save basics",
+		savingBasics: "Saving…",
+		addManually: "Add manually",
+		editFact: "Edit “{{title}}”",
+		addFact: "Add fact",
+		saveFact: "Save changes",
+		savingFact: "Saving…"
+	},
+	basics:
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 200
+    export default {
+	title: "个人资料",
+	subtitlePrefix: "你的职业主档。简历从这里选材生成——完善度 ",
+	loadError: {
+		title: "个人资料加载失败",
+		description: "没能读取主档数据，请重试。"
+	},
+	actions: {
+		openAssistant: "对话维护资料",
+		generateResume: "生成简历",
+		edit: "编辑",
+		editBasics: "编辑基本信息",
+		saveBasics: "保存基本信息",
+		savingBasics: "保存中…",
+		addManually: "手动添加",
+		editFact: "编辑「{{title}}」",
+		addFact: "添加事实",
+		saveFact: "保存修改",
+		savingFact: "保存中…"
+	},
+	basics: {
+		sectionAria: "基本信息",
+		fullName: "姓名",
+		headline: "一句话头衔",
+		email: "邮箱",
+		phone: "电话",
+		location: "城市",
+		links: "链接",
+		linkLabel: "名称",
+		linkNameAria: "链接 {{index}} 名称
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 200
+    // 事实类型的唯一顺序来源：分区展示（profile-workspace 的 SECTIONS）与类型下拉都从这里取序，
+// 避免「下拉顺序」与「分区顺序」两处各写一遍后漂移。
+export const FACT_TYPE_ORDER = [
+	"experience",
+	"project",
+	"education",
+	"skill",
+	"achievement",
+	"certificate"
+];
+export function factTypeLabel(t, type) {
+	return t(`profile.factType.${type}`);
+}
+export function evidenceStatusLabel(t, status) {
+	return t(`profile.evidenceStatus.${status}`);
+}
+export function factVisibilityLabel(t, visibility) {
+	return t(`profile.factVisibility.${visibility}`);
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJtYXBwaW5ncyI6Ijs7QUFRQSxPQUFPLE1BQU0sa0JBQThCO0NBQU
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-assistant.tsx");const useCallback = __vite__cjsImport0_react["useCallback"]; const useEffect = __vite__cjsImport0_react["useEffect"]; const useMemo = __vite__cjsImport0_react["useMemo"]; const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport14_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport14_react_jsxDevRuntime["Fragment"];// 个人资料助手：主档的对话入口。真实接线到 pr
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-basics-form.tsx");const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-004 基本信息直接编辑表单。与「对话编辑」并存：两条路径写同一份主档数据。
+// 控件样式沿用事实卡片与结构化编辑器（border-input / focus:ring-ring/30），不引入新视觉规则。
+// 失败出口：保存失败不再是未处理的 rejection，而是行内 alert（错误码 + 重试）；
+// 邮箱做格式兜底校验，所有输入带长度上限，避免把明显非法的值写进主档。
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/re
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-fact-form.tsx");const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-004 事实直接编辑表单：新增与修正走同一套字段（US-7.1 / US-7.6）。
+// 证据状态默认「待核实」，只有用户显式选择才成为「已核实」（BR-D09）；
+// 可见性默认沿用事实卡片的「仅用于简历」（US-7.10 / BR-D05）。
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/react.js?v=62f70824";
+import { useTranslation } from "/node_modules/.vite
+  POST http://127.0.0.1:5173/api/auth/login -> 200
+    {"id":"user_admin","email":"admin@resumate.dev","displayName":"管理员","role":"super_admin","roles":["super_admin"],"permissions":["access:read","access:write","account:read","account:write","backup:read","backup:write","jd:read","jd:write","profile:read","profile:write","resume:read","resume:write","role:assign","role:read","role:write","settings:read","settings:write","user:ban","user:read","user:unban"],"isBanned":false,"createdAt":"2026-09-27T10:52:02.289703+08:00"}
+  GET http://127.0.0.1:5173/api/jds -> 200
+    [{"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:00:54.470427+08:00","boundResumeId":null,"boundResumeAvailable":null},{"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A
+  GET http://127.0.0.1:5173/api/profile -> 200
+    {"id":"profile_9fd94e7179fc","ownerId":"user_admin","displayName":"我的职业事实库","completeness":56,"basics":{"fullName":"黄鹏兴","headline":"高级前端工程师","email":"huang@example.com","phone":"","location":"e2e-jd-profile-20261009-145802-城市","links":[]},"facts":[{"id":"fact_2ecc75030c32","type":"skill","title":"精通 React 与 TypeScript","content":"五年 React/TS 一线开发经验，主导过多个中后台项目。","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]},{"id":"fact_66490e99e1d7","type":"experience","title":"高级前端工
+  GET http://127.0.0.1:5173/jds -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds -> 200
+    [{"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:00:54.470427+08:00","boundResumeId":null,"boundResumeAvailable":null},{"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A
+  POST http://127.0.0.1:5173/api/jds:parse-text -> 502
+    {"code":"UPSTREAM_REJECTED","message":"模型服务拒绝凭证，请检查 API Key 与 provider 配置"}
+  GET http://127.0.0.1:5173/jds/jd_99d72625952a -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/jd_99d72625952a -> 200
+    {"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.415837+08:00","updatedAt":"2026-10-09T15:00:54.415837+08:00","boundResumeId":null,"boundResumeAvailable":null}
+  GET http://127.0.0.1:5173/jds -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds -> 200
+    [{"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:00:54.470427+08:00","boundResumeId":null,"boundResumeAvailable":null},{"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A
+  GET http://127.0.0.1:5173/jds/jd_99d72625952a -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/jd_99d72625952a -> 200
+    {"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.415837+08:00","updatedAt":"2026-10-09T15:00:54.415837+08:00","boundResumeId":null,"boundResumeAvailable":null}
+  GET http://127.0.0.1:5173/jds/jd_649d532f4f89 -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/jds.tsx");const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-005 JD 库（Page）。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { listJds, listResumes } from "/src/lib/api.ts?t=1791529153824";
+import { JdLibrary } from "/src/components/jd-library.tsx?t=1791529153824";
+import { PageLoading } from "/src/pages/states.tsx";
+var _jsxFileName = "<本机用户名>/resumate-worktrees/zj-fwwb-2026/ui/src/pa
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/profile.tsx");const _jsxDEV = __vite__cjsImport7_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（Page）。
+// 查询失败必须走统一错误状态块（错误码 + 重试），不能把 undefined 交给 ProfileWorkspace 永久停在加载中。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { useTranslation } from "/node_modules/.vite/deps/react-i18next.js?v=b43e8095";
+import { getProfile } from "/src/lib/api.ts?t=1791529153824";
+import { ApiRequestError } from "/src/lib/api-client.ts?t
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-workspace.tsx");const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];const _jsxDEV = __vite__cjsImport11_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
+// 两条维护路径：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
+// 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
+import { Link, useSearchParam
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 200
+    export default {
+	title: "Profile",
+	subtitlePrefix: "Your career master profile. Resumes draw material from here — completeness ",
+	loadError: {
+		title: "Couldn't load your profile",
+		description: "We couldn't read your master profile. Please try again."
+	},
+	actions: {
+		openAssistant: "Maintain via chat",
+		generateResume: "Generate resume",
+		edit: "Edit",
+		editBasics: "Edit basics",
+		saveBasics: "Save basics",
+		savingBasics: "Saving…",
+		addManually: "Add manually",
+		editFact: "Edit “{{title}}”",
+		addFact: "Add fact",
+		saveFact: "Save changes",
+		savingFact: "Saving…"
+	},
+	basics:
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 200
+    export default {
+	title: "个人资料",
+	subtitlePrefix: "你的职业主档。简历从这里选材生成——完善度 ",
+	loadError: {
+		title: "个人资料加载失败",
+		description: "没能读取主档数据，请重试。"
+	},
+	actions: {
+		openAssistant: "对话维护资料",
+		generateResume: "生成简历",
+		edit: "编辑",
+		editBasics: "编辑基本信息",
+		saveBasics: "保存基本信息",
+		savingBasics: "保存中…",
+		addManually: "手动添加",
+		editFact: "编辑「{{title}}」",
+		addFact: "添加事实",
+		saveFact: "保存修改",
+		savingFact: "保存中…"
+	},
+	basics: {
+		sectionAria: "基本信息",
+		fullName: "姓名",
+		headline: "一句话头衔",
+		email: "邮箱",
+		phone: "电话",
+		location: "城市",
+		links: "链接",
+		linkLabel: "名称",
+		linkNameAria: "链接 {{index}} 名称
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-assistant.tsx");const useCallback = __vite__cjsImport0_react["useCallback"]; const useEffect = __vite__cjsImport0_react["useEffect"]; const useMemo = __vite__cjsImport0_react["useMemo"]; const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport14_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport14_react_jsxDevRuntime["Fragment"];// 个人资料助手：主档的对话入口。真实接线到 pr
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-basics-form.tsx");const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-004 基本信息直接编辑表单。与「对话编辑」并存：两条路径写同一份主档数据。
+// 控件样式沿用事实卡片与结构化编辑器（border-input / focus:ring-ring/30），不引入新视觉规则。
+// 失败出口：保存失败不再是未处理的 rejection，而是行内 alert（错误码 + 重试）；
+// 邮箱做格式兜底校验，所有输入带长度上限，避免把明显非法的值写进主档。
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/re
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-fact-form.tsx");const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-004 事实直接编辑表单：新增与修正走同一套字段（US-7.1 / US-7.6）。
+// 证据状态默认「待核实」，只有用户显式选择才成为「已核实」（BR-D09）；
+// 可见性默认沿用事实卡片的「仅用于简历」（US-7.10 / BR-D05）。
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/react.js?v=62f70824";
+import { useTranslation } from "/node_modules/.vite
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 200
+    // 事实类型的唯一顺序来源：分区展示（profile-workspace 的 SECTIONS）与类型下拉都从这里取序，
+// 避免「下拉顺序」与「分区顺序」两处各写一遍后漂移。
+export const FACT_TYPE_ORDER = [
+	"experience",
+	"project",
+	"education",
+	"skill",
+	"achievement",
+	"certificate"
+];
+export function factTypeLabel(t, type) {
+	return t(`profile.factType.${type}`);
+}
+export function evidenceStatusLabel(t, status) {
+	return t(`profile.evidenceStatus.${status}`);
+}
+export function factVisibilityLabel(t, visibility) {
+	return t(`profile.factVisibility.${visibility}`);
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJtYXBwaW5ncyI6Ijs7QUFRQSxPQUFPLE1BQU0sa0JBQThCO0NBQU
+  GET http://127.0.0.1:5173/api/jds/jd_649d532f4f89 -> 200
+    {"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:00:54.470427+08:00","boundResumeId":null,"boundResumeAvailable":null}
+  GET http://127.0.0.1:5173/jds/jd_649d532f4f89 -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/jd_649d532f4f89 -> 200
+    {"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:01:30.291451+08:00","boundResumeId":"res_0b9fb8439661","boundResumeAvailable":true}
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/jds/jd_649d532f4f89 -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/jd_649d532f4f89 -> 200
+    {"id":"jd_649d532f4f89","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-B","company":"e2e-jd-profile-20261009-150054-公司-B","body":"e2e-jd-profile-20261009-150054 正文 B：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.470427+08:00","updatedAt":"2026-10-09T15:01:34.920219+08:00","boundResumeId":null,"boundResumeAvailable":null}
+  GET http://127.0.0.1:5173/jds/jd_99d72625952a -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/jd_99d72625952a -> 200
+    {"id":"jd_99d72625952a","ownerId":"user_admin","role":"e2e-jd-profile-20261009-150054-A","company":"e2e-jd-profile-20261009-150054-公司-A","body":"e2e-jd-profile-20261009-150054 正文 A：负责核心系统开发，主导性能优化。","sourceUrl":null,"tags":["e2e-jd-profile-20261009-150054-tag"],"revision":1,"createdAt":"2026-10-09T15:00:54.415837+08:00","updatedAt":"2026-10-09T15:00:54.415837+08:00","boundResumeId":null,"boundResumeAvailable":null}
+  GET http://127.0.0.1:5173/jds/does-not-exist-20261009-150054 -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/jds/does-not-exist-20261009-150054 -> 404
+    {"code":"RESOURCE_NOT_FOUND","message":"岗位 does-not-exist-20261009-150054 不存在"}
+  GET http://127.0.0.1:5173/profile -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529153824 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-workspace.tsx");const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];const _jsxDEV = __vite__cjsImport11_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
+// 两条维护路径：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
+// 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
+import { Link, useSearchParam
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529304024 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-assistant.tsx");const useCallback = __vite__cjsImport0_react["useCallback"]; const useEffect = __vite__cjsImport0_react["useEffect"]; const useMemo = __vite__cjsImport0_react["useMemo"]; const useRef = __vite__cjsImport0_react["useRef"]; const useState = __vite__cjsImport0_react["useState"];const _jsxDEV = __vite__cjsImport14_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport14_react_jsxDevRuntime["Fragment"];// 个人资料助手：主档的对话入口。真实接线到 pr
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529304024 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/profile-workspace.tsx");const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];const _jsxDEV = __vite__cjsImport11_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（主档）。像一份简历那样自上而下：基本信息 → 经历 → 项目 → 教育 → 技能 → 成果 → 证书。
+// 两条维护路径：页面内表单直接编辑（US-7.1 / US-7.2 / US-7.6 / US-7.9 / US-7.10），
+// 以及页头唯一的「对话维护资料」抽屉——对话助手维护的是整份主档，因此不在卡片上重复入口（C-07）。
+// 这是简历的事实来源；生成简历时从这里选材。不展示被哪些简历引用（那是简历侧的事）。
+import { Link, useSearchParam
+  GET http://127.0.0.1:5173/api/profile -> 200
+    {"id":"profile_9fd94e7179fc","ownerId":"user_admin","displayName":"我的职业事实库","completeness":56,"basics":{"fullName":"黄鹏兴","headline":"高级前端工程师","email":"huang@example.com","phone":"","location":"e2e-jd-profile-20261009-145802-城市","links":[]},"facts":[{"id":"fact_2ecc75030c32","type":"skill","title":"精通 React 与 TypeScript","content":"五年 React/TS 一线开发经验，主导过多个中后台项目。","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]},{"id":"fact_66490e99e1d7","type":"experience","title":"高级前端工
+  PATCH http://127.0.0.1:5173/api/profile/basics -> 200
+    {"id":"profile_9fd94e7179fc","ownerId":"user_admin","displayName":"我的职业事实库","completeness":56,"basics":{"fullName":"黄鹏兴","headline":"高级前端工程师","email":"huang@example.com","phone":"","location":"e2e-jd-profile-20261009-150054-城市","links":[]},"facts":[{"id":"fact_2ecc75030c32","type":"skill","title":"精通 React 与 TypeScript","content":"五年 React/TS 一线开发经验，主导过多个中后台项目。","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]},{"id":"fact_66490e99e1d7","type":"experience","title":"高级前端工
+  GET http://127.0.0.1:5173/profile -> 200
+    <!doctype html>
+<html lang="zh-CN">
+  <head>
+    <script type="module">import { injectIntoGlobalHook } from "/@react-refresh";
+injectIntoGlobalHook(window);
+window.$RefreshReg$ = () => {};
+window.$RefreshSig$ = () => (type) => type;</script>
+
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <!-- 图标一律来自品牌标志 brand/mark.png，生成方式见 public/brand/README.md。 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="4
+  GET http://127.0.0.1:5173/src/components/profile-workspace.tsx?t=1791529304024 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/pages/jds.tsx?t=1791529304024 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/jds.tsx");const _jsxDEV = __vite__cjsImport4_react_jsxDevRuntime["jsxDEV"];// SCR-005 JD 库（Page）。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { listJds, listResumes } from "/src/lib/api.ts?t=1791529304024";
+import { JdLibrary } from "/src/components/jd-library.tsx?t=1791529304024";
+import { PageLoading } from "/src/pages/states.tsx";
+var _jsxFileName = "<本机用户名>/resumate-worktrees/zj-fwwb-2026/ui/src/pa
+  GET http://127.0.0.1:5173/src/pages/profile.tsx?t=1791529304024 -> 200
+    import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/profile.tsx");const _jsxDEV = __vite__cjsImport7_react_jsxDevRuntime["jsxDEV"];// SCR-004 个人资料（Page）。
+// 查询失败必须走统一错误状态块（错误码 + 重试），不能把 undefined 交给 ProfileWorkspace 永久停在加载中。
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=f5215414";
+import { useTranslation } from "/node_modules/.vite/deps/react-i18next.js?v=b43e8095";
+import { getProfile } from "/src/lib/api.ts?t=1791529304024";
+import { ApiRequestError } from "/src/lib/api-client.ts?t
+  GET http://127.0.0.1:5173/src/i18n/locales/en/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/i18n/locales/zh-CN/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/lib/profile.ts -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-assistant.tsx?t=1791529304024 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-basics-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/src/components/profile-fact-form.tsx?t=1791529153824 -> 304
+    <unreadable: Response.text: Response body is unavailable for redirect responses>
+  GET http://127.0.0.1:5173/api/profile -> 200
+    {"id":"profile_9fd94e7179fc","ownerId":"user_admin","displayName":"我的职业事实库","completeness":56,"basics":{"fullName":"黄鹏兴","headline":"高级前端工程师","email":"huang@example.com","phone":"","location":"e2e-jd-profile-20261009-150054-城市","links":[]},"facts":[{"id":"fact_2ecc75030c32","type":"skill","title":"精通 React 与 TypeScript","content":"五年 React/TS 一线开发经验，主导过多个中后台项目。","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]},{"id":"fact_66490e99e1d7","type":"experience","title":"高级前端工
+  POST http://127.0.0.1:5173/api/profile/facts -> 201
+    {"id":"fact_ee2c0145ca77","type":"skill","title":"e2e-jd-profile-20261009-150054-技能事实","content":"e2e-jd-profile-20261009-150054-内容-初始","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]}
+  PATCH http://127.0.0.1:5173/api/profile/facts/fact_ee2c0145ca77 -> 200
+    {"id":"fact_ee2c0145ca77","type":"skill","title":"e2e-jd-profile-20261009-150054-技能事实","content":"e2e-jd-profile-20261009-150054-内容-已编辑","tags":[],"source":"手动录入","evidence":{"status":"unverified","label":null,"downloadable":null},"confidence":0.5,"verifiedAt":null,"visibility":"resume_only","referencedBy":[]}
+
+===== CONSOLE =====
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 404 (Not Found)
+  debug: [vite] connecting...
+  debug: [vite] connected.
+  info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  debug: [vite] connecting...
+  debug: [vite] connected.
+  info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+  error: Failed to load resource: the server responded with a status of 403 (Forbidden)
+
+REPORT: <本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/jd-profile/REPORT.md

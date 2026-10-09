@@ -151,6 +151,15 @@ def revoke_token(db: Session, user: CurrentUser, token_id: str) -> PersonalAcces
     return _response(token)
 
 
+def _as_utc(value: datetime | None) -> datetime | None:
+    """Treat naive input as UTC so aware DB columns never mix tzinfo."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
 def list_logs(
     db: Session,
     user: CurrentUser,
@@ -158,10 +167,26 @@ def list_logs(
     purpose: str | None = None,
     result: str | None = None,
     query: str | None = None,
+    from_at: datetime | None = None,
+    to_at: datetime | None = None,
     page: int = 1,
     size: int = 20,
 ) -> tuple[list[AccessLogResponse], int]:
-    rows, total = dao.list_logs(db, user.id, purpose=purpose, result=result, query=query, page=page, size=size)
+    from_at = _as_utc(from_at)
+    to_at = _as_utc(to_at)
+    if from_at is not None and to_at is not None and from_at > to_at:
+        raise ValidationFailed("时间范围无效：from 不能晚于 to")
+    rows, total = dao.list_logs(
+        db,
+        user.id,
+        purpose=purpose,
+        result=result,
+        query=query,
+        from_at=from_at,
+        to_at=to_at,
+        page=page,
+        size=size,
+    )
     return (
         [
             AccessLogResponse(

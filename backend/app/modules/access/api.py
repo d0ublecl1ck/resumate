@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
@@ -49,6 +51,8 @@ def get_logs(
     purpose: str | None = Query(None, max_length=200),
     result: AccessResult | None = Query(None),
     q: str | None = Query(None, max_length=200),
+    from_at: datetime | None = Query(None, alias="from"),
+    to_at: datetime | None = Query(None, alias="to"),
     pagination: PaginationParams = Depends(get_pagination),
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(require_permission("access:read")),
@@ -59,6 +63,8 @@ def get_logs(
         purpose=purpose,
         result=result,
         query=q,
+        from_at=from_at,
+        to_at=to_at,
         page=pagination.page,
         size=pagination.size,
     )

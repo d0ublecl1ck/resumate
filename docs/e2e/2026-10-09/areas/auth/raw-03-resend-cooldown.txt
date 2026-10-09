@@ -1,0 +1,2 @@
+status=429
+body={"code":"RESEND_TOO_SOON","message":"验证邮件刚刚发送，请稍后再试"}

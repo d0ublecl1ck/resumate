@@ -1,0 +1,2 @@
+status=403
+body={"code":"EMAIL_NOT_VERIFIED","message":"邮箱尚未验证，请先完成邮箱验证"}

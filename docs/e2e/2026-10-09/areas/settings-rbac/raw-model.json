@@ -1,0 +1,113 @@
+{
+  "admin_model_before": {
+    "provider": "deepseek",
+    "endpoint": "https://api.deepseek.com/v1",
+    "model": "deepseek-flash",
+    "keyConfigured": true,
+    "lastTest": {
+      "at": "2026-10-09T07:00:31.605342Z",
+      "ok": false,
+      "message": "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
+    }
+  },
+  "admin_prefs_before": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "管理员",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "admin_model_after_save": {
+    "provider": "deepseek",
+    "endpoint": "https://api.deepseek.com/v1",
+    "model": "deepseek-flash",
+    "keyConfigured": true,
+    "lastTest": null
+  },
+  "admin_test": {
+    "result": {
+      "at": "2026-10-09T07:01:16.053111Z",
+      "ok": false,
+      "message": "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
+    },
+    "elapsed_s": 1.1,
+    "ui_text": "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
+  },
+  "admin_prefs_after": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "管理员",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "main_model_saved": {
+    "provider": "deepseek",
+    "endpoint": "https://api.deepseek.com/v1",
+    "model": "deepseek-flash",
+    "keyConfigured": false,
+    "lastTest": null
+  },
+  "main_test_nokey": {
+    "result": {
+      "at": "2026-10-09T07:01:32.498630Z",
+      "ok": false,
+      "message": "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
+    },
+    "elapsed_s": 1.1
+  },
+  "main_model_restored": {
+    "provider": "",
+    "endpoint": "",
+    "model": "",
+    "keyConfigured": false,
+    "lastTest": null
+  }
+}

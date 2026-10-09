@@ -1,0 +1,90 @@
+[
+  {
+    "n": 1,
+    "title": "浏览器登录主账号",
+    "expected": "进入工作台",
+    "actual": "ok=True err=",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 2,
+    "title": "读取 Agent 配置（初始）",
+    "expected": "nextRunMode=approval, budget=20000/8/0.5",
+    "actual": "status=200 {\"currentRunMode\": null, \"nextRunMode\": \"approval\", \"modeSource\": \"account\", \"fullAccessScopes\": [\"read_search_compare_render\", \"content_patch\", \"metadata_update_archive\"], \"confirmRetainedOps\": [\"delete\", \"history_restore\", \"overwrite_export\", \"profile_to_resume\", \"fact_promotion\"], \"budget\": {\"maxTokens\": 20000, \"maxTurns\": 8, \"maxCostUsd\": 0.5}}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 3,
+    "title": "默认选中 Approval 模式",
+    "expected": "Approval 按钮 aria-pressed=true, Full Access=false",
+    "actual": "approval=true full=false",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 4,
+    "title": "切换到 Full Access",
+    "expected": "按钮 aria-pressed 翻转且出现免确认范围说明",
+    "actual": "full=true notice=True",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-agent-01-full-access-selected.png"
+  },
+  {
+    "n": 5,
+    "title": "保存 Agent 配置（full_access, 50000/12/2.5）",
+    "expected": "出现「已保存」",
+    "actual": "已出现「已保存」",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/02-agent-02-saved.png"
+  },
+  {
+    "n": 6,
+    "title": "REST 交叉验证 GET /agent/config",
+    "expected": "full_access, 50000/12/2.5",
+    "actual": "{\"currentRunMode\": null, \"nextRunMode\": \"full_access\", \"modeSource\": \"account\", \"fullAccessScopes\": [\"read_search_compare_render\", \"content_patch\", \"metadata_update_archive\"], \"confirmRetainedOps\": [\"delete\", \"history_restore\", \"overwrite_export\", \"profile_to_resume\", \"fact_promotion\"], \"budget\": {\"maxTokens\": 50000, \"maxTurns\": 12, \"maxCostUsd\": 2.5}}",
+    "ok": true,
+    "evidence": "areas/settings-rbac/raw-agent.json"
+  },
+  {
+    "n": 7,
+    "title": "刷新后 Agent 配置回显",
+    "expected": "Full Access 选中且 50000/12/2.5",
+    "actual": "full=true budget=('50000', '12', '2.5')",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-agent-03-after-reload.png"
+  },
+  {
+    "n": 8,
+    "title": "非法 Token 预算上限=0 校验",
+    "expected": "后端 422 且界面显示中文校验文案",
+    "actual": "UI='请求参数校验失败：maxTokens' REST=422 {\"code\": \"VALIDATION_FAILED\", \"message\": \"请求参数校验失败：maxTokens\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-agent-04-invalid-0.png"
+  },
+  {
+    "n": 9,
+    "title": "非法 最大轮次=101 校验",
+    "expected": "后端 422 且界面显示中文校验文案",
+    "actual": "UI='请求参数校验失败：maxTurns' REST=422 {\"code\": \"VALIDATION_FAILED\", \"message\": \"请求参数校验失败：maxTurns\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/05-agent-04-invalid-101.png"
+  },
+  {
+    "n": 10,
+    "title": "非法 成本上限（USD）=-1 校验",
+    "expected": "后端 422 且界面显示中文校验文案",
+    "actual": "UI='请求参数校验失败：maxCostUsd' REST=422 {\"code\": \"VALIDATION_FAILED\", \"message\": \"请求参数校验失败：maxCostUsd\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/06-agent-04-invalid-neg1.png"
+  },
+  {
+    "n": 11,
+    "title": "还原 Agent 配置为默认",
+    "expected": "approval, 20000/8/0.5",
+    "actual": "{\"currentRunMode\": null, \"nextRunMode\": \"approval\", \"modeSource\": \"account\", \"fullAccessScopes\": [\"read_search_compare_render\", \"content_patch\", \"metadata_update_archive\"], \"confirmRetainedOps\": [\"delete\", \"history_restore\", \"overwrite_export\", \"profile_to_resume\", \"fact_promotion\"], \"budget\": {\"maxTokens\": 20000, \"maxTurns\": 8, \"maxCostUsd\": 0.5}}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/07-agent-05-restored.png"
+  }
+]

@@ -72,6 +72,18 @@ export interface AuthUser {
   createdAt: ISODate
 }
 
+/** 用户管理投影（GET /auth/users）：role/roles 允许自定义角色码，不限制为内置三档。 */
+export interface AdminUser {
+  id: string
+  email: string
+  displayName: string
+  role: string
+  roles: string[]
+  permissions: string[]
+  isBanned: boolean
+  createdAt: ISODate
+}
+
 /** 邮箱验证投递结果（d7b99）：202 中性响应，两种情况都不代表已登录。 */
 export type VerificationSendStatus = "verification_sent" | "already_verified"
 
@@ -672,6 +684,10 @@ export interface AccessLogQuery {
   result?: AccessLogEntry["result"]
   /** 关键字，匹配 clientId / scope / resource。 */
   q?: string
+  /** 起始时间（ISO 8601，闭区间下界）。 */
+  from?: string
+  /** 结束时间（ISO 8601，闭区间上界）。 */
+  to?: string
 }
 
 /**

@@ -107,6 +107,27 @@ export default {
     saved: "Saved",
     failed: "Save failed",
   },
+  password: {
+    title: "Change password",
+    hint: "Changing it immediately invalidates every signed-in session; sign in again with the new password.",
+    current: "Current password",
+    new: "New password",
+    confirm: "Confirm new password",
+    submit: "Update password",
+    submitting: "Updating…",
+    success: "Password updated. Sign in again with your new password.",
+    goToLogin: "Go to sign in",
+    errors: {
+      requiredCurrent: "Enter your current password.",
+      shortPassword: "The new password must be at least 8 characters.",
+      requiredConfirm: "Enter the new password again.",
+      mismatch: "The two new passwords do not match.",
+      invalidCurrent: "The current password is incorrect.",
+      samePassword: "The new password must differ from the current one.",
+      network: "Cannot reach the backend service. Check your connection and try again.",
+      generic: "Could not update the password. Please try again later.",
+    },
+  },
   capability: {
     title: "Public access capabilities",
     meta: "Contract version {{version}} · Auth methods {{methods}}",
@@ -161,7 +182,7 @@ export default {
     },
     emptyFiltered: {
       title: "No records match the filters",
-      description: "Adjust purpose, result or keyword and try again.",
+      description: "Adjust purpose, result, time range or keyword and try again.",
     },
     filters: {
       purpose: "Purpose",
@@ -169,6 +190,8 @@ export default {
       result: "Result",
       resultAll: "All results",
       keyword: "Search client / scope / resource",
+      from: "From",
+      to: "To",
     },
     pagination: {
       total: "{{total}} records",

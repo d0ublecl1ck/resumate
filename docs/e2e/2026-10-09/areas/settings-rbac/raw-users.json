@@ -1,0 +1,330 @@
+{
+  "admin2_me": {
+    "id": "user_30989ed704ce",
+    "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+    "displayName": "E2E 二级管理员",
+    "role": "admin",
+    "roles": [
+      "admin"
+    ],
+    "permissions": [
+      "access:read",
+      "access:write",
+      "account:read",
+      "account:write",
+      "backup:read",
+      "backup:write",
+      "jd:read",
+      "jd:write",
+      "profile:read",
+      "profile:write",
+      "resume:read",
+      "resume:write",
+      "settings:read",
+      "settings:write",
+      "user:ban",
+      "user:read",
+      "user:unban"
+    ],
+    "isBanned": false,
+    "createdAt": "2026-10-09T14:56:29.343518+08:00"
+  },
+  "good_to_admin": {
+    "status": 200,
+    "body": {
+      "id": "user_35ed619f7007",
+      "email": "e2e-settings-rbac-good-1791528987@example.com",
+      "displayName": "E2E 被管账号",
+      "role": "admin",
+      "roles": [
+        "admin"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:28.695143+08:00"
+    }
+  },
+  "good_to_user": {
+    "status": 200,
+    "body": {
+      "id": "user_35ed619f7007",
+      "email": "e2e-settings-rbac-good-1791528987@example.com",
+      "displayName": "E2E 被管账号",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:28.695143+08:00"
+    }
+  },
+  "admin2_ban_superadmin": {
+    "status": 403,
+    "body": {
+      "code": "FORBIDDEN",
+      "message": "不能封禁同级或更高权限的账号"
+    }
+  },
+  "admin2_ban_peer_admin": {
+    "status": 403,
+    "body": {
+      "code": "FORBIDDEN",
+      "message": "不能封禁同级或更高权限的账号"
+    }
+  },
+  "admin2_change_role_denied": {
+    "status": 403,
+    "body": {
+      "code": "FORBIDDEN",
+      "message": "当前账号没有该操作权限"
+    }
+  },
+  "ban_good": {
+    "status": 200,
+    "body": {
+      "id": "user_35ed619f7007",
+      "email": "e2e-settings-rbac-good-1791528987@example.com",
+      "displayName": "E2E 被管账号",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": true,
+      "createdAt": "2026-10-09T14:56:28.695143+08:00"
+    }
+  },
+  "banned_old_session": {
+    "status": 401,
+    "body": {
+      "code": "UNAUTHENTICATED",
+      "message": "登录已失效，请重新登录"
+    }
+  },
+  "banned_login": {
+    "status": 403,
+    "body": {
+      "code": "ACCOUNT_BANNED",
+      "message": "账号已被封禁，请联系管理员"
+    }
+  },
+  "unban_good": {
+    "status": 200,
+    "body": {
+      "id": "user_35ed619f7007",
+      "email": "e2e-settings-rbac-good-1791528987@example.com",
+      "displayName": "E2E 被管账号",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:28.695143+08:00"
+    }
+  },
+  "self_ban": {
+    "status": 422,
+    "body": {
+      "code": "VALIDATION_FAILED",
+      "message": "不能封禁自己的账号"
+    }
+  },
+  "self_role": {
+    "status": 422,
+    "body": {
+      "code": "VALIDATION_FAILED",
+      "message": "不能修改自己的角色"
+    }
+  },
+  "admin2_promoted_super": {
+    "status": 200,
+    "body": {
+      "id": "user_30989ed704ce",
+      "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+      "displayName": "E2E 二级管理员",
+      "role": "super_admin",
+      "roles": [
+        "super_admin"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "role:assign",
+        "role:read",
+        "role:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:29.343518+08:00"
+    }
+  },
+  "same_rank_role_change": {
+    "status": 200,
+    "body": {
+      "id": "user_30989ed704ce",
+      "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+      "displayName": "E2E 二级管理员",
+      "role": "admin",
+      "roles": [
+        "admin"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:29.343518+08:00"
+    }
+  },
+  "final_good": {
+    "id": "user_35ed619f7007",
+    "email": "e2e-settings-rbac-good-1791528987@example.com",
+    "displayName": "E2E 被管账号",
+    "role": "user",
+    "roles": [
+      "user"
+    ],
+    "permissions": [
+      "access:read",
+      "access:write",
+      "account:read",
+      "account:write",
+      "backup:read",
+      "backup:write",
+      "jd:read",
+      "jd:write",
+      "profile:read",
+      "profile:write",
+      "resume:read",
+      "resume:write",
+      "settings:read",
+      "settings:write"
+    ],
+    "isBanned": false,
+    "createdAt": "2026-10-09T14:56:28.695143+08:00"
+  },
+  "final_admin2": {
+    "id": "user_30989ed704ce",
+    "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+    "displayName": "E2E 二级管理员",
+    "role": "admin",
+    "roles": [
+      "admin"
+    ],
+    "permissions": [
+      "access:read",
+      "access:write",
+      "account:read",
+      "account:write",
+      "backup:read",
+      "backup:write",
+      "jd:read",
+      "jd:write",
+      "profile:read",
+      "profile:write",
+      "resume:read",
+      "resume:write",
+      "settings:read",
+      "settings:write",
+      "user:ban",
+      "user:read",
+      "user:unban"
+    ],
+    "isBanned": false,
+    "createdAt": "2026-10-09T14:56:29.343518+08:00"
+  }
+}

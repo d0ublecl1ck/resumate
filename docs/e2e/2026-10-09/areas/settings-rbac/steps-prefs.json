@@ -1,0 +1,98 @@
+[
+  {
+    "n": 1,
+    "title": "REST 登录自建主账号",
+    "expected": "200 且 role=user",
+    "actual": "status=200 role=user",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 2,
+    "title": "浏览器登录并进入工作台",
+    "expected": "URL 为 / 且显示工作台",
+    "actual": "ok=True err= url=http://127.0.0.1:5173/",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-prefs-01-login-workbench.png"
+  },
+  {
+    "n": 3,
+    "title": "打开设置页",
+    "expected": "渲染出「个人偏好」分区",
+    "actual": "已渲染「个人偏好」",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/02-prefs-02-settings-loaded.png"
+  },
+  {
+    "n": 4,
+    "title": "编辑偏好（改名/深色/关自动保存/间隔30/默认模板现代双栏）",
+    "expected": "表单接受输入",
+    "actual": "theme=dark autosave=false interval=30 template=tpl_modern",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-prefs-03-edited-form.png"
+  },
+  {
+    "n": 5,
+    "title": "点击「保存偏好」",
+    "expected": "出现「已保存」",
+    "actual": "已出现「已保存」",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-prefs-04-saved.png"
+  },
+  {
+    "n": 6,
+    "title": "REST 交叉验证 GET /settings",
+    "expected": "theme=dark autosave=false interval=30 template=tpl_modern 名称已改",
+    "actual": "{\"theme\": \"dark\", \"language\": \"zh-CN\", \"displayName\": \"E2E 主账号-改名\", \"autosave\": false, \"autosaveIntervalSeconds\": 30, \"defaultTemplateId\": \"tpl_modern\", \"defaultTemplateRetired\": false, \"shortcuts\": [{\"action\": \"save_flush\", \"keys\": \"⌘ S\", \"conflict\": null}, {\"action\": \"send_message\", \"keys\": \"⌘ ↵\", \"conflict\": null}, {\"action\": \"open_history\", \"keys\": \"⌘ H\", \"conflict\": null}, {\"action\": \"accept_all_diff\", \"keys\": \"⌘ ⇧ A\", \"conflict\": null}]}",
+    "ok": true,
+    "evidence": "areas/settings-rbac/raw-prefs-after-save.json"
+  },
+  {
+    "n": 7,
+    "title": "主题即时生效",
+    "expected": "<html> 带 dark class",
+    "actual": "dark=True",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 8,
+    "title": "刷新后偏好回显",
+    "expected": "深色/改名/关自动保存/30/现代双栏 全部保留",
+    "actual": "theme=dark name=E2E 主账号-改名 autosave=false interval=30 tpl=tpl_modern dark=True",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/05-prefs-05-after-reload.png"
+  },
+  {
+    "n": 9,
+    "title": "切换语言为 English",
+    "expected": "REST language=en 且 <html lang>=en",
+    "actual": "language=en html.lang=en",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/06-prefs-06-lang-en.png"
+  },
+  {
+    "n": 10,
+    "title": "刷新后语言仍为 English",
+    "expected": "<html lang>=en 且 localStorage=en",
+    "actual": "html.lang=en localStorage=en",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/07-prefs-07-lang-en-reload.png"
+  },
+  {
+    "n": 11,
+    "title": "切回简体中文",
+    "expected": "REST language=zh-CN 且 <html lang>=zh-CN",
+    "actual": "language=zh-CN html.lang=zh-CN",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 12,
+    "title": "还原主题/自动保存为默认",
+    "expected": "theme=paper autosave=true interval=10",
+    "actual": "theme=paper autosave=True interval=10",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/08-prefs-08-restored.png"
+  }
+]

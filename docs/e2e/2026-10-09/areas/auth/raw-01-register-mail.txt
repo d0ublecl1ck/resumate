@@ -1,0 +1,9 @@
+path=/tmp/resumate-e2e-mail/20261009-145647-515743.eml
+subject=验证你的 Resumate 邮箱
+token=mez6IjKXBQSHzDAzsQOy1b6G9EvM5jP6OwVnmN07XBg
+body:
+请点击下面的链接完成邮箱验证：
+
+http://localhost:5173/verify-email?token=mez6IjKXBQSHzDAzsQOy1b6G9EvM5jP6OwVnmN07XBg
+
+如果这不是你本人的操作，忽略这封邮件即可。

@@ -1,0 +1,2 @@
+status=202
+body={"status":"verification_sent","email":"e2e-auth-20261009-145642@example.com"}

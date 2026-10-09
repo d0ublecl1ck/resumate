@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.modules.templates.models import Template
 
+import support
+
 
 def _document(section_title: str = "工作经历") -> dict:
     return {
@@ -237,6 +239,158 @@ def test_list_filters_by_query_and_tag(client: TestClient) -> None:
 
 def test_missing_resume_returns_not_found(client: TestClient) -> None:
     response = client.get("/resumes/res_missing")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "RESOURCE_NOT_FOUND"
+
+def test_restore_version_creates_new_restore_version(client: TestClient) -> None:
+    """恢复到历史版本：以 source=restore 生成新版本，历史全部保留。"""
+    created = _create(client)
+    first_version_id = created["currentVersionId"]
+    updated = client.put(
+        f"/resumes/{created['id']}/document",
+        json={"document": _document(section_title="项目经历"), "message": "调整章节"},
+    ).json()
+    assert len(updated["versions"]) == 2
+
+    response = client.post(
+        f"/resumes/{created['id']}/versions/{first_version_id}/restore",
+        json={"message": "恢复到 ver_old"},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["document"]["sections"][0]["title"] == "工作经历"
+    assert body["currentVersionId"] != updated["currentVersionId"]
+    assert [version["source"] for version in body["versions"]] == ["manual", "manual", "restore"]
+    assert [version["message"] for version in body["versions"]][-1] == "恢复到 ver_old"
+    assert len(body["versions"]) == 3
+
+
+def test_restore_version_rejects_unknown_version(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.post(f"/resumes/{created['id']}/versions/ver_missing/restore", json={})
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "RESOURCE_NOT_FOUND"
+
+
+def test_restore_version_rejects_current_version(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.post(f"/resumes/{created['id']}/versions/{created['currentVersionId']}/restore", json={})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_restore_version_flushes_pending_draft_first(client: TestClient) -> None:
+    """恢复前先把手动草稿 flush 成版本，避免恢复吞掉未提交编辑。"""
+    created = _create(client)
+    first_version_id = created["currentVersionId"]
+    client.put(
+        f"/resumes/{created['id']}/document",
+        json={"document": _document(section_title="项目经历"), "message": "调整章节"},
+    )
+    client.put(f"/resumes/{created['id']}/draft", json={"document": _document(section_title="草稿章节")})
+
+    response = client.post(f"/resumes/{created['id']}/versions/{first_version_id}/restore", json={})
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    messages = [version["message"] for version in body["versions"]]
+    assert messages[:3] == ["创建简历", "调整章节", "恢复前保存草稿"]
+    assert body["versions"][-1]["source"] == "restore"
+    assert body["draft"] is None
+
+
+# ---------------------------------------------------------------------------
+# Markdown 导出（GET /resumes/{id}/export?format=markdown）
+# ---------------------------------------------------------------------------
+
+
+def _register_verified(client: TestClient, email: str) -> None:
+    response = support.register_verified(client, email=email, password="password123", name="导出用户")
+    assert response.status_code == 200, response.text
+
+
+def test_export_markdown_returns_attachment_with_sections_and_bullets(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.get(f"/resumes/{created['id']}/export", params={"format": "markdown"})
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"].startswith("text/markdown")
+    disposition = response.headers["content-disposition"]
+    assert disposition.startswith("attachment;")
+    assert "filename*=UTF-8''" in disposition
+    body = response.text
+    assert body.startswith("# 张沐")
+    assert "## 工作经历" in body
+    assert "### 高级前端工程师" in body
+    assert "- 负责核心页面" in body
+    assert "zhangmu@example.com" in body
+
+
+def test_export_markdown_format_defaults_to_markdown(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.get(f"/resumes/{created['id']}/export")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/markdown")
+    assert "## 工作经历" in response.text
+
+
+def test_export_markdown_encodes_chinese_filename_and_keeps_empty_sections(client: TestClient) -> None:
+    document = _document()
+    document["sections"].append({"id": "sec_skills", "kind": "skills", "title": "技能", "entries": []})
+    created = _create(client, title="张沐的简历", document=document)
+
+    response = client.get(f"/resumes/{created['id']}/export")
+
+    assert response.status_code == 200, response.text
+    disposition = response.headers["content-disposition"]
+    assert "%E5%BC%A0%E6%B2%90" in disposition  # URL 编码后的「张沐」
+    assert "## 技能" in response.text  # 空 section 也要输出标题
+
+
+def test_export_markdown_falls_back_to_title_when_full_name_empty(client: TestClient) -> None:
+    document = _document()
+    document["basics"]["fullName"] = ""
+    created = _create(client, title="无姓名简历", document=document)
+
+    body = client.get(f"/resumes/{created['id']}/export").text
+
+    assert body.startswith("# 无姓名简历")
+
+
+def test_export_markdown_rejects_unsupported_format(client: TestClient) -> None:
+    created = _create(client)
+
+    response = client.get(f"/resumes/{created['id']}/export", params={"format": "pdf"})
+
+    assert response.status_code == 422
+    assert response.json()["code"] == "VALIDATION_FAILED"
+
+
+def test_export_markdown_missing_resume_returns_not_found(client: TestClient) -> None:
+    response = client.get("/resumes/res_missing/export")
+
+    assert response.status_code == 404
+    assert response.json()["code"] == "RESOURCE_NOT_FOUND"
+
+
+def test_export_markdown_other_owner_returns_not_found(session_clients) -> None:
+    owner = session_clients()
+    _register_verified(owner, "resume-export-owner@example.com")
+    created = _create(owner)
+
+    intruder = session_clients()
+    _register_verified(intruder, "resume-export-intruder@example.com")
+
+    response = intruder.get(f"/resumes/{created['id']}/export")
 
     assert response.status_code == 404
     assert response.json()["code"] == "RESOURCE_NOT_FOUND"

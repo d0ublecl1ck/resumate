@@ -107,3 +107,46 @@ describe("简历编辑器：手动保存", () => {
     await waitFor(() => expect(button).toBeEnabled())
   })
 })
+
+describe("简历编辑器：导出", () => {
+  it("点导出请求 GET /resumes/{id}/export?format=markdown 并触发下载", async () => {
+    let requestUrl = ""
+    server.use(
+      http.get("/api/resumes/:id/export", ({ request }) => {
+        const url = new URL(request.url)
+        requestUrl = url.pathname + url.search
+        return new HttpResponse("# 张沐", {
+          headers: { "Content-Type": "text/markdown; charset=utf-8", "Content-Disposition": "attachment; filename=resume.md" },
+        })
+      }),
+    )
+    const createObjectURL = vi.fn(() => "blob:mock")
+    const revokeObjectURL = vi.fn()
+    Object.defineProperty(URL, "createObjectURL", { value: createObjectURL, configurable: true, writable: true })
+    Object.defineProperty(URL, "revokeObjectURL", { value: revokeObjectURL, configurable: true, writable: true })
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
+
+    renderEditor()
+    fireEvent.click(screen.getByRole("button", { name: "导出" }))
+
+    expect(await screen.findByText("Markdown 文件已导出。")).toBeInTheDocument()
+    expect(requestUrl).toBe(`/api/resumes/${DIRTY.id}/export?format=markdown`)
+    expect(createObjectURL).toHaveBeenCalledTimes(1)
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock")
+  })
+
+  it("导出失败时展示 i18n 文案，不透出服务端 message", async () => {
+    server.use(
+      http.get("/api/resumes/:id/export", () =>
+        HttpResponse.json({ code: "RESOURCE_NOT_FOUND", message: "raw-backend-export-message-should-not-leak" }, { status: 404 }),
+      ),
+    )
+
+    renderEditor()
+    fireEvent.click(screen.getByRole("button", { name: "导出" }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("这份简历已不存在，请刷新后重试。")
+    expect(screen.queryByText(/raw-backend-export-message-should-not-leak/)).not.toBeInTheDocument()
+  })
+})

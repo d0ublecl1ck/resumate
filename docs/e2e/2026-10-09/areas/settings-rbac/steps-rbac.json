@@ -1,0 +1,138 @@
+[
+  {
+    "n": 1,
+    "title": "admin(REST) 登录",
+    "expected": "200 且 role=super_admin",
+    "actual": "status=200 role=super_admin",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 2,
+    "title": "REST 读取权限目录",
+    "expected": "权限目录非空且分组固定",
+    "actual": "共 20 条权限，分组=['access', 'account', 'backup', 'jd', 'profile', 'resume', 'role', 'settings', 'user']",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 3,
+    "title": "RBAC 页面加载",
+    "expected": "角色树含系统内置/自定义分组，权限树渲染",
+    "actual": "role_tree_has_system=True role_tree_has_custom=True perm_rows=29",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 4,
+    "title": "系统内置角色渲染",
+    "expected": "超级管理员/管理员/普通用户 均在树中",
+    "actual": "{\"超级管理员\": true, \"管理员\": true, \"普通用户\": true}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-rbac-01-loaded.png"
+  },
+  {
+    "n": 5,
+    "title": "新建角色 · 权限树初始态",
+    "expected": "所有分组未选中（无半选）",
+    "actual": "分组状态=[[\"开放接入\", false, false], [\"账号\", false, false], [\"备份\", false, false], [\"岗位\", false, false], [\"职业事实\", false, false], [\"简历\", false, false], [\"角色与权限\", false, false], [\"设置\", false, false], [\"用户\", false, false]]",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 6,
+    "title": "勾选 resume:read · 三态-半选",
+    "expected": "「简历」分组 indeterminate=true",
+    "actual": "简历={\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false} resume:read={\"label\": \"读取简历\", \"code\": \"resume:read\", \"isFolder\": false, \"checked\": true, \"indeterminate\": false, \"disabled\": false}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 7,
+    "title": "再勾选 resume:write · 三态-全选",
+    "expected": "「简历」分组 checked=true 且非半选",
+    "actual": "{\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": true, \"indeterminate\": false, \"disabled\": false}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 8,
+    "title": "取消 resume:read · 回到半选",
+    "expected": "「简历」分组 indeterminate=true",
+    "actual": "{\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 9,
+    "title": "勾选 resume:read/write + jd:read · 三态组合",
+    "expected": "简历已全选、岗位半选、账号未选",
+    "actual": "简历={\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": true, \"indeterminate\": false, \"disabled\": false} 岗位={\"label\": \"岗位\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false} 账号={\"label\": \"账号\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": false, \"disabled\": false}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/02-rbac-02-tri-state.png"
+  },
+  {
+    "n": 10,
+    "title": "创建自定义角色",
+    "expected": "REST 中角色存在且权限=['resume:read', 'resume:write', 'jd:read']",
+    "actual": "created={\"id\": \"role_e2e_rbac_1791528987_519143\", \"code\": \"e2e_rbac_1791528987\", \"name\": \"E2E 权限测试角色\", \"description\": \"E2E 自动化创建的临时角色\", \"rank\": 0, \"isSystem\": false, \"permissions\": [\"jd:read\", \"resume:read\", \"resume:write\"]}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-rbac-03-created.png"
+  },
+  {
+    "n": 11,
+    "title": "刷新后重新选中角色 · 权限回显一致",
+    "expected": "resume:read/write、jd:read 勾选；简历全选/岗位半选",
+    "actual": "clicked=True resume:read=True resume:write=True jd:read=True 简历={\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": true, \"indeterminate\": false, \"disabled\": false} 岗位={\"label\": \"岗位\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false} account:read=False",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-rbac-04-reload-echo.png"
+  },
+  {
+    "n": 12,
+    "title": "角色详情显示权限计数",
+    "expected": "显示「3 项权限」",
+    "actual": "detail contains 3 项权限=True",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 13,
+    "title": "修改角色名称与权限",
+    "expected": "REST 权限=['resume:read', 'jd:read', 'account:read'] 且名称=E2E 权限测试角色-改",
+    "actual": "{\"id\": \"role_e2e_rbac_1791528987_519143\", \"code\": \"e2e_rbac_1791528987\", \"name\": \"E2E 权限测试角色-改\", \"description\": \"E2E 自动化创建的临时角色\", \"rank\": 0, \"isSystem\": false, \"permissions\": [\"account:read\", \"jd:read\", \"resume:read\"]}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/06-rbac-06-updated.png"
+  },
+  {
+    "n": 14,
+    "title": "修改后刷新回显一致",
+    "expected": "resume:read、jd:read、account:read 勾选；简历/账号半选",
+    "actual": "resume:read=True resume:write=False jd:read=True account:read=True 账号={\"label\": \"账号\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false} 简历={\"label\": \"简历\", \"code\": null, \"isFolder\": true, \"checked\": false, \"indeterminate\": true, \"disabled\": false}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/07-rbac-07-updated-echo.png"
+  },
+  {
+    "n": 15,
+    "title": "删除自定义角色",
+    "expected": "REST 中角色已不存在",
+    "actual": "gone=True",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/08-rbac-08-deleted.png"
+  },
+  {
+    "n": 16,
+    "title": "系统角色只读",
+    "expected": "显示只读提示且无删除按钮",
+    "actual": "readonly_notice=True delete_btn=0",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/09-rbac-09-system-readonly.png"
+  },
+  {
+    "n": 17,
+    "title": "REST 修改系统角色被拒",
+    "expected": "422 且提示系统角色不可修改",
+    "actual": "status=422 body={\"code\": \"VALIDATION_FAILED\", \"message\": \"系统角色不可修改\"}",
+    "ok": true,
+    "evidence": ""
+  }
+]

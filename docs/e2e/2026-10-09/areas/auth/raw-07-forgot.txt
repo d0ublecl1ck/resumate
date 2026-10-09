@@ -1,0 +1,5 @@
+status=202
+body={"status":"reset_sent","email":"e2e-auth-20261009-145642@example.com"}
+mail=/tmp/resumate-e2e-mail/20261009-145810-161111.eml
+subject=重置你的 Resumate 密码
+token=hs9oDMH8-UjLRkqMQAMW5D6sjENncu-biP1BTk6Yccw

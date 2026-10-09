@@ -1,0 +1,146 @@
+[
+  {
+    "n": 1,
+    "title": "准备：admin2 已为 admin 角色并登录",
+    "expected": "role=admin",
+    "actual": "status=200 role=admin",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 2,
+    "title": "导航中查找用户管理入口",
+    "expected": "存在用户管理入口（本 worktree 未实现，属 UI 缺口）",
+    "actual": "has_user_entry=False links_with_users=0 nav='Resumate / 对话式简历工作台 / 工作台 / 简历库 / 个人资料 / JD 库 / 模拟面试 / 设置与 Agent / 管理员 / 模板库 / 角色与权限 / 管 /  / 管理员 /  / 超级管理员 /  / 退出登录'",
+    "ok": false,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-users-01-nav.png"
+  },
+  {
+    "n": 3,
+    "title": "访问 /admin/users",
+    "expected": "存在用户管理页面",
+    "actual": "页面文案='Resumate / 对话式简历工作台 / 工作台 / 简历库 / 个人资料 / JD 库 / 模拟面试 / 设置与 Agent / 管理员 / 模板库 / 角色与权限 / 管 /  / 管理员 /  / 超级管理员 /  / 退出登录 /  / 未找到该页面 /  / 它可能已被删除或从未存在。 /  / 错误码：404 /  / 返回工作台'",
+    "ok": false,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/02-users-02-admin-users-404.png"
+  },
+  {
+    "n": 4,
+    "title": "超管把自建用户角色改为 admin",
+    "expected": "200 且 roles=[admin]",
+    "actual": "status=200 body={\"id\": \"user_35ed619f7007\", \"email\": \"e2e-settings-rbac-good-1791528987@example.com\", \"displayName\": \"E2E 被管账号\", \"role\": \"admin\", \"roles\": [\"admin\"], \"permissions\": [\"access:read\", \"access:write\", \"account:read\", \"account:write\", \"backup:read\", \"backup:write\", \"jd:read\", \"jd:write\", \"profile:read\", \"profile:write\", \"resume:read\", \"resume:write\", \"settings:read\", \"settings:write\", \"user:ban\", \"user:read\", \"user:unban\"], \"isBanned\": false, \"createdAt\": \"2026-10-09T14:56:28.695143+08:00\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 5,
+    "title": "超管把自建用户角色改回 user",
+    "expected": "200 且 roles=[user]",
+    "actual": "status=200 body={\"id\": \"user_35ed619f7007\", \"email\": \"e2e-settings-rbac-good-1791528987@example.com\", \"displayName\": \"E2E 被管账号\", \"role\": \"user\", \"roles\": [\"user\"], \"permissions\": [\"access:read\", \"access:write\", \"account:read\", \"account:write\", \"backup:read\", \"backup:write\", \"jd:read\", \"jd:write\", \"profile:read\", \"profile:write\", \"resume:read\", \"resume:write\", \"settings:read\", \"settings:write\"], \"isBanned\": false, \"createdAt\": \"2026-10-09T14:56:28.695143+08:00\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 6,
+    "title": "admin 封禁超管（更高权限）",
+    "expected": "403 FORBIDDEN 且提示不能封禁同级或更高权限",
+    "actual": "status=403 body={\"code\": \"FORBIDDEN\", \"message\": \"不能封禁同级或更高权限的账号\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 7,
+    "title": "admin 封禁同级 admin",
+    "expected": "403 FORBIDDEN 且提示不能封禁同级或更高权限",
+    "actual": "status=403 body={\"code\": \"FORBIDDEN\", \"message\": \"不能封禁同级或更高权限的账号\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 8,
+    "title": "admin 尝试改用户角色（无 role:assign）",
+    "expected": "403 且提示没有该操作权限",
+    "actual": "status=403 body={\"code\": \"FORBIDDEN\", \"message\": \"当前账号没有该操作权限\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 9,
+    "title": "超管封禁自建用户",
+    "expected": "200 且 isBanned=true",
+    "actual": "status=200 isBanned=True",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 10,
+    "title": "封禁后旧会话立即失效",
+    "expected": "401 UNAUTHENTICATED",
+    "actual": "status=401 body={\"code\": \"UNAUTHENTICATED\", \"message\": \"登录已失效，请重新登录\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 11,
+    "title": "被封禁用户 REST 登录被拒",
+    "expected": "403 ACCOUNT_BANNED",
+    "actual": "status=403 body={\"code\": \"ACCOUNT_BANNED\", \"message\": \"账号已被封禁，请联系管理员\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 12,
+    "title": "被封禁用户浏览器登录",
+    "expected": "停留登录页并显示「账号已被封禁，请联系管理员。」",
+    "actual": "ok=False error='账号已被封禁，请联系管理员。'",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-users-03-banned-login.png"
+  },
+  {
+    "n": 13,
+    "title": "超管解封自建用户",
+    "expected": "200 且 isBanned=false",
+    "actual": "status=200 isBanned=False",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 14,
+    "title": "解封后浏览器可登录",
+    "expected": "进入工作台",
+    "actual": "ok=True err='' url=http://127.0.0.1:5173/",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-users-04-unbanned-login.png"
+  },
+  {
+    "n": 15,
+    "title": "超管封禁自己",
+    "expected": "422 且提示不能封禁自己",
+    "actual": "status=422 body={\"code\": \"VALIDATION_FAILED\", \"message\": \"不能封禁自己的账号\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 16,
+    "title": "超管修改自己的角色",
+    "expected": "422 且提示不能修改自己的角色",
+    "actual": "status=422 body={\"code\": \"VALIDATION_FAILED\", \"message\": \"不能修改自己的角色\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 17,
+    "title": "同级（super_admin→super_admin 操作者）改角色为 admin · 观察项",
+    "expected": "期望被越权保护拒绝（不能改同级或更高）",
+    "actual": "promote=True change_status=200 body={\"id\": \"user_30989ed704ce\", \"email\": \"e2e-settings-rbac-admin2-1791528987@example.com\", \"displayName\": \"E2E 二级管理员\", \"role\": \"admin\", \"roles\": [\"admin\"], \"permissions\": [\"access:read\", \"access:write\", \"account:read\", \"account:write\", \"backup:read\", \"backup:write\", \"jd:read\", \"jd:write\", \"profile:read\", \"profile:write\", \"resume:read\", \"resume:write\", \"settings:read\", \"settings:write\", \"user:ban\", \"user:read\", \"user:unban\"], \"isBanned\": false, \"createdAt\": \"2026-10-09T14:56:29.343518+08:00\"}（后端 change_role 无同级越权检查）",
+    "ok": false,
+    "evidence": "areas/settings-rbac/raw-users.json"
+  },
+  {
+    "n": 18,
+    "title": "收尾状态还原",
+    "expected": "good=user 未封禁；admin2=admin",
+    "actual": "good={\"id\": \"user_35ed619f7007\", \"email\": \"e2e-settings-rbac-good-1791528987@example.com\", \"displayName\": \"E2E 被管账号\", \"role\": \"user\", \"roles\": [\"user\"], \"permissions\": [\"access:read\", \"access:write\", \"account:read\", \"account:write\", \"backup:read\", \"backup:write\", \"jd:read\", \"jd:write\", \"profile:read\", \"profile:write\", \"resume:read\", \"resume:write\", \"settings:read\", \"settings:write\"], \"isBanned\": false, \"createdAt\": \"2026-10-09T14:56:28.695143+08:00\"} admin2={\"id\": \"user_30989ed704ce\", \"email\": \"e2e-settings-rbac-admin2-1791528987@example.com\", \"displayName\": \"E2E 二级管理员\", \"role\": \"admin\", \"roles\": [\"admin\"], \"permissions\": [\"access:read\", \"access:write\", \"account:read\", \"account:write\", \"backup:read\", \"backup:write\", \"jd:read\", \"jd:write\", \"profile:read\", \"profile:write\", \"resume:read\", \"resume:write\", \"settings:read\", \"settings:write\", \"user:ban\", \"user:read\", \"user:unban\"], \"isBanned\": false, \"createdAt\": \"2026-10-09T14:56:29.343518+08:00\"}",
+    "ok": true,
+    "evidence": ""
+  }
+]

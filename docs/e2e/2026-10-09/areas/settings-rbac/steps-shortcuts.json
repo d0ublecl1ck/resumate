@@ -1,0 +1,50 @@
+[
+  {
+    "n": 1,
+    "title": "读取快捷键默认映射",
+    "expected": "4 个动作且无冲突",
+    "actual": "{\"save_flush\": \"⌘ S\", \"send_message\": \"⌘ ↵\", \"open_history\": \"⌘ H\", \"accept_all_diff\": \"⌘ ⇧ A\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-shortcuts-01-defaults.png"
+  },
+  {
+    "n": 2,
+    "title": "两个动作绑定同一组合键 → 保存被拒",
+    "expected": "界面出现冲突提示且后端 422",
+    "actual": "UI='按键 ⌘ S 已绑定给「save_flush」，请先解除冲突' REST=422 {\"code\": \"VALIDATION_FAILED\", \"message\": \"按键 ⌘ S 已绑定给「save_flush」，请先解除冲突\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-shortcuts-03-conflict-rejected.png"
+  },
+  {
+    "n": 3,
+    "title": "冲突保存被拒后映射保留原值",
+    "expected": "send_message 仍为 ⌘ ↵",
+    "actual": "{\"save_flush\": \"⌘ S\", \"send_message\": \"⌘ ↵\", \"open_history\": \"⌘ H\", \"accept_all_diff\": \"⌘ ⇧ A\"}",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 4,
+    "title": "合法组合 ⌘ J 保存",
+    "expected": "REST send_message=⌘ J 且无冲突标记",
+    "actual": "{\"save_flush\": \"⌘ S\", \"send_message\": \"⌘ J\", \"open_history\": \"⌘ H\", \"accept_all_diff\": \"⌘ ⇧ A\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-shortcuts-04-valid-saved.png"
+  },
+  {
+    "n": 5,
+    "title": "刷新后合法组合回显",
+    "expected": "发送对话输入框 = ⌘ J",
+    "actual": "value='⌘ J'",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/05-shortcuts-05-after-reload.png"
+  },
+  {
+    "n": 6,
+    "title": "还原快捷键默认",
+    "expected": "send_message=⌘ ↵",
+    "actual": "{\"save_flush\": \"⌘ S\", \"send_message\": \"⌘ ↵\", \"open_history\": \"⌘ H\", \"accept_all_diff\": \"⌘ ⇧ A\"}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/06-shortcuts-06-restored.png"
+  }
+]

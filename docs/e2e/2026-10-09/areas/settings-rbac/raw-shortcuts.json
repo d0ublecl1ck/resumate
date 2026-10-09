@@ -1,0 +1,103 @@
+{
+  "shortcuts_before": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "conflict_ui": {
+    "ui_text": "按键 ⌘ S 已绑定给「save_flush」，请先解除冲突",
+    "rest_status": 422,
+    "rest_body": {
+      "code": "VALIDATION_FAILED",
+      "message": "按键 ⌘ S 已绑定给「save_flush」，请先解除冲突"
+    }
+  },
+  "shortcuts_valid": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ J",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "shortcuts_restored": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  }
+}

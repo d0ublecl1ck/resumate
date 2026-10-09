@@ -1,0 +1,49 @@
+{
+ "status": 200,
+ "body": {
+  "resumeId": "res_5d03043b283b",
+  "document": {
+   "basics": {
+    "fullName": "E2E 运行者",
+    "headline": "前端工程师",
+    "email": "e2e@example.com",
+    "phone": "",
+    "location": "上海",
+    "links": []
+   },
+   "sections": [
+    {
+     "id": "sec_sum_e2e",
+     "kind": "summary",
+     "title": "个人简介",
+     "entries": [],
+     "text": "初始简介"
+    },
+    {
+     "id": "sec_exp_e2e",
+     "kind": "experience",
+     "title": "工作经历",
+     "entries": [
+      {
+       "id": "entry_e2e_1",
+       "title": "高级前端工程师（E2E 修订）",
+       "subtitle": null,
+       "period": "2021-2024",
+       "location": null,
+       "bullets": [
+        "要点一",
+        "E2E 新增要点：首屏 LCP 优化至 1.2s"
+       ],
+       "provenance": null
+      }
+     ],
+     "text": null
+    }
+   ]
+  },
+  "baseVersionId": "ver_427a9d3f1964",
+  "userTurnId": "turn_cfee76cfe619",
+  "workingRevision": 1,
+  "dirty": true
+ }
+}

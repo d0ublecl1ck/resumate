@@ -1,0 +1,82 @@
+[
+  {
+    "n": 1,
+    "title": "admin 浏览器登录",
+    "expected": "进入工作台",
+    "actual": "ok=True err=",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 2,
+    "title": "admin 模型配置读取",
+    "expected": "Provider=DeepSeek / Model=DeepSeek V4.1 Flash / endpoint 已填 / Key 已配置",
+    "actual": "provider='DeepSeek' model='DeepSeek V4.1 Flash' endpoint='https://api.deepseek.com/v1' keyConfigured=True",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/01-model-01-admin-loaded.png"
+  },
+  {
+    "n": 3,
+    "title": "admin 保存模型配置（值不变）",
+    "expected": "保存成功；lastTest 被清空（编辑即失效）",
+    "actual": "status=200 lastTest=null",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/02-model-02-admin-saved.png"
+  },
+  {
+    "n": 4,
+    "title": "admin 测试连接（deepseek-flash）",
+    "expected": "返回 ok=true（连接成功）",
+    "actual": "ok=False message='模型服务拒绝凭证，请检查 API Key 与 provider 配置' 耗时=1.1s UI='模型服务拒绝凭证，请检查 API Key 与 provider 配置' → BLOCKED：后端探测返回 HTTP 401，凭证被拒，非界面缺陷",
+    "ok": false,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/03-model-03-admin-test.png"
+  },
+  {
+    "n": 5,
+    "title": "admin 语言/主题未被改动",
+    "expected": "language=zh-CN 且 theme=paper",
+    "actual": "language=zh-CN theme=paper displayName=管理员",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 6,
+    "title": "主账号浏览器登录",
+    "expected": "进入工作台",
+    "actual": "ok=True err=",
+    "ok": true,
+    "evidence": ""
+  },
+  {
+    "n": 7,
+    "title": "主账号选择 Provider=DeepSeek",
+    "expected": "下拉可选并自动带出模型",
+    "actual": "option=DeepSeek model='DeepSeek V4.1 Flash'",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/04-model-04-main-provider-selected.png"
+  },
+  {
+    "n": 8,
+    "title": "主账号保存模型配置",
+    "expected": "provider=deepseek model=deepseek-flash endpoint=api.deepseek.com/v1 keyConfigured=false",
+    "actual": "{\"provider\": \"deepseek\", \"endpoint\": \"https://api.deepseek.com/v1\", \"model\": \"deepseek-flash\", \"keyConfigured\": false, \"lastTest\": null}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/05-model-05-main-saved.png"
+  },
+  {
+    "n": 9,
+    "title": "主账号无 Key 测试连接",
+    "expected": "返回可读失败结果（不泄露密钥）",
+    "actual": "result={\"at\": \"2026-10-09T07:01:32.498630Z\", \"ok\": false, \"message\": \"模型服务拒绝凭证，请检查 API Key 与 provider 配置\"} 耗时=1.1s",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/06-model-06-main-test-nokey.png"
+  },
+  {
+    "n": 10,
+    "title": "还原主账号模型配置",
+    "expected": "provider/model/endpoint 均为空",
+    "actual": "{\"provider\": \"\", \"endpoint\": \"\", \"model\": \"\", \"keyConfigured\": false, \"lastTest\": null}",
+    "ok": true,
+    "evidence": "<本机用户名>/resumate-worktrees/zj-fwwb-2026/docs/e2e/2026-10-09/areas/settings-rbac/07-model-07-main-restored.png"
+  }
+]

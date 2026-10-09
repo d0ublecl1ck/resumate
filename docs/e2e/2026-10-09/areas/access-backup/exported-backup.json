@@ -1,0 +1,1151 @@
+{
+  "formatVersion": "resumate-backup/1.0",
+  "exportedAt": "2026-10-09T07:03:51.358470+00:00",
+  "ownerId": "user_530140113d44",
+  "resources": {
+    "profiles": [
+      {
+        "id": "profile_75d4dae0b591",
+        "displayName": "我的职业事实库",
+        "basics": {
+          "fullName": "",
+          "headline": "",
+          "email": "",
+          "phone": "",
+          "location": "",
+          "links": []
+        },
+        "createdAt": "2026-10-09T14:55:54.062027+08:00",
+        "updatedAt": "2026-10-09T14:55:54.062027+08:00",
+        "facts": [
+          {
+            "id": "fact_24b82b0e2a20",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_0e1633c6441f",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_a226c1d42f0b",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_455f4e36b0a9",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_e26bd85cb1e6",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_abfa1264ff07",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_0f4677a844d4",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          },
+          {
+            "id": "fact_a16e41212625",
+            "type": "project",
+            "title": "E2E-BAK-20261009-145552 项目事实",
+            "content": "E2E 备份导入导出验证用事实",
+            "tags": [
+              "e2e"
+            ],
+            "source": "手动录入",
+            "evidence": {
+              "status": "unverified"
+            },
+            "confidence": 0.5,
+            "verifiedAt": null,
+            "visibility": "private",
+            "createdAt": "2026-10-09T14:55:54.064887+08:00",
+            "updatedAt": "2026-10-09T14:55:54.064887+08:00"
+          }
+        ]
+      }
+    ],
+    "resumes": [
+      {
+        "id": "resume_78a47024b090",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_4f662a328f5b",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "res_ec16e43a7aaa",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_1921a857e7b6",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_e5d202b9adf2",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_249096b6b76b",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "res_33b441efd393",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_d86c6054fbc9",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_0a8fe2110771",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_508bdab9d805",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_406da99cc7a2",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_8678a555ad41",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_65664097e96f",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_8e904cd6c1ba",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_6aa375c16d19",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_50d23d7c5339",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_fd7e3c80557e",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_7fdaa9d05aeb",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_0129dbf716c4",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_2c91e7c8b991",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_f7e1485dd8bd",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_32218687076e",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_fde15061e94f",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_1b9ac2c51716",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_032e9fc1dd52",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_7eaf7c817f95",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_7b592768e23c",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_26976dc3ae8a",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "resume_b32719db5e80",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_0f55b4bd451b",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.073961+08:00",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "resume_b14cca60970c",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_f775bb8e0d8e",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "profileId": null,
+        "restoreDeadline": null,
+        "createdAt": "2026-10-09T14:55:54.083102+08:00",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00"
+      }
+    ],
+    "resumeVersions": [
+      {
+        "id": "ver_1921a857e7b6",
+        "resumeId": "res_ec16e43a7aaa",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_d86c6054fbc9",
+        "resumeId": "res_33b441efd393",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_1b9ac2c51716",
+        "resumeId": "resume_fde15061e94f",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_32218687076e",
+        "resumeId": "resume_f7e1485dd8bd",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_0f55b4bd451b",
+        "resumeId": "resume_b32719db5e80",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_2c91e7c8b991",
+        "resumeId": "resume_0129dbf716c4",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_7eaf7c817f95",
+        "resumeId": "resume_032e9fc1dd52",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_26976dc3ae8a",
+        "resumeId": "resume_7b592768e23c",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_7fdaa9d05aeb",
+        "resumeId": "resume_fd7e3c80557e",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_f775bb8e0d8e",
+        "resumeId": "resume_b14cca60970c",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_249096b6b76b",
+        "resumeId": "resume_e5d202b9adf2",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_8e904cd6c1ba",
+        "resumeId": "resume_65664097e96f",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_508bdab9d805",
+        "resumeId": "resume_0a8fe2110771",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_50d23d7c5339",
+        "resumeId": "resume_6aa375c16d19",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      },
+      {
+        "id": "ver_8678a555ad41",
+        "resumeId": "resume_406da99cc7a2",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.075071+08:00",
+        "committedAt": "2026-10-09T14:55:54.075071+08:00"
+      },
+      {
+        "id": "ver_4f662a328f5b",
+        "resumeId": "resume_78a47024b090",
+        "source": "manual",
+        "actorId": "user_530140113d44",
+        "message": "创建简历",
+        "changeCount": 1,
+        "affectedSections": [
+          "基础信息"
+        ],
+        "snapshot": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "parentVersionId": null,
+        "baseVersionId": null,
+        "startedAt": "2026-10-09T14:55:54.085024+08:00",
+        "committedAt": "2026-10-09T14:55:54.085024+08:00"
+      }
+    ],
+    "jobDescriptions": [
+      {
+        "id": "jd_dee7671d9114",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_35f8f473395b",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_1cef159eccd5",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_c58f9aeb4393",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_d8f09bceb643",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_180cee54884c",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_4db2e88b8d48",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      },
+      {
+        "id": "jd_42b35dd82b27",
+        "role": "E2E-BAK-20261009-145552 岗位",
+        "company": "E2E 公司",
+        "body": "负责 E2E 备份链路验证。",
+        "sourceUrl": null,
+        "tags": [
+          "e2e"
+        ],
+        "revision": 1,
+        "boundResumeId": null,
+        "createdAt": "2026-10-09T14:55:54.093216+08:00",
+        "updatedAt": "2026-10-09T14:55:54.093216+08:00"
+      }
+    ]
+  }
+}

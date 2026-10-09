@@ -1,0 +1,157 @@
+{
+  "settings_before": {
+    "theme": "dark",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": false,
+    "autosaveIntervalSeconds": 30,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "settings_after_save": {
+    "theme": "dark",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": false,
+    "autosaveIntervalSeconds": 30,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "settings_lang_en": {
+    "theme": "dark",
+    "language": "en",
+    "displayName": "E2E 主账号-改名",
+    "autosave": false,
+    "autosaveIntervalSeconds": 30,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "settings_lang_zh": {
+    "theme": "dark",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": false,
+    "autosaveIntervalSeconds": 30,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  },
+  "settings_restored": {
+    "theme": "paper",
+    "language": "zh-CN",
+    "displayName": "E2E 主账号-改名",
+    "autosave": true,
+    "autosaveIntervalSeconds": 10,
+    "defaultTemplateId": "tpl_modern",
+    "defaultTemplateRetired": false,
+    "shortcuts": [
+      {
+        "action": "save_flush",
+        "keys": "⌘ S",
+        "conflict": null
+      },
+      {
+        "action": "send_message",
+        "keys": "⌘ ↵",
+        "conflict": null
+      },
+      {
+        "action": "open_history",
+        "keys": "⌘ H",
+        "conflict": null
+      },
+      {
+        "action": "accept_all_diff",
+        "keys": "⌘ ⇧ A",
+        "conflict": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+ "status": 200,
+ "body": {
+  "id": "pa_17300f37cde3",
+  "userTurnId": "turn_cfee76cfe619",
+  "kind": "content_patch",
+  "target": "resume",
+  "title": "内容修改（1 处）",
+  "targetResource": "res_5d03043b283b",
+  "baseVersionId": "ver_427a9d3f1964",
+  "impactSummary": "影响 1 个章节，共 1 处变更",
+  "requiresTextConfirm": false,
+  "state": "approved",
+  "staleReason": null,
+  "diff": [
+   {
+    "id": "diff_1",
+    "target": "工作经历 · 高级前端工程师（E2E 修订）",
+    "changeType": "modified",
+    "before": "{\"id\":\"entry_e2e_1\",\"title\":\"高级前端工程师\",\"period\":\"2021-2024\",\"bullets\":[\"要点一\"]}",
+    "after": "{\"id\":\"entry_e2e_1\",\"title\":\"高级前端工程师（E2E 修订）\",\"period\":\"2021-2024\",\"bullets\":[\"要点一\",\"E2E 新增要点：首屏 LCP 优化至 1.2s\"]}",
+    "reason": "E2E 预览",
+    "state": "pending"
+   }
+  ],
+  "createdAt": "2026-10-09T15:08:27.940102+08:00",
+  "decidedAt": "2026-10-09T15:08:27.955448+08:00"
+ }
+}

@@ -35,15 +35,25 @@ def list_logs(
     purpose: str | None = None,
     result: str | None = None,
     query: str | None = None,
+    from_at: datetime | None = None,
+    to_at: datetime | None = None,
     page: int = 1,
     size: int = 20,
 ) -> tuple[list[AccessLog], int]:
-    """Return one page of audit rows (newest first) plus the filtered total."""
+    """Return one page of audit rows (newest first) plus the filtered total.
+
+    from_at/to_at bound AccessLog.at inclusively; either may be None for a
+    single-sided filter. Callers pass timezone-aware values.
+    """
     filters = [AccessLog.owner_id == owner_id]
     if purpose:
         filters.append(AccessLog.purpose == purpose)
     if result:
         filters.append(AccessLog.result == result)
+    if from_at is not None:
+        filters.append(AccessLog.at >= from_at)
+    if to_at is not None:
+        filters.append(AccessLog.at <= to_at)
     if query:
         pattern = f"%{query}%"
         filters.append(

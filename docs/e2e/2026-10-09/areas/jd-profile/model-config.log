@@ -1,0 +1,67 @@
+### GET /models/config -> 200
+{
+  "provider": "deepseek",
+  "endpoint": "https://api.deepseek.com/v1",
+  "model": "deepseek-flash",
+  "keyConfigured": true,
+  "lastTest": {
+    "at": "2026-10-07T10:09:02.676716Z",
+    "ok": true,
+    "message": "连接成功"
+  }
+}
+### GET /settings -> 200
+{
+  "theme": "paper",
+  "language": "zh-CN",
+  "displayName": "管理员",
+  "autosave": true,
+  "autosaveIntervalSeconds": 10,
+  "defaultTemplateId": "",
+  "defaultTemplateRetired": false,
+  "shortcuts": [
+    {
+      "action": "save_flush",
+      "keys": "⌘ S",
+      "conflict": null
+    },
+    {
+      "action": "send_message",
+      "keys": "⌘ ↵",
+      "conflict": null
+    },
+    {
+      "action": "open_history",
+      "keys": "⌘ H",
+      "conflict": null
+    },
+    {
+      "action": "accept_all_diff",
+      "keys": "⌘ ⇧ A",
+      "conflict": null
+    }
+  ]
+}
+### GET /agent/config -> 200
+{
+  "currentRunMode": null,
+  "nextRunMode": "approval",
+  "modeSource": "account",
+  "fullAccessScopes": [
+    "read_search_compare_render",
+    "content_patch",
+    "metadata_update_archive"
+  ],
+  "confirmRetainedOps": [
+    "delete",
+    "history_restore",
+    "overwrite_export",
+    "profile_to_resume",
+    "fact_promotion"
+  ],
+  "budget": {
+    "maxTokens": 20000,
+    "maxTurns": 8,
+    "maxCostUsd": 0.5
+  }
+}

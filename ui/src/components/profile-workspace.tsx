@@ -7,14 +7,27 @@ import { Link, useSearchParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { FactType, Profile, ProfileFact, ProfileFactInput, ResumeBasics } from "@/lib/types"
-import { createFactManually, updateBasics, updateFact } from "@/lib/api"
+import { createFactManually, deleteFact, updateBasics, updateFact } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
+import i18n from "@/i18n"
 import { FACT_TYPE_ORDER } from "@/lib/profile"
 import { EvidenceBadge } from "@/components/kit/badges"
 import { ProfileAssistant } from "@/components/profile-assistant"
 import { ProfileBasicsForm } from "@/components/profile-basics-form"
 import { ProfileFactForm } from "@/components/profile-fact-form"
+import { Modal } from "@/components/ui/modal"
 import { cn } from "@/lib/utils"
-import { Mail, MapPin, MessageSquarePlus, Pencil, Phone, Plus, Link2, Sparkles } from "lucide-react"
+import { Mail, MapPin, MessageSquarePlus, Pencil, Phone, Plus, Link2, Sparkles, Trash2 } from "lucide-react"
+
+/** 事实删除的错误文案映射（C-06）：机器错误码 → i18n 文案，不透出后端原文。 */
+function factDeleteErrorMessage(cause: unknown): string {
+  if (cause instanceof ApiRequestError) {
+    if (cause.code === "RESOURCE_NOT_FOUND") return i18n.t("profile.delete.errors.failed")
+    if (cause.code === "FORBIDDEN" || cause.code === "UNAUTHENTICATED") return i18n.t("profile.delete.errors.failed")
+    if (cause.code === "NETWORK_ERROR") return i18n.t("profile.delete.errors.failed")
+  }
+  return i18n.t("profile.delete.errors.failed")
+}
 
 // 分区顺序与类型下拉都从 FACT_TYPE_ORDER 取序：两处各写一遍迟早漂移（曾经 education / skill 互换）。
 const SECTIONS: { type: FactType; titleKey: string; emptyKey: string }[] = FACT_TYPE_ORDER.map((type) => ({
@@ -37,6 +50,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
   const [flashId, setFlashId] = useState<string | null>(null)
   const [editingBasics, setEditingBasics] = useState(false)
   const [factEditor, setFactEditor] = useState<FactEditor | null>(null)
+  // 删除是危险操作：先弹确认并展示反向引用影响，再调 DELETE /profile/facts/{id}。
+  const [pendingDelete, setPendingDelete] = useState<ProfileFact | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const sections = SECTIONS.map((section) => ({
     ...section,
@@ -94,6 +111,26 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
     setFacts((prev) => [created, ...prev])
     setFactEditor(null)
     flash(created.id)
+  }
+
+  function closeDelete() {
+    setPendingDelete(null)
+    setDeleteError(null)
+  }
+
+  async function confirmDeleteFact() {
+    if (!pendingDelete || deleteBusy) return
+    setDeleteBusy(true)
+    setDeleteError(null)
+    try {
+      await deleteFact(pendingDelete.id)
+      setFacts((prev) => prev.filter((fact) => fact.id !== pendingDelete.id))
+      setPendingDelete(null)
+    } catch (cause) {
+      setDeleteError(factDeleteErrorMessage(cause))
+    } finally {
+      setDeleteBusy(false)
+    }
   }
 
   return (
@@ -200,6 +237,10 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
                     onEdit={() => setFactEditor({ mode: "update", fact: f })}
                     onCancelEdit={() => setFactEditor(null)}
                     onSaveEdit={handleSaveFact}
+                    onDelete={() => {
+                      setDeleteError(null)
+                      setPendingDelete(f)
+                    }}
                   />
                 ))}
               </ul>
@@ -217,6 +258,57 @@ export function ProfileWorkspace({ profile }: { profile: Profile }) {
       })}
 
       <ProfileAssistant open={assistantOpen} onClose={closeAssistant} />
+
+      <Modal
+        open={pendingDelete !== null}
+        onOpenChange={(next) => {
+          if (!next) closeDelete()
+        }}
+        title={t("profile.delete.title")}
+        description={t("profile.delete.description")}
+      >
+        {pendingDelete ? (
+          <div className="mt-4 rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+            {pendingDelete.referencedBy.length ? (
+              <>
+                <p className="font-medium text-foreground">{t("profile.delete.referenced")}</p>
+                <ul className="mt-1.5 space-y-1">
+                  {pendingDelete.referencedBy.map((reference) => (
+                    <li key={`${reference.resumeId}-${reference.versionId}`} className="text-muted-foreground">
+                      <span className="font-medium text-foreground">{reference.resumeTitle}</span>
+                      <span className="ml-1.5">
+                        · {t("profile.delete.versionLabel")} <span className="font-mono">{reference.versionId}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-muted-foreground">{t("profile.delete.noReference")}</p>
+            )}
+          </div>
+        ) : null}
+        {deleteError ? <p role="alert" className="mt-3 text-xs text-coral">{deleteError}</p> : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={closeDelete}
+            disabled={deleteBusy}
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary disabled:opacity-40"
+          >
+            {t("common.actions.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void confirmDeleteFact()}
+            disabled={deleteBusy}
+            aria-busy={deleteBusy}
+            className="rounded-lg bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {deleteBusy ? t("profile.delete.deleting") : t("profile.delete.confirm")}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }
@@ -228,6 +320,7 @@ function FactRow({
   onEdit,
   onCancelEdit,
   onSaveEdit,
+  onDelete,
 }: {
   fact: ProfileFact
   flash?: boolean
@@ -235,6 +328,7 @@ function FactRow({
   onEdit: () => void
   onCancelEdit: () => void
   onSaveEdit: (input: ProfileFactInput) => Promise<void>
+  onDelete: () => void
 }) {
   const { t } = useTranslation()
 
@@ -263,13 +357,22 @@ function FactRow({
             </div>
           ) : null}
         </div>
-        <button
-          onClick={onEdit}
-          aria-label={t("profile.actions.editFact", { title: fact.title })}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
-        >
-          <Pencil className="size-3.5" aria-hidden /> {t("profile.actions.edit")}
-        </button>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            onClick={onEdit}
+            aria-label={t("profile.actions.editFact", { title: fact.title })}
+            className="inline-flex items-center gap-1.5 rounded-md border border-cobalt/40 px-2.5 py-1.5 text-xs font-medium text-cobalt transition-colors hover:bg-cobalt/5"
+          >
+            <Pencil className="size-3.5" aria-hidden /> {t("profile.actions.edit")}
+          </button>
+          <button
+            onClick={onDelete}
+            aria-label={t("profile.actions.deleteFact", { title: fact.title })}
+            className="inline-flex items-center gap-1.5 rounded-md border border-coral/40 px-2.5 py-1.5 text-xs font-medium text-coral transition-colors hover:bg-coral/5"
+          >
+            <Trash2 className="size-3.5" aria-hidden /> {t("profile.actions.delete")}
+          </button>
+        </div>
       </div>
     </li>
   )

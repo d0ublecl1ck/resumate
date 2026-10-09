@@ -1,0 +1,4 @@
+status=202
+body={"status":"verification_sent","email":"e2e-auth-20261009-145642@example.com"}
+mail=/tmp/resumate-e2e-mail/20261009-145751-359408.eml
+token=H82YL9p3IGCdGaqaMVz2viDfa7_X8_T8wECW-smBXUI

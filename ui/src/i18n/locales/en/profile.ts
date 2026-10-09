@@ -9,6 +9,7 @@ export default {
     openAssistant: "Maintain via chat",
     generateResume: "Generate resume",
     edit: "Edit",
+    delete: "Delete",
     editBasics: "Edit basics",
     saveBasics: "Save basics",
     savingBasics: "Saving…",
@@ -17,6 +18,19 @@ export default {
     addFact: "Add fact",
     saveFact: "Save changes",
     savingFact: "Saving…",
+    deleteFact: "Delete “{{title}}”",
+  },
+  delete: {
+    title: "Delete this fact?",
+    description: "Deleting cannot be undone; resume content that cites it is not rewritten automatically.",
+    referenced: "These resume versions cite this fact:",
+    noReference: "No resume cites this fact.",
+    versionLabel: "Version",
+    confirm: "Delete",
+    deleting: "Deleting…",
+    errors: {
+      failed: "Deleting failed. Try again later.",
+    },
   },
   basics: {
     sectionAria: "Basics",

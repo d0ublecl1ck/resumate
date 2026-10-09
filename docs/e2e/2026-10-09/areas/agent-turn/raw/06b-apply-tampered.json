@@ -1,0 +1,7 @@
+{
+ "status": 409,
+ "body": {
+  "code": "PENDING_ACTION_STALE",
+  "message": "应用内容与批准的预览不一致"
+ }
+}

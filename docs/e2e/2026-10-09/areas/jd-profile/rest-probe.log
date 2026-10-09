@@ -1,0 +1,123 @@
+PREFIX e2e-jd-profile-20261009-145428
+LOGIN 200 {"id":"user_admin","email":"admin@resumate.dev","displayName":"管理员","role":"super_admin","roles":["super_admin"],"permissions":["access:read","access:write","account:read","account:write","backup:read
+
+### POST /jds:parse-text -> 502
+{
+  "code": "UPSTREAM_REJECTED",
+  "message": "模型服务拒绝凭证，请检查 API Key 与 provider 配置"
+}
+
+### POST /jds -> 201
+{
+  "id": "jd_91e692a70a47",
+  "ownerId": "user_admin",
+  "role": "e2e-jd-profile-20261009-145428-角色",
+  "company": "e2e-jd-profile-20261009-145428-公司",
+  "body": "e2e-jd-profile-20261009-145428 正文：负责核心系统开发。",
+  "sourceUrl": null,
+  "tags": [
+    "e2e-jd-profile-20261009-145428-tag"
+  ],
+  "revision": 1,
+  "createdAt": "2026-10-09T14:54:29.212667+08:00",
+  "updatedAt": "2026-10-09T14:54:29.212667+08:00",
+  "boundResumeId": null,
+  "boundResumeAvailable": null
+}
+JD_ID jd_91e692a70a47
+
+### GET /resumes -> 200
+[
+  {
+    "id": "res_d5a6cc378080",
+    "title": "未命名简历（副本）"
+  },
+  {
+    "id": "res_71efbbef213f",
+    "title": "T-卡片复制-源（副本）"
+  },
+  {
+    "id": "res_84e8a241a460",
+    "title": "T-卡片复制-源"
+  },
+  {
+    "id": "res_aeba1b686aa4",
+    "title": "Agent 烟测（可删）"
+  }
+]
+RESUME_ID res_d5a6cc378080
+
+### PUT /jds/{id}/binding -> 200
+{
+  "id": "jd_91e692a70a47",
+  "ownerId": "user_admin",
+  "role": "e2e-jd-profile-20261009-145428-角色",
+  "company": "e2e-jd-profile-20261009-145428-公司",
+  "body": "e2e-jd-profile-20261009-145428 正文：负责核心系统开发。",
+  "sourceUrl": null,
+  "tags": [
+    "e2e-jd-profile-20261009-145428-tag"
+  ],
+  "revision": 1,
+  "createdAt": "2026-10-09T14:54:29.212667+08:00",
+  "updatedAt": "2026-10-09T14:54:29.244743+08:00",
+  "boundResumeId": "res_d5a6cc378080",
+  "boundResumeAvailable": true
+}
+
+### DELETE /jds/{id}/binding -> 200
+{
+  "id": "jd_91e692a70a47",
+  "ownerId": "user_admin",
+  "role": "e2e-jd-profile-20261009-145428-角色",
+  "company": "e2e-jd-profile-20261009-145428-公司",
+  "body": "e2e-jd-profile-20261009-145428 正文：负责核心系统开发。",
+  "sourceUrl": null,
+  "tags": [
+    "e2e-jd-profile-20261009-145428-tag"
+  ],
+  "revision": 1,
+  "createdAt": "2026-10-09T14:54:29.212667+08:00",
+  "updatedAt": "2026-10-09T14:54:29.255269+08:00",
+  "boundResumeId": null,
+  "boundResumeAvailable": null
+}
+
+### POST /profile/match-job -> 404
+{
+  "detail": "Not Found"
+}
+
+### POST /profile/facts -> 201
+{
+  "id": "fact_c608024b9f08",
+  "type": "skill",
+  "title": "e2e-jd-profile-20261009-145428-事实",
+  "content": "e2e-jd-profile-20261009-145428-内容",
+  "tags": [],
+  "source": "手动录入",
+  "evidence": {
+    "status": "unverified",
+    "label": null,
+    "downloadable": null
+  },
+  "confidence": 0.5,
+  "verifiedAt": null,
+  "visibility": "private",
+  "referencedBy": []
+}
+FACT_ID fact_c608024b9f08
+
+### DELETE /profile/facts/{id} -> 200
+{
+  "factId": "fact_c608024b9f08",
+  "referencedBy": []
+}
+
+### GET /profile/facts/{id} after delete -> 404
+{
+  "code": "RESOURCE_NOT_FOUND",
+  "message": "事实 fact_c608024b9f08 不存在"
+}
+
+CLEANUP delete jd 204

@@ -1,0 +1,345 @@
+{
+  "ts": "20261009-145552",
+  "prefix": "E2E-BAK-20261009-145552",
+  "email": "e2e-bak-20261009-145552@example.com",
+  "password": "E2E-bak-Passw0rd!",
+  "displayName": "E2E 备份用户 20261009-145552",
+  "steps": [
+    {
+      "step": "register",
+      "status": 202,
+      "body": {
+        "status": "verification_sent",
+        "email": "e2e-bak-20261009-145552@example.com"
+      }
+    },
+    {
+      "step": "mail",
+      "file": "/tmp/resumate-e2e-mail/20261009-145552-992900.eml",
+      "token": "ltbKLI2EWUcJUGGbxrUHx9-xE-c121lEdHoGYzcnfzY",
+      "blobHead": "请点击下面的链接完成邮箱验证：\n\nhttp://localhost:5173/verify-email?token=ltbKLI2EWUcJUGGbxrUHx9-xE-c121lEdHoGYzcnfzY\n\n如果这不是你本人的操作，忽略这封邮件即可。\n\nrcpt to:<e2e-bak-20261009-145552@example.com>\nX-Envelope-To: rcpt to:<e2e-bak-20261009-145552@example.com>\nSubject: =?utf-8?b?6aqM6K+B5L2g55qEIFJlc3VtYXRlIOmCrueusQ==?=\r\nFrom: no-reply@resumate.dev\r\nTo: e2e-bak-20261009-145552@example.com\r\nContent-Type: text/plain; charset="
+    },
+    {
+      "step": "verify",
+      "status": 200,
+      "body": {
+        "id": "user_530140113d44",
+        "email": "e2e-bak-20261009-145552@example.com",
+        "displayName": "E2E 备份用户 20261009-145552",
+        "role": "user",
+        "roles": [
+          "user"
+        ],
+        "permissions": [
+          "access:read",
+          "access:write",
+          "account:read",
+          "account:write",
+          "backup:read",
+          "backup:write",
+          "jd:read",
+          "jd:write",
+          "profile:read",
+          "profile:write",
+          "resume:read",
+          "resume:write",
+          "settings:read",
+          "settings:write"
+        ],
+        "isBanned": false,
+        "createdAt": "2026-10-09T14:55:52.853231+08:00"
+      }
+    }
+  ],
+  "cookie": "resumate_session=4Rb2wpq527v8KRLsSKTuWlUB0RjC5055nJq0j0kwiL0",
+  "me": {
+    "id": "user_530140113d44",
+    "email": "e2e-bak-20261009-145552@example.com",
+    "displayName": "E2E 备份用户 20261009-145552",
+    "role": "user",
+    "roles": [
+      "user"
+    ],
+    "permissions": [
+      "access:read",
+      "access:write",
+      "account:read",
+      "account:write",
+      "backup:read",
+      "backup:write",
+      "jd:read",
+      "jd:write",
+      "profile:read",
+      "profile:write",
+      "resume:read",
+      "resume:write",
+      "settings:read",
+      "settings:write"
+    ],
+    "isBanned": false,
+    "createdAt": "2026-10-09T14:55:52.853231+08:00"
+  },
+  "userId": "user_530140113d44",
+  "fact": {
+    "status": 201,
+    "body": {
+      "id": "fact_24b82b0e2a20",
+      "type": "project",
+      "title": "E2E-BAK-20261009-145552 项目事实",
+      "content": "E2E 备份导入导出验证用事实",
+      "tags": [
+        "e2e"
+      ],
+      "source": "手动录入",
+      "evidence": {
+        "status": "unverified",
+        "label": null,
+        "downloadable": null
+      },
+      "confidence": 0.5,
+      "verifiedAt": null,
+      "visibility": "private",
+      "referencedBy": []
+    }
+  },
+  "resumeResponses": [
+    {
+      "status": 201,
+      "body": {
+        "id": "res_ec16e43a7aaa",
+        "title": "E2E-BAK-20261009-145552 简历A",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_1921a857e7b6",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "updatedAt": "2026-10-09T14:55:54.075071+08:00",
+        "boundByJdIds": [],
+        "restoreDeadline": null,
+        "profileId": null,
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "draft": null,
+        "versions": [
+          {
+            "id": "ver_1921a857e7b6",
+            "source": "manual",
+            "actorId": "user_530140113d44",
+            "message": "创建简历",
+            "changeCount": 1,
+            "affectedSections": [
+              "基础信息"
+            ],
+            "startedAt": "2026-10-09T14:55:54.075071+08:00",
+            "committedAt": "2026-10-09T14:55:54.075071+08:00",
+            "parentVersionId": null,
+            "baseVersionId": null,
+            "clientId": null,
+            "conversationId": null,
+            "userTurnId": null,
+            "agentRunId": null,
+            "executionMode": null
+          }
+        ]
+      }
+    },
+    {
+      "status": 201,
+      "body": {
+        "id": "res_33b441efd393",
+        "title": "E2E-BAK-20261009-145552 简历B",
+        "targetRole": "前端工程师",
+        "tags": [
+          "e2e"
+        ],
+        "templateId": "tpl_classic",
+        "templateVersion": 1,
+        "currentVersionId": "ver_d86c6054fbc9",
+        "lifecycle": "active",
+        "saveState": "committed",
+        "updatedAt": "2026-10-09T14:55:54.085024+08:00",
+        "boundByJdIds": [],
+        "restoreDeadline": null,
+        "profileId": null,
+        "document": {
+          "basics": {
+            "fullName": "",
+            "headline": "",
+            "email": "",
+            "phone": "",
+            "location": "",
+            "links": []
+          },
+          "sections": []
+        },
+        "draft": null,
+        "versions": [
+          {
+            "id": "ver_d86c6054fbc9",
+            "source": "manual",
+            "actorId": "user_530140113d44",
+            "message": "创建简历",
+            "changeCount": 1,
+            "affectedSections": [
+              "基础信息"
+            ],
+            "startedAt": "2026-10-09T14:55:54.085024+08:00",
+            "committedAt": "2026-10-09T14:55:54.085024+08:00",
+            "parentVersionId": null,
+            "baseVersionId": null,
+            "clientId": null,
+            "conversationId": null,
+            "userTurnId": null,
+            "agentRunId": null,
+            "executionMode": null
+          }
+        ]
+      }
+    }
+  ],
+  "resumes": [
+    {
+      "id": "res_ec16e43a7aaa",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "id": "res_33b441efd393",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    }
+  ],
+  "jd": {
+    "status": 201,
+    "body": {
+      "id": "jd_dee7671d9114",
+      "ownerId": "user_530140113d44",
+      "role": "E2E-BAK-20261009-145552 岗位",
+      "company": "E2E 公司",
+      "body": "负责 E2E 备份链路验证。",
+      "sourceUrl": null,
+      "tags": [
+        "e2e"
+      ],
+      "revision": 1,
+      "createdAt": "2026-10-09T14:55:54.093216+08:00",
+      "updatedAt": "2026-10-09T14:55:54.093216+08:00",
+      "boundResumeId": null,
+      "boundResumeAvailable": null
+    }
+  },
+  "resumeCountAfterSeed": 2,
+  "resumeListAfterSeed": [
+    {
+      "id": "res_33b441efd393",
+      "title": "E2E-BAK-20261009-145552 简历B",
+      "targetRole": "前端工程师",
+      "tags": [
+        "e2e"
+      ],
+      "templateId": "tpl_classic",
+      "templateVersion": 1,
+      "currentVersionId": "ver_d86c6054fbc9",
+      "lifecycle": "active",
+      "saveState": "committed",
+      "updatedAt": "2026-10-09T14:55:54.085024+08:00",
+      "boundByJdIds": [],
+      "restoreDeadline": null,
+      "profileId": null,
+      "document": {
+        "basics": {
+          "fullName": "",
+          "headline": "",
+          "email": "",
+          "phone": "",
+          "location": "",
+          "links": []
+        },
+        "sections": []
+      },
+      "draft": null,
+      "versions": [
+        {
+          "id": "ver_d86c6054fbc9",
+          "source": "manual",
+          "actorId": "user_530140113d44",
+          "message": "创建简历",
+          "changeCount": 1,
+          "affectedSections": [
+            "基础信息"
+          ],
+          "startedAt": "2026-10-09T14:55:54.085024+08:00",
+          "committedAt": "2026-10-09T14:55:54.085024+08:00",
+          "parentVersionId": null,
+          "baseVersionId": null,
+          "clientId": null,
+          "conversationId": null,
+          "userTurnId": null,
+          "agentRunId": null,
+          "executionMode": null
+        }
+      ]
+    },
+    {
+      "id": "res_ec16e43a7aaa",
+      "title": "E2E-BAK-20261009-145552 简历A",
+      "targetRole": "前端工程师",
+      "tags": [
+        "e2e"
+      ],
+      "templateId": "tpl_classic",
+      "templateVersion": 1,
+      "currentVersionId": "ver_1921a857e7b6",
+      "lifecycle": "active",
+      "saveState": "committed",
+      "updatedAt": "2026-10-09T14:55:54.075071+08:00",
+      "boundByJdIds": [],
+      "restoreDeadline": null,
+      "profileId": null,
+      "document": {
+        "basics": {
+          "fullName": "",
+          "headline": "",
+          "email": "",
+          "phone": "",
+          "location": "",
+          "links": []
+        },
+        "sections": []
+      },
+      "draft": null,
+      "versions": [
+        {
+          "id": "ver_1921a857e7b6",
+          "source": "manual",
+          "actorId": "user_530140113d44",
+          "message": "创建简历",
+          "changeCount": 1,
+          "affectedSections": [
+            "基础信息"
+          ],
+          "startedAt": "2026-10-09T14:55:54.075071+08:00",
+          "committedAt": "2026-10-09T14:55:54.075071+08:00",
+          "parentVersionId": null,
+          "baseVersionId": null,
+          "clientId": null,
+          "conversationId": null,
+          "userTurnId": null,
+          "agentRunId": null,
+          "executionMode": null
+        }
+      ]
+    }
+  ]
+}

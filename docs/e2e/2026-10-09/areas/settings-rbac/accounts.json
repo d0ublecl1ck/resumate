@@ -1,0 +1,17 @@
+{
+  "password": "ResumateE2e!2026",
+  "ts": 1791528987,
+  "main": "e2e-settings-rbac-main-1791528987@example.com",
+  "good": "e2e-settings-rbac-good-1791528987@example.com",
+  "admin2": "e2e-settings-rbac-admin2-1791528987@example.com",
+  "names": {
+    "main": "E2E 主账号",
+    "good": "E2E 被管账号",
+    "admin2": "E2E 二级管理员"
+  },
+  "ids": {
+    "main": "user_078a7667ee09",
+    "good": "user_35ed619f7007",
+    "admin2": "user_30989ed704ce"
+  }
+}

@@ -1,0 +1,26 @@
+{
+ "id": "turn_9eb02b3d6de7",
+ "scope": "resume",
+ "resumeId": "res_5d03043b283b",
+ "clientId": "run_c6625c2f4197",
+ "source": "agent",
+ "executionMode": "approval",
+ "modeSource": "agent",
+ "state": "cancelled",
+ "baseVersionId": "ver_427a9d3f1964",
+ "sessionId": "sess_abfeacada3f6",
+ "message": "",
+ "createdAt": "2026-10-09T15:08:25.307361+08:00",
+ "closedAt": "2026-10-09T15:08:25.541383+08:00",
+ "result": {
+  "state": "cancelled",
+  "resumeId": "res_5d03043b283b",
+  "versionId": null,
+  "changeCount": 0,
+  "affectedSections": [],
+  "message": "runtime aborted: MODEL_ERROR",
+  "idempotentReplay": false,
+  "baseRebased": false
+ },
+ "pendingActions": []
+}

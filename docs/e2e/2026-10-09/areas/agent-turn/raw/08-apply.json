@@ -1,0 +1,16 @@
+{
+ "status": 200,
+ "body": {
+  "applied": true,
+  "userTurnId": "turn_cfee76cfe619",
+  "resumeId": "res_5d03043b283b",
+  "changeCount": 1,
+  "affectedSections": [
+   "工作经历"
+  ],
+  "workingRevision": 1,
+  "pendingActionId": "pa_659246ac747e",
+  "idempotentReplay": false,
+  "baseRebased": false
+ }
+}

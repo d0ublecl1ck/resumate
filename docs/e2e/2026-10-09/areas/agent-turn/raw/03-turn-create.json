@@ -1,0 +1,20 @@
+{
+ "status": 201,
+ "body": {
+  "id": "turn_cfee76cfe619",
+  "scope": "resume",
+  "resumeId": "res_5d03043b283b",
+  "clientId": "external",
+  "source": "agent",
+  "executionMode": "approval",
+  "modeSource": "session",
+  "state": "open",
+  "baseVersionId": "ver_427a9d3f1964",
+  "sessionId": null,
+  "message": "E2E 补丁链路",
+  "createdAt": "2026-10-09T15:08:27.924027+08:00",
+  "closedAt": null,
+  "result": null,
+  "pendingActions": []
+ }
+}

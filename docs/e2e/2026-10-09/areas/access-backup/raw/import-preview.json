@@ -1,0 +1,325 @@
+{
+  "manifest": {
+    "formatVersion": "resumate-backup/1.0",
+    "resourceCounts": {
+      "resumes": 16,
+      "versions": 16,
+      "profiles": 1,
+      "facts": 8,
+      "jds": 8
+    },
+    "attachments": []
+  },
+  "newResources": [
+    {
+      "type": "Profile",
+      "title": "我的职业事实库"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历A"
+    },
+    {
+      "type": "Resume",
+      "title": "E2E-BAK-20261009-145552 简历B"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    },
+    {
+      "type": "JD",
+      "title": "E2E 公司 · E2E-BAK-20261009-145552 岗位"
+    }
+  ],
+  "idMappings": [
+    {
+      "originalId": "profile_75d4dae0b591",
+      "newId": "import_profile_1",
+      "type": "Profile"
+    },
+    {
+      "originalId": "resume_78a47024b090",
+      "newId": "import_resume_1",
+      "type": "Resume"
+    },
+    {
+      "originalId": "res_ec16e43a7aaa",
+      "newId": "import_resume_2",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_e5d202b9adf2",
+      "newId": "import_resume_3",
+      "type": "Resume"
+    },
+    {
+      "originalId": "res_33b441efd393",
+      "newId": "import_resume_4",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_0a8fe2110771",
+      "newId": "import_resume_5",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_406da99cc7a2",
+      "newId": "import_resume_6",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_65664097e96f",
+      "newId": "import_resume_7",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_6aa375c16d19",
+      "newId": "import_resume_8",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_fd7e3c80557e",
+      "newId": "import_resume_9",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_0129dbf716c4",
+      "newId": "import_resume_10",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_f7e1485dd8bd",
+      "newId": "import_resume_11",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_fde15061e94f",
+      "newId": "import_resume_12",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_032e9fc1dd52",
+      "newId": "import_resume_13",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_7b592768e23c",
+      "newId": "import_resume_14",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_b32719db5e80",
+      "newId": "import_resume_15",
+      "type": "Resume"
+    },
+    {
+      "originalId": "resume_b14cca60970c",
+      "newId": "import_resume_16",
+      "type": "Resume"
+    },
+    {
+      "originalId": "ver_1921a857e7b6",
+      "newId": "import_version_1",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_d86c6054fbc9",
+      "newId": "import_version_2",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_1b9ac2c51716",
+      "newId": "import_version_3",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_32218687076e",
+      "newId": "import_version_4",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_0f55b4bd451b",
+      "newId": "import_version_5",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_2c91e7c8b991",
+      "newId": "import_version_6",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_7eaf7c817f95",
+      "newId": "import_version_7",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_26976dc3ae8a",
+      "newId": "import_version_8",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_7fdaa9d05aeb",
+      "newId": "import_version_9",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_f775bb8e0d8e",
+      "newId": "import_version_10",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_249096b6b76b",
+      "newId": "import_version_11",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_8e904cd6c1ba",
+      "newId": "import_version_12",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_508bdab9d805",
+      "newId": "import_version_13",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_50d23d7c5339",
+      "newId": "import_version_14",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_8678a555ad41",
+      "newId": "import_version_15",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "ver_4f662a328f5b",
+      "newId": "import_version_16",
+      "type": "ResumeVersion"
+    },
+    {
+      "originalId": "jd_dee7671d9114",
+      "newId": "import_jd_1",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_35f8f473395b",
+      "newId": "import_jd_2",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_1cef159eccd5",
+      "newId": "import_jd_3",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_c58f9aeb4393",
+      "newId": "import_jd_4",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_d8f09bceb643",
+      "newId": "import_jd_5",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_180cee54884c",
+      "newId": "import_jd_6",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_4db2e88b8d48",
+      "newId": "import_jd_7",
+      "type": "JD"
+    },
+    {
+      "originalId": "jd_42b35dd82b27",
+      "newId": "import_jd_8",
+      "type": "JD"
+    }
+  ],
+  "bindingRestores": [],
+  "missingReferences": [],
+  "status": "valid"
+}

@@ -1,0 +1,92 @@
+{
+  "agent_before": {
+    "currentRunMode": null,
+    "nextRunMode": "approval",
+    "modeSource": "account",
+    "fullAccessScopes": [
+      "read_search_compare_render",
+      "content_patch",
+      "metadata_update_archive"
+    ],
+    "confirmRetainedOps": [
+      "delete",
+      "history_restore",
+      "overwrite_export",
+      "profile_to_resume",
+      "fact_promotion"
+    ],
+    "budget": {
+      "maxTokens": 20000,
+      "maxTurns": 8,
+      "maxCostUsd": 0.5
+    }
+  },
+  "agent_after_save": {
+    "currentRunMode": null,
+    "nextRunMode": "full_access",
+    "modeSource": "account",
+    "fullAccessScopes": [
+      "read_search_compare_render",
+      "content_patch",
+      "metadata_update_archive"
+    ],
+    "confirmRetainedOps": [
+      "delete",
+      "history_restore",
+      "overwrite_export",
+      "profile_to_resume",
+      "fact_promotion"
+    ],
+    "budget": {
+      "maxTokens": 50000,
+      "maxTurns": 12,
+      "maxCostUsd": 2.5
+    }
+  },
+  "invalid_0": {
+    "ui_text": "请求参数校验失败：maxTokens",
+    "rest_status": 422,
+    "rest_body": {
+      "code": "VALIDATION_FAILED",
+      "message": "请求参数校验失败：maxTokens"
+    }
+  },
+  "invalid_101": {
+    "ui_text": "请求参数校验失败：maxTurns",
+    "rest_status": 422,
+    "rest_body": {
+      "code": "VALIDATION_FAILED",
+      "message": "请求参数校验失败：maxTurns"
+    }
+  },
+  "invalid_-1": {
+    "ui_text": "请求参数校验失败：maxCostUsd",
+    "rest_status": 422,
+    "rest_body": {
+      "code": "VALIDATION_FAILED",
+      "message": "请求参数校验失败：maxCostUsd"
+    }
+  },
+  "agent_restored": {
+    "currentRunMode": null,
+    "nextRunMode": "approval",
+    "modeSource": "account",
+    "fullAccessScopes": [
+      "read_search_compare_render",
+      "content_patch",
+      "metadata_update_archive"
+    ],
+    "confirmRetainedOps": [
+      "delete",
+      "history_restore",
+      "overwrite_export",
+      "profile_to_resume",
+      "fact_promotion"
+    ],
+    "budget": {
+      "maxTokens": 20000,
+      "maxTurns": 8,
+      "maxCostUsd": 0.5
+    }
+  }
+}

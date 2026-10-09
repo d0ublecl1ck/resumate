@@ -62,6 +62,35 @@ class FactDeletionImpact(ApiModel):
     referenced_by: list[FactReference] = Field(default_factory=list)
 
 
+class MatchJobRequest(ApiModel):
+    """POST /profile/match-job：按 JD 定位要匹配的岗位。"""
+
+    jd_id: str = Field(min_length=1)
+
+
+class JobMatchResult(ApiModel):
+    """Fact-level match: which profile fact supports the JD, and how strongly."""
+
+    fact_id: str
+    fact_title: str
+    relevance: float
+    reason: str
+    evidence_status: EvidenceStatus
+
+
+class MatchGap(ApiModel):
+    """Requirement-level gap: one JD requirement and its coverage status."""
+
+    requirement: str
+    status: Literal["covered", "partial", "missing"]
+    note: str = ""
+
+
+class JobMatchResponse(ApiModel):
+    results: list[JobMatchResult] = Field(default_factory=list)
+    gaps: list[MatchGap] = Field(default_factory=list)
+
+
 class ProfileBasicsUpdate(ApiModel):
     full_name: str | None = None
     headline: str | None = None

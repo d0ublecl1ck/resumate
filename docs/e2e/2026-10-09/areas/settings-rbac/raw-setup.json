@@ -1,0 +1,267 @@
+[
+  {
+    "key": "main",
+    "email": "e2e-settings-rbac-main-1791528987@example.com",
+    "user": {
+      "id": "user_078a7667ee09",
+      "email": "e2e-settings-rbac-main-1791528987@example.com",
+      "displayName": "E2E 主账号",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:27.854173+08:00"
+    },
+    "steps": [
+      {
+        "call": "POST /auth/register",
+        "status": 202,
+        "body": {
+          "status": "verification_sent",
+          "email": "e2e-settings-rbac-main-1791528987@example.com"
+        }
+      },
+      {
+        "call": "read mail",
+        "mail": "20261009-145628-168577.eml",
+        "token_found": true
+      },
+      {
+        "call": "POST /auth/verification/verify",
+        "status": 200,
+        "body": {
+          "id": "user_078a7667ee09",
+          "email": "e2e-settings-rbac-main-1791528987@example.com",
+          "displayName": "E2E 主账号",
+          "role": "user",
+          "roles": [
+            "user"
+          ],
+          "permissions": [
+            "access:read",
+            "access:write",
+            "account:read",
+            "account:write",
+            "backup:read",
+            "backup:write",
+            "jd:read",
+            "jd:write",
+            "profile:read",
+            "profile:write",
+            "resume:read",
+            "resume:write",
+            "settings:read",
+            "settings:write"
+          ],
+          "isBanned": false,
+          "createdAt": "2026-10-09T14:56:27.854173+08:00"
+        }
+      }
+    ]
+  },
+  {
+    "key": "good",
+    "email": "e2e-settings-rbac-good-1791528987@example.com",
+    "user": {
+      "id": "user_35ed619f7007",
+      "email": "e2e-settings-rbac-good-1791528987@example.com",
+      "displayName": "E2E 被管账号",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:28.695143+08:00"
+    },
+    "steps": [
+      {
+        "call": "POST /auth/register",
+        "status": 202,
+        "body": {
+          "status": "verification_sent",
+          "email": "e2e-settings-rbac-good-1791528987@example.com"
+        }
+      },
+      {
+        "call": "read mail",
+        "mail": "20261009-145628-816033.eml",
+        "token_found": true
+      },
+      {
+        "call": "POST /auth/verification/verify",
+        "status": 200,
+        "body": {
+          "id": "user_35ed619f7007",
+          "email": "e2e-settings-rbac-good-1791528987@example.com",
+          "displayName": "E2E 被管账号",
+          "role": "user",
+          "roles": [
+            "user"
+          ],
+          "permissions": [
+            "access:read",
+            "access:write",
+            "account:read",
+            "account:write",
+            "backup:read",
+            "backup:write",
+            "jd:read",
+            "jd:write",
+            "profile:read",
+            "profile:write",
+            "resume:read",
+            "resume:write",
+            "settings:read",
+            "settings:write"
+          ],
+          "isBanned": false,
+          "createdAt": "2026-10-09T14:56:28.695143+08:00"
+        }
+      }
+    ]
+  },
+  {
+    "key": "admin2",
+    "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+    "user": {
+      "id": "user_30989ed704ce",
+      "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+      "displayName": "E2E 二级管理员",
+      "role": "user",
+      "roles": [
+        "user"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:29.343518+08:00"
+    },
+    "steps": [
+      {
+        "call": "POST /auth/register",
+        "status": 202,
+        "body": {
+          "status": "verification_sent",
+          "email": "e2e-settings-rbac-admin2-1791528987@example.com"
+        }
+      },
+      {
+        "call": "read mail",
+        "mail": "20261009-145629-690088.eml",
+        "token_found": true
+      },
+      {
+        "call": "POST /auth/verification/verify",
+        "status": 200,
+        "body": {
+          "id": "user_30989ed704ce",
+          "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+          "displayName": "E2E 二级管理员",
+          "role": "user",
+          "roles": [
+            "user"
+          ],
+          "permissions": [
+            "access:read",
+            "access:write",
+            "account:read",
+            "account:write",
+            "backup:read",
+            "backup:write",
+            "jd:read",
+            "jd:write",
+            "profile:read",
+            "profile:write",
+            "resume:read",
+            "resume:write",
+            "settings:read",
+            "settings:write"
+          ],
+          "isBanned": false,
+          "createdAt": "2026-10-09T14:56:29.343518+08:00"
+        }
+      }
+    ]
+  },
+  {
+    "call": "promote admin2",
+    "status": 200,
+    "body": {
+      "id": "user_30989ed704ce",
+      "email": "e2e-settings-rbac-admin2-1791528987@example.com",
+      "displayName": "E2E 二级管理员",
+      "role": "admin",
+      "roles": [
+        "admin"
+      ],
+      "permissions": [
+        "access:read",
+        "access:write",
+        "account:read",
+        "account:write",
+        "backup:read",
+        "backup:write",
+        "jd:read",
+        "jd:write",
+        "profile:read",
+        "profile:write",
+        "resume:read",
+        "resume:write",
+        "settings:read",
+        "settings:write",
+        "user:ban",
+        "user:read",
+        "user:unban"
+      ],
+      "isBanned": false,
+      "createdAt": "2026-10-09T14:56:29.343518+08:00"
+    }
+  }
+]

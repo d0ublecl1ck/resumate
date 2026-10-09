@@ -207,3 +207,21 @@ describe("api-client 错误归类", () => {
 function createResumeDraft() {
   return api.createResume({ title: "未命名简历", templateId: "tpl_classic" })
 }
+
+describe("版本恢复接口", () => {
+  it("restoreVersion 调 POST /resumes/{id}/versions/{vid}/restore", async () => {
+    let captured: { path: string; body: unknown } | undefined
+    server.use(
+      http.post("/api/resumes/:id/versions/:versionId/restore", async ({ params, request }) => {
+        captured = { path: `/${params.id}/versions/${params.versionId}/restore`, body: await request.json() }
+        return HttpResponse.json(RESUMES[0])
+      }),
+    )
+
+    const restored = await api.restoreVersion("res_1", "ver_1", "恢复到 ver_1")
+
+    expect(captured?.path).toBe("/res_1/versions/ver_1/restore")
+    expect(captured?.body).toEqual({ message: "恢复到 ver_1" })
+    expect(restored.id).toBe(RESUMES[0].id)
+  })
+})
