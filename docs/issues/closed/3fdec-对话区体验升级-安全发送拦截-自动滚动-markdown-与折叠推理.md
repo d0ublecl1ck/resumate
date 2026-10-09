@@ -1,13 +1,14 @@
 ---
 id: 3fdec
-status: in-progress
+status: closed
 created_at: 2026-10-08T14:46:03.290Z
-updated_at: 2026-10-08T15:16:03.452Z
+updated_at: 2026-10-09T14:20:06.966Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-08T15:16:03.452Z
+closed_at: 2026-10-09T14:20:06.966Z
 ---
 
 # 对话区体验升级：安全发送拦截、自动滚动、Markdown 与折叠推理
@@ -35,7 +36,7 @@ started_at: 2026-10-08T15:16:03.452Z
 - [x] 原型 `ui/prototypes/index.html` 先登记 5 个新状态（发送拦截、自动滚动、Markdown、折叠 / 展开、服务端已更新）。
 - [x] Storybook story 覆盖默认 / 空 / 启动中 / 错误 / 超长 / Markdown / 折叠 / 拦截 / 服务端提示，`pnpm -C ui build-storybook` 通过。
 - [x] 上述行为有单测断言，`pnpm -C ui test` 通过，`archkit inspect .` 通过。
-- [ ] **用户在 Storybook 里确认视觉与交互**（本工单关单的前置条件，尚未确认）。
+- [x] **用户在 Storybook 里确认视觉与交互**：2026-10-09 用户逐个查看 5 个 iframe 直链（发送拦截、Markdown 渲染、折叠态、展开态、服务端已更新提示条）后确认认可。
 
 ## Implementation
 
@@ -53,6 +54,8 @@ started_at: 2026-10-08T15:16:03.452Z
 - 原型章节：`#tokens`、`#components`、`#screen-editor`（新增「对话区状态（#screen-editor）」登记块与 5 条 state）。
 - Storybook 评审路径：`Components/RunPanel` 的 `components-runpanel--default` / `--empty` / `--starting` / `--action-error` / `--long-message` / `--markdown-reply` / `--activity-collapsed` / `--activity-expanded` / `--send-blocked`，以及 `Components/ResumeEditor` 的 `components-resumeeditor--server-updated-while-dirty`。
 - 已知限制：`--starting` / `--action-error` 的 AutoDrive 只在浏览器里可验（story 内自动驱动），需人工在 Storybook 里点开确认。
+- 用户确认（2026-10-09）：在 worktree `docs/zj-fwwb-2026`（HEAD b893c92，含两次合并后的代码）上启动 Storybook，用户逐个打开以下 5 个直链并确认认可：
+  `components-runpanel--send-blocked`、`components-runpanel--markdown-reply`、`components-runpanel--activity-collapsed`、`components-runpanel--activity-expanded`、`components-resumeeditor--server-updated-while-dirty`；确认后 Storybook 已停止，6007 端口释放。
 
 ## Related ADRs
 
