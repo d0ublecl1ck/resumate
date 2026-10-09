@@ -117,7 +117,7 @@ export const JavaBackend = {
   render: () => {
     applyBankHandlers()
     return (
-      <Screen path="/interview/bank" routePath="/interview/bank">
+      <Screen path="/interview/bank" routePath="/interview/bank" width="fluid">
         <BankScreen />
       </Screen>
     )
