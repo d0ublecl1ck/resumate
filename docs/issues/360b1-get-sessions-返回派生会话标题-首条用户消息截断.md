@@ -50,6 +50,7 @@ started_at: 2026-10-09T16:47:57.517Z
 - `backend/app/modules/agent/dao.py`：新增 `SessionSummaryRow(NamedTuple)`；`list_sessions` 改为单条 `select(AgentSession, first_user_content, message_count)`——`first_user_content` 是「`role='user'` 按 `seq ASC` 取 1 条」的相关标量子查询，`message_count` 是 `count(id)` 相关标量子查询；owner 过滤、`last_active_at desc, created_at desc` 排序与 `limit` 均不变。
 - `backend/app/modules/agent/service.py`：`SESSION_TITLE_MAX_LENGTH = 24`；`_message_text` 归一 content（`str` / `{text}` / `{content}`，与前端 `sessionMessageText` 同口径）；`_derive_session_title` 去首尾空白，≤24 字原样、>24 字取前 24 字加 `…`，空白或无消息回退 `None`；`_session_response` 带 `title` / `message_count`，`list_sessions` 逐行映射，`create_session` 返回 `message_count=0`。
 - `backend/tests/test_agent_sessions.py`：新增 9 条测试——首条用户消息派生与 24 字截断（含边界 24/25）、wire/text/plain 三种 content 形态、首尾空白 trim、无消息 / 仅 system / 首条用户消息空白 / 仅 assistant 全部回退 `null`、assistant 与 system 绝不作标题来源、各 role 消息计数、多会话 recent-first 顺序与空库 `[]`、单条 SQL 断言（`before_cursor_execute` 计到 1 条 SELECT）。
+- `docs/agent/agent-operation-api.md` §19.1 / §19.2：回写 `GET /sessions` 响应新增派生只读字段 `title`（首条 `role=user` 正文归一、去首尾空白，≤24 字原样、>24 字取前 24 字加 `…`，空白或无用户消息为 `null`）与 `messageCount`（该会话消息总数，含 system/tool），并注明二者不落库、不新增列、无需迁移、随列表一次查出（无 N+1）。
 
 ## Verification
 
@@ -85,6 +86,10 @@ archkit inspect .                     -> Quality gates passed.
 
 `len(title) == 25`（24 字 + `…`），且 `title == 正文[:24] + "…"`；assistant 消息正文未进入标题。
 验证后已 kill 4310 服务并 `dropdb resumate_verify_360b1`。
+
+文档同步：`docs/agent/agent-operation-api.md` §19.1 / §19.2 已回写 `title` / `messageCount` 的派生口径与「不新增列、无需迁移、无 N+1」，与实现一致；改后重跑 `node quality-gates/run.js` 与 `archkit inspect .` 全绿。
+
+状态：已实现 + 已验证 + 文档已同步。关单由主执行者统一 `archkit issue close 360b1`（当前工作区仍有其他执行者未提交改动，`archkit issue close` 要求 clean worktree 故未在此执行）。
 
 ## Related ADRs
 
