@@ -91,6 +91,8 @@ export default {
     manualSaveMessage: "Manual edit",
     autosaveMessage: "Auto-save",
     autosaveHint: "Auto-save in {{seconds}}s",
+    serverUpdated: "The server has a newer version, and you have unsaved local input.",
+    loadServerVersion: "Load server version",
     saveErrors: {
       stale: "This resume changed elsewhere. Refresh and retry from the latest version.",
       validation: "The document is not valid. Check the fields and try again.",

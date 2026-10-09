@@ -172,12 +172,34 @@ class PatchValidationError(ApiModel):
     message: str
 
 
+def _op_wire(op: Any, *, exclude_none: bool) -> dict[str, Any]:
+    """Serialize one patch op; nested basics keeps its own explicitly-set fields."""
+    data = op.model_dump(mode="json", by_alias=True, exclude_none=exclude_none)
+    basics = getattr(op, "basics", None)
+    if isinstance(basics, ApiModel):
+        data["basics"] = basics.model_dump(mode="json", by_alias=True, exclude_none=exclude_none, exclude_unset=True)
+    return data
+
+
 class PatchRequest(ApiModel):
     """A validated patch proposal; ops must contain at least one operation."""
 
     ops: list[PatchOp] = Field(min_length=1)
     reason: str = ""
     base_version_id: str | None = None
+
+    def to_wire(self, *, exclude_none: bool = True) -> dict[str, Any]:
+        """Serialize the request while keeping a partial `setBasics` partial.
+
+        `setBasics` replaces the whole basics block, and `ResumeBasics` fills every
+        omitted field with an empty default. Sending those defaults wiped existing
+        name / email / phone in production-like runs (issue f52ec), so only the
+        fields the caller actually set go on the wire; the API merges the rest from
+        the current document and an explicit empty string still clears a field.
+        """
+        data = super().to_wire(exclude_none=exclude_none)
+        data["ops"] = [_op_wire(op, exclude_none=exclude_none) for op in self.ops]
+        return data
 
     @classmethod
     def from_ops(

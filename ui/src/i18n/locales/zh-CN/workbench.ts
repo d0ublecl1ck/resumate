@@ -64,6 +64,14 @@ export default {
     sendAria: "发送",
     actionError: "审批操作失败：{{message}}",
     starting: "正在启动运行体…",
+    sendConfirm: {
+      title: "确认发送",
+      description: "发送会结算当前轮次并作废待审批的待办",
+      confirm: "仍要发送",
+    },
+    activity: {
+      summary: "推理与工具活动（{{count}}）",
+    },
     errors: {
       modelNotConfigured: "尚未配置模型密钥。请到设置里填入 OpenAI 兼容的 Endpoint 与 API Key 后再发起对话。",
       rateLimited: "已有运行体在执行，请稍后再试。",
