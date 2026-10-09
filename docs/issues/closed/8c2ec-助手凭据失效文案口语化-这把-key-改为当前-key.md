@@ -1,13 +1,14 @@
 ---
 id: 8c2ec
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:34:57.572Z
-updated_at: 2026-10-09T16:35:10.593Z
+updated_at: 2026-10-09T16:40:48.318Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:35:10.593Z
+closed_at: 2026-10-09T16:40:48.318Z
 ---
 
 # 助手凭据失效文案口语化：这把 Key 改为当前 Key
@@ -28,9 +29,9 @@ started_at: 2026-10-09T16:35:10.593Z
 
 ## Acceptance Criteria
 
-- [ ] zh-CN `agentOnboarding.state.auth_failed.title` = 「当前 Key 被模型服务拒绝了」；en 保持 `The model service rejected this key`。
-- [ ] 引用该文案的测试断言同步更新并通过。
-- [ ] 两语言键结构逐键一致，en 无汉字。
+- [x] zh-CN `agentOnboarding.state.auth_failed.title` = 「当前 Key 被模型服务拒绝了」；en 保持 `The model service rejected this key`。
+- [x] 引用该文案的测试断言同步更新并通过。
+- [x] 两语言键结构逐键一致，en 无汉字。
 
 ## Implementation
 
@@ -40,12 +41,9 @@ started_at: 2026-10-09T16:35:10.593Z
 
 ## Verification
 
-```
-cd ui && ./node_modules/.bin/vitest run src/components/agent-onboarding.stories.test.tsx
-  -> Test Files 1 passed (1) / Tests 9 passed (9)
-cd ui && ./node_modules/.bin/tsc -b --noEmit   -> exit 0
-node quality-gates/run.js                      -> Quality gates passed.
-```
+验证命令与结果：在 `ui` 下运行 `./node_modules/.bin/vitest run src/components/agent-onboarding.stories.test.tsx` 通过，1 个测试文件 9 个用例全绿；`./node_modules/.bin/tsc -b --noEmit` 退出码 0；仓库根 `node quality-gates/run.js` 输出 Quality gates passed.。
+
+文案核验：zh-CN `agentOnboarding.state.auth_failed.title` 为「当前 Key 被模型服务拒绝了」；en 未改动，仍为 `The model service rejected this key`；两语言键结构逐键一致，en 无汉字。
 
 ## Related ADRs
 
