@@ -1,6 +1,7 @@
 // 历史会话（SCR-004 侧栏入口）：会话列表与会话详情（消息流）文案。
 export default {
   title: "历史会话",
+  currentChat: "当前对话",
   subtitle: "运行体写下的会话记录，按最近活跃时间排序。",
   derivedLabel: "会话 {{time}}",
   derivedHint: "后端暂未保存会话标题，这里用最近活跃时间代替。",
@@ -12,6 +13,11 @@ export default {
     errorTitle: "会话加载失败",
     errorDescription: "请稍后重试，或确认后端服务可用。",
     open: "查看会话",
+  },
+  continue: {
+    placeholder: "在这个会话继续对话…",
+    send: "发送",
+    hint: "继续发送会写入这条会话，不会新建会话。",
   },
   detail: {
     loading: "正在加载消息…",

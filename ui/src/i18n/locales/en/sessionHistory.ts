@@ -1,6 +1,7 @@
 // Session history (SCR-004 sidebar entry): list and detail copy.
 export default {
   title: "Session history",
+  currentChat: "Current chat",
   subtitle: "Sessions the runner has written, most recently active first.",
   derivedLabel: "Session {{time}}",
   derivedHint: "The backend does not store a session title yet, so the last active time stands in for it.",
@@ -12,6 +13,11 @@ export default {
     errorTitle: "Could not load sessions",
     errorDescription: "Try again in a moment, or check that the backend is reachable.",
     open: "Open session",
+  },
+  continue: {
+    placeholder: "Continue this conversation…",
+    send: "Send",
+    hint: "Sending here writes into this same session; no new session is created.",
   },
   detail: {
     loading: "Loading messages…",
