@@ -51,7 +51,7 @@ export default {
     emptyFilteredDescription: "已保留筛选条件。",
   },
   tuning: {
-    description: "查看岗位原文，明确微调目标与操作方式，再进入岗位相关 Diff。",
+    description: "查看岗位原文，选好微调目标与操作方式，创建绑定该岗位的 Agent 微调任务。",
     backToLibrary: "返回 JD 库",
     writeTarget: "写入目标",
     notSelected: "未选择",
@@ -74,7 +74,8 @@ export default {
     rebindLabel: "同时把此简历显式绑定为该 JD 的当前绑定",
     confirmCopyLaunch: "确认复制并发起微调",
     launch: "发起岗位微调",
-    footerNote: "提交前会校验 JD revision 与 Resume 基线；任一变化会使旧确认失效并重新预览。",
+    launching: "正在创建 Agent 任务…",
+    footerNote: "点击后在目标简历上创建一个 Agent 微调任务：prompt 携带当前 JD revision 与正文，然后跳到编辑工作台的 Run 面板；审批模式下不会直接覆盖简历。",
     editTitle: "编辑 JD",
     editDescription: "保存后生成新的 revision，历史 revision 不会被改写。",
     fieldRole: "岗位名称",
@@ -95,6 +96,8 @@ export default {
       saveFailed: "保存失败，请稍后重试。",
       deleteFailed: "删除失败，请稍后重试。",
       unbindFailed: "解除绑定失败，请稍后重试。",
+      launchFailed: "创建微调任务失败，请稍后重试。",
+      launchBusy: "已有微调任务在执行，请稍后再试。",
     },
     match: {
       title: "岗位匹配",
