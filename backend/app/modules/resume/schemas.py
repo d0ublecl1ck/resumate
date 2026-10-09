@@ -119,3 +119,9 @@ class DraftUpdate(ApiModel):
 
     document: ResumeDocument
     base_version_id: str | None = None
+
+
+class VersionRestore(ApiModel):
+    """恢复到历史版本（C-03）：message 是客户端本地化文案，缺省时服务端兜底。"""
+
+    message: str = ""

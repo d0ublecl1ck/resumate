@@ -6,7 +6,8 @@ import { Link } from "react-router-dom"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { getPreferences, saveDraft, updateDocument } from "@/lib/api"
+import { exportResumeMarkdown, getPreferences, saveDraft, updateDocument } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
 import { DEFAULT_AUTOSAVE_SECONDS, useIdleAutosave } from "@/lib/autosave"
 import { documentSaveErrorMessage } from "@/lib/resume-document"
 import type { AgentRun, JobDescription, Resume, ResumeDocument } from "@/lib/types"
@@ -46,6 +47,9 @@ export function ResumeEditor({
   const [mobileCol, setMobileCol] = useState<Column>(initialColumn)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [exportNotice, setExportNotice] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
   // 未落成正式版本的三态都算「有未保存内容」：本地未送达 / 服务端草稿缓冲 / 未提交。
   const dirty = saveState === "local_unsynced" || saveState === "uncommitted" || saveState === "synced_draft"
@@ -114,6 +118,39 @@ export function ResumeEditor({
     }
   }
 
+  // 导出：请求后端把当前已提交文档渲染成 Markdown 附件，前端用 Blob 触发下载并给出成功/失败反馈。
+  function exportErrorMessage(cause: unknown): string {
+    if (cause instanceof ApiRequestError) {
+      if (cause.code === "RESOURCE_NOT_FOUND") return t("resume.editor.exportErrors.missing")
+      if (cause.code === "FORBIDDEN") return t("resume.editor.exportErrors.permission")
+      if (cause.code === "NETWORK_ERROR") return t("resume.editor.exportErrors.network")
+    }
+    return t("resume.editor.exportErrors.generic")
+  }
+
+  async function handleExport() {
+    setExporting(true)
+    setExportNotice(null)
+    setExportError(null)
+    try {
+      const markdown = await exportResumeMarkdown(resume.id)
+      const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = (resume.title.trim() || resume.id) + ".md"
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+      setExportNotice(t("resume.editor.exportSuccess"))
+    } catch (cause) {
+      setExportError(exportErrorMessage(cause))
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="flex h-[calc(100vh-1rem)] flex-col">
       {/* 资源上下文条 */}
@@ -150,8 +187,14 @@ export function ResumeEditor({
           <Link to={`/resumes/${resume.id}/versions`} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary">
             <History className="size-4" aria-hidden /> {t("resume.editor.versions")}
           </Link>
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary">
-            <Download className="size-4" aria-hidden /> {t("resume.editor.export")}
+          <button
+            type="button"
+            onClick={() => void handleExport()}
+            disabled={exporting}
+            aria-busy={exporting}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Download className="size-4" aria-hidden /> {exporting ? t("resume.editor.exporting") : t("resume.editor.export")}
           </button>
         </div>
       </div>
@@ -159,6 +202,17 @@ export function ResumeEditor({
       {saveError ? (
         <p role="alert" className="mt-3 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-sm text-foreground">
           {saveError}
+        </p>
+      ) : null}
+
+      {exportNotice ? (
+        <p role="status" className="mt-3 rounded-lg border border-cobalt/40 bg-cobalt/5 px-3 py-2 text-sm text-foreground">
+          {exportNotice}
+        </p>
+      ) : null}
+      {exportError ? (
+        <p role="alert" className="mt-3 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-sm text-foreground">
+          {exportError}
         </p>
       ) : null}
 

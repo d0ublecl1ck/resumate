@@ -1,4 +1,8 @@
+from typing import Literal
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, Query, status
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -16,6 +20,7 @@ from .schemas import (
     ResumeResponse,
     ResumeUpdate,
     ResumeVersionResponse,
+    VersionRestore,
 )
 
 router = APIRouter(tags=["resume"])
@@ -155,3 +160,39 @@ def get_versions(
     user: CurrentUser = Depends(require_permission("resume:read")),
 ) -> list[ResumeVersionResponse]:
     return [ResumeVersionResponse.model_validate(version) for version in service.list_versions(db, user.id, resume_id)]
+
+@router.post("/resumes/{resume_id}/versions/{version_id}/restore", response_model=ResumeResponse)
+def restore_version(
+    resume_id: str,
+    version_id: str,
+    payload: VersionRestore,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:write")),
+) -> ResumeResponse:
+    """以 source=restore 生成新版本，历史版本全部保留（C-03）。"""
+    return _to_response(db, user.id, service.restore_version(db, user.id, resume_id, version_id, payload.message))
+
+
+def _attachment_disposition(title: str) -> str:
+    """RFC 5987: an ASCII fallback plus a UTF-8 filename, safe for any title."""
+    filename = f"{title or 'resume'}.md"
+    ascii_title = "".join(
+        char for char in title if char.isascii() and (char.isalnum() or char in "._- ")
+    ).strip(" ._-") or "resume"
+    return f"attachment; filename=\"{ascii_title}.md\"; filename*=UTF-8''{quote(filename, safe='')}"
+
+
+@router.get("/resumes/{resume_id}/export")
+def export_resume(
+    resume_id: str,
+    format: Literal["markdown"] = Query("markdown"),
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("resume:read")),
+) -> Response:
+    markdown, title = service.export_markdown(db, user.id, resume_id)
+    return Response(
+        content=markdown,
+        media_type="text/markdown; charset=utf-8",
+        headers={"Content-Disposition": _attachment_disposition(title)},
+    )
+

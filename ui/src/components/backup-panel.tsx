@@ -215,8 +215,10 @@ function ImportModal({
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-cobalt">{t("settings.importModal.newResources")}</p>
               <ul className="space-y-1.5">
-                {preview.newResources.map((resource) => (
-                  <li key={resource.type + resource.title} className="rounded-md border border-cobalt/30 bg-cobalt/5 px-2.5 py-1.5 text-xs text-foreground">
+                {preview.newResources.map((resource, index) => (
+                  // 备份允许同名资源（同名不合并、始终新建），type+title 不唯一；
+                  // 用序号补足唯一性，否则 React 会报 duplicate key 并让列表身份不稳定。
+                  <li key={`${resource.type}-${resource.title}-${index}`} className="rounded-md border border-cobalt/30 bg-cobalt/5 px-2.5 py-1.5 text-xs text-foreground">
                     <span className="text-muted-foreground">
                       {t("settings.importModal.resourceType." + resource.type, { defaultValue: resource.type })}
                     </span>{" "}

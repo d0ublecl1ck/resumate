@@ -93,3 +93,21 @@ def test_permission_catalogue_is_read_only(session_clients, db_session) -> None:
     assert client.post("/auth/permissions", json={"code": "report:read", "group": "report", "name": "x"}).status_code == 405
     assert client.patch(f"/auth/permissions/{permissions[0]['id']}", json={"name": "x"}).status_code == 404
     assert client.delete(f"/auth/permissions/{permissions[0]['id']}").status_code == 404
+
+def test_change_role_blocks_same_or_higher_rank(session_clients, db_session) -> None:
+    """改角色必须和封禁同口径：不能操作同级或更高权限的账号。"""
+    client = _superclient(session_clients, db_session)
+    # 注册会用同一个 TestClient 建立会话，所以目标用户要用独立 client，避免把超管会话顶掉。
+    peer = session_clients()
+    _register(peer, email="peersuper@example.com")
+    target_id = peer.get("/auth/me").json()["id"]
+
+    # 目标当前是普通 user（低于超管），提升为 super_admin 必须成功
+    promoted = client.post(f"/auth/users/{target_id}/role", json={"role": "super_admin"})
+    assert promoted.status_code == 200, promoted.text
+
+    # 目标已是同为 super_admin：再改它的角色必须 403
+    demoted = client.post(f"/auth/users/{target_id}/role", json={"role": "admin"})
+
+    assert demoted.status_code == 403, demoted.text
+    assert demoted.json()["code"] == "FORBIDDEN"

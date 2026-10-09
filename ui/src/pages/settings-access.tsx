@@ -12,7 +12,14 @@ import { PageLoading } from "@/pages/states"
 import { useCurrentUser } from "@/lib/session"
 
 const PAGE_SIZE = 20
-const EMPTY_FILTERS: AccessLogFilters = { purpose: "", result: "", query: "" }
+const EMPTY_FILTERS: AccessLogFilters = { purpose: "", result: "", query: "", from: "", to: "" }
+
+/** datetime-local 是本地时间的裸值；转成带时区的 ISO，避免后端按 UTC 误读。 */
+function toIso(value: string): string | undefined {
+  if (!value) return undefined
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString()
+}
 const RETRY_CLASS = "rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary"
 
 export function AccessPage() {
@@ -26,7 +33,7 @@ export function AccessPage() {
 
   const pats = useQuery({ queryKey: ["pats"], queryFn: listPats, enabled: canRead })
   const logs = useQuery({
-    queryKey: ["access-logs", page, filters.purpose, filters.result, filters.query],
+    queryKey: ["access-logs", page, filters.purpose, filters.result, filters.query, filters.from, filters.to],
     queryFn: () =>
       listAccessLogs({
         page,
@@ -34,6 +41,8 @@ export function AccessPage() {
         purpose: filters.purpose || undefined,
         result: filters.result || undefined,
         q: filters.query || undefined,
+        from: toIso(filters.from),
+        to: toIso(filters.to),
       }),
     enabled: canRead,
   })

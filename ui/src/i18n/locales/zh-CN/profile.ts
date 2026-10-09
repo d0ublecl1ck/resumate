@@ -9,6 +9,7 @@ export default {
     openAssistant: "对话维护资料",
     generateResume: "生成简历",
     edit: "编辑",
+    delete: "删除",
     editBasics: "编辑基本信息",
     saveBasics: "保存基本信息",
     savingBasics: "保存中…",
@@ -17,6 +18,19 @@ export default {
     addFact: "添加事实",
     saveFact: "保存修改",
     savingFact: "保存中…",
+    deleteFact: "删除「{{title}}」",
+  },
+  delete: {
+    title: "删除这条事实？",
+    description: "删除后无法撤销；已经引用它的简历内容不会被自动改写。",
+    referenced: "以下简历版本引用了这条事实：",
+    noReference: "没有被任何简历引用。",
+    versionLabel: "版本",
+    confirm: "确认删除",
+    deleting: "删除中…",
+    errors: {
+      failed: "删除失败，请稍后重试。",
+    },
   },
   basics: {
     sectionAria: "基本信息",

@@ -73,6 +73,31 @@ export async function requestWithResponse<T>(path: string, init: RequestInit = {
   return { data: await parseJson<T>(response), response }
 }
 
+/**
+ * 请求纯文本响应并保留原始 Response，供需要读取响应头（如附件文件名）的端点使用；
+ * 失败时与 request 一样解析 JSON 错误体，把机器码与状态带回调用方。
+ */
+export async function requestTextWithResponse(path: string, init: RequestInit = {}): Promise<{ text: string; response: Response }> {
+  const response = await send(path, init)
+  const text = await response.text()
+  if (!response.ok) {
+    let payload: ApiError | null = null
+    try {
+      payload = JSON.parse(text) as ApiError
+    } catch {
+      payload = null
+    }
+    const fallbackCode: MachineErrorCode | ClientErrorCode = payload === null && response.status >= 500 ? "SERVER_ERROR" : "VALIDATION_FAILED"
+    throw new ApiRequestError(
+      payload?.code ?? fallbackCode,
+      payload?.message ?? response.statusText ?? i18n.t("common.errors.requestFailed"),
+      response.status,
+      payload?.latestVersionId,
+    )
+  }
+  return { text, response }
+}
+
 /** 请求纯文本响应（如 Markdown 备份索引）。 */
 export async function requestText(path: string, init: RequestInit = {}): Promise<string> {
   let response: Response

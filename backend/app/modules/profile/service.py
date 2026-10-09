@@ -1,15 +1,28 @@
+import math
+import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
+from app.modules.jd import dao as jd_dao
 from app.modules.resume import dao as resume_dao
 from app.modules.resume.schemas import ResumeBasics
 from app.shared.errors import ResourceNotFound
 
 from . import dao
 from .models import Profile, ProfileFact
-from .schemas import Evidence, FactDeletionImpact, FactReference, ProfileBasicsUpdate, ProfileFactCreate, ProfileFactUpdate
+from .schemas import (
+    Evidence,
+    FactDeletionImpact,
+    FactReference,
+    JobMatchResponse,
+    JobMatchResult,
+    MatchGap,
+    ProfileBasicsUpdate,
+    ProfileFactCreate,
+    ProfileFactUpdate,
+)
 
 DEFAULT_DISPLAY_NAME = "我的职业事实库"
 BASICS_FIELDS = ("fullName", "headline", "email", "phone", "location")
@@ -122,6 +135,108 @@ def delete_fact(db: Session, owner_id: str, fact_id: str) -> FactDeletionImpact:
     profile.updated_at = _now()
     db.commit()
     return FactDeletionImpact(fact_id=fact_id, referenced_by=references)
+
+
+# ---------------------------------------------------------------------------
+# 岗位匹配（POST /profile/match-job）
+#
+# 纯确定性规则，不调用任何模型：把 JD 正文拆成要求项，按字符/词元重合度
+# 计算每条事实与要求项的覆盖情况，输出 JobMatchResult[] 与 MatchGap[]。
+# 中文没有分词依赖，统一用「ASCII 词 + 汉字二元组」做词元，保证同输入同输出。
+# ---------------------------------------------------------------------------
+
+_ASCII_TOKEN = re.compile(r"[a-z0-9+#.]{2,}")
+_HAN_RUN = re.compile(r"[\u4e00-\u9fff]+")
+_REQUIREMENT_SPLIT = re.compile(r"[。；;！!？?\n\r，,]+")
+_MAX_REQUIREMENTS = 8
+_MAX_RESULTS = 5
+_COVERED_THRESHOLD = 0.5
+_PARTIAL_THRESHOLD = 0.2
+
+
+def _tokens(text: str) -> set[str]:
+    """ASCII 词元 + 汉字二元组；不依赖任何分词库或模型。"""
+    lowered = (text or "").lower()
+    tokens = set(_ASCII_TOKEN.findall(lowered))
+    for run in _HAN_RUN.findall(text or ""):
+        if len(run) == 1:
+            tokens.add(run)
+            continue
+        for index in range(len(run) - 1):
+            tokens.add(run[index : index + 2])
+    return tokens
+
+
+def _fact_tokens(fact: ProfileFact) -> set[str]:
+    return _tokens(" ".join([fact.title, fact.content, " ".join(fact.tags or [])]))
+
+
+def _requirements(jd) -> list[str]:
+    segments = [segment.strip() for segment in _REQUIREMENT_SPLIT.split(jd.body or "")]
+    requirements = [segment for segment in segments if len(segment) >= 2]
+    if not requirements:
+        requirements = [jd.role] if jd.role else []
+    return requirements[:_MAX_REQUIREMENTS]
+
+
+def match_job(db: Session, owner_id: str, jd_id: str) -> JobMatchResponse:
+    jd = jd_dao.get_jd(db, jd_id)
+    if jd is None or jd.owner_id != owner_id:
+        raise ResourceNotFound(f"岗位 {jd_id} 不存在")
+
+    profile = get_or_create_profile(db, owner_id)
+    facts = dao.list_facts(db, profile.id)
+    jd_tokens = _tokens(" ".join([jd.role or "", jd.company or "", jd.body or "", " ".join(jd.tags or [])]))
+    fact_tokens = [(fact, _fact_tokens(fact)) for fact in facts]
+
+    scored: list[tuple[float, ProfileFact, set[str]]] = []
+    for fact, tokens in fact_tokens:
+        overlap = jd_tokens & tokens
+        if not overlap:
+            continue
+        denominator = math.sqrt(len(jd_tokens) * len(tokens))
+        relevance = round(len(overlap) / denominator, 3) if denominator else 0.0
+        scored.append((relevance, fact, overlap))
+    scored.sort(key=lambda item: (-item[0], item[1].title))
+
+    results = [
+        JobMatchResult(
+            fact_id=fact.id,
+            fact_title=fact.title,
+            relevance=relevance,
+            reason=", ".join(sorted(overlap)),
+            evidence_status=(fact.evidence or {}).get("status", "unverified"),
+        )
+        for relevance, fact, overlap in scored[:_MAX_RESULTS]
+    ]
+
+    gaps: list[MatchGap] = []
+    for requirement in _requirements(jd):
+        requirement_tokens = _tokens(requirement)
+        best_ratio = 0.0
+        best_fact: ProfileFact | None = None
+        for fact, tokens in fact_tokens:
+            if not requirement_tokens or not tokens:
+                continue
+            ratio = len(requirement_tokens & tokens) / len(requirement_tokens)
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_fact = fact
+        if best_ratio >= _COVERED_THRESHOLD:
+            status = "covered"
+        elif best_ratio >= _PARTIAL_THRESHOLD:
+            status = "partial"
+        else:
+            status = "missing"
+        gaps.append(
+            MatchGap(
+                requirement=requirement,
+                status=status,
+                note=best_fact.title if best_fact is not None and best_ratio > 0 else "",
+            )
+        )
+
+    return JobMatchResponse(results=results, gaps=gaps)
 
 
 def update_basics(db: Session, owner_id: str, payload: ProfileBasicsUpdate) -> Profile:

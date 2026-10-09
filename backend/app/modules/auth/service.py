@@ -326,11 +326,14 @@ def change_role(db: Session, actor: CurrentUser, user_id: str, role_code: str) -
     role = dao.get_role_by_code(db, role_code)
     if role is None:
         raise ValidationFailed(f"角色 {role_code} 不存在")
-    user = get_user_or_raise(db, user_id)
     current = {item.code for item in dao.list_user_roles(db, user_id)}
+    # 「最后一个超管不能被降级」先于越权校验：它保护的是系统不失去管理员，
+    # 即使调用方与被调用方同级也必须先报这个错。
     if BOOTSTRAP_ROLE_CODE in current and role_code != BOOTSTRAP_ROLE_CODE:
         if dao.count_users_with_role(db, BOOTSTRAP_ROLE_CODE) <= 1:
             raise ValidationFailed("必须保留至少一个超级管理员")
+    # 与封禁/解封同口径：不能改同级或更高权限账号的角色，否则一个超管可以把另一个超管降级。
+    user = _require_actor_outranks(db, actor, user_id, "修改角色")
     if current == {role_code}:
         return user
     _assign_role(db, user.id, role)

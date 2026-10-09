@@ -12,6 +12,8 @@ from .schemas import (
     Evidence,
     FactDeletionImpact,
     FactReference,
+    JobMatchResponse,
+    MatchJobRequest,
     ProfileBasicsUpdate,
     ProfileFactCreate,
     ProfileFactResponse,
@@ -118,3 +120,13 @@ def delete_fact(
     user: CurrentUser = Depends(require_permission("profile:write")),
 ) -> FactDeletionImpact:
     return service.delete_fact(db, user.id, fact_id)
+
+
+@router.post("/profile/match-job", response_model=JobMatchResponse)
+def match_job(
+    payload: MatchJobRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("profile:read")),
+) -> JobMatchResponse:
+    """确定性岗位匹配：JD 要求 vs 职业事实覆盖度，不调用任何模型。"""
+    return service.match_job(db, user.id, payload.jd_id)

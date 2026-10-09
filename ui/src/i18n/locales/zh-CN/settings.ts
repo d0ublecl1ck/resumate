@@ -107,6 +107,27 @@ export default {
     saved: "已保存",
     failed: "保存失败",
   },
+  password: {
+    title: "修改密码",
+    hint: "修改后该账号的全部已登录会话会立即失效，需要使用新密码重新登录。",
+    current: "当前密码",
+    new: "新密码",
+    confirm: "确认新密码",
+    submit: "更新密码",
+    submitting: "更新中…",
+    success: "密码已更新，请使用新密码重新登录。",
+    goToLogin: "去登录",
+    errors: {
+      requiredCurrent: "请输入当前密码。",
+      shortPassword: "新密码至少 8 位。",
+      requiredConfirm: "请再次输入新密码。",
+      mismatch: "两次输入的新密码不一致。",
+      invalidCurrent: "当前密码不正确。",
+      samePassword: "新密码不能与当前密码相同。",
+      network: "无法连接后端服务，请检查网络后重试。",
+      generic: "更新密码失败，请稍后重试。",
+    },
+  },
   capability: {
     title: "公共接入能力",
     meta: "契约版本 {{version}} · 认证方式 {{methods}}",
@@ -161,7 +182,7 @@ export default {
     },
     emptyFiltered: {
       title: "没有符合筛选条件的记录",
-      description: "调整用途、结果或关键字后重试。",
+      description: "调整用途、结果、时间范围或关键字后重试。",
     },
     filters: {
       purpose: "用途",
@@ -169,6 +190,8 @@ export default {
       result: "结果",
       resultAll: "全部结果",
       keyword: "搜索客户端 / Scope / 资源",
+      from: "开始时间",
+      to: "结束时间",
     },
     pagination: {
       total: "共 {{total}} 条",

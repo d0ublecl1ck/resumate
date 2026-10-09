@@ -14,6 +14,9 @@ from .schemas import DocumentUpdate, DraftUpdate, ResumeCreate, ResumeDocument, 
 
 RESTORE_WINDOW_DAYS = 30
 
+# 恢复前先把未提交的手动草稿落成一个版本，避免恢复动作吞掉用户刚编辑的内容。
+RESTORE_DRAFT_FLUSH_MESSAGE = "恢复前保存草稿"
+
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
@@ -300,6 +303,47 @@ def get_document(db: Session, owner_id: str, resume_id: str) -> dict:
     return _get_owned(db, owner_id, resume_id).document
 
 
+def _contact_line(basics: dict) -> str:
+    parts = [basics.get("email"), basics.get("phone"), basics.get("location")]
+    parts.extend(
+        f"[{link.get('label') or link.get('url', '')}]({link.get('url', '')})"
+        for link in basics.get("links") or []
+    )
+    return " · ".join(str(part) for part in parts if part)
+
+
+def _render_markdown(document: dict, title: str) -> str:
+    basics = document.get("basics") or {}
+    lines = [f"# {basics.get('fullName') or title}"]
+    if basics.get("headline"):
+        lines += ["", str(basics["headline"])]
+    contact = _contact_line(basics)
+    if contact:
+        lines += ["", contact]
+    for section in document.get("sections") or []:
+        section_title = section.get("title") or ""
+        lines += ["", f"## {section_title}".rstrip()]
+        if section.get("text"):
+            lines += ["", str(section["text"])]
+        for entry in section.get("entries") or []:
+            entry_title = entry.get("title") or ""
+            lines += ["", f"### {entry_title}".rstrip()]
+            meta = [entry.get("subtitle"), entry.get("period"), entry.get("location")]
+            meta_line = " · ".join(str(item) for item in meta if item)
+            if meta_line:
+                lines += ["", meta_line]
+            bullets = entry.get("bullets") or []
+            if bullets:
+                lines += [""] + [f"- {bullet}" for bullet in bullets]
+    return "\n".join(lines) + "\n"
+
+
+def export_markdown(db: Session, owner_id: str, resume_id: str) -> tuple[str, str]:
+    """Render an owned resume as Markdown; return it with the title for the filename."""
+    resume = _get_owned(db, owner_id, resume_id)
+    return _render_markdown(resume.document or {}, resume.title), resume.title
+
+
 def save_draft(db: Session, owner_id: str, resume_id: str, payload: DraftUpdate) -> Resume:
     """把手动编辑草稿写进服务端缓冲（C-05）：不生成版本、不改 current_version_id。"""
     resume = _get_owned(db, owner_id, resume_id)
@@ -354,3 +398,45 @@ def list_versions(db: Session, owner_id: str, resume_id: str) -> list[ResumeVers
 
 def list_bound_jd_ids(db: Session, owner_id: str, resume_id: str) -> list[str]:
     return jd_dao.list_jd_ids_for_resume(db, owner_id, resume_id)
+
+def restore_version(
+    db: Session,
+    owner_id: str,
+    resume_id: str,
+    version_id: str,
+    message: str = "",
+) -> Resume:
+    """恢复到历史版本：快照内容落成一个 source=restore 的新版本，历史不被覆盖。
+
+    恢复会覆盖当前文档，所以未提交的手动草稿先 flush 成版本（C-05），
+    否则用户刚编辑的内容会被静默丢弃。
+    """
+    resume = _get_owned(db, owner_id, resume_id)
+    version = dao.get_version(db, version_id)
+    if version is None or version.resume_id != resume.id:
+        raise ResourceNotFound(f"版本 {version_id} 不存在")
+    if version.id == resume.current_version_id:
+        raise ValidationFailed("该版本已是当前正式版本，无需恢复")
+    if resume.draft_document is not None and (resume.draft_document or {}) != (resume.document or {}):
+        _commit_version(
+            db,
+            resume,
+            copy.deepcopy(resume.draft_document),
+            source="manual",
+            actor_id=owner_id,
+            message=RESTORE_DRAFT_FLUSH_MESSAGE,
+        )
+    resume.draft_document = None
+    resume.draft_base_version_id = None
+    resume.draft_updated_at = None
+    _commit_version(
+        db,
+        resume,
+        copy.deepcopy(version.snapshot or {}),
+        source="restore",
+        actor_id=owner_id,
+        message=message or f"恢复到 {version.id}",
+    )
+    db.commit()
+    db.refresh(resume)
+    return resume

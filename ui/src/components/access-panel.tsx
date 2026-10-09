@@ -19,6 +19,9 @@ export interface AccessLogFilters {
   purpose: string
   result: "" | AccessLogEntry["result"]
   query: string
+  /** datetime-local 值（本地时间，空串表示不筛选）。 */
+  from: string
+  to: string
 }
 
 export type AccessLogsState = "loading" | "error" | "ready"
@@ -81,7 +84,7 @@ export function AccessPanel({
   const { t } = useTranslation()
   const [createOpen, setCreateOpen] = useState(false)
   const separator = t("common.listSeparator")
-  const hasFilters = Boolean(filters.purpose || filters.result || filters.query)
+  const hasFilters = Boolean(filters.purpose || filters.result || filters.query || filters.from || filters.to)
   const totalPages = total === null ? null : Math.ceil(total / pageSize)
   const hasNext = totalPages === null ? logs.length >= pageSize : page < totalPages
 
@@ -208,6 +211,24 @@ export function AccessPanel({
                 className={cn(FIELD_CLASS, "w-full pl-8")}
               />
             </span>
+          </FilterField>
+          <FilterField label={t("settings.accessLog.filters.from")}>
+            <input
+              type="datetime-local"
+              aria-label={t("settings.accessLog.filters.from")}
+              value={filters.from}
+              onChange={(event) => onFiltersChange({ from: event.target.value })}
+              className={FIELD_CLASS}
+            />
+          </FilterField>
+          <FilterField label={t("settings.accessLog.filters.to")}>
+            <input
+              type="datetime-local"
+              aria-label={t("settings.accessLog.filters.to")}
+              value={filters.to}
+              onChange={(event) => onFiltersChange({ to: event.target.value })}
+              className={FIELD_CLASS}
+            />
           </FilterField>
         </div>
 

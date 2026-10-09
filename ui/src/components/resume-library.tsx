@@ -9,14 +9,27 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useQueryClient } from "@tanstack/react-query"
 import type { JobDescription, Resume, ResumeTemplate } from "@/lib/types"
-import { archiveResume, duplicateResume, restoreResume } from "@/lib/api"
+import { archiveResume, deleteResume, duplicateResume, restoreResume, updateResume } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
+import i18n from "@/i18n"
 import { resumeCreateErrorMessage } from "@/lib/resume-create"
 import { resumeLifecycleErrorMessage } from "@/lib/resume-lifecycle"
 import { SaveStateBadge } from "@/components/kit/badges"
 import { FilterToolbar, PageHeader } from "@/components/kit/toolbar"
 import { StateBlock } from "@/components/kit/state-block"
 import { CreateResumeModal } from "@/components/create-resume-modal"
-import { Link2, Plus, Tag } from "lucide-react"
+import { Modal } from "@/components/ui/modal"
+import { Link2, Plus, Tag, X } from "lucide-react"
+
+/** 元数据编辑 / 删除的错误文案映射（C-06）：机器错误码 → i18n 文案。 */
+function resumeMetaErrorMessage(cause: unknown, action: "update" | "delete"): string {
+  if (cause instanceof ApiRequestError) {
+    if (cause.code === "RESOURCE_NOT_FOUND") return i18n.t("resume.library.errors.missing")
+    if (cause.code === "FORBIDDEN" || cause.code === "UNAUTHENTICATED") return i18n.t("resume.library.errors.permission")
+    if (cause.code === "NETWORK_ERROR") return i18n.t("resume.library.errors.network")
+  }
+  return action === "update" ? i18n.t("resume.library.errors.updateFailed") : i18n.t("resume.library.errors.deleteFailed")
+}
 
 type Tab = "active" | "archived"
 
@@ -118,6 +131,12 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
   const [copying, setCopying] = useState(false)
   const [lifecycleBusy, setLifecycleBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  // 卡片元数据编辑：重命名 / 标签 / 删除各用一个弹窗，共用 busy 与错误出口。
+  const [editor, setEditor] = useState<"rename" | "tags" | "delete" | null>(null)
+  const [draftTitle, setDraftTitle] = useState(resume.title)
+  const [draftTags, setDraftTags] = useState<string[]>(resume.tags)
+  const [tagInput, setTagInput] = useState("")
+  const [saving, setSaving] = useState(false)
   const boundJds = jds.filter((jd) => resume.boundByJdIds.includes(jd.id))
   const archived = resume.lifecycle === "archived"
 
@@ -134,6 +153,60 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
       setActionError(resumeCreateErrorMessage(cause))
     } finally {
       setCopying(false)
+    }
+  }
+
+  function openEditor(next: "rename" | "tags" | "delete") {
+    setActionError(null)
+    if (next === "rename") setDraftTitle(resume.title)
+    if (next === "tags") {
+      setDraftTags(resume.tags)
+      setTagInput("")
+    }
+    setEditor(next)
+  }
+
+  function addTag() {
+    const value = tagInput.trim()
+    if (!value) return
+    setDraftTags((prev) => (prev.includes(value) ? prev : [...prev, value]))
+    setTagInput("")
+  }
+
+  async function refreshLibrary() {
+    await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+    await queryClient.invalidateQueries({ queryKey: ["workbench-summary"] })
+  }
+
+  /** PATCH /resumes/{id}：只改元数据，不生成内容版本。 */
+  async function saveMeta(patch: { title?: string; tags?: string[] }) {
+    if (saving) return
+    setActionError(null)
+    setSaving(true)
+    try {
+      await updateResume(resume.id, patch)
+      await refreshLibrary()
+      setEditor(null)
+    } catch (cause) {
+      setActionError(resumeMetaErrorMessage(cause, "update"))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /** DELETE /resumes/{id}：软删除，成功后卡片从当前 Tab 消失。 */
+  async function removeResume() {
+    if (saving) return
+    setActionError(null)
+    setSaving(true)
+    try {
+      await deleteResume(resume.id)
+      await refreshLibrary()
+      setEditor(null)
+    } catch (cause) {
+      setActionError(resumeMetaErrorMessage(cause, "delete"))
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -204,7 +277,8 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
         <div>{t("resume.library.lastEdited", { date: resume.updatedAt.slice(0, 16).replace("T", " ") })}</div>
       </dl>
 
-      {/* 操作区压成一行：三列宽度下四颗按钮不折行，因此次级操作不带图标、内边距收紧。 */}
+      {/* 操作区压成一行并允许换行：打开/历史/复制/重命名/标签/归档/删除。
+          元数据编辑与删除各用一个小弹窗，危险操作必须确认。 */}
       <div className="mt-auto flex flex-wrap gap-1.5 border-t border-border pt-3">
         <Link to={`/resumes/${resume.id}`} className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">{t("resume.library.openEditor")}</Link>
         <Link to={`/resumes/${resume.id}/versions`} className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
@@ -219,6 +293,18 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
           {t("common.actions.copy")}
         </button>
         <button
+          onClick={() => openEditor("rename")}
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+        >
+          {t("resume.library.rename")}
+        </button>
+        <button
+          onClick={() => openEditor("tags")}
+          className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+        >
+          {t("resume.library.editTags")}
+        </button>
+        <button
           onClick={toggleLifecycle}
           disabled={lifecycleBusy}
           aria-busy={lifecycleBusy}
@@ -226,8 +312,153 @@ function ResumeCard({ resume, jds }: { resume: Resume; jds: JobDescription[] }) 
         >
           {archived ? t("resume.library.restore") : t("resume.library.archive")}
         </button>
+        <button
+          onClick={() => openEditor("delete")}
+          className="rounded-md border border-coral/40 px-2.5 py-1.5 text-xs font-medium text-coral hover:bg-coral/5"
+        >
+          {t("resume.library.delete")}
+        </button>
       </div>
-      {actionError ? <p role="alert" className="mt-2 text-xs text-coral">{actionError}</p> : null}
+      {actionError && editor === null ? <p role="alert" className="mt-2 text-xs text-coral">{actionError}</p> : null}
+
+      <Modal
+        open={editor === "rename"}
+        onOpenChange={(next) => {
+          if (!next) {
+            setEditor(null)
+            setActionError(null)
+          }
+        }}
+        title={t("resume.rename.title")}
+        description={t("resume.rename.description")}
+      >
+        <label className="mt-5 block">
+          <span className="mb-1 block text-xs font-medium text-muted-foreground">{t("resume.rename.label")}</span>
+          <input
+            value={draftTitle}
+            onChange={(e) => setDraftTitle(e.target.value)}
+            maxLength={200}
+            disabled={saving}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:opacity-50"
+          />
+        </label>
+        {actionError ? <p role="alert" className="mt-3 text-xs text-coral">{actionError}</p> : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={() => { setEditor(null); setActionError(null) }} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">
+            {t("common.actions.cancel")}
+          </button>
+          <button
+            onClick={() => void saveMeta({ title: draftTitle.trim() })}
+            disabled={saving || !draftTitle.trim()}
+            aria-busy={saving}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving ? t("resume.rename.saving") : t("resume.rename.save")}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={editor === "tags"}
+        onOpenChange={(next) => {
+          if (!next) {
+            setEditor(null)
+            setActionError(null)
+          }
+        }}
+        title={t("resume.tagsEdit.title")}
+        description={t("resume.tagsEdit.description")}
+      >
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-wrap gap-1.5">
+            {draftTags.length ? (
+              draftTags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setDraftTags((prev) => prev.filter((item) => item !== tag))}
+                    disabled={saving}
+                    aria-label={t("resume.tagsEdit.remove", { tag })}
+                    className="rounded-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    <X className="size-3" aria-hidden />
+                  </button>
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">{t("resume.tagsEdit.empty")}</span>
+            )}
+          </div>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-muted-foreground">{t("resume.tagsEdit.label")}</span>
+            <div className="flex gap-2">
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    addTag()
+                  }
+                }}
+                disabled={saving}
+                placeholder={t("resume.tagsEdit.placeholder")}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                disabled={saving || !tagInput.trim()}
+                className="shrink-0 rounded-md border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {t("resume.tagsEdit.add")}
+              </button>
+            </div>
+          </label>
+        </div>
+        {actionError ? <p role="alert" className="mt-3 text-xs text-coral">{actionError}</p> : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={() => { setEditor(null); setActionError(null) }} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">
+            {t("common.actions.cancel")}
+          </button>
+          <button
+            onClick={() => void saveMeta({ tags: draftTags })}
+            disabled={saving}
+            aria-busy={saving}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving ? t("resume.tagsEdit.saving") : t("resume.tagsEdit.save")}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={editor === "delete"}
+        onOpenChange={(next) => {
+          if (!next) {
+            setEditor(null)
+            setActionError(null)
+          }
+        }}
+        title={t("resume.remove.title")}
+        description={t("resume.remove.description", { title: resume.title })}
+      >
+        {actionError ? <p role="alert" className="mt-3 text-xs text-coral">{actionError}</p> : null}
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={() => { setEditor(null); setActionError(null) }} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">
+            {t("common.actions.cancel")}
+          </button>
+          <button
+            onClick={() => void removeResume()}
+            disabled={saving}
+            aria-busy={saving}
+            className="rounded-lg bg-coral px-4 py-2 text-sm font-semibold text-white hover:bg-coral/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving ? t("resume.remove.deleting") : t("resume.remove.confirm")}
+          </button>
+        </div>
+      </Modal>
     </li>
   )
 }

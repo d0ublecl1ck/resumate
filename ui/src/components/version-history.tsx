@@ -4,6 +4,9 @@
 import { Link } from "react-router-dom"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
+import { restoreVersion } from "@/lib/api"
+import { versionRestoreErrorMessage } from "@/lib/version-restore"
 import type { Resume, ResumeVersion } from "@/lib/types"
 import { VersionTimeline } from "@/components/kit/version-timeline"
 import { PageHeader } from "@/components/kit/toolbar"
@@ -85,13 +88,36 @@ export function VersionHistory({ resume }: { resume: Resume }) {
         </aside>
       </div>
 
-      {restoreTarget ? <RestoreModal version={restoreTarget} onClose={() => setRestoreTarget(null)} /> : null}
+      {restoreTarget ? (
+        <RestoreModal resumeId={resume.id} version={restoreTarget} onClose={() => setRestoreTarget(null)} />
+      ) : null}
     </div>
   )
 }
 
-function RestoreModal({ version, onClose }: { version: ResumeVersion; onClose: () => void }) {
+function RestoreModal({ resumeId, version, onClose }: { resumeId: string; version: ResumeVersion; onClose: () => void }) {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 恢复是服务端动作：以 source=restore 生成新版本，历史不覆盖；成功后刷新简历与版本列表。
+  async function confirm() {
+    if (submitting) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await restoreVersion(resumeId, version.id, t("resume.restore.versionMessage", { version: version.id }))
+      await queryClient.invalidateQueries({ queryKey: ["resume", resumeId] })
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] })
+      onClose()
+    } catch (cause) {
+      setError(versionRestoreErrorMessage(cause))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button className="absolute inset-0 bg-foreground/40" aria-label={t("common.actions.close")} onClick={onClose} />
@@ -108,9 +134,16 @@ function RestoreModal({ version, onClose }: { version: ResumeVersion; onClose: (
           <li>· {t("resume.restore.bullet2")}</li>
           <li>· {t("resume.restore.bullet3")}</li>
         </ul>
+        {error ? (
+          <p role="alert" className="mt-3 rounded-lg border border-coral/40 bg-coral/5 px-3 py-2 text-sm text-foreground">
+            {error}
+          </p>
+        ) : null}
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary">{t("common.actions.cancel")}</button>
-          <button onClick={onClose} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">{t("resume.restore.confirm")}</button>
+          <button onClick={onClose} disabled={submitting} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary disabled:opacity-40">{t("common.actions.cancel")}</button>
+          <button onClick={() => void confirm()} disabled={submitting} aria-busy={submitting} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-40">
+            {submitting ? t("resume.restore.restoring") : t("resume.restore.confirm")}
+          </button>
         </div>
       </div>
     </div>

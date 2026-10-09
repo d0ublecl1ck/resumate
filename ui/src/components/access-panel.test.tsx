@@ -23,7 +23,7 @@ function logEntry(purpose: string): AccessLogEntry {
   }
 }
 
-const NO_FILTERS: AccessLogFilters = { purpose: "", result: "", query: "" }
+const NO_FILTERS: AccessLogFilters = { purpose: "", result: "", query: "", from: "", to: "" }
 
 function renderPanel(
   options: {
@@ -125,7 +125,7 @@ describe("日志空态与加载/错误态", () => {
   })
 
   it("筛选后没有命中时提示调整筛选条件", () => {
-    renderPanel({ logs: [], total: 0, filters: { purpose: "token_create", result: "", query: "" } })
+    renderPanel({ logs: [], total: 0, filters: { purpose: "token_create", result: "", query: "", from: "", to: "" } })
 
     expect(screen.getByText("没有符合筛选条件的记录")).toBeInTheDocument()
     expect(screen.queryByText("还没有访问记录")).not.toBeInTheDocument()
@@ -170,6 +170,23 @@ describe("日志筛选控件", () => {
     fireEvent.change(screen.getByLabelText("搜索客户端 / Scope / 资源"), { target: { value: "acme" } })
 
     expect(onFiltersChange).toHaveBeenCalledWith({ query: "acme" })
+  })
+
+  it("填写时间范围时回调筛选变更", () => {
+    const onFiltersChange = vi.fn()
+    renderPanel({ onFiltersChange })
+
+    fireEvent.change(screen.getByLabelText("开始时间"), { target: { value: "2026-10-01T09:00" } })
+    expect(onFiltersChange).toHaveBeenCalledWith({ from: "2026-10-01T09:00" })
+
+    fireEvent.change(screen.getByLabelText("结束时间"), { target: { value: "2026-10-09T18:00" } })
+    expect(onFiltersChange).toHaveBeenCalledWith({ to: "2026-10-09T18:00" })
+  })
+
+  it("已填时间范围时用筛选空态而不是默认空态", () => {
+    renderPanel({ logs: [], total: 0, filters: { purpose: "", result: "", query: "", from: "2026-10-01T00:00", to: "" } })
+
+    expect(screen.getByText("没有符合筛选条件的记录")).toBeInTheDocument()
   })
 })
 

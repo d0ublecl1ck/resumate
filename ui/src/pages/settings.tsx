@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { getAgentConfig, getModelConfig, getPreferences, listTemplates } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import { SettingsForm } from "@/components/settings-form"
+import { ChangePasswordForm } from "@/components/change-password-form"
 import { StateBlock } from "@/components/kit/state-block"
 import { PageLoading } from "@/pages/states"
 
@@ -49,5 +50,10 @@ export function SettingsPage() {
     )
   }
 
-  return <SettingsForm agent={agent.data!} model={model.data!} prefs={prefs.data!} templates={templates.data!} />
+  return (
+    <div className="space-y-6">
+      <SettingsForm agent={agent.data!} model={model.data!} prefs={prefs.data!} templates={templates.data!} />
+      <ChangePasswordForm />
+    </div>
+  )
 }
