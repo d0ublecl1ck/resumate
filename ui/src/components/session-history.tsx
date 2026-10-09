@@ -1,19 +1,24 @@
 // 历史会话（SCR-004 侧栏入口）：会话列表与会话详情（消息流）。
 // 纯展示组件：数据由调用方注入；本期只做 Storybook，不接真实端点、不动路由。
-// 后端会话表没有 title / summary 字段，所以列表标题只能由 lastActiveAt 派生——
-// 这里不编造标题字段，并在文案里如实说明用时间代替。
-// 视觉复用既有令牌与组件（card-soft / primary / cobalt / font-serif / StateBlock），不新增页面视觉规则。
+// 后端会话表只有 id / createdAt / lastActiveAt，没有 title / messageCount：
+// 这两个字段是可选展示入参，缺失时用 i18n 兜底，绝不渲染 undefined。
+// 视觉复用既有令牌与组件（card-soft / border-input / cobalt / font-serif / StateBlock / Button），不新增页面视觉规则。
 import dayjs from "dayjs"
+import { MessageSquarePlus, MessageSquareText } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { MessageSquareText } from "lucide-react"
 import { StateBlock } from "@/components/kit/state-block"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-/** Mirrors GET /sessions items; no title field exists on the backend yet. */
+/** Mirrors GET /sessions items, plus optional display-only fields. */
 export interface SessionSummary {
   id: string
   createdAt: string
   lastActiveAt: string
+  /** 展示层派生标题（例如来自首条用户消息）；后端暂无该字段，缺失即兜底。 */
+  title?: string
+  /** 展示层消息数；后端暂无该字段，缺失即不渲染。 */
+  messageCount?: number
 }
 
 export type SessionMessageRole = "system" | "user" | "assistant" | "tool"
@@ -28,6 +33,12 @@ export interface SessionMessage {
 
 const COMPACTED_MARKER = "[compacted-history]"
 
+const MINUTE_MS = 60_000
+const HOUR_MS = 60 * MINUTE_MS
+const DAY_MS = 24 * HOUR_MS
+
+type RelativeUnit = "minutes" | "hours" | "days" | "months" | "years"
+
 function formatTime(value: string): string {
   const parsed = dayjs(value)
   return parsed.isValid() ? parsed.format("YYYY-MM-DD HH:mm") : value
@@ -40,6 +51,42 @@ export function shortSessionId(id: string): string {
 
 export function sessionLabel(id: string, lastActiveAt: string): string {
   return `${formatTime(lastActiveAt)} · ${shortSessionId(id)}`
+}
+
+/**
+ * 相对时间只描述「最近活跃」的新鲜度；无效时间返回 null，由调用方退回绝对时间串。
+ * justNow 与各时间单位都走 i18n，不硬编码中英文。
+ */
+function relativeTime(value: string): { unit: RelativeUnit; n: number } | "justNow" | null {
+  const parsed = dayjs(value)
+  if (!parsed.isValid()) return null
+  const diff = Math.max(0, Date.now() - parsed.valueOf())
+  if (diff < MINUTE_MS) return "justNow"
+  if (diff < HOUR_MS) return { unit: "minutes", n: Math.floor(diff / MINUTE_MS) }
+  if (diff < DAY_MS) return { unit: "hours", n: Math.floor(diff / HOUR_MS) }
+  if (diff < 30 * DAY_MS) return { unit: "days", n: Math.floor(diff / DAY_MS) }
+  if (diff < 365 * DAY_MS) return { unit: "months", n: Math.floor(diff / (30 * DAY_MS)) }
+  return { unit: "years", n: Math.floor(diff / (365 * DAY_MS)) }
+}
+
+/** 列表项第二行：相对时间 +（可选）消息数 + id 尾巴；字段缺失直接跳过。 */
+function SessionMeta({ session }: { session: SessionSummary }) {
+  const { t } = useTranslation()
+  const relative = relativeTime(session.lastActiveAt)
+  const time =
+    relative === null
+      ? formatTime(session.lastActiveAt)
+      : relative === "justNow"
+        ? t("sessionHistory.relative.justNow")
+        : t("sessionHistory.relative." + relative.unit, { n: relative.n })
+
+  const parts = [t("sessionHistory.relativeTime", { time })]
+  if (session.messageCount !== undefined) {
+    parts.push(t("sessionHistory.messageCount", { n: session.messageCount }))
+  }
+  parts.push(t("sessionHistory.idLabel", { id: shortSessionId(session.id) }))
+
+  return <span className="mt-1 block text-xs text-muted-foreground">{parts.join(" · ")}</span>
 }
 
 function messageText(message: SessionMessage): string {
@@ -100,32 +147,60 @@ export function SessionList({ sessions, error, activeId, onSelect }: SessionList
     )
   }
 
+  // 选中一个「刚创建还没发消息」的会话时，提示这不是空列表而是空会话。
+  const showNewSessionHint = sessions.some((session) => session.id === activeId && session.messageCount === 0)
+
   return (
-    <ul aria-label={t("sessionHistory.title")} className="space-y-2">
-      {sessions.map((session) => {
-        const active = session.id === activeId
-        return (
-          <li key={session.id}>
-            <button
-              type="button"
-              onClick={() => onSelect?.(session.id)}
-              aria-current={active ? "true" : undefined}
-              className={cn(
-                "w-full rounded-lg border border-input bg-card px-3 py-2.5 text-left transition-colors hover:bg-secondary",
-                active && "border-cobalt bg-cobalt/5",
-              )}
-            >
-              <span className="block font-serif text-base font-bold text-foreground">
-                {t("sessionHistory.derivedLabel", { time: formatTime(session.lastActiveAt) })}
-              </span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {t("sessionHistory.idLabel", { id: shortSessionId(session.id) })}
-              </span>
-            </button>
-          </li>
-        )
-      })}
-    </ul>
+    <>
+      {showNewSessionHint ? (
+        <StateBlock
+          kind="empty"
+          className="mb-3"
+          title={t("sessionHistory.list.emptyConversationTitle")}
+          description={t("sessionHistory.list.emptyConversationDescription")}
+        />
+      ) : null}
+      <ul aria-label={t("sessionHistory.title")} className="space-y-2">
+        {sessions.map((session) => {
+          const active = session.id === activeId
+          const title =
+            session.title?.trim() || t("sessionHistory.untitledWithTime", { time: formatTime(session.lastActiveAt) })
+          return (
+            <li key={session.id}>
+              <button
+                type="button"
+                onClick={() => onSelect?.(session.id)}
+                aria-current={active ? "true" : undefined}
+                className={cn(
+                  "w-full rounded-lg border border-input bg-card px-3 py-2.5 text-left transition-colors hover:bg-secondary",
+                  active && "border-cobalt bg-cobalt/5",
+                )}
+              >
+                <span className="wrap-anywhere block font-serif text-base font-bold text-foreground">{title}</span>
+                <SessionMeta session={session} />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+}
+
+export interface NewConversationEntryProps {
+  /** true 表示创建请求进行中：按钮禁用并切换文案。 */
+  disabled?: boolean
+  onCreate?: () => void
+}
+
+/** 新建对话入口：全宽主按钮 + MessageSquarePlus；提交中禁用，避免重复发起。 */
+export function NewConversationEntry({ disabled = false, onCreate }: NewConversationEntryProps) {
+  const { t } = useTranslation()
+  return (
+    <Button type="button" onClick={onCreate} disabled={disabled} className="w-full justify-center gap-2">
+      <MessageSquarePlus aria-hidden />
+      {disabled ? t("sessionHistory.newConversation.creating") : t("sessionHistory.newConversation.create")}
+    </Button>
   )
 }
 
@@ -140,6 +215,10 @@ export interface SessionDetailProps {
 export function SessionDetail({ session, messages, error, onBack }: SessionDetailProps) {
   const { t } = useTranslation()
 
+  const title = session
+    ? session.title?.trim() || t("sessionHistory.untitledWithTime", { time: formatTime(session.lastActiveAt) })
+    : t("sessionHistory.title")
+
   return (
     <section aria-label={t("sessionHistory.title")} className="space-y-4">
       <header className="flex items-start gap-3">
@@ -147,11 +226,7 @@ export function SessionDetail({ session, messages, error, onBack }: SessionDetai
           <MessageSquareText className="size-5" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-serif text-lg font-bold text-foreground">
-            {session
-              ? t("sessionHistory.derivedLabel", { time: formatTime(session.lastActiveAt) })
-              : t("sessionHistory.title")}
-          </h2>
+          <h2 className="wrap-anywhere font-serif text-lg font-bold text-foreground">{title}</h2>
           {session ? (
             <p className="mt-1 text-xs text-muted-foreground">
               {t("sessionHistory.idLabel", { id: shortSessionId(session.id) })}
