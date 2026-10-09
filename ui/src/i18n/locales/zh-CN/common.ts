@@ -41,7 +41,7 @@ export default {
   },
   pageState: {
     loading: "加载中",
-    loadingDemo: "正在读取本地演示数据…",
+    loadingDemo: "正在加载…",
     notFound: "未找到该{{target}}",
     notFoundDescription: "它可能已被删除或从未存在。",
     errorCode: "错误码：{{code}}",
