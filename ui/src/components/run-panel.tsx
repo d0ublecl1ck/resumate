@@ -11,6 +11,7 @@ import type { AgentRun, ExecutionMode, RunTimelineEvent } from "@/lib/types"
 import { subscribeTurnEvents } from "@/lib/turn-events"
 import { PendingActionCard } from "@/components/kit/pending-action"
 import { RunErrorBlock } from "@/components/kit/run-error"
+import { AgentAvailabilityNotice, type AgentAvailability, type AgentAvailabilityAction } from "@/components/agent-onboarding"
 import { MarkdownMessage } from "@/components/kit/markdown"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
@@ -75,12 +76,20 @@ export function RunPanel({
   mode,
   resumeId,
   defaultActivityOpen = false,
+  availability = "available",
+  credentialHint,
+  onAvailabilityAction,
 }: {
   run?: AgentRun | null
   mode: ExecutionMode
   resumeId: string
   /** 推理与工具活动块的初始展开态；对话进行中可传 true，历史默认折叠。 */
   defaultActivityOpen?: boolean
+  /** Agent 可用性七态（默认 available，保持既有直接调用不变）；非 available 时引导取代输入区。 */
+  availability?: AgentAvailability
+  /** 被上游拒绝的凭据线索；只有形如 ****be21 的掩码会被渲染。 */
+  credentialHint?: string | null
+  onAvailabilityAction?: (action: AgentAvailabilityAction) => void
 }) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
@@ -203,6 +212,10 @@ export function RunPanel({
   // 轮次已关闭时历史 pending 由 PendingActionCard 按失效只读渲染，发送不会再结算它，因此不拦截。
   const needsSendConfirm = pendingCount > 0 && run?.state !== "turn_closed"
 
+  // 只有 available 才放行。不可用时用引导取代输入区，并抑制运行失败错误块：
+  // 两块同时出现会给出互相矛盾的下一步（错误块「重试」vs 引导「去设置」），同一时刻只留最相关的一块。
+  const chatAvailable = availability === "available"
+
   const approve = (actionId: string) => decision.mutate({ actionId, kind: "approve" })
   const reject = (actionId: string) => decision.mutate({ actionId, kind: "reject" })
 
@@ -289,8 +302,9 @@ export function RunPanel({
           />
         ))}
 
-        {/* 运行失败必须可见（issue 4ff97）：类别 + provider/model + key 尾号 + 下一步入口。 */}
-        {run?.error ? (
+        {/* 运行失败必须可见（issue 4ff97）：类别 + provider/model + key 尾号 + 下一步入口。
+            可用性引导与它同一时刻只显示一种：不可用时引导优先，错误块的「重试」不会绕过拦截。 */}
+        {run?.error && chatAvailable ? (
           <RunErrorBlock
             error={run.error}
             onRetry={lastPrompt ? () => launch(lastPrompt) : undefined}
@@ -298,35 +312,46 @@ export function RunPanel({
         ) : null}
       </div>
 
-      {/* 输入 */}
-      <div className="border-t border-border p-3">
-        <div className="flex items-end gap-2">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-                submit()
-              }
-            }}
-            rows={2}
-            disabled={start.isPending}
-            aria-busy={start.isPending}
-            placeholder={t("workbench.run.inputPlaceholder")}
-            className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
-            aria-label={t("workbench.run.inputAria")}
-          />
-          <button
-            type="button"
-            onClick={submit}
-            disabled={start.isPending}
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label={t("workbench.run.sendAria")}
-          >
-            <Send className="size-4" />
-          </button>
+      {/* 输入区：Agent 不可用时不留「不能用的输入框」，就地换成与助手抽屉、设置页同一份引导。 */}
+      {chatAvailable ? (
+        <div className="border-t border-border p-3">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
+                  submit()
+                }
+              }}
+              rows={2}
+              disabled={start.isPending}
+              aria-busy={start.isPending}
+              placeholder={t("workbench.run.inputPlaceholder")}
+              className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
+              aria-label={t("workbench.run.inputAria")}
+            />
+            <button
+              type="button"
+              onClick={submit}
+              disabled={start.isPending}
+              className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={t("workbench.run.sendAria")}
+            >
+              <Send className="size-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="border-t border-border p-3">
+          <AgentAvailabilityNotice
+            state={availability}
+            placement="panel"
+            credentialHint={credentialHint}
+            onAction={onAvailabilityAction}
+          />
+        </div>
+      )}
 
       {/* 有待审批待办时的发送确认：确认后当前轮次才会结算，待办随之作废。 */}
       <Modal

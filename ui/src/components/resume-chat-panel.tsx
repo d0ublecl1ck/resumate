@@ -5,11 +5,15 @@
 // 会话只绑 owner、scope 是轮次属性（契约 §19.1 / §21.1）；主档助手会话选取见 11ad1，与本组件解耦。
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Send } from "lucide-react"
-import { appendSessionMessage, listSessionMessages, listSessions, startRun } from "@/lib/api"
+import { appendSessionMessage, getModelConfig, listSessionMessages, listSessions, startRun } from "@/lib/api"
+import { ApiRequestError } from "@/lib/api-client"
 import { agentErrorKey } from "@/lib/agent-error"
+import { useRuntimeStatus } from "@/lib/runtime"
 import { RunPanel } from "@/components/run-panel"
+import { AgentAvailabilityNotice, agentAvailability, agentAvailabilityActionEffect, type AgentAvailabilityAction } from "@/components/agent-onboarding"
 import { SessionDetail, SessionList, type SessionMessage } from "@/components/session-history"
 import type { AgentRun, AgentSessionMessage, ExecutionMode } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -19,6 +23,11 @@ type ChatView = "run" | "history"
 /** 展示组件只读 id/seq/role/content；sessionId/createdAt 是列表与排序用的，不参与渲染。 */
 function toSessionMessages(rows: AgentSessionMessage[]): SessionMessage[] {
   return rows.map((row) => ({ id: row.id, seq: row.seq, role: row.role, content: row.content }))
+}
+
+/** 把模型配置查询失败归一成机器错误码：非 ApiRequestError（网络中断等）按 NETWORK_ERROR 处理。 */
+function errorCodeOf(error: unknown): ApiRequestError["code"] {
+  return error instanceof ApiRequestError ? error.code : "NETWORK_ERROR"
 }
 
 export function ResumeChatPanel({
@@ -48,6 +57,39 @@ export function ResumeChatPanel({
 
   // 当前 active run 所属会话；作为列表里的「当前会话」高亮依据。
   const activeSessionId = run?.conversationId
+
+  // AI 可用性：模型配置与运行体探测两路信号合成七态，只有 available 放行聊天。
+  // 引导动作与个人资料助手、设置页共用同一套 action effect，不再各写一份导航。
+  const navigate = useNavigate()
+  const modelQuery = useQuery({ queryKey: ["model-config"], queryFn: getModelConfig })
+  const runtimeQuery = useRuntimeStatus()
+  const availability = agentAvailability({
+    model: {
+      isPending: modelQuery.isPending,
+      keyConfigured: modelQuery.data?.keyConfigured,
+      errorCode: modelQuery.isError ? errorCodeOf(modelQuery.error) : undefined,
+      lastTest: modelQuery.data?.lastTest,
+    },
+    runtime: { isPending: runtimeQuery.isPending, available: runtimeQuery.data?.available },
+  })
+  const chatAvailable = availability === "available"
+  // 只有上游已掩码尾号会被 AgentAvailabilityNotice 渲染；这里把原文交给它过滤，绝不自行拼接。
+  const credentialHint = modelQuery.data?.lastTest?.message
+
+  function handleAvailabilityAction(action: AgentAvailabilityAction) {
+    switch (agentAvailabilityActionEffect(action)) {
+      case "settings":
+        navigate("/settings")
+        return
+      case "retry":
+        void modelQuery.refetch()
+        void runtimeQuery.refetch()
+        return
+      // start_chat 表示「进入对话」；本组件本身就是对话区，可用时不会渲染引导，无需额外动作。
+      default:
+        return
+    }
+  }
 
   const sessionsQuery = useQuery({
     queryKey: ["sessions"],
@@ -126,7 +168,14 @@ export function ResumeChatPanel({
 
       {view === "run" ? (
         <div role="tabpanel" className="min-h-0 flex-1">
-          <RunPanel resumeId={resumeId} run={run} mode={mode} />
+          <RunPanel
+            resumeId={resumeId}
+            run={run}
+            mode={mode}
+            availability={availability}
+            credentialHint={credentialHint}
+            onAvailabilityAction={handleAvailabilityAction}
+          />
         </div>
       ) : (
         <div role="tabpanel" className="flex min-h-0 flex-1 flex-col">
@@ -153,37 +202,49 @@ export function ResumeChatPanel({
 
           {selectedId ? (
             <div className="border-t border-border p-3">
-              <p className="mb-2 text-xs text-muted-foreground">{t("sessionHistory.continue.hint")}</p>
-              {sendError ? (
-                <p role="alert" className="mb-2 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
-                  {sendError}
-                </p>
-              ) : null}
-              <div className="flex items-end gap-2">
-                <textarea
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing && event.keyCode !== 229) {
-                      submit()
-                    }
-                  }}
-                  rows={2}
-                  aria-label={t("sessionHistory.continue.placeholder")}
-                  placeholder={t("sessionHistory.continue.placeholder")}
-                  className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+              {chatAvailable ? (
+                <>
+                  <p className="mb-2 text-xs text-muted-foreground">{t("sessionHistory.continue.hint")}</p>
+                  {sendError ? (
+                    <p role="alert" className="mb-2 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
+                      {sendError}
+                    </p>
+                  ) : null}
+                  <div className="flex items-end gap-2">
+                    <textarea
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing && event.keyCode !== 229) {
+                          submit()
+                        }
+                      }}
+                      rows={2}
+                      aria-label={t("sessionHistory.continue.placeholder")}
+                      placeholder={t("sessionHistory.continue.placeholder")}
+                      className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={submit}
+                      disabled={send.isPending || !input.trim()}
+                      aria-busy={send.isPending}
+                      aria-label={t("sessionHistory.continue.send")}
+                      className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Send className="size-4" aria-hidden />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                // 不可用时历史会话仍可浏览，但「继续对话」也不放行：就地换成同一份引导。
+                <AgentAvailabilityNotice
+                  state={availability}
+                  placement="panel"
+                  credentialHint={credentialHint}
+                  onAction={handleAvailabilityAction}
                 />
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={send.isPending || !input.trim()}
-                  aria-busy={send.isPending}
-                  aria-label={t("sessionHistory.continue.send")}
-                  className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Send className="size-4" aria-hidden />
-                </button>
-              </div>
+              )}
             </div>
           ) : null}
         </div>
