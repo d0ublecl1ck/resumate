@@ -57,6 +57,32 @@ class ModelConfigUpdate(ApiModel):
     api_key: str | None = Field(default=None, max_length=400)
 
 
+class SpeechTestResult(ApiModel):
+    at: datetime
+    ok: bool
+    message: str
+
+
+class SpeechConfigResponse(ApiModel):
+    """语音识别（云端 ASR）配置；apiKey 永不回显，只给 key_configured。"""
+
+    provider: str
+    region: str
+    endpoint: str
+    model: str
+    key_configured: bool
+    last_test: SpeechTestResult | None = None
+
+
+class SpeechConfigUpdate(ApiModel):
+    provider: Literal["dashscope"] | None = None
+    region: Literal["cn-beijing", "ap-southeast-1"] | None = None
+    endpoint: str | None = Field(default=None, max_length=300)
+    model: str | None = Field(default=None, max_length=100)
+    # Write-only: accepted on PUT and :test, never returned.
+    api_key: str | None = Field(default=None, max_length=400)
+
+
 class ModelCatalogModel(ApiModel):
     """One selectable model from the models.dev snapshot (contract section 17)."""
 

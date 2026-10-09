@@ -22,5 +22,8 @@ class UserSettings(Base):
     preferences: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     agent_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     model_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    # 语音识别（云端 ASR）配置单独一列，与模型配置同构：provider/region/endpoint/
+    # model 明文，apiKey 以 Fernet 密文存放，读取接口只回 keyConfigured 布尔。
+    speech_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

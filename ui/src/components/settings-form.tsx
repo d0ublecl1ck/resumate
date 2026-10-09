@@ -7,8 +7,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { SUPPORTED_LOCALES, changeLocale, currentLocale } from "@/i18n"
-import { getModelCatalog, testModelConnection, updateAgentConfig, updateModelConfig, updatePreferences } from "@/lib/api"
-import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, UserPreferences } from "@/lib/types"
+import { getModelCatalog, getSpeechConfig, testModelConnection, testSpeechConnection, updateAgentConfig, updateModelConfig, updatePreferences, updateSpeechConfig } from "@/lib/api"
+import type { AgentConfig, ExecutionMode, ModelConfig, ModelTestResult, ResumeTemplate, SpeechConfig, SpeechTestResult, UserPreferences } from "@/lib/types"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AgentAvailabilityNotice, agentAvailabilityFromModelConfig } from "@/components/agent-onboarding"
 import { MAX_AUTOSAVE_SECONDS, MIN_AUTOSAVE_SECONDS, clampAutosaveSeconds, isValidAutosaveSeconds } from "@/lib/autosave"
@@ -148,6 +148,7 @@ export function SettingsForm({
 
   // 模型目录（契约 §17）：provider / model 只从只读目录选择；目录失败时保留已保存值。
   const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: () => getModelCatalog() })
+  const speechQuery = useQuery({ queryKey: ["speech-config"], queryFn: getSpeechConfig })
   const runtimeQuery = useRuntimeStatus()
   const catalogProviders = catalogQuery.data?.providers ?? []
   const selectedProvider = catalogProviders.find((item) => item.id === provider)
@@ -448,6 +449,16 @@ export function SettingsForm({
         </div>
       </Section>
 
+      {speechQuery.data ? (
+        <SpeechConfigSection config={speechQuery.data} />
+      ) : (
+        <Section title={t("settings.speech.title")} hint={t("settings.speech.hint")}>
+          <p className="text-xs text-muted-foreground">
+            {speechQuery.isPending ? t("settings.speech.loading") : t("settings.speech.loadFailed")}
+          </p>
+        </Section>
+      )}
+
       <Section title={t("settings.preferences.title")} hint={t("settings.preferences.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="rounded-lg border border-border p-3">
@@ -650,6 +661,168 @@ function Section({ id, title, hint, children }: { id?: string; title: string; hi
 
 function FieldLabel({ children }: { children: ReactNode }) {
   return <span className="text-xs font-medium text-muted-foreground">{children}</span>
+}
+
+/** 语音识别（云端 ASR）配置：与模型配置同构，apiKey write-only、不回显。 */
+function SpeechConfigSection({ config }: { config: SpeechConfig }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const [provider, setProvider] = useState<"dashscope">("dashscope")
+  const [region, setRegion] = useState<"cn-beijing" | "ap-southeast-1">(
+    config.region === "ap-southeast-1" ? "ap-southeast-1" : "cn-beijing",
+  )
+  const [endpoint, setEndpoint] = useState(config.endpoint)
+  const [modelName, setModelName] = useState(config.model)
+  const [apiKey, setApiKey] = useState("")
+  const [keyConfigured, setKeyConfigured] = useState(config.keyConfigured)
+  const [status, setStatus] = useState<SaveState>("idle")
+
+  const save = useMutation({
+    mutationFn: () =>
+      updateSpeechConfig({
+        provider,
+        region,
+        endpoint,
+        model: modelName,
+        ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      }),
+    onMutate: () => setStatus("saving"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["speech-config"], data)
+      setKeyConfigured(data.keyConfigured)
+      setApiKey("")
+      setStatus("saved")
+    },
+    onError: () => setStatus("error"),
+  })
+
+  const test = useMutation({
+    mutationFn: () =>
+      testSpeechConnection({
+        provider,
+        region,
+        endpoint,
+        model: modelName,
+        ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["speech-config"] }),
+  })
+
+  const testResult: SpeechTestResult | undefined = test.data ?? config.lastTest
+  const testResultFromLastTest = !test.data && Boolean(config.lastTest)
+
+  return (
+    <Section title={t("settings.speech.title")} hint={t("settings.speech.hint")}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="rounded-lg border border-border p-3">
+          <FieldLabel>{t("settings.speech.provider")}</FieldLabel>
+          <select
+            className={INPUT_CLASS}
+            aria-label={t("settings.speech.provider")}
+            value={provider}
+            onChange={(event) => {
+              setProvider(event.target.value as "dashscope")
+              setStatus("idle")
+            }}
+          >
+            <option value="dashscope">{t("settings.speech.providerDashscope")}</option>
+          </select>
+        </label>
+        <label className="rounded-lg border border-border p-3">
+          <FieldLabel>{t("settings.speech.region")}</FieldLabel>
+          <select
+            className={INPUT_CLASS}
+            aria-label={t("settings.speech.region")}
+            value={region}
+            onChange={(event) => {
+              setRegion(event.target.value as "cn-beijing" | "ap-southeast-1")
+              setStatus("idle")
+            }}
+          >
+            <option value="cn-beijing">{t("settings.speech.regionCnBeijing")}</option>
+            <option value="ap-southeast-1">{t("settings.speech.regionApg")}</option>
+          </select>
+        </label>
+        <label className="rounded-lg border border-border p-3">
+          <FieldLabel>{t("settings.speech.endpoint")}</FieldLabel>
+          <input
+            className={INPUT_CLASS}
+            placeholder={t("settings.speech.endpointPlaceholder")}
+            value={endpoint}
+            onChange={(event) => {
+              setEndpoint(event.target.value)
+              setStatus("idle")
+            }}
+          />
+        </label>
+        <label className="rounded-lg border border-border p-3">
+          <FieldLabel>{t("settings.speech.model")}</FieldLabel>
+          <input
+            className={INPUT_CLASS}
+            aria-label={t("settings.speech.model")}
+            value={modelName}
+            onChange={(event) => {
+              setModelName(event.target.value)
+              setStatus("idle")
+            }}
+          />
+        </label>
+        <label className="rounded-lg border border-border p-3">
+          <FieldLabel>{t("settings.speech.apiKey")}</FieldLabel>
+          <input
+            type="password"
+            autoComplete="off"
+            className={INPUT_CLASS}
+            value={apiKey}
+            placeholder={keyConfigured ? t("settings.speech.keyConfiguredPlaceholder") : t("settings.speech.keyMissingPlaceholder")}
+            onChange={(event) => {
+              setApiKey(event.target.value)
+              setStatus("idle")
+            }}
+          />
+          <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <KeyRound className="size-3.5 text-cobalt" aria-hidden /> {keyConfigured ? t("settings.speech.keyConfigured") : t("settings.speech.keyMissing")}
+          </p>
+        </label>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => save.mutate()}
+          disabled={save.isPending}
+          className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {t("settings.speech.save")}
+        </button>
+        <button
+          type="button"
+          onClick={() => test.mutate()}
+          disabled={test.isPending}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-60"
+        >
+          <RefreshCw className={cn("size-4", test.isPending && "animate-spin")} aria-hidden /> {t("settings.speech.test")}
+        </button>
+        <SaveStatus state={status} error={save.error} />
+        {test.isPending ? <span className="text-xs text-muted-foreground">{t("settings.speech.testing")}</span> : null}
+        {test.isError ? (
+          <span className="inline-flex items-center gap-1 text-xs text-coral">
+            <AlertTriangle className="size-3.5" aria-hidden /> {t("settings.speech.testFailed")}
+          </span>
+        ) : null}
+        {!test.isPending && !test.isError && testResult ? (
+          <span className={cn("inline-flex items-center gap-1 text-xs", testResult.ok ? "text-cobalt" : "text-coral")}>
+            {testResult.ok ? <CheckCircle2 className="size-3.5" aria-hidden /> : <AlertTriangle className="size-3.5" aria-hidden />}
+            {testResult.ok ? t("settings.speech.connectionOk") : testResult.message}
+            {testResultFromLastTest ? (
+              <span className="text-muted-foreground">
+                · {t("settings.speech.lastTest", { time: testResult.at.slice(0, 16).replace("T", " ") })}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
+      </div>
+    </Section>
+  )
 }
 
 function SaveStatus({ state, error }: { state: SaveState; error: unknown }) {

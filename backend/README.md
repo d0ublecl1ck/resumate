@@ -81,3 +81,45 @@ for line in sys.stdin: print(f"{time.time()-t:7.3f}s {line.rstrip()}")'
 
 经 Vite dev proxy 时把 URL 换成 `http://127.0.0.1:5174/api/turns/$TURN_ID/events`（`/api` 由 `ui/vite.config.ts` 代理并剥前缀）。
 实测两条链路都分块即时到达；http-proxy 默认流式，无需额外配置。
+
+## 语音作答与云端 ASR（百炼 Paraformer）
+
+语音作答有三条链路，界面会如实标注当前真正生效的一条：云端识别（后端调阿里云百炼
+Paraformer 录音文件识别）> 浏览器 SpeechRecognition > 手动输入。云端不可用（未配置
+Key、上游拒绝、超时、响应畸形）时自动回退，且不会把上游原始报错抛给前端。
+
+- `POST /speech/transcribe`（权限 `jd:write`）：请求体 `{audioBase64, contentType?,
+  filename?, languageHints?}`，返回 `{transcript, durationSeconds, words?, provider}`。
+  选 base64 JSON 而不是 multipart：仓库当前没有 `python-multipart` 依赖，单题作答音频
+  很小，base64 让请求体与既有 JSON 契约统一。
+- 音频不落盘：base64 在内存里解码后只作为一次 multipart 请求体交给 DashScope，处理完
+  即弃；`speech_segments` 只存时长、转写与派生指标。
+- `POST/GET /speech/segments`：给 `words`（词/句级时间戳）时，语速分母用发声跨度
+  （首单元开始到末单元结束），停顿 = 相邻单元间隔严格大于 600ms 的次数，
+  `timingSource=timestamps`；没有时间戳时退回「字数 ÷ 时长」，`timingSource=duration`。
+- 配置：`GET/PUT /speech/config` 与 `POST /speech/config:test`（权限 `settings:read|write`），
+  字段 `provider/region/endpoint/model/apiKey`；`apiKey` 用与模型配置相同的 Fernet 方案
+  加密落 `user_settings.speech_config`，读取接口只回 `keyConfigured`。未配置 Key 时
+  `/speech/transcribe` 返回 `409 MODEL_NOT_CONFIGURED`。
+
+契约测试（httpx.MockTransport，不打真实网络）：
+
+```bash
+uv run pytest tests/test_speech_asr.py tests/test_speech_transcribe.py tests/test_speech_config.py
+```
+
+拿到百炼 API Key 后跑真实链路：
+
+1. 登录后端拿到会话 Cookie，写入 Key 并测试凭据：
+
+   ```bash
+   curl -sS -X PUT http://127.0.0.1:8000/speech/config -H 'Content-Type: application/json' -b cookies.txt \
+     -d '{"provider":"dashscope","region":"cn-beijing","model":"paraformer-v2","apiKey":"<百炼 API Key>"}'
+   curl -sS -X POST http://127.0.0.1:8000/speech/config:test -b cookies.txt
+   ```
+
+   预期：第一条返回 `"keyConfigured": true` 且不含 `apiKey`；第二条返回
+   `{"ok": true, "message": "凭据可用"}`。若返回 `UPSTREAM_REJECTED`，是 Key 与地域
+   不匹配（各地域 Key 不能混用）。
+2. 在语音面试页录一段话，预期：界面显示「云端识别」，转写来自百炼；模型返回时间戳时
+   落库的 `timingSource` 为 `timestamps`。

@@ -572,6 +572,36 @@ export interface ModelConfigUpdate {
 }
 
 // ---------------------------------------------------------------------------
+// 语音识别（云端 ASR，语音链路真实化）：与模型配置同构，apiKey 永不回显。
+// ---------------------------------------------------------------------------
+
+export interface SpeechTestResult {
+  at: ISODate
+  ok: boolean
+  message: string
+}
+
+export interface SpeechConfig {
+  provider: string
+  /** 地域决定默认接入域名；cn-beijing / ap-southeast-1 */
+  region: string
+  /** 自定义 Endpoint；为空时用地域默认域名 */
+  endpoint: string
+  model: string
+  keyConfigured: boolean
+  lastTest?: SpeechTestResult
+}
+
+export interface SpeechConfigUpdate {
+  provider?: "dashscope"
+  region?: "cn-beijing" | "ap-southeast-1"
+  endpoint?: string
+  model?: string
+  /** write-only：仅提交，后端不回显 */
+  apiKey?: string
+}
+
+// ---------------------------------------------------------------------------
 // 模型目录（契约 §17 / 9546b）：只读，条目来自后端维护的 models.dev 快照。
 // ---------------------------------------------------------------------------
 
