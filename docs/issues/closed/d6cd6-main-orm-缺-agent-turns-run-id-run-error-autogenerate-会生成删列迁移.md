@@ -1,13 +1,14 @@
 ---
 id: d6cd6
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:58:34.161Z
-updated_at: 2026-10-09T16:58:44.321Z
+updated_at: 2026-10-09T16:59:45.017Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:58:44.321Z
+closed_at: 2026-10-09T16:59:45.017Z
 ---
 
 # main ORM 缺 agent_turns run_id/run_error，autogenerate 会生成删列迁移
@@ -33,19 +34,26 @@ main（f4e6f07）已通过迁移 `backend/migrations/versions/2a17c2e1d3d3_add_a
 
 ## Acceptance Criteria
 
-- [ ] `.freak` 新增线索包含现象、风险、原因、解除条件四要素与记录日期。
-- [ ] 线索以单个 `Issue: d6cd6` trailer 的提交落库；随后归档提交带 `Issue` + `Closes`，`archkit issue close d6cd6` 验证绑定。
-- [ ] `node quality-gates/run.js` 与 `archkit inspect .` 通过。
-- [ ] `git push origin main` 成功，且 `HEAD` 与 `origin/main` 一致。
+- [x] `.freak` 新增线索包含现象、风险、原因、解除条件四要素与记录日期。
+- [x] 线索以单个 `Issue: d6cd6` trailer 的提交落库；随后归档提交带 `Issue` + `Closes`，`archkit issue close d6cd6` 验证绑定。
+- [x] `node quality-gates/run.js` 与 `archkit inspect .` 通过。
+- [x] `git push origin main` 成功，且 `HEAD` 与 `origin/main` 一致。
 
 ## Implementation
 
 - `.freak` 末尾新增一条未完成线索（记录：2026-10-10）：现象 = main 的 ORM `AgentTurn` 无 `run_id` / `run_error`（实测 `grep -c` 均为 0），而库中该两列已有数据（`agent_turns` 91 行，run_id 5 行、run_error 3 行）；风险 = 在 main 跑 `alembic revision --autogenerate` 会生成 DROP 这两列的迁移；原因 = ORM 实现在 `docs/zj-fwwb-2026` 分支（cd5944f 等）未合并，main 只同步了迁移文件（6383c60）；解除条件 = 该分支合并进 main 后本线索作废。
-- 未改任何代码、迁移或测试，未动 `ui/prototypes/editor-explorations.html`。
+- 未改任何代码、迁移或测试，未动 `ui/prototypes/editor-explorations.html`。线索提交：`1aad943 docs(freak): 登记 main ORM 缺 run_id/run_error 的删列迁移风险`（单个 `Issue: d6cd6` trailer）。
 
 ## Verification
 
-<!-- Add commands and results after verification. -->
+```
+node quality-gates/run.js   -> Quality gates passed. (exit 0)
+archkit inspect .           -> Quality gates passed. (exit 0)
+```
+
+- 线索提交：`1aad943 docs(freak): 登记 main ORM 缺 run_id/run_error 的删列迁移风险`，暂存仅 `.freak` 与本 issue 文档，单个 `Issue: d6cd6` trailer。
+- 归档：`archkit issue close d6cd6 --base f4e6f0709949500b9a207105b45e5cfc54ae7f47 --prepare` → 归档提交（rename + status/closed_at）携带 `Issue: d6cd6` + `Closes: d6cd6`；随后 `archkit issue close d6cd6` 输出 `Issue d6cd6 already closed; bound to commit …`。
+- 推送：`git push origin main` 成功后 `git rev-parse HEAD origin/main` 一致。
 
 ## Related ADRs
 
