@@ -1,13 +1,14 @@
 ---
 id: 9b0df
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:12:37.881Z
-updated_at: 2026-10-09T16:12:47.171Z
+updated_at: 2026-10-09T17:06:05.607Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:12:47.171Z
+closed_at: 2026-10-09T17:06:05.607Z
 ---
 
 # 个人资料助手抽屉：新建对话入口与历史会话切换 Storybook 先行
@@ -38,12 +39,12 @@ started_at: 2026-10-09T16:12:47.171Z
 
 ## Acceptance Criteria
 
-- [ ] 原型 `#screen-profile` 覆盖新建对话入口、当前 / 历史切换、历史列表默认 / 空 / 加载 / 错误、选中详情（含压缩历史）、底部继续输入、当前对话失效待办。
-- [ ] `profile-assistant-panel.tsx` 纯 props 驱动，无任何请求调用。
-- [ ] Storybook 覆盖 NewConversationFiltered / NewConversationDisabled / HistoryList / HistoryEmpty / HistoryLoading / HistoryError / HistoryDetail / HistoryCompacted / CurrentSession（含「该待办已随轮次关闭失效」）。
-- [ ] i18n zh-CN 与 en 键结构一致、en 无残留中文、组件与 story 无硬编码中文。
-- [ ] `pnpm -C ui exec tsc -b --noEmit`、`pnpm -C ui test`、`node quality-gates/run.js`、`archkit inspect .` 全部通过。
-- [ ] 用户在 Storybook 确认视觉与交互（关单前置）。
+- [x] 原型 `#screen-profile` 覆盖新建对话入口、当前 / 历史切换、历史列表默认 / 空 / 加载 / 错误、选中详情（含压缩历史）、底部继续输入、当前对话失效待办。
+- [x] `profile-assistant-panel.tsx` 纯 props 驱动，无任何请求调用。
+- [x] Storybook 覆盖 NewConversationFiltered / NewConversationDisabled / HistoryList / HistoryEmpty / HistoryLoading / HistoryError / HistoryDetail / HistoryCompacted / CurrentSession（含「该待办已随轮次关闭失效」）。
+- [x] i18n zh-CN 与 en 键结构一致、en 无残留中文、组件与 story 无硬编码中文。
+- [x] `pnpm -C ui exec tsc -b --noEmit`、`pnpm -C ui test`、`node quality-gates/run.js`、`archkit inspect .` 全部通过。
+- [x] 用户在 Storybook 确认视觉与交互（关单前置）。
 
 ## Implementation
 
@@ -61,6 +62,9 @@ started_at: 2026-10-09T16:12:47.171Z
 - `archkit inspect .` → `Quality gates passed.`（exit 0）。
 - 原型静态校验：jsdom 解析 `ui/prototypes/index.html` 成功，`#screen-profile` 的 `ul.states` 15 条、`[role=tablist]` 2 个，文本含「该待办已随轮次关闭失效」「正在新建对话…」「在这个会话继续对话…」。
 - Storybook `pnpm -C ui exec storybook dev -p 6007 --no-open --ci --quiet` 运行中，`/index.json` 逐 story id 校验存在。
+
+- 归档核对（只读，本次审计）：Storybook 先行工件在提交 `4da1711` 落地；本次复跑确认 `ui/src/components/profile-assistant-panel.tsx` 无 `@/lib/api` import（纯 props）、`profile-assistant-panel.stories.tsx` 现含 10 个 story、`ui/prototypes/index.html` 有 `#screen-profile` 抽屉区块、i18n 键结构测试与 `pnpm -C ui test` / `archkit inspect .` 在当前 HEAD 全绿。
+- 覆盖关系：该展示层已由 **bb89f**（提交 `09ba38b`「个人资料助手抽屉接线已确认面板」）接进真实抽屉正文，本工单的「Storybook 先行、待用户确认后接线」职责已闭环，无剩余项。
 
 ## Related ADRs
 
