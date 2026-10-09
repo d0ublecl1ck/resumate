@@ -1,13 +1,14 @@
 ---
 id: b6eab
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:27:50.897Z
-updated_at: 2026-10-09T16:28:09.391Z
+updated_at: 2026-10-09T16:37:18.770Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:28:09.391Z
+closed_at: 2026-10-09T16:37:18.770Z
 ---
 
 # 把伪实现检测做成质量门禁：诚实词汇扫描与前后端路由交叉核对
