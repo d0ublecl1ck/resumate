@@ -37,17 +37,17 @@ started_at: 2026-10-09T16:47:40.827Z
 
 ## Acceptance Criteria
 
-- [ ] 抽屉正文渲染 `ProfileAssistantPanel`，「当前对话 / 历史会话」两态可切换。
-- [ ] 点「新建对话」真的调用 `POST /sessions`，创建中按钮禁用并显示「正在新建对话…」，重复点击不发起第二次请求。
-- [ ] 历史列表来自 `GET /sessions`，行内不出现会话 ID，按 `groupSessionsByTime` 的时间分组（今天 / 昨天 / 7 天内 / 30 天内 / 更早）渲染。
-- [ ] 点历史某一行真的切到该 session 并加载其消息（`GET /sessions/{id}/messages`），详情标题用派生标题（无标题走兜底）。
-- [ ] 历史会话底部继续输入：把消息 `POST /sessions/{选中 id}/messages` 并带同一 id 起 run（`POST /sessions/{选中 id}/runs`），绝不写回最新会话。
-- [ ] AI 引导：`agentAvailability` 传 `lastTest`，凭据被拒判为 `auth_failed`；`AgentAvailabilityNotice` 传 `credentialHint={model.lastTest?.message}`，只渲染掩码尾号。
-- [ ] 未配置 / 凭据失效 / 运行体不可用时**不放行聊天**（无输入框），显示引导与「去设置」跳转。
-- [ ] 消息带 `runError` 时抽屉内展示 `RunErrorBlock`：类别、provider/model、key 掩码尾号、「去设置更新 Key」、重试。
-- [ ] 测试含正向与负向断言；负向：不得出现完整 key、`Authorization`、`Traceback`。
-- [ ] `pnpm -C ui test`、`pnpm -C ui exec tsc -b --noEmit`、`node quality-gates/run.js`、`archkit inspect .` 全绿。
-- [ ] 原型 `#screen-profile` 的助手抽屉区块与实现一致。
+- [x] 抽屉正文渲染 `ProfileAssistantPanel`，「当前对话 / 历史会话」两态可切换。
+- [x] 点「新建对话」真的调用 `POST /sessions`，创建中按钮禁用并显示「正在新建对话…」，重复点击不发起第二次请求。
+- [x] 历史列表来自 `GET /sessions`，行内不出现会话 ID，按 `groupSessionsByTime` 的时间分组（今天 / 昨天 / 7 天内 / 30 天内 / 更早）渲染。
+- [x] 点历史某一行真的切到该 session 并加载其消息（`GET /sessions/{id}/messages`），详情标题用派生标题（无标题走兜底）。
+- [x] 历史会话底部继续输入：把消息 `POST /sessions/{选中 id}/messages` 并带同一 id 起 run（`POST /sessions/{选中 id}/runs`），绝不写回最新会话。
+- [x] AI 引导：`agentAvailability` 传 `lastTest`，凭据被拒判为 `auth_failed`；`AgentAvailabilityNotice` 传 `credentialHint={model.lastTest?.message}`，只渲染掩码尾号。
+- [x] 未配置 / 凭据失效 / 运行体不可用时**不放行聊天**（无输入框），显示引导与「去设置」跳转。
+- [x] 消息带 `runError` 时抽屉内展示 `RunErrorBlock`：类别、provider/model、key 掩码尾号、「去设置更新 Key」、重试。
+- [x] 测试含正向与负向断言；负向：不得出现完整 key、`Authorization`、`Traceback`。
+- [x] `pnpm -C ui test`、`pnpm -C ui exec tsc -b --noEmit`、`node quality-gates/run.js`、`archkit inspect .` 全绿。
+- [x] 原型 `#screen-profile` 的助手抽屉区块与实现一致。
 
 ## Implementation
 
