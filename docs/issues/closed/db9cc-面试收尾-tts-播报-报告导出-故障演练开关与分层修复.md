@@ -1,14 +1,15 @@
 ---
 id: db9cc
-status: in-progress
+status: closed
 created_at: 2026-10-09T09:31:48.329Z
-updated_at: 2026-10-09T09:31:58.963Z
+updated_at: 2026-10-09T10:10:10.965Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: A11 面试与能力提升
 started_at: 2026-10-09T09:31:58.963Z
+closed_at: 2026-10-09T10:10:10.965Z
 ---
 
 # 面试收尾：TTS 播报、报告导出、故障演练开关与分层修复
