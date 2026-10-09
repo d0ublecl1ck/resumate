@@ -1,14 +1,15 @@
 ---
 id: ed1b9
-status: in-progress
+status: closed
 created_at: 2026-10-09T08:22:43.866Z
-updated_at: 2026-10-09T10:08:02.391Z
+updated_at: 2026-10-09T10:10:06.342Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: A11 面试与能力提升
 started_at: 2026-10-09T10:08:02.391Z
+closed_at: 2026-10-09T10:10:06.342Z
 ---
 
 # 面试数据聚合：成长曲线、历史口径比较、练习计划与复测、重新生成
