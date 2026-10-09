@@ -6,6 +6,7 @@ from .models import (
     InterviewQuestion,
     InterviewReport,
     InterviewSession,
+    PracticeItem,
 )
 
 
@@ -90,3 +91,44 @@ def get_report(db: Session, session_id: str) -> InterviewReport | None:
 
 def add_report(db: Session, report: InterviewReport) -> None:
     db.add(report)
+
+def list_sessions_with_reports(db: Session, owner_id: str, role: str | None = None) -> list[InterviewSession]:
+    """已产出报告的真实场次，按时间正序；成长曲线只认这些点。"""
+    statement = (
+        select(InterviewSession)
+        .join(InterviewReport, InterviewReport.session_id == InterviewSession.id)
+        .where(InterviewSession.owner_id == owner_id)
+    )
+    if role:
+        statement = statement.where(InterviewSession.role == role)
+    statement = statement.order_by(InterviewSession.created_at.asc(), InterviewSession.id.asc())
+    return list(db.scalars(statement))
+
+
+def delete_questions_for_session(db: Session, session_id: str) -> None:
+    for question in list_questions(db, session_id):
+        db.delete(question)
+
+
+def list_practice_items(db: Session, owner_id: str, role: str | None = None) -> list[PracticeItem]:
+    statement = select(PracticeItem).where(PracticeItem.owner_id == owner_id)
+    if role:
+        statement = statement.where(PracticeItem.role == role)
+    statement = statement.order_by(PracticeItem.created_at.desc(), PracticeItem.id.desc())
+    return list(db.scalars(statement))
+
+
+def get_practice_item(db: Session, item_id: str) -> PracticeItem | None:
+    return db.get(PracticeItem, item_id)
+
+
+def get_practice_item_for_report_dimension(db: Session, report_id: str, dimension: str) -> PracticeItem | None:
+    statement = select(PracticeItem).where(
+        PracticeItem.source_report_id == report_id,
+        PracticeItem.dimension == dimension,
+    )
+    return db.scalars(statement).first()
+
+
+def add_practice_item(db: Session, item: PracticeItem) -> None:
+    db.add(item)

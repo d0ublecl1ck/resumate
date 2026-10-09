@@ -38,10 +38,15 @@ class InterviewQuestion(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     session_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     ordinal: Mapped[int] = mapped_column(Integer, nullable=False)
-    # technical / behavioral / situational / follow_up
+    # technical / deep_dive / scenario / behavioral / follow_up；
+    # 历史数据可能仍是 situational（scenario 的旧名）。
     kind: Mapped[str] = mapped_column(String(32), nullable=False)
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
     reference_points: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    # 出题时指定的难度 easy/medium/hard；历史题与不限难度为 NULL。
+    difficulty: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    # 知识库检索命中的出处（与 bank 的 knowledge_refs 同构）；未命中为 NULL。
+    knowledge_refs: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     parent_question_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     # 追问由哪条作答推导而来，用于幂等重放时返回同一条追问。
     derived_from_answer_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
@@ -62,6 +67,34 @@ class InterviewAnswer(Base):
     idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PracticeItem(Base):
+    """练习项：把评估报告的建议落成可执行、可复测的练习。
+
+    (source_report_id, dimension) 唯一：同一份报告的同一维度只落一条，重复
+    materialize 幂等。retest_session_id 指向为该项发起的复测场次（可空）。
+    """
+
+    __tablename__ = "practice_items"
+    __table_args__ = (
+        UniqueConstraint("source_report_id", "dimension", name="uq_practice_items_report_dimension"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    owner_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    dimension: Mapped[str] = mapped_column(String(32), nullable=False)
+    goal: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    material: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    # active = 进行中；done = 已完成。
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
+    source_report_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    source_session_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    rubric_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    retest_session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class InterviewReport(Base):
