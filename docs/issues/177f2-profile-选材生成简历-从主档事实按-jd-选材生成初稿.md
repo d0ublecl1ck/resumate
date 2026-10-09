@@ -108,7 +108,13 @@ blocked_by: []
 
 ## Verification
 
-<!-- 待验证后补记：命令与真实输出、无头浏览器实测路径。 -->
+- 2026-10-10 现状核查（只读，**未开工**）：
+  - `ui/src/components/profile-workspace.tsx:154` 的「生成简历」仍是 `<Link to="/resumes?create=1">` 裸跳，没有进入选材流程。
+  - `grep -rn 'resume_generation' backend/ ui/src/` 无命中：方案 A 需要的 pending action `kind` 与选材负载未定义、未实现。
+  - `POST /resumes` 的 `profile_id` 仍只被当外键存储（`ui/src/lib/api.ts:130` 的 `createResume` 支持该字段，但调用方从不传）。
+  - `git log` 中与本工单绑定的提交只有开单提交 `b9ece3e`，无实现提交。
+- 剩余项：本工单 Scope 全部未实现——执行者与确认载体（推荐方案 A）未拍板、选材负载结构与 approve 后创建路径未定义、`/profile` 入口未改、`profile_id` 语义未升级、原型与 Storybook 选材预览未补、契约文档与 PRD/US-8.1 实现状态未同步。
+- 阻塞/待决：Background「待决点」三项（方案 A/B 二选一、来源快照持久化位置、缺关键事实是否允许部分创建）均需用户先拍板，未决前不应实现。
 
 ## Related ADRs
 
