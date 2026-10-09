@@ -59,9 +59,10 @@ const RUN: AgentRun = {
   pendingActions: [],
 }
 
+// 列表行不再渲染会话 ID，因此用派生标题定位行（title 是展示层可选入参）。
 const SESSIONS = [
-  { id: "sess_000000000001", createdAt: "2026-10-01T00:00:00Z", updatedAt: "2026-10-01T00:00:00Z", lastActiveAt: "2026-10-01T02:00:00Z" },
-  { id: "sess_000000000002", createdAt: "2026-09-30T00:00:00Z", updatedAt: "2026-09-30T00:00:00Z", lastActiveAt: "2026-09-30T02:00:00Z" },
+  { id: "sess_000000000001", createdAt: "2026-10-01T00:00:00Z", updatedAt: "2026-10-01T00:00:00Z", lastActiveAt: "2026-10-01T02:00:00Z", title: "优化项目经历措辞" },
+  { id: "sess_000000000002", createdAt: "2026-09-30T00:00:00Z", updatedAt: "2026-09-30T00:00:00Z", lastActiveAt: "2026-09-30T02:00:00Z", title: "定制岗位摘要版本" },
 ]
 
 function newClient() {
@@ -86,10 +87,9 @@ describe("对话区历史会话接线", () => {
     renderPanel()
     await openHistory()
 
-    const currentId = "000000000002"
-    const current = await screen.findByRole("button", { name: new RegExp(currentId) })
+    const current = await screen.findByRole("button", { name: /定制岗位摘要版本/ })
     expect(current).toHaveAttribute("aria-current", "true")
-    const other = screen.getByRole("button", { name: /000000000001/ })
+    const other = screen.getByRole("button", { name: /优化项目经历措辞/ })
     expect(other).not.toHaveAttribute("aria-current")
   })
 
@@ -105,7 +105,7 @@ describe("对话区历史会话接线", () => {
     )
     renderPanel(newClient(), null)
     await openHistory()
-    fireEvent.click(await screen.findByRole("button", { name: /000000000001/ }))
+    fireEvent.click(await screen.findByRole("button", { name: /优化项目经历措辞/ }))
 
     expect(await screen.findByText("把项目经历改得更量化")).toBeInTheDocument()
     expect(await screen.findByText("已更新第一条项目经历。")).toBeInTheDocument()
@@ -140,7 +140,7 @@ describe("对话区历史会话接线", () => {
 
     renderPanel()
     await openHistory()
-    fireEvent.click(await screen.findByRole("button", { name: /000000000001/ }))
+    fireEvent.click(await screen.findByRole("button", { name: /优化项目经历措辞/ }))
 
     const box = await screen.findByRole("textbox", { name: i18n.t("sessionHistory.continue.placeholder") })
     fireEvent.change(box, { target: { value: "再帮我加一条项目" } })

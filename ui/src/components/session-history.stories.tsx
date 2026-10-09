@@ -1,14 +1,21 @@
 // Storybook confirmation artifact for 历史会话（SCR-004）：新建入口 + 列表 + 详情。
 // 纯展示组件 + 注入数据：不接真实端点、不动路由、不改 lib/api.ts。
-// 数据形状镜像后端契约（GET /sessions、GET /sessions/{id}/messages）；
+// 列表一行一个会话（一个会话含若干轮消息），行主文案是话题标题，按最近活跃时间分组；
 // title / messageCount 是后端暂未提供的展示层可选入参，story 显式注入以确认派生与兜底。
 import type { SessionMessage, SessionSummary } from "@/components/session-history"
 import { NewConversationEntry, SessionDetail, SessionList } from "@/components/session-history"
 
-// 无 title / messageCount：走「未命名对话 + 时间」与 id 兜底。
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** 相对当前时间的 ISO：分组 story 不写死日期，避免过期后分组漂移。 */
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * DAY_MS).toISOString()
+}
+
+// 无 title / messageCount：走「未命名对话」与时间兜底。
 const SESSIONS: SessionSummary[] = [
-  { id: "ses_000000000001", createdAt: "2026-09-30T09:00:00Z", lastActiveAt: "2026-10-01T02:10:00Z" },
-  { id: "ses_000000000002", createdAt: "2026-09-29T08:00:00Z", lastActiveAt: "2026-09-30T18:00:00Z" },
+  { id: "ses_000000000001", createdAt: daysAgo(2), lastActiveAt: daysAgo(0) },
+  { id: "ses_000000000002", createdAt: daysAgo(3), lastActiveAt: daysAgo(1) },
 ]
 
 // 展示层注入的派生标题与消息数（后端暂未返回）。
@@ -18,10 +25,25 @@ const TITLED_SESSIONS: SessionSummary[] = [
   { ...SESSIONS[1], title: "为美团高级前端岗位定制摘要", messageCount: 3 }, // i18n-allow: 用户内容不翻译
 ]
 
+// 跨五个时间分组：今天 / 昨天 / 7 天内 / 30 天内 / 更早。
+const GROUPED_SESSIONS: SessionSummary[] = [
+  { id: "ses_group_today_a", createdAt: daysAgo(1), lastActiveAt: daysAgo(0), title: "把项目经历第二条改得更量化", messageCount: 6 }, // i18n-allow: 用户内容不翻译
+  { id: "ses_group_today_b", createdAt: daysAgo(1), lastActiveAt: daysAgo(0), title: "补充一段云原生迁移经历", messageCount: 4 }, // i18n-allow: 用户内容不翻译
+  { id: "ses_group_yesterday", createdAt: daysAgo(2), lastActiveAt: daysAgo(1), title: "把个人摘要压缩到两行", messageCount: 3 }, // i18n-allow: 用户内容不翻译
+  { id: "ses_group_week", createdAt: daysAgo(5), lastActiveAt: daysAgo(3), title: "调整技能关键词排序", messageCount: 2 }, // i18n-allow: 用户内容不翻译
+  { id: "ses_group_month", createdAt: daysAgo(25), lastActiveAt: daysAgo(20), title: "统一各段落的时态", messageCount: 5 }, // i18n-allow: 用户内容不翻译
+  { id: "ses_group_earlier", createdAt: daysAgo(90), lastActiveAt: daysAgo(60), title: "删掉重复的自我评价", messageCount: 1 }, // i18n-allow: 用户内容不翻译
+]
+
+// 仅一个会话：只渲染一个分组、一行。
+const SINGLE_SESSION: SessionSummary[] = [
+  { id: "ses_single", createdAt: daysAgo(2), lastActiveAt: daysAgo(1), title: "只聊过一次的话题", messageCount: 2 }, // i18n-allow: 用户内容不翻译
+]
+
 const LONG_TITLE_SESSION: SessionSummary = {
   id: "ses_000000000009",
-  createdAt: "2026-09-20T09:00:00Z",
-  lastActiveAt: "2026-09-21T02:10:00Z",
+  createdAt: daysAgo(2),
+  lastActiveAt: daysAgo(0),
   // 超长标题用于验证折行；用户内容按 US-13.4 不翻译
   title: "把工作经历里的性能优化成果提前到第一条并补充量化指标与前后对比数据同时调整排版让招聘方一眼看到重点", // i18n-allow: 用户内容不翻译
   messageCount: 8,
@@ -29,8 +51,8 @@ const LONG_TITLE_SESSION: SessionSummary = {
 
 const NEW_SESSION: SessionSummary = {
   id: "ses_00000000000a",
-  createdAt: "2026-10-01T02:10:00Z",
-  lastActiveAt: "2026-10-01T02:10:00Z",
+  createdAt: daysAgo(0),
+  lastActiveAt: daysAgo(0),
   title: "新建对话", // i18n-allow: 用户内容不翻译
   messageCount: 0,
 }
@@ -61,8 +83,8 @@ const LONG_TITLES_FOR_LIST = [
 // 20 条固定数据：验证列表可滚动，序号只影响 id 与消息数，标题循环使用同一批用户内容。
 const LONG_SESSIONS: SessionSummary[] = Array.from({ length: 20 }, (_, index) => ({
   id: `ses_${String(index + 11).padStart(12, "0")}`,
-  createdAt: "2026-09-20T09:00:00Z",
-  lastActiveAt: "2026-09-21T02:10:00Z",
+  createdAt: daysAgo(index + 2),
+  lastActiveAt: daysAgo(index),
   title: LONG_TITLES_FOR_LIST[index % LONG_TITLES_FOR_LIST.length],
   messageCount: index + 1,
 }))
@@ -146,6 +168,22 @@ export const ListUntitledFallback = {
   render: () => (
     <Frame>
       <SessionList sessions={SESSIONS} onSelect={() => {}} />
+    </Frame>
+  ),
+}
+
+export const ListGroupedByTime = {
+  render: () => (
+    <Frame>
+      <SessionList sessions={GROUPED_SESSIONS} activeId={GROUPED_SESSIONS[0].id} onSelect={() => {}} />
+    </Frame>
+  ),
+}
+
+export const ListSingleSession = {
+  render: () => (
+    <Frame>
+      <SessionList sessions={SINGLE_SESSION} activeId={SINGLE_SESSION[0].id} onSelect={() => {}} />
     </Frame>
   ),
 }
