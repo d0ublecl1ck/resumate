@@ -153,6 +153,7 @@
       <a href="#screen-workbench">/ <code>工作台</code></a>
       <a href="#screen-resumes">/resumes <code>简历库</code></a>
       <a href="#screen-editor">/resumes/:id <code>简历编辑</code></a>
+      <a href="#screen-session-history">Storybook <code>历史会话</code></a>
       <a href="#screen-versions">/resumes/:id/versions <code>版本历史</code></a>
       <a href="#screen-jds">/jds <code>JD 库</code></a>
       <a href="#screen-jd">/jds/:id <code>JD 详情</code></a>
@@ -820,6 +821,114 @@
           <li>Agent Markdown（issue 3fdec）：助手消息按标题 / 列表 / 加粗 / 行内 code / 引用渲染，原始 HTML 只当纯文本，禁止注入</li>
           <li>折叠推理与工具活动（issue 3fdec）：中间助手回复与 <code>tool_progress</code> 合成「推理与工具活动」可折叠块，默认折叠</li>
           <li>服务端已更新提示条（issue 3fdec）：本地有未保存输入且服务端签名变化时，顶部金色提示条 + 「载入服务端版本」，用户不点不覆盖本地输入</li>
+        </ul>
+      </div>
+
+      <div class="screen" id="screen-session-history">
+        <div class="screen-head"><h3>历史会话（新建对话 + 列表 + 详情）</h3><span class="route">Storybook · Pages/SessionHistory</span><p>SCR-004。先用 Storybook 确认视觉与交互，不接路由、不改后端：<code>GET /sessions</code> 只有 <code>id / createdAt / lastActiveAt</code>，标题与消息数都是可选展示入参，缺失时走兜底。视觉复用既有令牌与类（card-soft / border-input / cobalt / badge / btn / StateBlock），不新增规则。</p></div>
+        <div class="device" data-shell data-active="/profile">
+          <div class="main"><div class="main-inner">
+            <div class="stack">
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">新建对话入口</h2>
+                <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">全宽主按钮 + lucide MessageSquarePlus；提交中 disabled，文案切到「正在新建对话…」。</p>
+                <div class="grid-cards">
+                  <div>
+                    <button class="btn btn-primary" type="button" style="width:100%;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h9"/><path d="M16 3h6"/><path d="M19 0v6"/></svg>新建对话</button>
+                    <p style="margin:6px 0 0;font-size:12px;color:var(--muted-foreground)">默认：可点，触发 onCreate</p>
+                  </div>
+                  <div>
+                    <button class="btn btn-primary" type="button" disabled style="width:100%;justify-content:center;opacity:.5;cursor:not-allowed"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h9"/><path d="M16 3h6"/><path d="M19 0v6"/></svg>正在新建对话…</button>
+                    <p style="margin:6px 0 0;font-size:12px;color:var(--muted-foreground)">提交中：disabled，重复点击不发起第二次请求</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">历史对话列表项</h2>
+                <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">标题优先用展示入参 <code>title</code>；第二行是相对时间，<code>messageCount</code> 存在时补「N 条消息」，并保留 id 尾巴；绝不渲染 undefined。</p>
+                <ul style="list-style:none;margin:0;padding:0;display:grid;gap:8px">
+                  <li>
+                    <button type="button" aria-current="true" style="width:100%;text-align:left;border:1px solid var(--cobalt);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--cobalt) 5%,transparent);padding:10px 12px">
+                      <span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">性能优化成果提前</span>
+                      <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 2 小时前 · 12 条消息 · ID 000000000001</span>
+                    </button>
+                    <p style="margin:4px 0 0;font-size:11px;color:var(--muted-foreground)">选中态：沿用 <code>border-cobalt bg-cobalt/5</code></p>
+                  </li>
+                  <li>
+                    <button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px">
+                      <span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">未命名对话 · 2026-10-01 10:10</span>
+                      <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 3 天前 · ID 000000000002</span>
+                    </button>
+                    <p style="margin:4px 0 0;font-size:11px;color:var(--muted-foreground)">无标题兜底：「未命名对话」+ 最近活跃时间；没有 messageCount 时不渲染消息数</p>
+                  </li>
+                  <li>
+                    <button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px">
+                      <span class="wrap-anywhere" style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把工作经历里的性能优化成果提前到第一条并补充量化指标与前后对比数据同时调整排版让招聘方一眼看到重点</span>
+                      <span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 1 个月前 · 3 条消息 · ID 000000000003</span>
+                    </button>
+                    <p style="margin:4px 0 0;font-size:11px;color:var(--muted-foreground)">超长标题：<code>wrap-anywhere</code> 折行，不撑破卡片</p>
+                  </li>
+                </ul>
+              </section>
+
+              <div class="state-block">
+                <span class="badge badge-muted">空态</span>
+                <h3>这是新对话</h3>
+                <p>还没有发送消息，输入第一条内容开始。</p>
+              </div>
+              <p style="margin:-18px 0 0;font-size:12px;color:var(--muted-foreground)">新会话空态：在列表里选中一个「刚创建还没发消息」的会话时出现，与「还没有历史会话」区分，复用 <code>StateBlock kind="empty"</code>。</p>
+
+              <section class="card-soft" style="padding:16px">
+                <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">长列表（20 条，可滚动）</h2>
+                <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">Story 用 20 条固定数据；滚动容器沿用全局细滚动条，列表项不压缩行高。</p>
+                <div style="max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px">
+                  <ul style="list-style:none;margin:0;padding:0;display:grid;gap:8px">
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把项目经历第二条改得更量化</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 2 小时前 · 12 条消息 · ID 000000000004</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">补充一段云原生迁移经历</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 2 天前 · 2 条消息 · ID 000000000005</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把个人摘要压缩到两行</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 3 天前 · 3 条消息 · ID 000000000006</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把教育经历提前到技能之前</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 4 天前 · 4 条消息 · ID 000000000007</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">调整技能关键词排序</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 5 天前 · 5 条消息 · ID 000000000008</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">补充一段开源贡献经历</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 6 天前 · 6 条消息 · ID 000000000009</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把实习经历改成项目制写法</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 7 天前 · 7 条消息 · ID 000000000010</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">为投递 A 岗位定制版本</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 8 天前 · 8 条消息 · ID 000000000011</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">为投递 B 岗位定制版本</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 9 天前 · 9 条消息 · ID 000000000012</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">统一各段落的时态</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 10 天前 · 1 条消息 · ID 000000000013</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">补充数据指标口径说明</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 11 天前 · 2 条消息 · ID 000000000014</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">删掉重复的自我评价</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 12 天前 · 3 条消息 · ID 000000000015</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把获奖经历并进教育经历</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 13 天前 · 4 条消息 · ID 000000000016</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把技术栈按熟练度分组</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 14 天前 · 5 条消息 · ID 000000000017</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">补充一段跨团队协作事实</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 15 天前 · 6 条消息 · ID 000000000018</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把英文缩写展开成中文</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 16 天前 · 7 条消息 · ID 000000000019</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">调整工作经历的时间倒序</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 17 天前 · 8 条消息 · ID 000000000020</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">补充一段性能优化前后对比</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 18 天前 · 9 条消息 · ID 000000000021</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">把职责与成果分点列出</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 19 天前 · 1 条消息 · ID 000000000022</span></button></li>
+                    <li><button type="button" style="width:100%;text-align:left;border:1px solid var(--input);border-radius:var(--radius-lg);background:var(--card);padding:10px 12px"><span style="display:block;font-family:var(--font-serif);font-size:16px;font-weight:700">核对联系方式与作品链接</span><span style="display:block;margin-top:4px;font-size:12px;color:var(--muted-foreground)">最近活跃 20 天前 · 2 条消息 · ID 000000000023</span></button></li>
+                  </ul>
+                </div>
+              </section>
+
+              <div class="grid-cards cols-3">
+                <div class="state-block"><span class="badge badge-muted">空态</span><h3>还没有历史会话</h3><p>运行体跑过一次之后，这里会出现它的会话记录。</p></div>
+                <div class="state-block"><span class="badge badge-cobalt">加载中</span><h3>正在加载会话…</h3><p>会话列表请求进行中。</p></div>
+                <div class="state-block is-error"><span class="badge badge-coral">错误</span><h3>会话加载失败</h3><p>请稍后重试，或确认后端服务可用。</p></div>
+              </div>
+              <p style="margin:-18px 0 0;font-size:12px;color:var(--muted-foreground)">空 / 加载 / 错误三态共用 <code>StateBlock</code>，不各写一套。</p>
+            </div>
+          </div></div>
+        </div>
+        <ul class="states">
+          <li>新建对话入口（<code>#screen-session-history</code>）：默认可点（<code>onCreate</code>）；提交中 <code>disabled</code>，文案「正在新建对话…」</li>
+          <li>带派生标题：列表项优先渲染展示入参 <code>title</code>（后端暂无该字段，由调用方从用户消息派生）</li>
+          <li>无标题兜底：<code>title</code> 缺失时用「未命名对话」+ 最近活跃时间，绝不渲染 undefined</li>
+          <li>第二行：相对时间 +（<code>messageCount</code> 存在时）「N 条消息」+ id 尾巴</li>
+          <li>选中态：沿用 <code>border-cobalt bg-cobalt/5</code></li>
+          <li>超长标题：<code>wrap-anywhere</code> 折行不溢出</li>
+          <li>长列表：20 条固定数据，滚动容器内可滚动</li>
+          <li>刚创建还没发消息：选中该会话时展示 <code>StateBlock kind="empty"</code> 提示块</li>
+          <li>空 / 加载 / 错误：共用 <code>StateBlock</code>（empty / loading / error），不各写一套</li>
+          <li>组合页：新建入口 + 列表 + 详情同一屏（Storybook <code>Pages/SessionHistory</code> 的 CompositePage）</li>
+          <li>展示层假设：<code>title</code> / <code>messageCount</code> 是可选入参，后端 <code>GET /sessions</code> 暂无这两个字段</li>
         </ul>
       </div>
 
