@@ -1,0 +1,472 @@
+{
+  "schema": "rubric-consistency/v1",
+  "date": "2026-10-09",
+  "generated_at": "2026-10-09T09:57:13.107943+00:00",
+  "rubric_version": "interview-rubric-v1",
+  "scoring_prompt_sha256": "sha256:7a93f91c707527c8bfb694ad2817303487c51dae326163df9471b920e24ed718",
+  "input_digest": "sha256:9aa32169141ccf901e4df20c33f7a80475cb641aae2fafafe0dd183f134a8ceb",
+  "model": {
+    "provider": "deepseek",
+    "model": "deepseek-flash",
+    "endpoint_host": "api.deepseek.com"
+  },
+  "sampling": {
+    "method": "stratified-random",
+    "ratio": 1.0,
+    "seed": 20261009,
+    "sample_size_override": null,
+    "population": 5,
+    "selected": 5,
+    "strata": [
+      {
+        "rubric_version": "interview-rubric-v1",
+        "role": "Java 后端",
+        "population": 4,
+        "selected": 4
+      },
+      {
+        "rubric_version": "interview-rubric-v1",
+        "role": "资深后端工程师",
+        "population": 1,
+        "selected": 1
+      }
+    ],
+    "skipped": []
+  },
+  "rule": {
+    "mean_abs_diff_limit": 5.0,
+    "max_abs_diff_limit": 10,
+    "min_coverage": 0.8,
+    "agreement_tolerance": 5
+  },
+  "samples": [
+    {
+      "session_id": "ivs_c8a570dfae6a",
+      "report_id": "ivr_4c6be68fa35a",
+      "role": "Java 后端",
+      "rubric_version": "interview-rubric-v1",
+      "created_at": "2026-10-09T15:40:44.861565+08:00",
+      "answer_count": 4,
+      "status": "scored",
+      "original": {
+        "correctness": 82,
+        "depth": 75,
+        "rigor": 77,
+        "fit": 88
+      },
+      "rescore": {
+        "correctness": 85,
+        "depth": 70,
+        "rigor": 68,
+        "fit": 88
+      },
+      "rescore_evidence": {
+        "correctness": [
+          "我们按订单号做基因法分片，取订单号后四位与用户 ID 哈希拼成分片键，保证同一用户的订单落在同一片，避免跨片事务",
+          "分页用 search_after 避免深分页",
+          "2 亿行拆 64 片，单片约 300 万行，写入 P99 从 800ms 降到 220ms"
+        ],
+        "depth": [
+          "跨片查询不放在线拼装：统计类异步同步到 ES",
+          "半开状态放 5 个探针请求",
+          "本地缓存 50ms 过期，配合热点探测自动加载"
+        ],
+        "rigor": [
+          "一致性以 Cache Aside 为主：更新数据库后删除缓存，再用 binlog 订阅做延迟双删，容忍秒级不一致窗口",
+          "熔断用 Sentinel，错误率超过 50% 且持续 10 秒触发，半开状态放 5 个探针请求",
+          "迁移用双写加影子表，按用户维度灰度切流，全程可回滚"
+        ],
+        "fit": [
+          "路由由 ShardingSphere 中间件承担，应用层不感知",
+          "熔断用 Sentinel，错误率超过 50% 且持续 10 秒触发",
+          "热点 key 用本地 Caffeine 加 Redis 分片多副本"
+        ]
+      },
+      "comparisons": [
+        {
+          "dimension": "correctness",
+          "original": 82,
+          "rescore": 85,
+          "diff": 3,
+          "comparable": true
+        },
+        {
+          "dimension": "depth",
+          "original": 75,
+          "rescore": 70,
+          "diff": -5,
+          "comparable": true
+        },
+        {
+          "dimension": "rigor",
+          "original": 77,
+          "rescore": 68,
+          "diff": -9,
+          "comparable": true
+        },
+        {
+          "dimension": "fit",
+          "original": 88,
+          "rescore": 88,
+          "diff": 0,
+          "comparable": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "session_id": "ivs_8ed9d0cfe39a",
+      "report_id": "ivr_c03d98927778",
+      "role": "Java 后端",
+      "rubric_version": "interview-rubric-v1",
+      "created_at": "2026-10-09T15:53:44.196698+08:00",
+      "answer_count": 4,
+      "status": "scored",
+      "original": {
+        "correctness": 80,
+        "depth": 75,
+        "rigor": 70,
+        "fit": 86
+      },
+      "rescore": {
+        "correctness": 78,
+        "depth": 70,
+        "rigor": 66,
+        "fit": 83
+      },
+      "rescore_evidence": {
+        "correctness": [
+          "我们当时用的是 buyer_id 做分片键，因为买家维度的查询是最主要的，同一买家的订单都落在一个分片里，能避免跨库",
+          "跨分片查询我们用 ES 建了异构索引，列表页和商家后台都走 ES",
+          "分布式事务用的是本地消息表加定时任务补偿，保证最终一致"
+        ],
+        "depth": [
+          "全局唯一 ID 用雪花算法，订单号里带分片信息，方便定位",
+          "扩容到 128 片的话，思路是双写一段时间，把老数据迁移过去，再灰度切读，最后对账校验，确认没问题再停双写",
+          "阈值是压测出来的，按容量的百分之七八十设置"
+        ],
+        "rigor": [
+          "整体上这套方案能撑住，分片键选对是最关键的",
+          "这样一套下来，查询性能提升比较明显，热点商品基本都命中缓存",
+          "事后复盘了容量和告警阈值，把消费者扩容做成自动的"
+        ],
+        "fit": [
+          "遇到这种情况我第一步先止损。先看积压量多大、消费速率多少、分区是不是倾斜，再确认消费者有没有异常",
+          "订单状态以数据库为准做对账修复"
+        ]
+      },
+      "comparisons": [
+        {
+          "dimension": "correctness",
+          "original": 80,
+          "rescore": 78,
+          "diff": -2,
+          "comparable": true
+        },
+        {
+          "dimension": "depth",
+          "original": 75,
+          "rescore": 70,
+          "diff": -5,
+          "comparable": true
+        },
+        {
+          "dimension": "rigor",
+          "original": 70,
+          "rescore": 66,
+          "diff": -4,
+          "comparable": true
+        },
+        {
+          "dimension": "fit",
+          "original": 86,
+          "rescore": 83,
+          "diff": -3,
+          "comparable": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "session_id": "ivs_fbd85adbe536",
+      "report_id": "ivr_1cdca7fc7520",
+      "role": "Java 后端",
+      "rubric_version": "interview-rubric-v1",
+      "created_at": "2026-10-09T15:56:15.987277+08:00",
+      "answer_count": 4,
+      "status": "scored",
+      "original": {
+        "correctness": 90,
+        "depth": 87,
+        "rigor": 86,
+        "fit": 88
+      },
+      "rescore": {
+        "correctness": 90,
+        "depth": 82,
+        "rigor": 84,
+        "fit": 90
+      },
+      "rescore_evidence": {
+        "correctness": [
+          "分片键用 buyer_id，订单号用基因法把 buyer_id 的低位基因编进 order_id，这样按订单号和买家 ID 查询都会路由到同一片；卖家 ID 走异构索引（ES 或卖家维度宽表）承接",
+          "算法上网关用令牌桶允许小幅突发，接口级用滑动窗口保证精度；阈值不拍脑袋，先压测出单机容量，再按容量的 70% 到 80% 设阈值并预留弹性扩容空间",
+          "熔断按错误率和慢调用比例两个指标判定，慢调用比例专门应对下游变慢这种最危险的情况；熔断后进入半开，放少量探测流量，成功率达标再恢复。"
+        ],
+        "depth": [
+          "扩容我按 2 倍重建 128 片：先上双写新老分片并校验，历史数据用批量导出加 binlog 增量迁移，再按 1%、10%、100% 灰度切读，两侧跑对账 SQL，一致后才摘旧片，全程留回滚开关。",
+          "容量评估按单表目标行数和单库 QPS 反推，比如单表控制在 3000 万行、单库峰值压到 3000 QPS 以内，取较小值再留 30% 水位，据此定分片数。",
+          "降级分三级：一级关推荐、积分展示这类非核心功能，二级核心链路改成异步受理，三级返回兜底数据。"
+        ],
+        "rigor": [
+          "更新时先写库再删缓存，删缓存失败用 binlog 订阅补偿删除，避免延迟双删的窗口问题",
+          "验证不误伤靠灰度放量、影子压测和限流命中大盘，盯真实下单成功率，一旦误伤立即调阈值或放行。",
+          "代码评审规定分片相关改动必须两人 review 且影子比对通过才能合并。"
+        ],
+        "fit": [
+          "我举订单中台分库分表这个项目，团队 6 人，我是方案 owner 兼主力开发。",
+          "选型上我对比了 ShardingSphere 和应用层自研路由，按改造成本、SQL 兼容性、团队熟悉度三个维度打分，选了 ShardingSphere",
+          "任务拆成数据迁移、双写、灰度切读、对账四条并行线，每条线有明确 owner 和验收标准。"
+        ]
+      },
+      "comparisons": [
+        {
+          "dimension": "correctness",
+          "original": 90,
+          "rescore": 90,
+          "diff": 0,
+          "comparable": true
+        },
+        {
+          "dimension": "depth",
+          "original": 87,
+          "rescore": 82,
+          "diff": -5,
+          "comparable": true
+        },
+        {
+          "dimension": "rigor",
+          "original": 86,
+          "rescore": 84,
+          "diff": -2,
+          "comparable": true
+        },
+        {
+          "dimension": "fit",
+          "original": 88,
+          "rescore": 90,
+          "diff": 2,
+          "comparable": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "session_id": "ivs_5d13d06cd4d7",
+      "report_id": "ivr_95bbda022513",
+      "role": "Java 后端",
+      "rubric_version": "interview-rubric-v1",
+      "created_at": "2026-10-09T15:59:03.218966+08:00",
+      "answer_count": 4,
+      "status": "scored",
+      "original": {
+        "correctness": 90,
+        "depth": 88,
+        "rigor": 87,
+        "fit": 90
+      },
+      "rescore": {
+        "correctness": 88,
+        "depth": 84,
+        "rigor": 82,
+        "fit": 90
+      },
+      "rescore_evidence": {
+        "correctness": [
+          "分片键选 buyer_id：因为 80% 查询走买家维度，用户维度天然单分片，且 buyer_id 离散度高、分布均匀，能避免订单号递增造成热点；用基因法把 buyer_id 低位编进 order_id，让订单号查询也命中同一片",
+          "2 亿除以 64 约 312 万行每片，按单行约 1KB、索引放大 2 倍估磁盘约 6GB，按 QPS 3000 估 IOPS，预留 50% 增长空间，控制在单片 500 万行以内",
+          "更新用 Cache Aside，先更库再删缓存，删失败由 Canal 订阅 binlog 异步补偿删除，本地缓存用 MQ 广播失效，短 TTL 兜底"
+        ],
+        "depth": [
+          "涨到 10 亿走在线重分片：按 2 的幂扩到 128 片，基因法让迁移只搬一半数据，双写新老路由、Canal 增量加批量导出、1% 到 100% 灰度切读、双向对账，用 ShardingSphere 弹性伸缩编排，每步可回滚",
+          "跨分片查询禁止跨片 join，卖家维度用冗余宽表加 ES 异步汇总",
+          "分布式事务按场景选：主链路本地消息表加最终一致，强一致用 Seata AT，资金类用 TCC"
+        ],
+        "rigor": [
+          "约束是下单写入 P99 小于 300ms、改造零停机可回滚",
+          "每阶段先压测和影子比对，切读按 1% 到 10% 到 100% 灰度，准备回滚开关和双跑对账，出问题 5 分钟内可回退",
+          "监控盯命中率、回源 QPS、缓存与 DB 差异条数，差异超阈值自动降级直连 Redis"
+        ],
+        "fit": [
+          "用基因法把 buyer_id 低位编进 order_id，让订单号查询也命中同一片",
+          "强一致用 Seata AT，资金类用 TCC",
+          "用 ShardingSphere 弹性伸缩编排，每步可回滚"
+        ]
+      },
+      "comparisons": [
+        {
+          "dimension": "correctness",
+          "original": 90,
+          "rescore": 88,
+          "diff": -2,
+          "comparable": true
+        },
+        {
+          "dimension": "depth",
+          "original": 88,
+          "rescore": 84,
+          "diff": -4,
+          "comparable": true
+        },
+        {
+          "dimension": "rigor",
+          "original": 87,
+          "rescore": 82,
+          "diff": -5,
+          "comparable": true
+        },
+        {
+          "dimension": "fit",
+          "original": 90,
+          "rescore": 90,
+          "diff": 0,
+          "comparable": true
+        }
+      ],
+      "error": null
+    },
+    {
+      "session_id": "ivs_814176d3982c",
+      "report_id": "ivr_06a4f80db4d1",
+      "role": "资深后端工程师",
+      "rubric_version": "interview-rubric-v1",
+      "created_at": "2026-10-09T16:30:22.237716+08:00",
+      "answer_count": 3,
+      "status": "scored",
+      "original": {
+        "correctness": 84,
+        "depth": 72,
+        "rigor": 60,
+        "fit": 78
+      },
+      "rescore": {
+        "correctness": 70,
+        "depth": 72,
+        "rigor": 62,
+        "fit": 80
+      },
+      "rescore_evidence": {
+        "correctness": [
+          "按订单号做基因法分片：从订单号里取买家 ID 的后四位参与哈希，路由时优先按买家维度，跨片查询走异步异构索引。",
+          "订单号用雪花算法生成，workerId 由配置中心分配，并处理时钟回拨。",
+          "五名工程师分工：一人看监控、一人改配置、一人对外沟通，我自己负责决策和回滚判断，5 分钟内没恢复就回滚。"
+        ],
+        "depth": [
+          "单表控制在 2000 万行以内，日均 500 万单保留 3 年约 54 亿行，按 64 片起步并取 2 的幂便于翻倍扩容。",
+          "热点 key 用互斥锁或逻辑过期防击穿，空值用空对象缓存加布隆过滤器防穿透，过期时间打散防雪崩。",
+          "订阅 binlog 做延迟双删，容忍秒级不一致窗口。"
+        ],
+        "rigor": [
+          "按 64 片起步并取 2 的幂便于翻倍扩容。",
+          "单表控制在 2000 万行以内，日均 500 万单保留 3 年约 54 亿行",
+          "五名工程师分工：一人看监控、一人改配置、一人对外沟通"
+        ],
+        "fit": [
+          "先看监控大盘和链路追踪定位瓶颈：数据库慢查询与连接池、Redis 大 key 与热 key、线程池与 GC、下游依赖超时。",
+          "止损优先级是先对非核心流量限流，再关闭非核心校验和异步日志通知做降级，同时对下游熔断。",
+          "事后复盘根因，补压测与容量水位告警，把限流降级预案沉淀成一键开关。"
+        ]
+      },
+      "comparisons": [
+        {
+          "dimension": "correctness",
+          "original": 84,
+          "rescore": 70,
+          "diff": -14,
+          "comparable": true
+        },
+        {
+          "dimension": "depth",
+          "original": 72,
+          "rescore": 72,
+          "diff": 0,
+          "comparable": true
+        },
+        {
+          "dimension": "rigor",
+          "original": 60,
+          "rescore": 62,
+          "diff": 2,
+          "comparable": true
+        },
+        {
+          "dimension": "fit",
+          "original": 78,
+          "rescore": 80,
+          "diff": 2,
+          "comparable": true
+        }
+      ],
+      "error": null
+    }
+  ],
+  "summary": {
+    "comparable": 20,
+    "total": 20,
+    "coverage": 1.0,
+    "by_dimension": {
+      "correctness": {
+        "n": 5,
+        "mean_abs_diff": 4.2,
+        "max_abs_diff": 14,
+        "exact_agreement_rate": 0.2,
+        "within_5_rate": 0.8
+      },
+      "depth": {
+        "n": 5,
+        "mean_abs_diff": 3.8,
+        "max_abs_diff": 5,
+        "exact_agreement_rate": 0.2,
+        "within_5_rate": 1.0
+      },
+      "rigor": {
+        "n": 5,
+        "mean_abs_diff": 4.4,
+        "max_abs_diff": 9,
+        "exact_agreement_rate": 0.0,
+        "within_5_rate": 0.8
+      },
+      "fit": {
+        "n": 5,
+        "mean_abs_diff": 1.4,
+        "max_abs_diff": 3,
+        "exact_agreement_rate": 0.4,
+        "within_5_rate": 1.0
+      }
+    },
+    "pooled": {
+      "n": 20,
+      "mean_abs_diff": 3.45,
+      "max_abs_diff": 14,
+      "exact_agreement_rate": 0.2,
+      "within_5_rate": 0.9
+    },
+    "verdict": "fail",
+    "reasons": [
+      "单点最大偏差 14 超过 10"
+    ],
+    "rule": {
+      "mean_abs_diff_limit": 5.0,
+      "max_abs_diff_limit": 10,
+      "min_coverage": 0.8,
+      "agreement_tolerance": 5
+    }
+  },
+  "manual_review": {
+    "status": "pending",
+    "reviewer": null,
+    "reviewed_at": null,
+    "notes": ""
+  },
+  "reproduction_command": "cd backend && .venv/bin/python -m scripts.audit_rubric_consistency --sample-ratio 1.0 --seed 20261009 --date 2026-10-09"
+}
