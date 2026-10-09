@@ -2,6 +2,7 @@ import base64
 import copy
 import hashlib
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -10,8 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.deps import CurrentUser
+from app.modules.speech import dashscope_asr
 from app.modules.templates import dao as templates_dao
-from app.shared.errors import ValidationFailed
+from app.shared.errors import ModelNotConfigured, ValidationFailed
 
 from . import catalog, dao
 from .models import UserSettings
@@ -26,6 +28,9 @@ from .schemas import (
     ModelConfigUpdate,
     ModelTestResult,
     Shortcut,
+    SpeechConfigResponse,
+    SpeechConfigUpdate,
+    SpeechTestResult,
     UserPreferencesResponse,
     UserPreferencesUpdate,
 )
@@ -47,6 +52,24 @@ DEFAULT_AGENT_CONFIG: dict = {
     "budget": {"maxTokens": 20000, "maxTurns": 8, "maxCostUsd": 0.5},
 }
 DEFAULT_MODEL_CONFIG: dict = {"provider": "", "endpoint": "", "model": ""}
+# 语音识别（云端 ASR）默认配置：默认阿里云百炼 Paraformer，华北2（北京）地域。
+DEFAULT_SPEECH_CONFIG: dict = {
+    "provider": dashscope_asr.PROVIDER,
+    "region": dashscope_asr.DEFAULT_REGION,
+    "endpoint": "",
+    "model": dashscope_asr.DEFAULT_MODEL,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class SpeechCredentials:
+    """解密后的语音识别凭据；只在服务端内存中传递，不经过任何接口返回。"""
+
+    provider: str
+    region: str
+    endpoint: str
+    model: str
+    api_key: str
 
 # Stable policy keys; the UI maps them through settings.agent.fullAccessScope.* /
 # settings.agent.confirmRetainedOp.* so the copy follows the active locale.
@@ -124,6 +147,7 @@ def get_or_create(db: Session, user: CurrentUser) -> UserSettings:
             },
             agent_config=copy.deepcopy(DEFAULT_AGENT_CONFIG),
             model_config=copy.deepcopy(DEFAULT_MODEL_CONFIG),
+            speech_config=copy.deepcopy(DEFAULT_SPEECH_CONFIG),
             created_at=now,
             updated_at=now,
         )
@@ -187,6 +211,97 @@ def _model_config(settings: UserSettings) -> ModelConfigResponse:
         key_configured=bool(config.get("apiKey")),
         last_test=ModelTestResult.model_validate(last_test) if last_test else None,
     )
+
+
+def _speech_config(settings: UserSettings) -> SpeechConfigResponse:
+    config = dict(DEFAULT_SPEECH_CONFIG)
+    config.update(settings.speech_config or {})
+    last_test = config.get("lastTest")
+    return SpeechConfigResponse(
+        provider=config.get("provider", dashscope_asr.PROVIDER),
+        region=config.get("region", dashscope_asr.DEFAULT_REGION),
+        endpoint=config.get("endpoint", ""),
+        model=config.get("model", dashscope_asr.DEFAULT_MODEL),
+        key_configured=bool(config.get("apiKey")),
+        last_test=SpeechTestResult.model_validate(last_test) if last_test else None,
+    )
+
+
+def get_speech_config(db: Session, user: CurrentUser) -> SpeechConfigResponse:
+    return _speech_config(get_or_create(db, user))
+
+
+def update_speech_config(db: Session, user: CurrentUser, payload: SpeechConfigUpdate) -> SpeechConfigResponse:
+    settings = get_or_create(db, user)
+    config = dict(settings.speech_config or {})
+    data = payload.model_dump(by_alias=True, exclude_none=True)
+    for key in ("provider", "region", "endpoint", "model"):
+        if key in data:
+            config[key] = data[key]
+    if "apiKey" in data:
+        secret = (data["apiKey"] or "").strip()
+        if secret:
+            config["apiKey"] = _encrypt_secret(secret)
+        else:
+            config.pop("apiKey", None)
+    # Any edit invalidates the previous credential test result.
+    config.pop("lastTest", None)
+    settings.speech_config = config
+    settings.updated_at = _now()
+    db.commit()
+    db.refresh(settings)
+    return _speech_config(settings)
+
+
+def get_speech_credentials(db: Session, user: CurrentUser) -> SpeechCredentials:
+    """解密语音识别凭据供服务端调用上游；未配置 Key 时给可区分的 MODEL_NOT_CONFIGURED。
+
+    这是唯一会拿到明文 Key 的入口，返回值不经过任何序列化出口。
+    """
+    settings = get_or_create(db, user)
+    config = dict(DEFAULT_SPEECH_CONFIG)
+    config.update(settings.speech_config or {})
+    api_key = _decrypt_secret(config.get("apiKey", ""))
+    if not api_key:
+        raise ModelNotConfigured("还没有配置语音识别 API Key，请到设置里配置后再使用云端识别")
+    model = (config.get("model") or "").strip() or dashscope_asr.DEFAULT_MODEL
+    return SpeechCredentials(
+        provider=config.get("provider") or dashscope_asr.PROVIDER,
+        region=config.get("region") or dashscope_asr.DEFAULT_REGION,
+        endpoint=config.get("endpoint") or "",
+        model=model,
+        api_key=api_key,
+    )
+
+
+def test_speech_connection(db: Session, user: CurrentUser, payload: SpeechConfigUpdate | None = None) -> SpeechTestResult:
+    """只校验 Key/地域/模型能否取到上传凭证，不消耗音频、不回显任何凭证。"""
+    settings = get_or_create(db, user)
+    saved = settings.speech_config or {}
+    provider = _effective(payload, saved, "provider").strip() or dashscope_asr.PROVIDER
+    region = _effective(payload, saved, "region").strip() or dashscope_asr.DEFAULT_REGION
+    model = _effective(payload, saved, "model").strip() or dashscope_asr.DEFAULT_MODEL
+    endpoint = _effective(payload, saved, "endpoint").strip()
+    if payload and payload.api_key is not None:
+        api_key = payload.api_key or None
+    else:
+        api_key = _decrypt_secret(saved.get("apiKey", ""))
+    if not api_key:
+        raise ValidationFailed("请先配置语音识别 API Key")
+    ok, message = dashscope_asr.probe_credentials(
+        api_key=api_key,
+        model=model,
+        base_url=dashscope_asr.resolve_base_url(region=region, endpoint=endpoint),
+    )
+    result = SpeechTestResult(at=_now(), ok=ok, message=message)
+    config = dict(settings.speech_config or {})
+    config["lastTest"] = result.model_dump(mode="json", by_alias=True)
+    config.setdefault("provider", provider)
+    settings.speech_config = config
+    settings.updated_at = _now()
+    db.commit()
+    db.refresh(settings)
+    return result
 
 
 def get_preferences(db: Session, user: CurrentUser) -> UserPreferencesResponse:

@@ -13,6 +13,9 @@ from .schemas import (
     ModelConfigResponse,
     ModelConfigUpdate,
     ModelTestResult,
+    SpeechConfigResponse,
+    SpeechConfigUpdate,
+    SpeechTestResult,
     UserPreferencesResponse,
     UserPreferencesUpdate,
 )
@@ -87,3 +90,29 @@ def test_model_config(
     user: CurrentUser = Depends(require_permission("settings:write")),
 ) -> ModelTestResult:
     return service.test_model_connection(db, user, payload)
+
+
+@router.get("/speech/config", response_model=SpeechConfigResponse)
+def get_speech_config(
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("settings:read")),
+) -> SpeechConfigResponse:
+    return service.get_speech_config(db, user)
+
+
+@router.put("/speech/config", response_model=SpeechConfigResponse)
+def update_speech_config(
+    payload: SpeechConfigUpdate,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("settings:write")),
+) -> SpeechConfigResponse:
+    return service.update_speech_config(db, user, payload)
+
+
+@router.post("/speech/config:test", response_model=SpeechTestResult)
+def test_speech_config(
+    payload: SpeechConfigUpdate | None = None,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("settings:write")),
+) -> SpeechTestResult:
+    return service.test_speech_connection(db, user, payload)
