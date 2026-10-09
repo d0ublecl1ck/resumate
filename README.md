@@ -220,7 +220,7 @@ ls ui/src/pages/*.stories.tsx ui/src/components/*.stories.tsx | wc -l         # 
 - **没有 MCP server。** 能力发现返回的 `mcpUrl` 是占位，实测 `GET /mcp` 返回 404；外部接入目前走 REST 与 PAT。
 - **后端 spawn 运行体要求 CLI 在 `PATH`。** `POST /resumes/{id}/runs` 默认执行 `resumate-agent`，安装方式：`uv tool install ./agent-core`（或把 `AGENT_RUNNER_COMMAND` 指向其它可执行文件）。注意该工具是安装时的快照，`agent-core` 改动后需要重新安装才会生效。
 - **模板管理端写接口未开放**，模板当前只读。
-- **Webhook 与题库/面试扩展属 P1/EXT**，未实现，见 [用户故事索引](docs/user-stories/README.md)。
+- **Webhook 与题库扩展属 P1/EXT**，未实现；**AI 模拟面试闭环已实现**，见 [用户故事索引](docs/user-stories/README.md)。
 - **必须自备 PostgreSQL 与 Redis**，没有单文件 / 零依赖模式。
 - **仓库未附 LICENSE**，因此当前默认保留所有权利。
 
