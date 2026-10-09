@@ -91,3 +91,22 @@ def test_escape_hatch_and_smtp_are_scoped_to_backend_only() -> None:
         env = _environment(name)
         assert ESCAPE_HATCH not in env, f"{name} 不应设置 {ESCAPE_HATCH}"
         assert not [key for key in env if key.startswith("SMTP_")], f"{name} 不应透传 SMTP_*"
+
+
+DOCKERIGNORE = Path(__file__).resolve().parents[2] / ".dockerignore"
+DOCKERFILE_BACKEND = Path(__file__).resolve().parents[2] / "docker" / "Dockerfile.backend"
+
+
+def test_build_context_excludes_env_files() -> None:
+    """构建上下文必须排除 .env：Dockerfile.backend 用 `COPY backend/ ./` 整目录拷贝，
+    漏掉这条会把本机 backend/.env（真实 SMTP 凭据）固化进镜像层。"""
+    dockerfile = DOCKERFILE_BACKEND.read_text(encoding="utf-8")
+    assert "COPY backend/ ./" in dockerfile, "该守卫假定后端镜像是整目录拷贝，若改成逐文件 COPY 需一并复核"
+
+    patterns = {
+        line.strip()
+        for line in DOCKERIGNORE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+    assert ".env" in patterns, ".dockerignore 必须排除根目录 .env"
+    assert "**/.env" in patterns, ".dockerignore 必须用 **/.env 覆盖 backend/.env 这类嵌套路径"
