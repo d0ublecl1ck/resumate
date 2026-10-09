@@ -1,0 +1,57 @@
+{
+  "web": "http://127.0.0.1:5177",
+  "image": {
+    "status": 409,
+    "body": "{\"code\":\"MODEL_NO_VISION\",\"message\":\"当前配置的模型不支持图像输入，请到「设置与 Agent → 模型配置」换成支持看图的模型\"}",
+    "alert": " 整理失败当前模型不支持看图。请到「设置与 Agent → 模型配置」换成支持图像的模型再试。去设置换模型",
+    "hasSwitchModel": true
+  },
+  "tuning": {
+    "duplicateStatus": 201,
+    "copyId": "res_cf18c53f6249",
+    "runStatus": 202,
+    "runRequestBody": {
+      "prompt": "请按目标岗位 JD 微调这份简历（JD revision rev.1）。\n\n岗位：资深后端工程师 · 星澜科技\nJD 原文：\n负责订单中台核心服务的架构设计与开发；要求精通 Java 17 与 Spring Cloud 微服务；熟悉 MySQL 分库分表与容量评估；有高并发与限流降级实战经验；熟悉 Redis 缓存设计与一致性方案；熟悉 Kafka 消息队列与最终一致性；具备线上问题定位与性能调优能力；有技术带队经验。\n\n要求：\n- 只围绕该岗位的要求调整简历内容与措辞，不得编造简历里不存在的事实。\n- 产出可审阅的领域 Patch；未确认前不要覆盖已有内容。\n- 目标是刚创建的简历副本，原稿保持不变。"
+    },
+    "runResponse": "{\"runId\":\"run_d265c1f7af92\",\"status\":\"started\"}",
+    "url": "http://127.0.0.1:5177/resumes/res_cf18c53f6249?panel=run",
+    "turns": {
+      "status": 200,
+      "count": 1,
+      "body": [
+        {
+          "id": "turn_97198052f777",
+          "scope": "resume",
+          "resumeId": "res_cf18c53f6249",
+          "clientId": "run_d265c1f7af92",
+          "source": "agent",
+          "executionMode": "approval",
+          "modeSource": "agent",
+          "state": "open",
+          "baseVersionId": "ver_f8a347eb4a1b",
+          "sessionId": "sess_38872a3c85c7",
+          "message": "",
+          "createdAt": "2026-10-10T00:40:27.317397+08:00",
+          "closedAt": null,
+          "result": null,
+          "pendingActions": [],
+          "runError": null
+        }
+      ]
+    }
+  },
+  "console": [
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "error: Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "error: Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "debug: [vite] connecting...",
+    "debug: [vite] connected.",
+    "info: %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "error: `value` prop on `%s` should not be null. Consider using an empty string to clear the component or `undefined` for uncontrolled components. textarea"
+  ]
+}

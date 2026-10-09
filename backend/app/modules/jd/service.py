@@ -9,6 +9,7 @@ from app.shared.errors import ResourceNotFound, ValidationFailed
 from . import dao, parser
 from .models import JobDescription
 from .schemas import (
+    JdImageParseRequest,
     JdParseRequest,
     JobDescriptionCreate,
     JobDescriptionUpdate,
@@ -109,6 +110,11 @@ def release_binding(db: Session, owner_id: str, jd_id: str) -> JobDescription:
 def parse_text(db: Session, owner_id: str, payload: JdParseRequest) -> ProposedJdResponse:
     """POST /jds:parse-text：用用户已配置的模型把粘贴文本结构化成草案。"""
     return parser.parse_jd_text(db, owner_id, text=payload.text)
+
+
+def parse_image(db: Session, owner_id: str, payload: JdImageParseRequest) -> ProposedJdResponse:
+    """POST /jds:parse-image：用支持图像的模型把截图结构化成草案；不落库。"""
+    return parser.parse_jd_image(db, owner_id, payload=payload)
 
 
 def bound_resume_available(db: Session, jd: JobDescription) -> bool | None:

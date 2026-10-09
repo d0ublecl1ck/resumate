@@ -57,3 +57,18 @@ export const Parsing = { render: () => view({ parsing: true }) }
 export const DraftResult = { render: () => view({ draft: DRAFT }) }
 export const ModelNotConfigured = { render: () => view({ error: "MODEL_NOT_CONFIGURED", onOpenSettings: () => {} }) }
 export const ParseRetryable = { render: () => view({ error: "UPSTREAM_TIMEOUT" }) }
+
+const IMAGE_DRAFT: ProposedJd = {
+  ...DRAFT,
+  inputSource: "image",
+  note: i18n.t("api.jd.note.image"),
+}
+
+export const ImageParsing = { render: () => view({ mode: "image", parsing: true, imageName: "jd-screenshot.png" }) }
+export const ImageDraftResult = { render: () => view({ mode: "image", draft: IMAGE_DRAFT, imageName: "jd-screenshot.png" }) }
+export const ImageModelNotConfigured = {
+  render: () => view({ mode: "image", imageName: "jd-screenshot.png", error: "MODEL_NOT_CONFIGURED", onOpenSettings: () => {} }),
+}
+export const ImageModelNoVision = {
+  render: () => view({ mode: "image", imageName: "jd-screenshot.png", error: "MODEL_NO_VISION", onOpenSettings: () => {} }),
+}

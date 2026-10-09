@@ -17,7 +17,6 @@ export default {
     note: {
       image: "Content recognized from the screenshot. Please review before creating.",
       text: "Structured by AI. Please review before creating.",
-      imageDemo: "Recognized the following content from the screenshot “{{fileName}}” (sample data for demo). Please review before creating.",
     },
   },
 }

@@ -9,6 +9,7 @@ from . import service
 from .models import JobDescription
 from .schemas import (
     BindingUpdate,
+    JdImageParseRequest,
     JdParseRequest,
     JobDescriptionCreate,
     JobDescriptionResponse,
@@ -62,6 +63,16 @@ def parse_jd_text(
     user: CurrentUser = Depends(require_permission("jd:write")),
 ) -> ProposedJdResponse:
     return service.parse_text(db, user.id, payload)
+
+
+@router.post("/jds:parse-image", response_model=ProposedJdResponse)
+def parse_jd_image(
+    payload: JdImageParseRequest,
+    db: Session = Depends(get_db),
+    user: CurrentUser = Depends(require_permission("jd:write")),
+) -> ProposedJdResponse:
+    """上传岗位截图，用支持图像的模型结构化成草案；不落库，模型不支持给 MODEL_NO_VISION。"""
+    return service.parse_image(db, user.id, payload)
 
 
 @router.get("/jds/{jd_id}", response_model=JobDescriptionResponse)

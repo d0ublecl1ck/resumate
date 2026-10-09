@@ -20,6 +20,7 @@ class ErrorCode(StrEnum):
     UPSTREAM_TIMEOUT = "UPSTREAM_TIMEOUT"
     UPSTREAM_REJECTED = "UPSTREAM_REJECTED"
     MODEL_OUTPUT_INVALID = "MODEL_OUTPUT_INVALID"
+    MODEL_NO_VISION = "MODEL_NO_VISION"
     SCOPE_INSUFFICIENT = "SCOPE_INSUFFICIENT"
     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND"
     TOKEN_REVOKED = "TOKEN_REVOKED"
@@ -110,6 +111,13 @@ class RunStateConflict(ApiException):
 class ModelNotConfigured(ApiException):
     status_code = 409
     code = ErrorCode.MODEL_NOT_CONFIGURED
+
+
+class ModelNoVision(ApiException):
+    """配置的模型不支持图像输入；用专门错误码引导用户换视觉模型。"""
+
+    status_code = 409
+    code = ErrorCode.MODEL_NO_VISION
 
 
 class UpstreamTimeout(ApiException):

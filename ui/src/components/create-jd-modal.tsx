@@ -20,6 +20,8 @@ type Mode = "text" | "image"
 /** 解析失败的可映射错误码；与阶段二后端契约（issue fb67d）一致。 */
 export type JdParseErrorCode =
   | "MODEL_NOT_CONFIGURED"
+  | "MODEL_NO_VISION"
+  | "VALIDATION_FAILED"
   | "UPSTREAM_TIMEOUT"
   | "UPSTREAM_REJECTED"
   | "MODEL_OUTPUT_INVALID"
@@ -27,6 +29,8 @@ export type JdParseErrorCode =
 
 const PARSE_ERROR_KEYS: Record<JdParseErrorCode, string> = {
   MODEL_NOT_CONFIGURED: "jd.create.errors.MODEL_NOT_CONFIGURED",
+  MODEL_NO_VISION: "jd.create.errors.MODEL_NO_VISION",
+  VALIDATION_FAILED: "jd.create.errors.VALIDATION_FAILED",
   UPSTREAM_TIMEOUT: "jd.create.errors.UPSTREAM_TIMEOUT",
   UPSTREAM_REJECTED: "jd.create.errors.UPSTREAM_REJECTED",
   MODEL_OUTPUT_INVALID: "jd.create.errors.MODEL_OUTPUT_INVALID",
@@ -143,7 +147,7 @@ export function CreateJdDialogView({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
@@ -173,10 +177,12 @@ export function CreateJdDialogView({
               </p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{t(PARSE_ERROR_KEYS[error])}</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {error === "MODEL_NOT_CONFIGURED" && onOpenSettings ? (
-                  <button onClick={onOpenSettings} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
-                    {t("jd.create.openSettings")}
-                  </button>
+                {error === "MODEL_NOT_CONFIGURED" || error === "MODEL_NO_VISION" ? (
+                  onOpenSettings ? (
+                    <button onClick={onOpenSettings} className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90">
+                      {t(error === "MODEL_NO_VISION" ? "jd.create.openVisionSettings" : "jd.create.openSettings")}
+                    </button>
+                  ) : null
                 ) : (
                   <button onClick={onRetry} className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary">
                     {t("jd.create.retry")}
@@ -242,6 +248,7 @@ export function CreateJdModal({
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>("text")
   const [text, setText] = useState("")
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageName, setImageName] = useState<string | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [parsing, setParsing] = useState(false)
@@ -254,6 +261,7 @@ export function CreateJdModal({
   function reset() {
     setMode("text")
     setText("")
+    setImageFile(null)
     setImageName(null)
     setImagePreview(null)
     setDraft(null)
@@ -286,11 +294,14 @@ export function CreateJdModal({
   }
 
   function runImageParse() {
-    if (!imageName) return
-    void runParse(() => parseJdFromImage(imageName))
+    if (!imageFile) return
+    void runParse(() =>
+      parseJdFromImage({ image: imageFile, filename: imageFile.name, contentType: imageFile.type }),
+    )
   }
 
   function pickImage(file: File) {
+    setImageFile(file)
     setImageName(file.name)
     const reader = new FileReader()
     reader.onload = () => setImagePreview(typeof reader.result === "string" ? reader.result : null)
@@ -322,7 +333,7 @@ export function CreateJdModal({
       onDraftChange={setDraft}
       onResetDraft={() => setDraft(null)}
       error={error}
-      onRetry={runTextParse}
+      onRetry={mode === "text" ? runTextParse : runImageParse}
       onOpenSettings={() => {
         close()
         navigate("/settings")
