@@ -1,13 +1,14 @@
 ---
 id: 3ff68
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:03:03.680Z
-updated_at: 2026-10-09T16:03:12.206Z
+updated_at: 2026-10-09T16:08:08.380Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:03:12.206Z
+closed_at: 2026-10-09T16:08:08.380Z
 ---
 
 # 启动自检校验有效配置：缺 SMTP 立即失败并输出配置来源
