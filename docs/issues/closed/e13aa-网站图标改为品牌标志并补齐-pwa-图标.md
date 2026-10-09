@@ -1,13 +1,15 @@
 ---
 id: e13aa
-status: open
+status: closed
 created_at: 2026-10-03T07:05:50.083Z
-updated_at: 2026-10-03T07:05:50.083Z
+updated_at: 2026-10-09T17:05:57.289Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: 品牌资产
+started_at: 2026-10-09T17:05:57.048Z
+closed_at: 2026-10-09T17:05:57.289Z
 ---
 
 # 网站图标改为品牌标志并补齐 PWA 图标
@@ -33,12 +35,12 @@ design_section: 品牌资产
 
 ## Acceptance Criteria
 
-- [ ] `ui/index.html` 的图标引用全部指向品牌标志产物，且不再引用 `favicon.svg`。
-- [ ] `ui/public/favicon.svg`（脚手架 Vite 图标）已删除。
-- [ ] `favicon-16/32/48.png` 为透明底正方形；`apple-touch-icon.png`、`android-chrome-*.png` 不带透明像素、底色为 `#f7f5f0`。
-- [ ] `site.webmanifest` 是合法 JSON，图标路径均可解析。
-- [ ] `pnpm -C ui build` 产物 `ui/dist` 内含全部图标与 manifest。
-- [ ] `pnpm -C ui test` 通过，`archkit inspect .` 通过。
+- [x] `ui/index.html` 的图标引用全部指向品牌标志产物，且不再引用 `favicon.svg`。
+- [x] `ui/public/favicon.svg`（脚手架 Vite 图标）已删除。
+- [x] `favicon-16/32/48.png` 为透明底正方形；`apple-touch-icon.png`、`android-chrome-*.png` 不带透明像素、底色为 `#f7f5f0`。
+- [x] `site.webmanifest` 是合法 JSON，图标路径均可解析。
+- [x] `pnpm -C ui build` 产物 `ui/dist` 内含全部图标与 manifest。
+- [x] `pnpm -C ui test` 通过，`archkit inspect .` 通过。
 
 ## Implementation
 
@@ -63,6 +65,8 @@ Quality gates passed.
 静态服务 `ui/dist`（`python3 -m http.server 6008`）实测：`/favicon-32.png` 200 image/png 1900B、`/favicon-16.png` 200、`/apple-touch-icon.png` 200、`/site.webmanifest` 200 application/manifest+json、`/android-chrome-512x512.png` 200，旧 `/favicon.svg` 404。
 
 PNG 像素校验（zlib 解码 IHDR/IDAT）：`favicon-32.png` 32x32 RGBA `min_alpha=0`（保留透明）；`apple-touch-icon.png` 180x180 与 `android-chrome-192x192.png` 192x192 均 `min_alpha=255`、角像素 `(247,245,240,255)`（`#f7f5f0` 实心垫底）。
+
+- 归档核对（只读，本次审计复跑）：`ui/index.html` 6-10 行确为 3 个 PNG favicon + apple-touch-icon + manifest；`ui/public/favicon.svg` 不存在；6 个 PNG 实测尺寸 16/32/48/180/192/512；`site.webmanifest` 解析出 `name=Resumate · 对话式简历工作台`、`icons[0].sizes=192x192`、`theme_color=#f7f5f0`；`ui/public/brand/README.md` 有「网站图标」一节。实现提交 `aafdc42`。
 
 ## Related ADRs
 
