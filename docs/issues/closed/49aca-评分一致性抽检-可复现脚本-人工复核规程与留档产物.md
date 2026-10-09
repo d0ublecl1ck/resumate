@@ -1,14 +1,15 @@
 ---
 id: 49aca
-status: in-progress
+status: closed
 created_at: 2026-10-09T09:51:18.972Z
-updated_at: 2026-10-09T09:51:27.564Z
+updated_at: 2026-10-09T10:10:13.296Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: A11 面试与能力提升
 started_at: 2026-10-09T09:51:27.564Z
+closed_at: 2026-10-09T10:10:13.296Z
 ---
 
 # 评分一致性抽检：可复现脚本、人工复核规程与留档产物
