@@ -1,14 +1,15 @@
 ---
 id: f7eb9
-status: in-progress
+status: closed
 created_at: 2026-10-09T09:47:00.219Z
-updated_at: 2026-10-09T09:47:09.268Z
+updated_at: 2026-10-09T10:10:03.927Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: AI 模拟面试闭环（已实现）
 started_at: 2026-10-09T09:47:09.268Z
+closed_at: 2026-10-09T10:10:03.927Z
 ---
 
 # 面试出题补全：项目深挖题型、难度题型筛选与知识库依据注入
