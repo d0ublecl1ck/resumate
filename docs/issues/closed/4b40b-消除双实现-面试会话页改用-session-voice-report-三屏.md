@@ -1,13 +1,14 @@
 ---
 id: 4b40b
-status: in-progress
+status: closed
 created_at: 2026-10-09T09:19:32.958Z
-updated_at: 2026-10-09T09:29:37.364Z
+updated_at: 2026-10-09T10:10:09.662Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T09:19:44.167Z
+closed_at: 2026-10-09T10:10:09.662Z
 ---
 
 # 消除双实现：面试会话页改用 Session/Voice/Report 三屏
