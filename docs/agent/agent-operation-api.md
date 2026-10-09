@@ -392,12 +392,21 @@ Vite 的 `/api` proxy（http-proxy）默认即流式，**无需**修改 `ui/vite
 | agent_session_messages | id, session_id, seq, role, content(JSON), created_at | role ∈ system\|user\|assistant\|tool；唯一约束 (session_id, seq) |
 | agent_turns（扩展） | session_id(可空), run_state(JSON 默认 {}), state_version(int 默认 0) | 轮次挂会话；run_state 是该轮次的 checkpoint |
 
+`GET /sessions` 的响应项在会话存储字段（`id` / `createdAt` / `updatedAt` / `lastActiveAt`）之外，还会带回两个**派生只读字段**；它们不落库、不新增列、无需迁移：
+
+| 派生字段 | 类型 | 口径 |
+| --- | --- | --- |
+| `title` | string \| null | 该会话**首条 `role=user` 消息**正文的派生标题。content 先归一（`str`，或对象里的 `text` / `content` 字符串，与前端 `sessionMessageText` 同口径），再去除首尾空白；≤ 24 字原样，> 24 字取前 24 字加 `…`。无用户消息、仅 `system` / `assistant` / `tool` 消息或正文为空白时为 `null`，由前端兜底「未命名对话」 |
+| `messageCount` | int | 该会话 `agent_session_messages` 的总条数（含 `system` / `tool`） |
+
+两个派生字段随会话列表一次查出（相关标量子查询），服务端不会对每个会话再发一次消息查询（无 N+1）。
+
 ### 19.2 端点
 
 | 方法 | 路径 | 权限 | 说明 |
 | --- | --- | --- | --- |
 | POST | /sessions | resume:write | 建会话；body 可省略 |
-| GET | /sessions | resume:read | 当前用户的会话，最近活跃优先（last_active_at desc） |
+| GET | /sessions | resume:read | 当前用户的会话，最近活跃优先（last_active_at desc）；每项 `{id, createdAt, updatedAt, lastActiveAt, title, messageCount}`，其中 `title` / `messageCount` 为派生只读字段（见 §19.1） |
 | GET | /sessions/{session_id}/messages | resume:read | 列出消息；`afterSeq=N` 只返回 seq > N |
 | POST | /sessions/{session_id}/messages | resume:write | 追加消息；同一 (session_id, seq) 幂等 |
 | GET | /turns/{turn_id}/state | resume:read | 读 run checkpoint |
