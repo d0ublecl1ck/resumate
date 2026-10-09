@@ -1,14 +1,15 @@
 ---
 id: acf2f
-status: in-progress
+status: closed
 created_at: 2026-10-09T08:22:43.673Z
-updated_at: 2026-10-09T10:08:02.391Z
+updated_at: 2026-10-09T10:10:05.220Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 design_section: A11 面试与能力提升
 started_at: 2026-10-09T10:08:02.391Z
+closed_at: 2026-10-09T10:10:05.220Z
 ---
 
 # 知识库检索链路：切片、检索、引用回指与依据不足
