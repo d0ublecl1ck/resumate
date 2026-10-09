@@ -52,7 +52,7 @@ export default {
     emptyFilteredDescription: "Your filters are kept.",
   },
   tuning: {
-    description: "Review the original JD, set the tuning target and operation, then open the JD-related Diff.",
+    description: "Review the original JD, choose the tuning target and operation, and start a JD-bound agent tuning run.",
     backToLibrary: "Back to JD library",
     writeTarget: "Write target",
     notSelected: "Not selected",
@@ -75,8 +75,9 @@ export default {
     rebindLabel: "Also explicitly bind this resume as the JD's current binding",
     confirmCopyLaunch: "Confirm copy and start tuning",
     launch: "Start JD tuning",
+    launching: "Starting the agent run…",
     footerNote:
-      "The JD revision and resume baseline are validated before submitting; any change invalidates the old confirmation and reopens the preview.",
+      "Clicking starts an agent tuning run on the target resume (the prompt carries this JD's revision and body), then opens the Run panel in the editor; in approval mode nothing is overwritten directly.",
     editTitle: "Edit JD",
     editDescription: "Saving creates a new revision; historical revisions are never rewritten.",
     fieldRole: "Job title",
@@ -97,6 +98,8 @@ export default {
       saveFailed: "Saving failed. Try again later.",
       deleteFailed: "Deleting failed. Try again later.",
       unbindFailed: "Unbinding failed. Try again later.",
+      launchFailed: "Couldn't start the tuning run. Try again later.",
+      launchBusy: "Another tuning run is already executing. Try again shortly.",
     },
     match: {
       title: "Job match",

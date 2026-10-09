@@ -8,7 +8,7 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import type { JobDescription, Resume } from "@/lib/types"
-import { deleteJd, matchJob, releaseJdBinding, updateJd } from "@/lib/api"
+import { deleteJd, duplicateResume, jdTuningPrompt, matchJob, releaseJdBinding, setJdBinding, startRun, updateJd } from "@/lib/api"
 import { ApiRequestError } from "@/lib/api-client"
 import i18n from "@/i18n"
 import { JdBindingBadge } from "@/components/kit/badges"
@@ -19,17 +19,21 @@ import { ArrowLeft, Building2, Copy, Link2, PencilLine, Trash2, Unlink } from "l
 
 type Op = "direct" | "copy"
 
-/** JD 写操作（编辑 / 删除 / 解绑）的错误文案映射（C-06）：机器错误码 → i18n 文案。 */
-function jdErrorMessage(cause: unknown, action: "save" | "delete" | "unbind"): string {
+/** JD 写操作（编辑 / 删除 / 解绑 / 启动微调）的错误文案映射（C-06）：机器错误码 → i18n 文案。 */
+function jdErrorMessage(cause: unknown, action: "save" | "delete" | "unbind" | "launch"): string {
   if (cause instanceof ApiRequestError) {
+    if (cause.code === "RATE_LIMITED" && action === "launch") return i18n.t("jd.tuning.errors.launchBusy")
     if (cause.code === "RESOURCE_NOT_FOUND") {
       return action === "delete" ? i18n.t("jd.tuning.errors.deleteFailed") : i18n.t("jd.tuning.errors.saveFailed")
     }
-    if (cause.code === "FORBIDDEN" || cause.code === "UNAUTHENTICATED") return i18n.t("jd.tuning.errors.saveFailed")
+    if (cause.code === "FORBIDDEN" || cause.code === "UNAUTHENTICATED") {
+      return action === "launch" ? i18n.t("jd.tuning.errors.launchFailed") : i18n.t("jd.tuning.errors.saveFailed")
+    }
     if (cause.code === "NETWORK_ERROR") return i18n.t("common.errors.network")
   }
   if (action === "delete") return i18n.t("jd.tuning.errors.deleteFailed")
   if (action === "unbind") return i18n.t("jd.tuning.errors.unbindFailed")
+  if (action === "launch") return i18n.t("jd.tuning.errors.launchFailed")
   return i18n.t("jd.tuning.errors.saveFailed")
 }
 
@@ -53,6 +57,7 @@ export function JdTuning({ jd, resumes }: { jd: JobDescription; resumes: Resume[
   const [removing, setRemoving] = useState(false)
   const [busy, setBusy] = useState(false)
   const [unbinding, setUnbinding] = useState(false)
+  const [launching, setLaunching] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [draft, setDraft] = useState({ role: jd.role, company: jd.company ?? "", body: jd.body, tags: jd.tags.join(", ") })
 
@@ -63,9 +68,33 @@ export function JdTuning({ jd, resumes }: { jd: JobDescription; resumes: Resume[
   // 岗位匹配是只读派生视图：挂载即算，输入来自 JD 与 Profile 事实，不调用模型。
   const match = useQuery({ queryKey: ["job-match", jd.id], queryFn: () => matchJob(jd.id) })
 
-  function launch() {
-    // 前端演示：真实实现会创建绑定 JD 的 Agent 任务，并进入编辑工作台的 Run 面板。
-    navigate(`/resumes/${targetId}?panel=run`)
+  /**
+   * 启动岗位微调：Agent run 没有 jd_id 字段，run 绑简历、JD 上下文经 prompt 携带。
+   * copy 模式先复制简历，rebind 时把目标简历显式绑定为该 JD 的当前绑定，然后起 run，
+   * 最后进入编辑工作台由 Run 面板接手（Run 面板按 resume 读 active run）。
+   */
+  async function launch() {
+    if (!targetId || launching) return
+    setLaunching(true)
+    setActionError(null)
+    try {
+      let runResumeId = targetId
+      if (op === "copy") {
+        const copy = await duplicateResume(targetId)
+        runResumeId = copy.id
+      }
+      if (rebind) {
+        await setJdBinding(jd.id, runResumeId)
+        await queryClient.invalidateQueries({ queryKey: ["jd", jd.id] })
+        await queryClient.invalidateQueries({ queryKey: ["jds"] })
+      }
+      await startRun(runResumeId, { prompt: jdTuningPrompt(jd, op) })
+      navigate(`/resumes/${runResumeId}?panel=run`)
+    } catch (cause) {
+      setActionError(jdErrorMessage(cause, "launch"))
+    } finally {
+      setLaunching(false)
+    }
   }
 
   function openEdit() {
@@ -242,8 +271,13 @@ export function JdTuning({ jd, resumes }: { jd: JobDescription; resumes: Resume[
             {t("jd.tuning.rebindLabel")}
           </label>
 
-          <button onClick={launch} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-            {op === "copy" ? t("jd.tuning.confirmCopyLaunch") : t("jd.tuning.launch")}
+          <button
+            onClick={() => void launch()}
+            disabled={launching || !targetId}
+            aria-busy={launching || undefined}
+            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {launching ? t("jd.tuning.launching") : op === "copy" ? t("jd.tuning.confirmCopyLaunch") : t("jd.tuning.launch")}
           </button>
           <p className="text-center text-[11px] text-muted-foreground">{t("jd.tuning.footerNote")}</p>
         </aside>
