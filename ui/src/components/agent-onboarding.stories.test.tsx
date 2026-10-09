@@ -77,7 +77,7 @@ describe("agent onboarding stories", () => {
       const view = render(surface.render())
 
       expect(await screen.findByText("凭据失效")).toBeInTheDocument()
-      expect(screen.getByText("这把 Key 被模型服务拒绝了")).toBeInTheDocument()
+      expect(screen.getByText("当前 Key 被模型服务拒绝了")).toBeInTheDocument()
       expect(screen.getByText(/\*\*\*\*be21/)).toBeInTheDocument()
       expect(screen.getByRole("button", { name: "去更新 Key" })).toBeInTheDocument()
       // 诚实性：被拒时不提供「开始聊聊」，也不出现任何完整 key。
@@ -110,7 +110,7 @@ describe("agent onboarding stories", () => {
     render(StatesGallery.render())
 
     expect(await screen.findByText("先把助手开起来")).toBeInTheDocument()
-    expect(screen.getByText(/这把 Key 被模型服务拒绝了/)).toBeInTheDocument()
+    expect(screen.getByText(/当前 Key 被模型服务拒绝了/)).toBeInTheDocument()
     expect(screen.getByText("助手暂时不可用")).toBeInTheDocument()
     expect(screen.getByText("说说你的经历")).toBeInTheDocument()
     expect(screen.getByText(/\*\*\*\*be21/)).toBeInTheDocument()

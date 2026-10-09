@@ -24,7 +24,7 @@ export default {
     },
     auth_failed: {
       stamp: "凭据失效",
-      title: "这把 Key 被模型服务拒绝了",
+      title: "当前 Key 被模型服务拒绝了",
       description: "已保存的 Key 被上游拒绝（通常是 401）。去「设置与 Agent → 模型配置」更新 Key，保存后回来再试。",
       action: "去更新 Key",
       credentialHint: "被拒凭据：{{credential}}（上游已掩码）",
