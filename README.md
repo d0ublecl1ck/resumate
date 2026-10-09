@@ -90,6 +90,8 @@ HTTP 403  { "code": "FORBIDDEN", "message": "审批动作仅限人类会话，Ag
 
 不需要任何外部 API Key 就能把系统跑起来。对话功能要真正驱动模型时，才需在设置页里配一个 OpenAI 兼容端点与密钥（密钥只写不读，落库前加密）。
 
+运行配置来自未跟踪的 `backend/.env`（模板见 `backend/.env.example`）；后端启动时会做配置自检并打印配置来源（`.env` 是否存在、哪些关键项来自环境变量，不打印任何密钥取值），SMTP 这组配置不齐备会直接拒绝启动。**`git worktree` 不会带过来未跟踪的 `.env`，需要手动复制**，否则会因「SMTP 未配置」起不来；无邮件需求的本地场景可设 `RESUMATE_ALLOW_MISSING_ENV=1` 放行（会有醒目 WARNING，邮件相关功能不可用）。
+
 ### 本机一条命令
 
 ```bash
