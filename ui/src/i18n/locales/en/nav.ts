@@ -27,8 +27,10 @@ export default {
     resumes: "Resumes",
     profile: "Profile",
     jds: "Job descriptions",
+    interview: "Mock interview",
     settings: "Settings & Agent",
     templates: "Templates",
+    users: "User management",
     rbac: "Roles & permissions",
   },
 }

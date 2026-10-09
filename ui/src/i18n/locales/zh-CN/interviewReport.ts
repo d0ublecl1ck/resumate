@@ -1,0 +1,98 @@
+// 命名空间：interviewReport —— 「单场评估报告」屏幕文案。
+export default {
+  eyebrow: "评估报告",
+  title: "单场评估报告 · {{role}}",
+  role: "Java 后端",
+  description: "量表版本 v1.0 已随本次报告冻结；每条结论都能回指到具体回答，证据不足的维度不给分。",
+  actions: {
+    rubricVersion: "量表版本 {{version}}",
+    rubricFrozen: "已冻结",
+    export: "导出报告",
+  },
+  mode: {
+    label: "场次类型",
+    text: "纯文本场次",
+    voice: "语音场次",
+  },
+  content: {
+    title: "内容维度",
+    caption: "逐维度附证据：每个分数都挂着一段回答原话，可回指到具体作答。",
+    scoreLabel: "得分",
+    scoreAria: "{{dimension}}得分 {{score}} 分，满分 100 分",
+    evidenceLabel: "证据引用",
+    expand: "展开证据原文",
+    collapse: "收起证据原文",
+    dims: {
+      correctness: "技术正确性",
+      depth: "知识深度",
+      rigor: "逻辑严谨性",
+      fit: "岗位匹配度",
+    },
+    evidence: {
+      correctness: "「我们按订单号做基因法分片，取订单号后四位与用户 ID 哈希拼成分片键，保证同一用户的订单落在同一片。」",
+      depth: "「跨片查询不放在线拼装：统计类异步同步到 ES，分页用 search_after 避免深分页。」",
+      rigor: "「容量按单表 3000 万行、三年增长留 30% 余量，2 亿行拆 64 片，写入 P99 从 800ms 降到 220ms。」",
+      fit: "「限流用令牌桶做单机限流，集群维度用 Redis 滑动窗口，按接口和租户两个维度控制。」",
+    },
+    evidenceMore: {
+      correctness: "「一致性以 Cache Aside 为主：更新数据库后删除缓存，再用 binlog 订阅做延迟双删，容忍秒级不一致窗口。」",
+      depth: "「熔断用 Sentinel，错误率超过 50% 且持续 10 秒触发，半开状态放 5 个探针请求。」",
+      rigor: "「阈值来自大促前的全链路压测，压到 1.5 倍预估峰值后取 80% 作为阈值，留 buffer。」",
+      fit: "「先止血：按预案对非核心链路限流降级，切走部分流量，扩容核心服务，保住下单和支付。」",
+    },
+  },
+  expression: {
+    title: "表达维度",
+    caption: "只做可复核的估计，不从文本推断语音特征。",
+    metrics: {
+      pace: "语速",
+      clarity: "清晰度",
+      confidence: "自信度",
+    },
+    audioReference: "音频场次参考：{{value}}",
+    paceNormal: "正常",
+    clarityGood: "良好",
+    confidenceEstimate: "有依据的估计",
+    confidenceBasis: "依据 2 处作答措辞给出估计",
+    notApplicable: "不适用",
+    voiceValuePace: "128 字/分",
+    voiceValueClarity: "良好",
+    voiceBasisPace: "音频场次实测：落在本岗推荐区间（110–140 字/分）",
+    voiceBasisClarity: "音频场次实测：吐字清晰，无口头禅堆积",
+    voiceNote: "语音场次：语速、清晰度、自信度均由音频信号实测，三项都参与计分。",
+    notApplicableDetail: {
+      pace: "本场为纯文本场次，没有音频轨道，语速无法测量；该维度记为「无法测量」，不参与计分。",
+      clarity: "本场为纯文本场次，没有音频轨道，清晰度无法测量；该维度记为「无法测量」，不参与计分。",
+    },
+    textOnlyNote: "纯文本场次：语速与清晰度标为不适用。",
+    insufficientNote: "证据不足不给分：本场没有音频，语速与清晰度只记录「无法测量」，不参与计分。",
+  },
+  highlights: {
+    title: "亮点",
+    caption: "可回指到具体回答",
+    items: {
+      jmm: "订单分库分表讲到基因法、ShardingSphere 路由、ES 异步聚合与 search_after 分页，并给出容量与迁移策略。",
+      index: "限流阈值来自全链路压测并预留 buffer，熔断用 Sentinel 半开探针，工程可落地。",
+      aop: "多级缓存对一致性、热点 key、穿透、击穿、雪崩都有对应处理思路。",
+    },
+  },
+  gaps: {
+    title: "不足",
+    caption: "按对本岗的影响排序",
+    items: {
+      depth: "未展开订单与库存、支付之间的分布式事务或最终一致边界设计。",
+      fit: "本地缓存与 Redis 之间的失效同步机制未明确说明。",
+      vague: "分片键描述需要进一步验证是否稳定保证同一用户同片。",
+    },
+  },
+  suggestions: {
+    title: "改进建议",
+    caption: "每条都已挂到下一轮练习项",
+    practiceItem: "练习项 {{item}}",
+    items: {
+      gc: "补充订单-库存-支付链路的分布式事务选型与一致性边界。",
+      star: "明确本地缓存失效同步方案，说明断线重连与最终一致兜底。",
+      numbers: "完善熔断策略：加入慢调用、异常数、半开探针成功阈值与防抖动。",
+    },
+  },
+}

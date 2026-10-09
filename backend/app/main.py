@@ -8,6 +8,7 @@ from app.modules.agent.api import router as agent_router
 from app.modules.auth.api import router as auth_router
 from app.modules.backup.api import router as backup_router
 from app.modules.health.api import router as health_router
+from app.modules.interview.api import router as interview_router
 from app.modules.jd.api import router as jd_router
 from app.modules.profile.api import router as profile_router
 from app.modules.resume.api import router as resume_router
@@ -50,3 +51,4 @@ app.include_router(settings_router)
 app.include_router(access_router)
 app.include_router(backup_router)
 app.include_router(agent_router)
+app.include_router(interview_router)
