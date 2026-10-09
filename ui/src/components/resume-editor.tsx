@@ -12,7 +12,7 @@ import { DEFAULT_AUTOSAVE_SECONDS, useIdleAutosave } from "@/lib/autosave"
 import { documentSaveErrorMessage } from "@/lib/resume-document"
 import type { AgentRun, JobDescription, Resume, ResumeDocument } from "@/lib/types"
 import { StructuredEditor } from "@/components/structured-editor"
-import { RunPanel } from "@/components/run-panel"
+import { ResumeChatPanel } from "@/components/resume-chat-panel"
 import { PreviewCanvas } from "@/components/preview-canvas"
 import { SaveStateBadge } from "@/components/kit/badges"
 import { cn } from "@/lib/utils"
@@ -244,7 +244,7 @@ export function ResumeEditor({
         </section>
 
         <section className={cn("min-h-0 card-soft", mobileCol === "chat" ? "block" : "hidden", "lg:block")} aria-label={t("resume.editor.chatAndRun")}>
-          <RunPanel resumeId={resume.id} run={run} mode={resume.versions[0]?.executionMode ?? "approval"} />
+          <ResumeChatPanel resumeId={resume.id} run={run} mode={resume.versions[0]?.executionMode ?? "approval"} />
         </section>
 
         <section className={cn("min-h-0 card-soft overflow-hidden", mobileCol === "preview" ? "block" : "hidden", "lg:block")} aria-label={t("resume.editor.preview")}>

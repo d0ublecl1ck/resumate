@@ -35,6 +35,9 @@ import type {
   ModelConfigUpdate,
   ModelTestResult,
   PersonalAccessToken,
+  SpeechConfig,
+  SpeechConfigUpdate,
+  SpeechTestResult,
   PersonalAccessTokenInput,
   Profile,
   ProfileFact,
@@ -283,6 +286,11 @@ export async function getActiveRun(resumeId: string, options: GetActiveRunOption
 export interface StartRunInput {
   prompt: string
   executionMode?: ExecutionMode
+  /**
+   * 在既有会话里继续：运行体以 --session <id> 启动，把历史追加到该会话，不新建会话。
+   * 缺省时后端新建会话（契约 §19.1 / §21.1：会话只绑 owner，scope 是轮次属性）。
+   */
+  sessionId?: string
 }
 
 export interface RunStartAccepted {
@@ -292,8 +300,9 @@ export interface RunStartAccepted {
 
 /** POST /resumes/{resume_id}/runs —— 由后端 spawn 运行体；202 只表示已启动。 */
 export function startRun(resumeId: string, input: StartRunInput): Promise<RunStartAccepted> {
-  const body: { prompt: string; executionMode?: ExecutionMode } = { prompt: input.prompt }
+  const body: { prompt: string; executionMode?: ExecutionMode; sessionId?: string } = { prompt: input.prompt }
   if (input.executionMode) body.executionMode = input.executionMode
+  if (input.sessionId) body.sessionId = input.sessionId
   return request<RunStartAccepted>(`/resumes/${resumeId}/runs`, { method: "POST", body: JSON.stringify(body) })
 }
 
@@ -637,6 +646,21 @@ export function updateModelConfig(patch: ModelConfigUpdate): Promise<ModelConfig
 /** POST /models/config:test —— 用给定配置发起连通性测试，缺省字段沿用已存配置；响应与错误均不含明文密钥 */
 export function testModelConnection(patch: ModelConfigUpdate = {}): Promise<ModelTestResult> {
   return request<ModelTestResult>("/models/config:test", { method: "POST", body: JSON.stringify(patch) })
+}
+
+/** GET /speech/config —— 语音识别（云端 ASR）配置；apiKey 永不回显。 */
+export function getSpeechConfig(): Promise<SpeechConfig> {
+  return request<SpeechConfig>("/speech/config")
+}
+
+/** PUT /speech/config —— apiKey 为 write-only，响应不回显 */
+export function updateSpeechConfig(patch: SpeechConfigUpdate): Promise<SpeechConfig> {
+  return request<SpeechConfig>("/speech/config", { method: "PUT", body: JSON.stringify(patch) })
+}
+
+/** POST /speech/config:test —— 只校验凭据能否取上传凭证，缺省字段沿用已存配置；响应不含明文密钥 */
+export function testSpeechConnection(patch: SpeechConfigUpdate = {}): Promise<SpeechTestResult> {
+  return request<SpeechTestResult>("/speech/config:test", { method: "POST", body: JSON.stringify(patch) })
 }
 
 /** GET /settings */
