@@ -1,4 +1,7 @@
 // 个人资料助手：主档的对话入口。真实接线到 profile 作用域的 Agent run：
+// 抽屉正文是 profile-assistant-panel 展示层，本文件只负责数据与会话作用域：
+// 当前对话 = 复用/新建的主档会话；历史会话 = GET /sessions 列表 + 详情，
+// 在历史会话里继续对话只写回被选中的那个 session（契约 §19 / §21）。
 // 建/复用会话 → 追加用户消息 → 起 run → 订阅 GET /turns/{id}/events 刷新轮次与会话历史。
 // Agent 的文字回复渲染成对话气泡；待确认的主档改动复用 PendingActionCard，
 // approve 之后才由后端写入主档（契约 §21.4），reject 不动主档。
@@ -23,21 +26,19 @@ import {
 import { ApiRequestError } from "@/lib/api-client"
 import { agentErrorKey } from "@/lib/agent-error"
 import { useRuntimeStatus } from "@/lib/runtime"
-import { AgentAvailabilityNotice, agentAvailability, agentAvailabilityActionEffect } from "@/components/agent-onboarding"
-import { PendingActionCard } from "@/components/kit/pending-action"
-import { RunErrorBlock } from "@/components/kit/run-error"
+import {
+  AgentAvailabilityNotice,
+  agentAvailability,
+  agentAvailabilityActionEffect,
+  maskedCredentialTail,
+} from "@/components/agent-onboarding"
+import { ProfileAssistantPanel, type ProfileAssistantView } from "@/components/profile-assistant-panel"
 import { Modal } from "@/components/ui/modal"
 import { subscribeTurnEvents } from "@/lib/turn-events"
+import { sessionMessageText } from "@/lib/run-conversation"
 import type { AgentSessionMessage } from "@/lib/types"
+import type { SessionSummary } from "@/components/session-history"
 import { cn } from "@/lib/utils"
-import { Bot, Loader2, Send, User } from "lucide-react"
-
-const SUGGESTIONS = [
-  "profile.assistant.suggestion.phone",
-  "profile.assistant.suggestion.city",
-  "profile.assistant.suggestion.project",
-  "profile.assistant.suggestion.skill",
-]
 
 interface Bubble {
   id: string
@@ -48,16 +49,6 @@ interface Bubble {
 interface OptimisticMessage {
   id: string
   text: string
-}
-
-/** 会话消息 content 是不透明 JSON：运行体写 Message wire，前端追加用户消息时写同一形态。 */
-function sessionMessageText(content: unknown): string | null {
-  if (typeof content === "string") return content.trim() || null
-  if (content && typeof content === "object" && "content" in content) {
-    const value = (content as { content?: unknown }).content
-    if (typeof value === "string") return value.trim() || null
-  }
-  return null
 }
 
 /** 把查询失败归一成机器错误码：非 ApiRequestError（网络中断等）按 NETWORK_ERROR 处理。 */
@@ -101,23 +92,29 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const queryClient = useQueryClient()
   const modelQuery = useQuery({ queryKey: ["model-config"], queryFn: getModelConfig, enabled: open })
   const runtimeQuery = useRuntimeStatus(open)
-  // 可用性六态：加载中 / 读取失败 / 无权限 / 未配置 / 运行体离线 / 可用。
-  // 读取失败与无权限绝不能被当成「未配置」，否则会把用户误导向设置页。
+  // 可用性七态：加载中 / 读取失败 / 无权限 / 未配置 / 凭据被拒 / 运行体离线 / 可用。
+  // 读取失败与无权限绝不能被当成「未配置」，否则会把用户误导向设置页；
+  // lastTest 是「配置读得到但凭据被上游拒绝」的唯一信号，不传就判不出 auth_failed。
   const availability = agentAvailability({
     model: {
       isPending: modelQuery.isPending,
       keyConfigured: modelQuery.data?.keyConfigured,
       errorCode: modelQuery.isError ? errorCodeOf(modelQuery.error) : undefined,
+      lastTest: modelQuery.data?.lastTest,
     },
     runtime: { isPending: runtimeQuery.isPending, available: runtimeQuery.data?.available },
   })
   const checkingAvailability = availability === "checking"
   const canChat = availability === "available"
+  // 只把上游已掩码的尾号交给界面：maskedCredentialTail 只认 ****be21 形态，
+  // 拿不到掩码（含误传明文 key）一律返回 null，绝不自行拼接或透出 lastTest 原文。
+  const credentialHint = maskedCredentialTail(modelQuery.data?.lastTest?.message)
 
+  const [mode, setMode] = useState<ProfileAssistantView>("current")
   const [createdSessionId, setCreatedSessionId] = useState<string | null>(null)
+  const [historySessionId, setHistorySessionId] = useState<string | null>(null)
   const [messages, setMessages] = useState<AgentSessionMessage[]>([])
   const [optimistic, setOptimistic] = useState<OptimisticMessage[]>([])
-  const [input, setInput] = useState("")
   const [awaitingTurn, setAwaitingTurn] = useState(false)
   const [startErrorKey, setStartErrorKey] = useState<string | null>(null)
   // 失败后重试要能重放这次输入；会话历史里虽有镜像，但重试入口用最新一次发送更直接。
@@ -125,7 +122,6 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   const [actionErrorKey, setActionErrorKey] = useState<string | null>(null)
   const [submittingActionId, setSubmittingActionId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const composerRef = useRef<HTMLTextAreaElement>(null)
   const optimisticSeq = useRef(0)
   const lastSeqRef = useRef(0)
   const lastTurnIdRef = useRef<string | null>(null)
@@ -136,22 +132,42 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
    * 因此只采用「至少有一条 profile 轮次，且所有轮次都是 profile 作用域」的会话；
    * 没有这样的会话时返回 null，由提交路径新建，绝不退回「最近一条会话」。
    */
+  const findProfileSession = useCallback(async (): Promise<string | null> => {
+    const candidates = await listSessions()
+    for (const candidate of candidates) {
+      const candidateTurns = await listSessionTurns(candidate.id)
+      if (candidateTurns.length > 0 && candidateTurns.every((turn) => turn.scope === "profile")) {
+        return candidate.id
+      }
+    }
+    return null
+  }, [])
   const profileSessionQuery = useQuery({
     queryKey: ["profile-session"],
     enabled: open && canChat && !createdSessionId,
-    queryFn: async () => {
-      const candidates = await listSessions()
-      for (const candidate of candidates) {
-        const candidateTurns = await listSessionTurns(candidate.id)
-        if (candidateTurns.length > 0 && candidateTurns.every((turn) => turn.scope === "profile")) {
-          return candidate.id
-        }
-      }
-      return null
-    },
+    queryFn: findProfileSession,
   })
   const sessionId = createdSessionId ?? profileSessionQuery.data ?? null
   sessionRef.current = sessionId
+
+  /**
+   * 历史会话列表：GET /sessions 现在返回服务端派生的 title 与 messageCount（契约 §19.1，
+   * issue 360b1），直接消费后端字段，不再逐会话拉消息；title 为 null 时由展示层兜底「未命名对话」。
+   */
+  const sessionsQuery = useQuery({
+    queryKey: ["profile-assistant-sessions"],
+    enabled: open && canChat,
+    queryFn: async (): Promise<SessionSummary[]> => {
+      const rows = await listSessions()
+      return rows.map((row) => ({
+        id: row.id,
+        createdAt: row.createdAt,
+        lastActiveAt: row.lastActiveAt,
+        title: row.title ?? undefined,
+        messageCount: row.messageCount ?? undefined,
+      }))
+    },
+  })
 
   const turnsQuery = useQuery({
     queryKey: ["session-turns", sessionId],
@@ -170,7 +186,14 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
   // 由 PendingActionCard 统一兜底（与工作台共享同一份实现），避免点击必得 409。
   const activeTurnClosed = activeTurn !== undefined && activeTurn.state !== "open"
 
-  /** 拉取会话消息：after 之后的增量，按 id 去重，保证 StrictMode 重挂载不产生重复行。 */
+  /** 历史详情消息：只有进入历史视图并选中某一行时才拉取，选中哪个就只拉哪个。 */
+  const historyMessagesQuery = useQuery({
+    queryKey: ["profile-assistant-history-messages", historySessionId],
+    queryFn: () => listSessionMessages(historySessionId as string),
+    enabled: Boolean(open && canChat && mode === "history" && historySessionId),
+  })
+
+  /** 拉取当前会话消息：after 之后的增量，按 id 去重，保证 StrictMode 重挂载不产生重复行。 */
   const loadMessages = useCallback(async (sid: string, after: number) => {
     const rows = (await listSessionMessages(sid, after)).filter((row) => row.sessionId === sid)
     if (sessionRef.current !== sid || !rows.length) return
@@ -222,9 +245,29 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     return () => window.clearTimeout(stop)
   }, [awaitingTurn])
 
-  const startMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      let sid = sessionId
+  const createMutation = useMutation({
+    mutationFn: createSession,
+    onSuccess: (session) => {
+      setCreatedSessionId(session.id)
+      sessionRef.current = session.id
+      setMessages([])
+      lastSeqRef.current = 0
+      setOptimistic([])
+      setMode("current")
+      setHistorySessionId(null)
+      void queryClient.invalidateQueries({ queryKey: ["profile-assistant-sessions"] })
+      void queryClient.invalidateQueries({ queryKey: ["profile-session"] })
+    },
+    onError: (cause) => setStartErrorKey(agentErrorKey(cause)),
+  })
+
+  const sendMutation = useMutation({
+    mutationFn: async ({ target, text }: { target: string | null; text: string }) => {
+      // 目标会话优先用调用方传入的历史/当前会话；当前视图首次发送时先复用已发现（含在途）的
+      // 主档会话，确实没有才新建——否则「可用性刚就绪、会话发现还没回来」会误建一条新会话。
+      let sid =
+        target ??
+        (await queryClient.ensureQueryData({ queryKey: ["profile-session"], queryFn: findProfileSession }))
       if (!sid) {
         sid = (await createSession()).id
         setCreatedSessionId(sid)
@@ -232,8 +275,8 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
       }
       const history = await listSessionMessages(sid)
       const nextSeq = history.reduce((max, row) => Math.max(max, row.seq), 0) + 1
-      await appendSessionMessage(sid, { seq: nextSeq, role: "user", content: { role: "user", content: prompt } })
-      await startProfileRun(sid, prompt)
+      await appendSessionMessage(sid, { seq: nextSeq, role: "user", content: { role: "user", content: text } })
+      await startProfileRun(sid, text)
       return sid
     },
     onMutate: () => setStartErrorKey(null),
@@ -241,6 +284,8 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
       setAwaitingTurn(true)
       void queryClient.invalidateQueries({ queryKey: ["session-turns", sid] })
       void queryClient.invalidateQueries({ queryKey: ["profile-session"] })
+      void queryClient.invalidateQueries({ queryKey: ["profile-assistant-sessions"] })
+      void queryClient.invalidateQueries({ queryKey: ["profile-assistant-history-messages", sid] })
     },
     onError: (cause) => setStartErrorKey(agentErrorKey(cause)),
   })
@@ -266,6 +311,44 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     () => (activeTurn?.pendingActions ?? []).map(mapPendingAction),
     [activeTurn],
   )
+  const thinking = sendMutation.isPending || awaitingTurn
+  const runErrorKey = startErrorKey ?? actionErrorKey
+  // 每个视图只透出自己那一路错误，避免历史列表报错却显示当前对话的错误。
+  // 列表 / 详情读取失败只给统一的界面文案，绝不回显服务端原文。
+  const loadError = t("profile.assistant.panel.loadError")
+  const panelError =
+    mode === "current"
+      ? runErrorKey
+        ? t(runErrorKey)
+        : undefined
+      : historySessionId
+        ? historyMessagesQuery.isError
+          ? loadError
+          : undefined
+        : sessionsQuery.isError
+          ? loadError
+          : undefined
+
+  /**
+   * 继续对话：当前视图写回主档会话，历史视图只写回被选中的那个 session。
+   * 没有会话时（当前视图首次发送）才新建，绝不把历史会话的消息写回最新会话。
+   */
+  function handleContinue(text: string) {
+    const value = text.trim()
+    if (!value || sendMutation.isPending || createMutation.isPending) return
+    const target = mode === "history" ? historySessionId : sessionId
+    if (mode === "current") {
+      setLastPrompt(value)
+      optimisticSeq.current += 1
+      setOptimistic((prev) => [...prev, { id: `optimistic_${optimisticSeq.current}`, text: value }])
+    }
+    sendMutation.mutate({ target, text: value })
+  }
+
+  function handleCreate() {
+    if (createMutation.isPending) return
+    createMutation.mutate()
+  }
 
   useEffect(() => {
     const node = scrollRef.current
@@ -273,21 +356,9 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
     if (node && typeof node.scrollTo === "function") {
       node.scrollTo({ top: node.scrollHeight, behavior: "smooth" })
     }
-  }, [conversation.length, pendingActions.length, awaitingTurn, startMutation.isPending])
+  }, [conversation.length, pendingActions.length, awaitingTurn, sendMutation.isPending])
 
   if (!open) return null
-
-  function submit(text: string) {
-    const value = text.trim()
-    if (!value || startMutation.isPending) return
-    setInput("")
-    setLastPrompt(value)
-    optimisticSeq.current += 1
-    setOptimistic((prev) => [...prev, { id: `optimistic_${optimisticSeq.current}`, text: value }])
-    startMutation.mutate(value)
-  }
-
-  const thinking = startMutation.isPending || awaitingTurn
 
   return (
     <Modal
@@ -312,10 +383,11 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
           <AgentAvailabilityNotice
             state={availability}
             placement="panel"
+            credentialHint={credentialHint}
             onAction={(action) => {
               // 与设置页同一套 AgentAvailabilityAction 语义：只有 configure_model 去设置页；
-              // start_chat 表示「进入对话」，本抽屉本身就是对话入口，聚焦自己的输入框即可；
-              // retry 重试可用性查询；未知动作留在当前页，绝不误触发导航。
+              // start_chat 表示「进入对话」，本抽屉本身就是对话入口；retry 重试可用性查询；
+              // 未知动作留在当前页，绝不误触发导航。
               switch (agentAvailabilityActionEffect(action)) {
                 case "settings":
                   navigate("/settings")
@@ -324,9 +396,6 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
                   void modelQuery.refetch()
                   void runtimeQuery.refetch()
                   return
-                case "chat":
-                  composerRef.current?.focus()
-                  return
                 default:
                   return
               }
@@ -334,125 +403,33 @@ export function ProfileAssistant({ open, onClose }: { open: boolean; onClose: ()
           />
         </div>
       ) : (
-        <>
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
-            {conversation.length === 0 && !thinking ? (
-              <div className="space-y-4">
-                <div className="flex gap-2.5">
-                  <AgentAvatar />
-                  <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground break-words">
-                    {t("profile.assistant.intro")}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="px-1 text-xs font-medium text-muted-foreground">{t("profile.assistant.trySaying")}</p>
-                  {SUGGESTIONS.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => submit(t(s))}
-                      className="block w-full rounded-lg border border-border bg-background px-3 py-2 text-left text-sm text-foreground transition-colors hover:border-cobalt/40 hover:bg-secondary"
-                    >
-                      {t(s)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              conversation.map((bubble) =>
-                bubble.role === "user" ? (
-                  <div key={bubble.id} className="flex justify-end gap-2.5">
-                    <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-cobalt px-3.5 py-2.5 text-sm leading-6 text-primary-foreground break-words">{bubble.text}</div>
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-cobalt">
-                      <User className="size-4" aria-hidden />
-                    </span>
-                  </div>
-                ) : (
-                  <div key={bubble.id} className="flex gap-2.5">
-                    <AgentAvatar />
-                    <div className="max-w-[80%] rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm leading-6 text-foreground break-words">{bubble.text}</div>
-                  </div>
-                ),
-              )
-            )}
-
-            {pendingActions.map((action) => (
-              <PendingActionCard
-                key={action.id}
-                action={action}
-                turnClosed={activeTurnClosed}
-                onApprove={(id) => decision.mutate({ actionId: id, kind: "approve" })}
-                onReject={(id) => decision.mutate({ actionId: id, kind: "reject" })}
-                busy={submittingActionId === action.id}
-              />
-            ))}
-
-            {/* 运行失败必须可见（issue 4ff97）：与简历工作台共用同一份错误块实现。 */}
-            {activeTurn?.runError ? (
-              <RunErrorBlock
-                error={activeTurn.runError}
-                onRetry={lastPrompt ? () => submit(lastPrompt) : undefined}
-              />
-            ) : null}
-
-            {thinking ? (
-              <div className="flex gap-2.5">
-                <AgentAvatar />
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-secondary px-3.5 py-2.5 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" aria-hidden /> {t("profile.assistant.thinking")}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {startErrorKey || actionErrorKey ? (
-            <p role="alert" className="mx-3 mb-1 rounded-md bg-coral/10 px-2.5 py-1.5 text-xs font-medium text-coral">
-              {t(startErrorKey ?? actionErrorKey!)}
-            </p>
-          ) : null}
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              submit(input)
-            }}
-            className="border-t border-border p-3"
-          >
-            <div className="flex items-end gap-2">
-              <textarea
-                ref={composerRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing && e.keyCode !== 229) {
-                    e.preventDefault()
-                    submit(input)
-                  }
-                }}
-                rows={2}
-                placeholder={t("profile.assistant.placeholder")}
-                className="min-h-[44px] flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm leading-6 outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || startMutation.isPending}
-                className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40"
-                aria-label={t("profile.assistant.send")}
-              >
-                <Send className="size-4" aria-hidden />
-              </button>
-            </div>
-          </form>
-        </>
+        <ProfileAssistantPanel
+          mode={mode}
+          sessions={sessionsQuery.data}
+          messages={historyMessagesQuery.data}
+          activeSessionId={historySessionId}
+          currentRun={{
+            bubbles: conversation,
+            pendingActions,
+            turnClosed: activeTurnClosed,
+            thinking,
+            runError: activeTurn?.runError ?? null,
+            onRetry: lastPrompt ? () => handleContinue(lastPrompt) : undefined,
+            onApprove: (id) => decision.mutate({ actionId: id, kind: "approve" }),
+            onReject: (id) => decision.mutate({ actionId: id, kind: "reject" }),
+            busyActionId: submittingActionId,
+          }}
+          error={panelError}
+          creating={createMutation.isPending}
+          onCreate={handleCreate}
+          onSelect={setHistorySessionId}
+          onBack={() => setHistorySessionId(null)}
+          onContinue={handleContinue}
+          onModeChange={setMode}
+          bodyRef={scrollRef}
+        />
       )}
     </Modal>
-  )
-}
-
-function AgentAvatar() {
-  return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-cobalt/15 text-cobalt">
-      <Bot className="size-4" aria-hidden />
-    </span>
   )
 }
 

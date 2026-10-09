@@ -400,6 +400,10 @@ export interface AgentSession {
   createdAt: ISODate
   updatedAt: ISODate
   lastActiveAt: ISODate
+  /** 服务端派生标题：该会话首条 role=user 消息正文归一后截断；无消息或空白时后端返回 null（issue 360b1）。 */
+  title?: string
+  /** 该会话的消息数；后端未返回时缺省。 */
+  messageCount?: number
 }
 
 export type SessionMessageRole = "system" | "user" | "assistant" | "tool"

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest"
 
 import {
   CurrentSession,
+  CurrentSessionRunError,
   HistoryCompacted,
   HistoryDetail,
   HistoryEmpty,
@@ -80,5 +81,18 @@ describe("profile assistant panel stories", () => {
     expect(screen.getByText(/该待办已随轮次关闭失效/)).toBeInTheDocument()
     // 失效待办不给可点入口，避免点出必得 409 的「批准并应用」。
     expect(screen.queryByRole("button", { name: "批准并应用" })).not.toBeInTheDocument()
+  })
+
+  it("CurrentSessionRunError 渲染运行失败块：类别、provider/model、掩码尾号与两个出口", () => {
+    render(CurrentSessionRunError.render())
+    const block = screen.getByTestId("run-error")
+    expect(block).toHaveTextContent("模型鉴权失败")
+    expect(block).toHaveTextContent("openai / gpt-4o-mini")
+    expect(block).toHaveTextContent("****be21")
+    expect(screen.getByRole("button", { name: "去设置更新 Key" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "重试" })).toBeInTheDocument()
+    // 负向：错误块不回显认证头与堆栈。
+    expect(screen.queryByText(/Authorization/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Traceback/)).not.toBeInTheDocument()
   })
 })

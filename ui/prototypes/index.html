@@ -834,6 +834,7 @@
             </div>
           </div>
           <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:var(--muted-foreground)">动作契约：<code>auth_failed</code> 与 <code>model_missing</code> 都给 <code>configure_model</code>，经 <code>agentAvailabilityActionEffect</code> 归一成 <code>settings</code>；<code>auth_failed</code> 只透出上游已掩码的尾号（<code>****be21</code>），未掩码明文一律不渲染。运行体未接入与可用态沿用既有 <code>runtime_offline</code> / <code>available</code> 文案。</p>
+          <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--muted-foreground)">同一时刻只显示一种最相关提示：可用性不可用时对话区用引导取代输入区（当前对话与历史会话两处），并抑制运行失败错误块（<code>RunErrorBlock</code>）；只有恢复 <code>available</code> 后错误块才重新出现，避免「重试」与「去设置」两块互相矛盾。</p>
         </div>
         <ul class="states">
           <li>加载中 / 资源不存在：<code>PageLoading</code> / <code>PageNotFound entity="resume"</code></li>
@@ -1214,7 +1215,7 @@
               <div style="margin-top:16px;display:grid;gap:16px">
                 <section class="card-soft" style="padding:16px">
                   <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">个人资料助手抽屉（右侧真模态）：新建对话入口 + 当前 / 历史切换</h2>
-                  <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">抽屉顶部固定「新建对话」（复用 <code>NewConversationEntry</code>）与「当前对话 / 历史会话」切换；历史视图是「列表 → 详情 → 底部继续输入框」。零件复用 <code>SessionList</code> / <code>SessionDetail</code> / <code>PendingActionCard</code>，令牌与类沿用既有规范，不新增视觉规则；新建入口与列表三态同时登记在 <a href="#screen-session-history"><code>#screen-session-history</code></a>。</p>
+                  <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">抽屉正文是 <code>ProfileAssistantPanel</code>：顶部固定「新建对话」（复用 <code>NewConversationEntry</code>）与「当前对话 / 历史会话」切换；历史视图是「列表 → 详情 → 底部继续输入框」。真实接线：新建对话 <code>POST /sessions</code> 并切到这条新会话（创建中禁用并显示「正在新建对话…」）；历史列表 <code>GET /sessions</code>，标题取该会话首条用户消息派生、行内不出现会话 ID、按 <code>groupSessionsByTime</code> 分「今天 / 昨天 / 7 天内 / 30 天内 / 更早」；点某一行 <code>GET /sessions/{id}/messages</code> 切到该会话；底部继续输入先 <code>POST /sessions/{选中 id}/messages</code>（seq = 现有最大 seq + 1）再以同一 id <code>POST /sessions/{选中 id}/runs</code>，只写回被选中的会话，绝不写回最新会话。零件复用 <code>SessionList</code> / <code>SessionDetail</code> / <code>PendingActionCard</code> / <code>RunErrorBlock</code>，令牌与类沿用既有规范，不新增视觉规则；新建入口与列表三态同时登记在 <a href="#screen-session-history"><code>#screen-session-history</code></a>。</p>
                   <div style="display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))">
                     <div>
                       <button class="btn btn-primary" type="button" style="width:100%;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h9"/><path d="M16 3h6"/><path d="M19 0v6"/></svg>新建对话</button>
@@ -1245,8 +1246,8 @@
 
                 <div class="grid-cards">
                   <section class="card-soft" style="padding:16px">
-                    <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">当前对话视图（含失效待办）</h2>
-                    <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">轮次已关闭时，历史 <code>pending</code> 待办按失效只读渲染：显示「该待办已随轮次关闭失效」，且不出现「批准并应用」。</p>
+                    <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">当前对话视图（含失效待办与运行失败）</h2>
+                    <p style="margin:0 0 12px;font-size:12px;color:var(--muted-foreground)">轮次已关闭时，历史 <code>pending</code> 待办按失效只读渲染：显示「该待办已随轮次关闭失效」，且不出现「批准并应用」。轮次带 <code>runError</code> 时在同一气泡流下方渲染共享的 <code>RunErrorBlock</code>：类别、provider/model、出问题那把 key 的已掩码尾号、「去设置更新 Key」与「重试」；后端已保证 message 不含完整 key / Authorization 头 / 堆栈。</p>
                     <div style="display:grid;gap:10px">
                       <div style="display:flex;justify-content:flex-end;gap:10px">
                         <div style="max-width:80%;border-radius:var(--radius-2xl) var(--radius-2xl) 4px var(--radius-2xl);background:var(--cobalt);color:var(--primary-foreground);padding:10px 14px;font-size:14px">把工作经历里的性能优化成果提前。</div>
@@ -1266,6 +1267,19 @@
                         </div>
                         <p style="margin:8px 0 0;border-radius:6px;background:var(--secondary);padding:6px 10px;font-size:12px;color:var(--secondary-foreground)">影响：新增 1 条事实，写入前需你确认</p>
                         <p style="margin:6px 0 0;font-size:12px;font-weight:500;color:var(--coral)">失效原因：该待办已随轮次关闭失效</p>
+                      </div>
+                      <div role="alert" style="border:1px solid color-mix(in oklab,var(--coral) 30%,transparent);border-radius:var(--radius-lg);background:color-mix(in oklab,var(--coral) 10%,transparent);padding:12px;font-size:12px">
+                        <p style="margin:0;font-weight:600;color:var(--coral)">运行失败 · 模型鉴权失败</p>
+                        <div style="margin-top:8px;display:grid;gap:4px;font-size:11px;line-height:1.5">
+                          <p style="margin:0">Provider / 模型：openai / gpt-4o-mini</p>
+                          <p style="margin:0;font-family:monospace">出问题的 Key：****be21</p>
+                          <p style="margin:0;color:var(--muted-foreground)">上游信息：上游 401 拒绝：api key ****be21</p>
+                          <p style="margin:0;color:var(--muted-foreground)">更新模型配置后，重新发起这次对话即可。</p>
+                        </div>
+                        <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">
+                          <button class="btn btn-outline btn-sm" type="button">去设置更新 Key</button>
+                          <button class="btn btn-primary btn-sm" type="button">重试</button>
+                        </div>
                       </div>
                     </div>
                     <div style="display:flex;align-items:flex-end;gap:8px;border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
@@ -1328,7 +1342,7 @@
                 </div>
                 <section class="card-soft" style="padding:16px">
                   <h2 style="margin:0 0 4px;font-size:14px;font-weight:600">抽屉内的 AI 引导（AI 未配置 / 凭据无效）</h2>
-                  <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">抽屉正文用 <code>panel</code> 档渲染同一个 <code>AgentAvailabilityNotice</code>；四态与简历编辑器对话区、设置页 Agent 入口共用，文案与动作一致，只差尺寸档。凭据被拒时同样只显示上游已掩码尾号。</p>
+                  <p style="margin:0 0 12px;font-size:12px;line-height:1.6;color:var(--muted-foreground)">抽屉正文用 <code>panel</code> 档渲染同一个 <code>AgentAvailabilityNotice</code>；四态与简历编辑器对话区、设置页 Agent 入口共用，文案与动作一致，只差尺寸档。可用性判定传 <code>model.lastTest</code>——<code>keyConfigured=true</code> 但被上游拒绝时才算 <code>auth_failed</code>，不传就判不出——并传 <code>credentialHint={model.lastTest?.message}</code>，经 <code>maskedCredentialTail</code> 只渲染 <code>****be21</code> 形态，未配置 / 凭据失效 / 运行体不可用时用引导取代输入框，不放行聊天。</p>
                   <div class="grid-cards">
                     <div class="state-block" style="padding:16px">
                       <span class="badge" style="color:var(--gold);border-color:color-mix(in oklab,var(--gold) 40%,transparent);background:color-mix(in oklab,var(--gold) 5%,transparent)">还差一步</span>
@@ -1364,6 +1378,12 @@
           <li>助手抽屉 · 历史列表：一行一个会话（话题标题、行内无会话 ID、按最近活跃时间分组）+ 无标题兜底 / 选中态 / 空 / 加载 / 错误，三态共用 <code>StateBlock</code>，详见 <code>#screen-session-history</code></li>
           <li>助手抽屉 · 历史详情：消息流 + 压缩历史独立区块（不出现 <code>[compacted-history]</code> 标记）+ 底部继续输入框</li>
           <li>助手抽屉 · 当前对话失效待办：轮次关闭后历史 <code>pending</code> 待办按失效只读渲染，显示「该待办已随轮次关闭失效」，不出现「批准并应用」</li>
+          <li>助手抽屉 · 面板接线：抽屉正文是 <code>ProfileAssistantPanel</code>，「当前对话 / 历史会话」两态切换；每个控件都对应真实接口，不是只看 UI</li>
+          <li>助手抽屉 · 新建对话：点入口真的 <code>POST /sessions</code> 并把该会话切成当前会话；请求进行中入口 <code>disabled</code> 且文案切「正在新建对话…」，重复点击不发起第二次请求</li>
+          <li>助手抽屉 · 历史会话切换：列表 <code>GET /sessions</code>，标题取该会话首条用户消息派生（缺失走「未命名对话」兜底）、行内不出现会话 ID、按最近活跃时间分组；点某一行 <code>GET /sessions/{id}/messages</code> 切到该会话</li>
+          <li>助手抽屉 · 历史续聊：底部继续输入先 <code>POST /sessions/{选中 id}/messages</code>（seq = 现有最大 seq + 1）再以同一 id <code>POST /sessions/{选中 id}/runs</code>，只写回被选中的会话，绝不写回最新会话</li>
+          <li>助手抽屉 · 运行失败（<code>runError</code>）：类别 / provider·model / key 已掩码尾号 / 「去设置更新 Key」/「重试」；后端已脱敏，界面不回显完整 key、<code>Authorization</code> 头或堆栈</li>
+          <li>助手抽屉 · 可用性判据：<code>agentAvailability</code> 传 <code>model.lastTest</code> 才判得出 <code>auth_failed</code>；<code>AgentAvailabilityNotice</code> 传 <code>credentialHint={model.lastTest?.message}</code>，只渲染 <code>****be21</code> 掩码尾号；未配置 / 凭据失效 / 运行体不可用时用引导取代输入框，不放行聊天</li>
         </ul>
       </div>
 

@@ -743,3 +743,308 @@ describe("ProfileAssistant 的可用性引导按 action 分流", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("/settings")
   })
 })
+
+// ---------------------------------------------------------------------------
+// 面板真实接线（issue bb89f）：新建会话 / 历史切换 / 历史续聊写对 session /
+// 凭据失效不放行 / runError 展示。全部由 MSW 按冻结契约造，断言真实请求与负向文案。
+// ---------------------------------------------------------------------------
+
+const OTHER_SESSION = {
+  id: "sess_old",
+  createdAt: "2026-09-20T00:00:00Z",
+  updatedAt: "2026-09-20T00:00:00Z",
+  lastActiveAt: "2026-09-20T00:00:00Z",
+}
+
+const NEW_SESSION = {
+  id: "sess_new",
+  createdAt: "2026-10-03T00:00:00Z",
+  updatedAt: "2026-10-03T00:00:00Z",
+  lastActiveAt: "2026-10-03T00:00:00Z",
+}
+
+function userSessionMessage(id: string, sessionId: string, seq: number, text: string) {
+  return {
+    id,
+    sessionId,
+    seq,
+    role: "user",
+    content: { role: "user", content: text },
+    createdAt: "2026-10-01T00:00:00Z",
+  }
+}
+
+describe("ProfileAssistant 的面板真实接线", () => {
+  it("点「新建对话」真的 POST /sessions，后续发送写入这条新会话", async () => {
+    const calls: string[] = []
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([])),
+      http.post("/api/sessions", () => {
+        calls.push("create")
+        return HttpResponse.json(NEW_SESSION, { status: 201 })
+      }),
+      http.get("/api/sessions/sess_new/messages", () => HttpResponse.json([])),
+      http.get("/api/sessions/sess_new/turns", () => HttpResponse.json([])),
+      http.post("/api/sessions/sess_new/messages", async ({ request }) => {
+        const body = (await request.json()) as { seq: number; role: string; content: { content: string } }
+        calls.push("message:" + body.seq + ":" + body.content.content)
+        return HttpResponse.json(
+          { id: "msg_new", sessionId: "sess_new", seq: body.seq, role: body.role, content: body.content, createdAt: "2026-10-03T00:00:00Z" },
+          { status: 201 },
+        )
+      }),
+      http.post("/api/sessions/sess_new/runs", async ({ request }) => {
+        const body = (await request.json()) as { prompt: string }
+        calls.push("run:" + body.prompt)
+        return HttpResponse.json({ runId: "run_new", status: "started" }, { status: 202 })
+      }),
+    )
+
+    renderAssistant()
+    fireEvent.click(await screen.findByRole("button", { name: "新建对话" }))
+    await waitFor(() => expect(calls).toContain("create"))
+    // 创建成功后停在当前对话视图，输入框可用。
+    expect(screen.getByRole("tab", { name: "当前对话" })).toHaveAttribute("aria-selected", "true")
+
+    const box = await screen.findByRole("textbox")
+    fireEvent.change(box, { target: { value: "整理一下我的技能" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    await waitFor(() => expect(calls).toContain("run:整理一下我的技能"))
+    expect(calls).toContain("message:1:整理一下我的技能")
+  })
+
+  it("新建对话请求进行中时入口禁用并切文案，重复点击不发起第二次请求", async () => {
+    let creates = 0
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([])),
+      http.post("/api/sessions", async () => {
+        creates += 1
+        await new Promise(() => {})
+        return HttpResponse.json(NEW_SESSION, { status: 201 })
+      }),
+    )
+
+    renderAssistant()
+    fireEvent.click(await screen.findByRole("button", { name: "新建对话" }))
+
+    const creating = await screen.findByRole("button", { name: "正在新建对话…" })
+    expect(creating).toBeDisabled()
+    fireEvent.click(creating)
+    expect(creates).toBe(1)
+    expect(screen.queryByRole("button", { name: "新建对话" })).not.toBeInTheDocument()
+  })
+
+  it("历史列表用派生标题与时间分组，行内不出现会话 ID；点某一行切到该会话并加载消息", async () => {
+    // lastActiveAt 取当前时间：分组标签才稳定落在「今天」，不依赖测试运行日期。
+    // title / messageCount 由后端 GET /sessions 直接返回（issue 360b1），前端不再自行派生。
+    const todaySession = {
+      ...SESSION,
+      lastActiveAt: new Date().toISOString(),
+      title: "我最近在做订单系统重构",
+      messageCount: 2,
+    }
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([todaySession])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
+      http.get("/api/sessions/sess_1/messages", () =>
+        HttpResponse.json([userSessionMessage("msg_u", "sess_1", 1, "我最近在做订单系统重构")]),
+      ),
+    )
+
+    renderAssistant()
+    await screen.findByRole("button", { name: "新建对话" })
+    fireEvent.click(screen.getByRole("tab", { name: "历史会话" }))
+
+    const list = await screen.findByRole("tabpanel")
+    // 行主文案是后端 title，第二行带消息数；行内不出现会话 ID。
+    expect(within(list).getByText("我最近在做订单系统重构")).toBeInTheDocument()
+    expect(within(list).getByText(/2 条消息/)).toBeInTheDocument()
+    expect(within(list).getByText("今天")).toBeInTheDocument()
+    expect(within(list).queryByText(/sess_1/)).not.toBeInTheDocument()
+
+    fireEvent.click(within(list).getByRole("button", { name: /我最近在做订单系统重构/ }))
+
+    expect(await screen.findByRole("heading", { level: 2, name: /我最近在做订单系统重构/ })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("在这个会话继续对话…")).toBeInTheDocument()
+  })
+
+  it("后端未返回 title 时行主文案走「未命名对话」兜底，未返回 messageCount 时不渲染消息数", async () => {
+    const untitledSession = { ...SESSION, lastActiveAt: new Date().toISOString() }
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([untitledSession])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+    )
+
+    renderAssistant()
+    await screen.findByRole("button", { name: "新建对话" })
+    fireEvent.click(screen.getByRole("tab", { name: "历史会话" }))
+
+    const list = await screen.findByRole("tabpanel")
+    expect(within(list).getByText("未命名对话")).toBeInTheDocument()
+    expect(within(list).queryByText(/条消息/)).not.toBeInTheDocument()
+    expect(within(list).queryByText(/undefined/)).not.toBeInTheDocument()
+  })
+
+  it("历史会话底部继续输入写入被选中的会话，绝不写回最新会话", async () => {
+    const calls: string[] = []
+    // 两条会话都有后端 title：最新会话 / 旧会话，用来证明续聊按选中项分流。
+    const latestSession = { ...SESSION, title: "最新会话第一句", messageCount: 1 }
+    const oldSession = { ...OTHER_SESSION, title: "旧会话第一句", messageCount: 1 }
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([latestSession, oldSession])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn()])),
+      http.get("/api/sessions/sess_1/messages", () =>
+        HttpResponse.json([userSessionMessage("msg_new", "sess_1", 1, "最新会话第一句")]),
+      ),
+      http.get("/api/sessions/sess_old/turns", () =>
+        HttpResponse.json([profileTurn({ id: "turn_old", sessionId: "sess_old" })]),
+      ),
+      http.get("/api/sessions/sess_old/messages", () =>
+        HttpResponse.json([userSessionMessage("msg_old", "sess_old", 1, "旧会话第一句")]),
+      ),
+      http.post("/api/sessions/sess_1/messages", () => {
+        calls.push("write:latest")
+        return HttpResponse.json({}, { status: 500 })
+      }),
+      http.post("/api/sessions/sess_1/runs", () => {
+        calls.push("run:latest")
+        return HttpResponse.json({ runId: "run_wrong", status: "started" }, { status: 202 })
+      }),
+      http.post("/api/sessions/sess_old/messages", async ({ request }) => {
+        const body = (await request.json()) as { seq: number; role: string; content: { content: string } }
+        calls.push("write:old:" + body.content.content)
+        return HttpResponse.json(
+          { id: "msg_old_2", sessionId: "sess_old", seq: body.seq, role: body.role, content: body.content, createdAt: "2026-10-01T00:00:00Z" },
+          { status: 201 },
+        )
+      }),
+      http.post("/api/sessions/sess_old/runs", async ({ request }) => {
+        const body = (await request.json()) as { prompt: string }
+        calls.push("run:old:" + body.prompt)
+        return HttpResponse.json({ runId: "run_old", status: "started" }, { status: 202 })
+      }),
+    )
+
+    renderAssistant()
+    await screen.findByRole("button", { name: "新建对话" })
+    fireEvent.click(screen.getByRole("tab", { name: "历史会话" }))
+
+    const list = await screen.findByRole("tabpanel")
+    fireEvent.click(within(list).getByRole("button", { name: /旧会话第一句/ }))
+
+    const box = await screen.findByPlaceholderText("在这个会话继续对话…")
+    fireEvent.change(box, { target: { value: "再补充一条经历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+
+    await waitFor(() => expect(calls).toContain("run:old:再补充一条经历"))
+    expect(calls).toContain("write:old:再补充一条经历")
+    // 负向：不得写回当前/最新会话。
+    expect(calls).not.toContain("write:latest")
+    expect(calls).not.toContain("run:latest")
+  })
+
+  it("已配置但凭据被上游拒绝时不放行聊天，且只透出上游掩码尾号", async () => {
+    server.use(
+      http.get("/api/models/config", () =>
+        HttpResponse.json({
+          ...MODEL_CONFIG,
+          keyConfigured: true,
+          lastTest: { at: "2026-10-01T00:00:00Z", ok: false, message: "HTTP 401 unauthorized: api key ****be21 rejected" },
+        }),
+      ),
+    )
+
+    renderAssistant()
+
+    expect(await screen.findByText("当前 Key 被模型服务拒绝了")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "去更新 Key" })).toBeInTheDocument()
+    expect(screen.getByText(/\*\*\*\*be21/)).toBeInTheDocument()
+    // 不放行聊天：没有输入框，也没有「开始聊聊」。
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "开始聊聊" })).not.toBeInTheDocument()
+    // 负向：不出现认证头与堆栈。
+    expect(screen.queryByText(/Authorization/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Traceback/)).not.toBeInTheDocument()
+  })
+
+  it("凭据线索不是掩码形态时界面不渲染明文 key", async () => {
+    const fullKey = "sk-live-abcdef1234567890"
+    server.use(
+      http.get("/api/models/config", () =>
+        HttpResponse.json({
+          ...MODEL_CONFIG,
+          keyConfigured: true,
+          lastTest: { at: "2026-10-01T00:00:00Z", ok: false, message: "HTTP 401 unauthorized: api key " + fullKey + " rejected" },
+        }),
+      ),
+    )
+
+    renderAssistant()
+
+    expect(await screen.findByText("当前 Key 被模型服务拒绝了")).toBeInTheDocument()
+    expect(screen.queryByText(new RegExp(fullKey))).not.toBeInTheDocument()
+    expect(screen.queryByText(/sk-live/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
+  })
+
+  it("轮次带 runError 时在抽屉内展示错误块，且不含完整 key / Authorization / Traceback", async () => {
+    const runError = {
+      code: "MODEL_AUTH_FAILED",
+      category: "auth",
+      message: "上游 401 拒绝：key ****be21",
+      provider: "openai",
+      model: "gpt-4o-mini",
+      keyHint: "****be21",
+    }
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([SESSION])),
+      http.get("/api/sessions/sess_1/turns", () => HttpResponse.json([profileTurn({ runError })])),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+    )
+
+    renderAssistant()
+
+    const block = await screen.findByTestId("run-error")
+    expect(block).toHaveTextContent("模型鉴权失败")
+    expect(block).toHaveTextContent("openai / gpt-4o-mini")
+    expect(block).toHaveTextContent("****be21")
+    expect(screen.getByRole("button", { name: "去设置更新 Key" })).toBeInTheDocument()
+    expect(screen.queryByText(/Authorization/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Traceback/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/sk-live/)).not.toBeInTheDocument()
+  })
+
+  it("runError 时可重试最近一次输入，重试真的再起一次 run", async () => {
+    const runs: string[] = []
+    server.use(
+      http.get("/api/sessions", () => HttpResponse.json([SESSION])),
+      http.get("/api/sessions/sess_1/turns", () =>
+        HttpResponse.json([profileTurn({ runError: { code: "MODEL_AUTH_FAILED", category: "auth", message: "上游拒绝 ****be21", provider: "openai", model: "gpt-4o-mini", keyHint: "****be21" } })]),
+      ),
+      http.get("/api/sessions/sess_1/messages", () => HttpResponse.json([])),
+      http.post("/api/sessions/sess_1/messages", async ({ request }) => {
+        const body = (await request.json()) as { seq: number; role: string; content: unknown }
+        return HttpResponse.json(
+          { id: "msg_r", sessionId: "sess_1", seq: body.seq, role: body.role, content: body.content, createdAt: "2026-10-01T00:00:00Z" },
+          { status: 201 },
+        )
+      }),
+      http.post("/api/sessions/sess_1/runs", async ({ request }) => {
+        const body = (await request.json()) as { prompt: string }
+        runs.push(body.prompt)
+        return HttpResponse.json({ runId: "run_r", status: "started" }, { status: 202 })
+      }),
+    )
+
+    renderAssistant()
+    const box = await screen.findByRole("textbox")
+    fireEvent.change(box, { target: { value: "补充一段经历" } })
+    fireEvent.click(screen.getByRole("button", { name: "发送" }))
+    await waitFor(() => expect(runs).toEqual(["补充一段经历"]))
+
+    fireEvent.click(await screen.findByRole("button", { name: "重试" }))
+    await waitFor(() => expect(runs).toEqual(["补充一段经历", "补充一段经历"]))
+  })
+})

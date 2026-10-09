@@ -4,13 +4,14 @@
 // 数据形状镜像后端契约（GET /sessions、GET /sessions/{id}/messages），
 // title / messageCount 是后端暂未提供的展示层可选入参，story 显式注入以确认派生与兜底。
 import type { ReactNode } from "react"
+import { MemoryRouter } from "react-router-dom"
 import type { SessionMessage, SessionSummary } from "@/components/session-history"
 import {
   ProfileAssistantPanel,
   type ProfileAssistantBubble,
   type ProfileCurrentRun,
 } from "@/components/profile-assistant-panel"
-import type { PendingAction } from "@/lib/types"
+import type { PendingAction, RunError } from "@/lib/types"
 
 // 展示层注入的派生标题与消息数（后端 GET /sessions 暂未返回）。
 const SESSIONS: SessionSummary[] = [
@@ -94,6 +95,17 @@ const CLOSED_TURN_RUN: ProfileCurrentRun = {
   bubbles: BUBBLES,
   pendingActions: [EXPIRED_ACTION],
   turnClosed: true,
+}
+
+// 运行失败的归一化投影：类别、provider/model、已掩码 key 尾号（契约 §4.1，issue 4ff97）。
+// 后端已保证 message 只含掩码尾号，界面直接复用共享的 RunErrorBlock。
+const RUN_ERROR: RunError = {
+  code: "MODEL_AUTH_FAILED",
+  category: "auth",
+  message: "上游 401 拒绝：api key ****be21", // i18n-allow: 后端已脱敏错误详情不翻译
+  provider: "openai",
+  model: "gpt-4o-mini",
+  keyHint: "****be21",
 }
 
 const LIST_ERROR = "GET /sessions 失败（503）" // i18n-allow: 后端错误详情不翻译
@@ -220,6 +232,25 @@ export const CurrentSession = {
   render: () => (
     <Drawer>
       <ProfileAssistantPanel mode="current" currentRun={CLOSED_TURN_RUN} onCreate={noop} onContinue={noop} onModeChange={noop} />
+    </Drawer>
+  ),
+}
+
+// —— 当前对话：本轮 run 失败（类别 / provider.model / key 尾号 / 去设置 / 重试） ——
+// RunErrorBlock 内部用 useNavigate（「去设置更新 Key」），所以 story 要包一层 Router。
+
+export const CurrentSessionRunError = {
+  render: () => (
+    <Drawer>
+      <MemoryRouter>
+        <ProfileAssistantPanel
+          mode="current"
+          currentRun={{ ...CURRENT_RUN, runError: RUN_ERROR, onRetry: noop }}
+          onCreate={noop}
+          onContinue={noop}
+          onModeChange={noop}
+        />
+      </MemoryRouter>
     </Drawer>
   ),
 }
