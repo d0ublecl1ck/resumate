@@ -171,6 +171,151 @@ function withLifecycle(resume: Resume): Resume {
   return lifecycle ? { ...resume, lifecycle } : resume
 }
 
+// A11 题库 / 笔试的默认桩：形状对齐真实契约，让未覆盖的 story 也能离线渲染。
+const MOCK_BANK_QUESTIONS = [
+  {
+    id: "bkq_mock_nacos",
+    role: "Java 后端",
+    kind: "technical",
+    difficulty: "medium",
+    prompt: "在 Nacos 作为注册中心时，临时实例与持久实例在健康检查和剔除机制上有什么区别？",
+    referencePoints: ["临时实例由客户端心跳维持", "持久实例由服务端主动健康检查"],
+    knowledgeRefs: ["Nacos 服务注册与健康检查 · 临时实例与持久实例"],
+    source: "seed_model",
+    createdAt: "2026-10-09T08:00:00+08:00",
+  },
+  {
+    id: "bkq_mock_sharding",
+    role: "Java 后端",
+    kind: "deep_dive",
+    difficulty: "hard",
+    prompt: "订单表单表 3000 万行、日增 80 万行，请说明你会采集哪些指标判断是否必须分库分表。",
+    referencePoints: ["采集行数、日均增量、P99 与磁盘增速", "分片数取 2 的幂便于翻倍扩容"],
+    knowledgeRefs: ["分库分表实战 · 分片键与路由算法"],
+    source: "seed_model",
+    createdAt: "2026-10-09T08:00:00+08:00",
+  },
+  {
+    id: "bkq_mock_ratelimit",
+    role: "Java 后端",
+    kind: "scenario",
+    difficulty: "medium",
+    prompt: "大促零点网关 QPS 从 1 万突增到 8 万，请说明你会如何做限流并给出关键配置项。",
+    referencePoints: ["用 Redis + Lua 令牌桶做网关全局限流", "超限返回 429 并带 Retry-After"],
+    knowledgeRefs: ["Spring Cloud Gateway 限流与灰度路由 · 限流：令牌桶与 KeyResolver"],
+    source: "seed_model",
+    createdAt: "2026-10-09T08:00:00+08:00",
+  },
+]
+
+const MOCK_QUIZ_ATTEMPT = {
+  id: "qza_mock",
+  status: "in_progress",
+  role: "Java 后端",
+  questionTypes: ["objective", "open", "code"],
+  questions: [
+    {
+      id: "qzq_mock_objective",
+      group: "objective",
+      kind: "multiple_choice",
+      ordinal: 1,
+      points: 10,
+      prompt: "关于订单服务分库分表的容量评估，下列说法正确的有哪些？",
+      options: [
+        { id: "a", text: "分片键选订单号，保证同一订单的读写落在同一分片。" },
+        { id: "b", text: "分片数量一旦确定，后期就不需要再调整。" },
+        { id: "c", text: "容量评估要同时考虑峰值 QPS、单行大小与索引膨胀系数。" },
+        { id: "d", text: "跨分片聚合查询应尽量下沉到离线数仓。" },
+      ],
+      referencePoints: [],
+      referenceAnswer: "",
+      starterCode: "",
+      source: { kind: "seed", label: "内置示范题", version: "seed-v1" },
+    },
+    {
+      id: "qzq_mock_open",
+      group: "open",
+      kind: "open",
+      ordinal: 2,
+      points: 20,
+      prompt: "大促当天订单量突增十倍，数据库连接数逼近上限。请给出排查顺序与保护方案。",
+      options: [],
+      referencePoints: ["先看连接池与慢查询", "再谈限流降级与扩容"],
+      referenceAnswer: "先定位慢查询与连接泄漏，再对非核心链路限流降级，最后评估扩容与读写分离。",
+      starterCode: "",
+      source: { kind: "bank", label: "岗位题库", version: "bank-v1" },
+    },
+    {
+      id: "qzq_mock_code",
+      group: "code",
+      kind: "code",
+      ordinal: 3,
+      points: 20,
+      prompt: "实现一个线程安全的限流器，限制每秒最多 N 次请求。",
+      options: [],
+      referencePoints: [],
+      referenceAnswer: "",
+      starterCode: "public class RateLimiter {\n    // TODO\n}",
+      source: { kind: "seed", label: "内置示范题", version: "seed-v1" },
+    },
+  ],
+  answers: [],
+  result: null,
+  maxScore: 50,
+  createdAt: "2026-10-09T08:00:00+08:00",
+  updatedAt: "2026-10-09T08:00:00+08:00",
+  submittedAt: null,
+}
+
+const MOCK_SPEECH_SEGMENT = {
+  id: "spseg_mock",
+  sessionId: "ivs_mock",
+  questionId: "ivq_mock_1",
+  durationSeconds: 8.4,
+  transcript: "交易下单接口的 P99 从 800ms 降到 220ms，QPS 从 600 提到 1800。",
+  charCount: 32,
+  paceCharsPerMin: 229,
+  fillerCount: 1,
+  pauseCount: 1,
+  clarityScore: 92,
+  clarityLevel: "good",
+  provider: "dashscope",
+  timingSource: "timestamps",
+  speechDurationSeconds: 8.4,
+  createdAt: "2026-10-09T08:00:00+08:00",
+}
+
+const MOCK_PRACTICE_ITEMS = [
+  {
+    id: "pti_mock_rigor",
+    role: "Java 后端",
+    dimension: "rigor",
+    goal: "补充分片键基因法和全局索引设计，说明如何覆盖多查询维度",
+    material: "分片键选择未讨论卖家 / 订单号等查询维度和热点买家问题",
+    status: "active",
+    sourceReportId: "ivr_mock_1",
+    sourceSessionId: "ivs_mock_1",
+    rubricVersion: "interview-rubric-v1",
+    retestSessionId: null,
+    createdAt: "2026-10-09T08:00:00+08:00",
+    updatedAt: "2026-10-09T08:00:00+08:00",
+  },
+  {
+    id: "pti_mock_depth",
+    role: "Java 后端",
+    dimension: "depth",
+    goal: "扩容说明虚拟槽位 / 双写开关 / 回滚方案，并给出迁移校验指标",
+    material: "扩容方案未说明双写一致性、回滚和迁移校验细节",
+    status: "active",
+    sourceReportId: "ivr_mock_1",
+    sourceSessionId: "ivs_mock_1",
+    rubricVersion: "interview-rubric-v1",
+    retestSessionId: null,
+    createdAt: "2026-10-09T08:00:00+08:00",
+    updatedAt: "2026-10-09T08:00:00+08:00",
+  },
+]
+
 export const handlers = [
   http.get("/api/auth/me", () => HttpResponse.json(AUTH_USER)),
   http.post("/api/auth/login", async ({ request }) => {
@@ -478,6 +623,106 @@ export const handlers = [
   ),
   http.post("/api/pending-actions/:id/reject", ({ params }) =>
     HttpResponse.json({ ...MOCK_PENDING_ACTION, id: params.id, state: "rejected" }),
+  ),
+  // acf2f：知识库检索默认无内容 → no_match；Storybook 与测试用 use() 覆盖成命中。
+  http.get("/api/kb/search", ({ request }) => {
+    const url = new URL(request.url)
+    return HttpResponse.json({
+      query: url.searchParams.get("q") ?? "",
+      role: url.searchParams.get("role"),
+      status: "no_match",
+      total: 0,
+      results: [],
+    })
+  }),
+  // A11：题库 / 练习计划 / 笔试的默认桩，形状对齐真实契约；具体 story 与测试仍可用 use() 覆盖。
+  http.get("/api/bank/stats", () =>
+    HttpResponse.json({
+      roles: [
+        { role: "Java 后端", total: 100, kinds: { technical: 48, deep_dive: 24, scenario: 16, behavioral: 12 } },
+        { role: "Web 前端", total: 100, kinds: { technical: 48, deep_dive: 24, scenario: 16, behavioral: 12 } },
+      ],
+      total: 200,
+    }),
+  ),
+  http.get("/api/bank/questions", () =>
+    HttpResponse.json(MOCK_BANK_QUESTIONS, { headers: { "X-Total-Count": String(MOCK_BANK_QUESTIONS.length) } }),
+  ),
+  http.get("/api/interview/practice-items", ({ request }) => {
+    const role = new URL(request.url).searchParams.get("role") ?? "Java 后端"
+    return HttpResponse.json(MOCK_PRACTICE_ITEMS.filter((item) => item.role === role))
+  }),
+  http.post("/api/quiz/attempts", () => HttpResponse.json(MOCK_QUIZ_ATTEMPT, { status: 201 })),
+  http.get("/api/quiz/attempts/:id", () => HttpResponse.json(MOCK_QUIZ_ATTEMPT)),
+  http.post("/api/quiz/attempts/:id/answers", () =>
+    HttpResponse.json({
+      answer: {
+        id: "qza_mock_answer",
+        questionId: "qzq_mock_objective",
+        questionGroup: "objective",
+        questionKind: "multiple_choice",
+        selectedOptionIds: ["a"],
+        textAnswer: null,
+        codeAnswer: null,
+        awardedPoints: 5,
+        maxPoints: 10,
+        verdict: "partial",
+        executed: null,
+        feedback: { policy: "多选：所选是无错选的正确子集（且非空）得半分（向下取整）。", optionAnalysis: [] },
+        createdAt: "2026-10-09T08:00:00+08:00",
+        gradedAt: "2026-10-09T08:00:00+08:00",
+      },
+    }),
+  ),
+  http.post("/api/quiz/attempts/:id/submit", () =>
+    HttpResponse.json({
+      ...MOCK_QUIZ_ATTEMPT,
+      status: "submitted",
+      result: { totalScore: 5, maxScore: 50, policy: { version: "quiz-policy-v1" }, submittedAt: "2026-10-09T08:10:00+08:00" },
+      submittedAt: "2026-10-09T08:10:00+08:00",
+    }),
+  ),
+  // A11 语音与报告导出的默认桩：形状对齐真实契约，story 覆盖时用 use() 换成命中/失败分支。
+  http.post("/api/speech/transcribe", async ({ request }) => {
+    const body = (await request.json()) as { audioBase64?: string }
+    return HttpResponse.json({
+      transcript: "交易下单接口的 P99 从 800ms 降到 220ms，QPS 从 600 提到 1800。",
+      durationSeconds: 8.4,
+      words: [
+        { text: "交易下单接口的", beginMs: 0, endMs: 2400 },
+        { text: "P99 从 800ms 降到 220ms，", beginMs: 2500, endMs: 5600 },
+        { text: "QPS 从 600 提到 1800。", beginMs: 5700, endMs: 8400 },
+      ],
+      provider: "dashscope",
+      receivedBytes: body.audioBase64?.length ?? 0,
+    })
+  }),
+  http.post("/api/speech/segments", () => HttpResponse.json(MOCK_SPEECH_SEGMENT, { status: 201 })),
+  http.get("/api/speech/segments", ({ request }) =>
+    HttpResponse.json(
+      new URL(request.url).searchParams.get("sessionId") ? [MOCK_SPEECH_SEGMENT] : [],
+    ),
+  ),
+  http.post("/api/speech/synthesize", () =>
+    HttpResponse.arrayBuffer(new Uint8Array([82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69]).buffer, {
+      headers: { "Content-Type": "audio/wav" },
+    }),
+  ),
+  http.get("/api/interview/insights", ({ request }) => {
+    const url = new URL(request.url)
+    return HttpResponse.json({
+      resumeVersionId: url.searchParams.get("resumeVersionId") ?? "ver_mock",
+      jdId: url.searchParams.get("jdId") ?? "jd_mock",
+      matchPoints: ["简历中的订单中台项目与 JD 的分布式交易职责一致", "有高并发限流降级经验，对应 JD 的稳定性要求"],
+      riskPoints: ["JD 要求 Kafka 实战经验，简历只体现为了解", "缺少 JD 强调的多活容灾落地案例"],
+      scopeKeywords: ["Java 17", "Spring Cloud", "分库分表", "高并发与稳定性"],
+    })
+  }),
+  http.get("/api/interview/sessions/:id/report/export", ({ params }) =>
+    HttpResponse.text(
+      "# 模拟面试评估报告\n\n- 场次：" + params.id + "\n- 量表：interview-rubric-v1\n\n（导出的 Markdown 内容由后端生成）\n",
+      { headers: { "Content-Type": "text/markdown; charset=utf-8" } },
+    ),
   ),
 ]
 

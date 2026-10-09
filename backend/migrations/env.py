@@ -5,11 +5,15 @@ from app.core.db import Base, engine
 from app.modules.access import models as access_models  # noqa: F401
 from app.modules.agent import models as agent_models  # noqa: F401
 from app.modules.auth import models as auth_models  # noqa: F401
+from app.modules.bank import models as bank_models  # noqa: F401
 from app.modules.interview import models as interview_models  # noqa: F401
 from app.modules.jd import models as jd_models  # noqa: F401
+from app.modules.kb import models as kb_models  # noqa: F401
 from app.modules.profile import models as profile_models  # noqa: F401
+from app.modules.quiz import models as quiz_models  # noqa: F401
 from app.modules.resume import models as resume_models  # noqa: F401
 from app.modules.settings import models as settings_models  # noqa: F401
+from app.modules.speech import models as speech_models  # noqa: F401
 from app.modules.templates import models as templates_models  # noqa: F401
 
 # Import each business model module explicitly here before autogeneration.

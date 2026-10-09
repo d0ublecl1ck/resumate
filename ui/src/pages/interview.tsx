@@ -4,46 +4,17 @@ import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { MessagesSquare, Settings } from "lucide-react"
+import { MessagesSquare } from "lucide-react"
 
 import { listJds, listResumes, listResumeVersions } from "@/lib/api"
 import { createInterviewSession, listInterviewSessions } from "@/lib/interview"
-import { userFacingError } from "@/lib/api-error-text"
 import { Panel, SectionHeader } from "@/features/interview/section-header"
 import { StateBlock } from "@/components/kit/state-block"
+import { InterviewErrorNotice } from "@/components/interview-error-notice"
 
 const QUESTION_COUNTS = [3, 4, 5]
 const FIELD_CLASS =
   "w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
-
-/** 把机器错误码映射到本命名空间的 i18n 文案；未知码回落到 generic，绝不泄漏后端英文原文。 */
-function errorText(cause: unknown, t: (key: string, options?: { defaultValue?: string }) => string): string {
-  const fallback = t("interviewWorkflow.errors.generic")
-  const { code } = userFacingError(cause, fallback)
-  if (!code) return fallback
-  return t(`interviewWorkflow.errors.${code}`, { defaultValue: "" }) || fallback
-}
-
-/** 统一失败出口：标题 + 中文说明；MODEL_NOT_CONFIGURED 额外给出「去设置模型」引导。 */
-export function InterviewErrorNotice({ title, cause }: { title: string; cause: unknown }) {
-  const { t } = useTranslation()
-  const { code } = userFacingError(cause, t("interviewWorkflow.errors.generic"))
-  return (
-    <div role="alert" className="rounded-lg border border-coral/40 bg-coral/5 px-4 py-3">
-      <p className="text-sm font-medium text-coral">{title}</p>
-      <p className="mt-1 text-sm text-secondary-foreground">{errorText(cause, t)}</p>
-      {code === "MODEL_NOT_CONFIGURED" ? (
-        <Link
-          to="/settings"
-          className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
-        >
-          <Settings className="size-3.5" aria-hidden />
-          {t("interviewWorkflow.errors.openSettings")}
-        </Link>
-      ) : null}
-    </div>
-  )
-}
 
 function formatDate(value: string): string {
   const date = new Date(value)
@@ -101,6 +72,26 @@ export function InterviewPage() {
         title={t("interviewWorkflow.meta.title")}
         description={t("interviewWorkflow.meta.description")}
       />
+
+      {/* 数据聚合屏入口：准备、题库、题目快照、历史口径比较、练习计划与成长曲线。 */}
+      <nav aria-label={t("interviewWorkflow.meta.eyebrow")} className="flex flex-wrap gap-2">
+        {[
+          { to: "/interview/setup", label: t("interviewSetup.title") },
+          { to: "/interview/bank", label: t("interviewBank.title") },
+          { to: "/interview/questions", label: t("interviewQuestions.title") },
+          { to: "/interview/history", label: t("interviewHistory.header.title") },
+          { to: "/interview/plan", label: t("interviewPlan.header.title") },
+          { to: "/interview/growth", label: t("interviewGrowth.header.title") },
+        ].map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
 
       <Panel title={t("interviewWorkflow.create.title")} caption={t("interviewWorkflow.create.caption")}>
         <div className="mt-4 grid gap-4 md:grid-cols-2">

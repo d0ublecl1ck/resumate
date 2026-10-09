@@ -64,6 +64,8 @@ export default {
     questionOrdinal: "Question {{ordinal}}",
     kind: {
       technical: "Technical",
+      deep_dive: "Project deep dive",
+      scenario: "Scenario",
       behavioral: "Behavioral",
       situational: "Situational",
       follow_up: "Follow-up",
