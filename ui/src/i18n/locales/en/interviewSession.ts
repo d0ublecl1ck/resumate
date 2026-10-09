@@ -4,10 +4,13 @@ export default {
     eyebrow: "Mock interview",
     title: "Java Backend · Mock interview in progress",
     description: "This session locks the resume version and target JD; questions come from the role question bank and cite knowledge entries as scoring evidence.",
+    inProgress: "Mock interview in progress",
   },
   header: {
     voiceChannel: "Voice channel healthy",
+    voiceUnavailable: "Voice channel unavailable",
     elapsed: "18 minutes elapsed",
+    elapsedValue: "{{minutes}} minutes elapsed",
   },
   conversation: {
     title: "Conversation",
@@ -23,6 +26,7 @@ export default {
     transcriptVerified: "Transcript verified",
     sourceLine: "Source: {{source}}",
     basisLine: "Follow-up basis: {{basis}}",
+    referenceLine: "Reference points: {{points}}",
     turns: {
       q1: "Start with the JVM memory regions, and tell me which parts you check first when debugging a production memory issue.",
       q1Source: "JVM memory model · Knowledge entry #204",
@@ -46,6 +50,7 @@ export default {
       resumeValue: "Resume v3 · Frozen",
       jd: "Target JD",
       jdValue: "Backend hiring JD · Trading platform",
+      company: "Company",
       scale: "Scale version",
       scaleValue: "Competency scale v1.0",
       elapsed: "Elapsed",
@@ -55,9 +60,15 @@ export default {
   voice: {
     title: "Voice pipeline",
     caption: "Dual channel with automatic fallback",
+    entry: "Open voice answering",
+    entryHint: "Record in this session: cloud ASR first, browser ASR as fallback, and review the transcript before submitting.",
     rows: {
       asr: "ASR available",
       asrDetail: "Live transcription, reviewable line by line after answering",
+      asrUnavailableDetail: "This browser has no live transcription; when cloud ASR is unavailable, type the transcript manually",
+      recorder: "Recorder available",
+      recorderDetail: "Native browser recording with a timer; raw audio never leaves this machine",
+      recorderUnavailableDetail: "This browser cannot record; it falls back to manual text plus a manual length",
       tts: "TTS available",
       ttsDetail: "Interviewer voice playback, pausable anytime",
       fallback: "Text-only fallback",
@@ -67,6 +78,7 @@ export default {
   gaps: {
     title: "Follow-up basis",
     caption: "Gaps flagged automatically from the current answer",
+    empty: "No open points right now.",
     items: {
       gcTradeoff: "CMS vs G1 pause / throughput trade-off",
       offHeap: "Impact of off-heap memory and metaspace on GC",

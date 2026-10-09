@@ -4,10 +4,13 @@ export default {
     eyebrow: "模拟面试",
     title: "Java 后端 · 模拟面试进行中",
     description: "本场已冻结简历版本与目标 JD，题目取自该岗位题库，并挂载知识条目作为评分依据。",
+    inProgress: "模拟面试进行中",
   },
   header: {
     voiceChannel: "语音通道正常",
+    voiceUnavailable: "语音通道不可用",
     elapsed: "已进行 18 分钟",
+    elapsedValue: "已进行 {{minutes}} 分钟",
   },
   conversation: {
     title: "对话流",
@@ -23,6 +26,7 @@ export default {
     transcriptVerified: "转写已核对",
     sourceLine: "知识来源：{{source}}",
     basisLine: "追问依据：{{basis}}",
+    referenceLine: "参考要点：{{points}}",
     turns: {
       q1: "先说说 JVM 的内存区域划分，以及线上排查内存问题时你最先看哪几块。",
       q1Source: "JVM 内存模型 · 知识条目 #204",
@@ -46,6 +50,7 @@ export default {
       resumeValue: "简历 v3 · 已冻结",
       jd: "目标 JD",
       jdValue: "后端社招 JD · 交易中台",
+      company: "公司",
       scale: "量表版本",
       scaleValue: "能力量表 v1.0",
       elapsed: "已用时",
@@ -55,9 +60,15 @@ export default {
   voice: {
     title: "语音链路",
     caption: "双通道并行，异常自动降级",
+    entry: "打开语音作答",
+    entryHint: "在本场录音作答，云端识别优先、浏览器识别兜底，转写核对后再提交。",
     rows: {
       asr: "ASR 可用",
       asrDetail: "实时转写，回答后可逐句核对",
+      asrUnavailableDetail: "当前浏览器不支持实时转写，云端识别不可用时改为手动输入文本",
+      recorder: "录音可用",
+      recorderDetail: "浏览器原生录音并计时，原始音频只在本机停留",
+      recorderUnavailableDetail: "当前浏览器不支持录音，将降级为手动输入文本与时长",
       tts: "TTS 可用",
       ttsDetail: "面试官语音播报，可随时暂停",
       fallback: "降级为纯文字",
@@ -67,6 +78,7 @@ export default {
   gaps: {
     title: "追问依据",
     caption: "根据当前回答自动标记的待补要点",
+    empty: "当前没有待补要点。",
     items: {
       gcTradeoff: "CMS 与 G1 的停顿 / 吞吐取舍",
       offHeap: "堆外内存与元空间对 GC 的影响",
