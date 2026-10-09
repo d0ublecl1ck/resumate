@@ -5,6 +5,7 @@ import hashlib
 import json
 import shutil
 from datetime import datetime, timezone
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
@@ -938,12 +939,50 @@ def runtime_status() -> RuntimeStatusResponse:
 # --- sessions, messages and run checkpoints (issue 9d29a) -----------------------
 
 
-def _session_response(session: AgentSession) -> SessionResponse:
+# Derived session title length, in characters (issue 360b1 / e5290).
+SESSION_TITLE_MAX_LENGTH = 24
+
+
+def _message_text(content: Any) -> str | None:
+    """Extract display text from an opaque session message content payload.
+
+    Mirrors the frontend's `sessionMessageText` so the derived list title reads
+    the same wire shapes: a plain string, or an object carrying `text` (final
+    reply) or `content` (agent-core Message wire).
+    """
+    if isinstance(content, str):
+        return content.strip() or None
+    if isinstance(content, dict):
+        for key in ("text", "content"):
+            value = content.get(key)
+            if isinstance(value, str):
+                return value.strip() or None
+    return None
+
+
+def _derive_session_title(first_user_content: Any | None) -> str | None:
+    """Trim the first user message and cut it to 24 characters with an ellipsis."""
+    text = _message_text(first_user_content)
+    if not text:
+        return None
+    if len(text) <= SESSION_TITLE_MAX_LENGTH:
+        return text
+    return text[:SESSION_TITLE_MAX_LENGTH] + "…"
+
+
+def _session_response(
+    session: AgentSession,
+    *,
+    first_user_content: Any | None = None,
+    message_count: int | None = None,
+) -> SessionResponse:
     return SessionResponse(
         id=session.id,
         created_at=session.created_at,
         updated_at=session.updated_at,
         last_active_at=session.last_active_at,
+        title=_derive_session_title(first_user_content),
+        message_count=message_count,
     )
 
 
@@ -978,11 +1017,20 @@ def create_session(db: Session, user: CurrentUser) -> SessionResponse:
     dao.add_session(db, session)
     db.commit()
     db.refresh(session)
-    return _session_response(session)
+    # A brand-new session has no user message yet, so its title is null and its
+    # message count is a truthful zero.
+    return _session_response(session, message_count=0)
 
 
 def list_sessions(db: Session, user: CurrentUser) -> list[SessionResponse]:
-    return [_session_response(session) for session in dao.list_sessions(db, user.id)]
+    return [
+        _session_response(
+            row.session,
+            first_user_content=row.first_user_content,
+            message_count=row.message_count,
+        )
+        for row in dao.list_sessions(db, user.id)
+    ]
 
 
 def list_session_messages(
