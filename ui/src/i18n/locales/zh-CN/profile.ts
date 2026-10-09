@@ -129,5 +129,11 @@ export default {
     thinking: "正在整理…",
     placeholder: "改基本信息，或补充一段经历…（⌘↵ 发送，Shift+↵ 换行）",
     send: "发送",
+    panel: {
+      tabsLabel: "助手视图",
+      historyHint: "选择一条历史会话继续聊，或新建对话。",
+      currentEmptyTitle: "还没有对话",
+      currentEmptyDescription: "在下面输入第一句，助手会先读主档再动手。",
+    },
   },
 }
