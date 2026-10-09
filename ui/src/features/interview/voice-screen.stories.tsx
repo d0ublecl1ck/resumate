@@ -7,7 +7,7 @@ export default { title: "Interview/Voice" }
 
 export const Default = {
   render: () => (
-    <Screen path="/interview/voice" routePath="/interview/voice">
+    <Screen path="/interview/voice" routePath="/interview/voice" width="fluid">
       <VoiceScreen />
     </Screen>
   ),

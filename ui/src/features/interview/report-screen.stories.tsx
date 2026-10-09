@@ -21,7 +21,7 @@ const VOICE_SAMPLE: ExpressionSummary = {
 
 export const Default = {
   render: () => (
-    <Screen path="/interview/report" routePath="/interview/report">
+    <Screen path="/interview/report" routePath="/interview/report" width="fluid">
       <InterviewReportScreen speech={null} />
     </Screen>
   ),
@@ -29,7 +29,7 @@ export const Default = {
 
 export const Voice = {
   render: () => (
-    <Screen path="/interview/report" routePath="/interview/report">
+    <Screen path="/interview/report" routePath="/interview/report" width="fluid">
       <InterviewReportScreen speech={VOICE_SAMPLE} />
     </Screen>
   ),

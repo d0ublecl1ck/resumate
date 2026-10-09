@@ -62,7 +62,7 @@ export const SameCaliber = {
       http.get("/api/interview/comparison", () => HttpResponse.json(COMPARISON)),
     )
     return (
-      <Screen path="/interview/history" routePath="/interview/history">
+      <Screen path="/interview/history" routePath="/interview/history" width="fluid">
         <HistoryScreen />
       </Screen>
     )

@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
-import { AppShell } from "@/components/app-shell"
+import { AppShell, type ShellWidth } from "@/components/app-shell"
 
 export type StorySeed = [readonly unknown[], unknown][]
 
@@ -23,15 +23,18 @@ export function Screen({
   routePath = "*",
   seed,
   chrome = true,
+  width,
   children,
 }: {
   path: string
   routePath?: string
   seed?: StorySeed
   chrome?: boolean
+  /** 外壳宽度档位；工作区型页面传 "fluid"，与 App.tsx 的路由分组保持一致。 */
+  width?: ShellWidth
   children: ReactNode
 }) {
-  const element = chrome ? <AppShell>{children}</AppShell> : children
+  const element = chrome ? <AppShell width={width}>{children}</AppShell> : children
   return (
     <StoryProviders seed={seed}>
       <MemoryRouter initialEntries={[path]}>

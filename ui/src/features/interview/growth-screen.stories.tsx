@@ -54,7 +54,7 @@ export const Default = {
       http.get("/api/interview/practice-items", () => HttpResponse.json(ITEMS)),
     )
     return (
-      <Screen path="/interview/growth" routePath="/interview/growth">
+      <Screen path="/interview/growth" routePath="/interview/growth" width="fluid">
         <GrowthScreen />
       </Screen>
     )

@@ -52,6 +52,26 @@ function App() {
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
           <Route path="verify-email" element={<VerifyEmailPage />} />
+          {/* 工作区型（fluid）：多栏工作台，吃满侧栏之外的可用宽度。 */}
+          <Route
+            element={
+              <RequireAuth>
+                <AppShell width="fluid">
+                  <Outlet />
+                </AppShell>
+              </RequireAuth>
+            }
+          >
+            <Route path="resumes/:id" element={<ResumeEditorPage />} />
+            {/* 具体路径必须排在 interview/:id 之前，否则会被参数路由吞掉。 */}
+            <Route path="interview/bank" element={<BankScreen />} />
+            <Route path="interview/written" element={<WrittenScreen />} />
+            <Route path="interview/growth" element={<GrowthScreen />} />
+            <Route path="interview/history" element={<HistoryScreen />} />
+            <Route path="interview/:id" element={<InterviewSessionPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
+          {/* 阅读/表单型（readable）：单列文本与表单，保留 AppShell 默认的可读性上限。 */}
           <Route
             element={
               <RequireAuth>
@@ -63,21 +83,13 @@ function App() {
           >
             <Route index element={<WorkbenchPage />} />
             <Route path="resumes" element={<ResumesPage />} />
-            <Route path="resumes/:id" element={<ResumeEditorPage />} />
             <Route path="resumes/:id/versions" element={<ResumeVersionsPage />} />
             <Route path="jds" element={<JdsPage />} />
             <Route path="jds/:id" element={<JdDetailPage />} />
             <Route path="interview" element={<InterviewPage />} />
-            {/* 具体路径必须排在 interview/:id 之前，否则会被参数路由吞掉。 */}
-            <Route path="interview/bank" element={<BankScreen />} />
-            <Route path="interview/written" element={<WrittenScreen />} />
-            <Route path="interview/growth" element={<GrowthScreen />} />
-            <Route path="interview/history" element={<HistoryScreen />} />
             <Route path="interview/plan" element={<PlanScreen />} />
             <Route path="interview/questions" element={<QuestionsScreen />} />
             <Route path="interview/setup" element={<SetupScreen />} />
-            <Route path="interview/:id" element={<InterviewSessionPage />} />
-            <Route path="profile" element={<ProfilePage />} />
             <Route path="settings/*" element={<SettingsLayout />} />
             <Route path="admin/templates" element={<TemplatesPage />} />
             <Route path="admin/templates/:id" element={<TemplateEditorPage />} />

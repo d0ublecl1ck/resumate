@@ -16,7 +16,7 @@ function applyPreferences(autosave: boolean, autosaveIntervalSeconds = 10) {
 
 export const WithActiveRun = {
   render: () => (
-    <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+    <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id" width="fluid">
       <ResumeEditorPage />
     </Screen>
   ),
@@ -24,7 +24,7 @@ export const WithActiveRun = {
 
 export const WithoutActiveRun = {
   render: () => (
-    <Screen path="/resumes/res_pm_pivot" routePath="/resumes/:id">
+    <Screen path="/resumes/res_pm_pivot" routePath="/resumes/:id" width="fluid">
       <ResumeEditorPage />
     </Screen>
   ),
@@ -35,7 +35,7 @@ export const AutosaveOn = {
   render: () => {
     applyPreferences(true, 10)
     return (
-      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id" width="fluid">
         <ResumeEditorPage />
       </Screen>
     )
@@ -47,7 +47,7 @@ export const AutosaveOff = {
   render: () => {
     applyPreferences(false)
     return (
-      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id" width="fluid">
         <ResumeEditorPage />
       </Screen>
     )
@@ -59,7 +59,7 @@ export const AutosaveLongInterval = {
   render: () => {
     applyPreferences(true, 120)
     return (
-      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id" width="fluid">
         <ResumeEditorPage />
       </Screen>
     )
@@ -97,7 +97,7 @@ export const ConversationAfterFinalize = {
     applyPreferences(false)
     worker.use(http.get("/api/resumes/:id/turns", () => HttpResponse.json([FINALIZED_TURN])))
     return (
-      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id">
+      <Screen path="/resumes/res_fe_lead" routePath="/resumes/:id" width="fluid">
         <ResumeEditorPage />
       </Screen>
     )

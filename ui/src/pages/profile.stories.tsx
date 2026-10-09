@@ -5,7 +5,7 @@ export default { title: "Pages/Profile" }
 
 export const Default = {
   render: () => (
-    <Screen path="/profile" routePath="/profile">
+    <Screen path="/profile" routePath="/profile" width="fluid">
       <ProfilePage />
     </Screen>
   ),

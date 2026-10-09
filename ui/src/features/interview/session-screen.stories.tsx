@@ -7,7 +7,7 @@ export default { title: "Interview/Session" }
 
 export const InProgress = {
   render: () => (
-    <Screen path="/interview/session" routePath="/interview/session">
+    <Screen path="/interview/session" routePath="/interview/session" width="fluid">
       <SessionScreen />
     </Screen>
   ),
