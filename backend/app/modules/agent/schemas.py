@@ -254,6 +254,13 @@ class SessionResponse(ApiModel):
     created_at: datetime
     updated_at: datetime
     last_active_at: datetime
+    # Derived on read (issue 360b1): the session's first role=user message text,
+    # trimmed and cut to 24 characters with an ellipsis. None means "no user
+    # message / blank", and the list UI falls back to its own untitled label.
+    title: str | None = None
+    # Total messages stored in the session; GET /sessions resolves it with the
+    # same statement as the title, so it never costs a per-session query.
+    message_count: int | None = None
 
 
 class SessionMessageCreateRequest(ApiModel):

@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from typing import Any, NamedTuple
+
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .models import AgentOperation, AgentSession, AgentSessionMessage, AgentTurn, PendingAction
@@ -121,14 +123,52 @@ def get_session(db: Session, session_id: str) -> AgentSession | None:
     return db.get(AgentSession, session_id)
 
 
-def list_sessions(db: Session, owner_id: str, limit: int = 50) -> list[AgentSession]:
+class SessionSummaryRow(NamedTuple):
+    """One session list row with its derived title source and message count."""
+
+    session: AgentSession
+    first_user_content: Any | None
+    message_count: int
+
+
+def list_sessions(db: Session, owner_id: str, limit: int = 50) -> list[SessionSummaryRow]:
+    """List one owner's sessions newest-first with derived summary data.
+
+    The first user message's content and the total message count are resolved by
+    correlated scalar subqueries inside this single statement, so the session
+    list never issues one query per session (issue 360b1).
+    """
+    first_user_content = (
+        select(AgentSessionMessage.content)
+        .where(
+            AgentSessionMessage.session_id == AgentSession.id,
+            AgentSessionMessage.role == "user",
+        )
+        .order_by(AgentSessionMessage.seq.asc())
+        .limit(1)
+        .correlate(AgentSession)
+        .scalar_subquery()
+    )
+    message_count = (
+        select(func.count(AgentSessionMessage.id))
+        .where(AgentSessionMessage.session_id == AgentSession.id)
+        .correlate(AgentSession)
+        .scalar_subquery()
+    )
     statement = (
-        select(AgentSession)
+        select(AgentSession, first_user_content, message_count)
         .where(AgentSession.owner_id == owner_id)
         .order_by(AgentSession.last_active_at.desc(), AgentSession.created_at.desc())
         .limit(limit)
     )
-    return list(db.scalars(statement))
+    return [
+        SessionSummaryRow(
+            session=row[0],
+            first_user_content=row[1],
+            message_count=row[2] or 0,
+        )
+        for row in db.execute(statement).all()
+    ]
 
 
 def add_message(db: Session, message: AgentSessionMessage) -> None:
