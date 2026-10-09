@@ -1,8 +1,12 @@
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.core.config import get_settings
+from app.core.config import check_startup_config, get_settings
 from app.modules.access.api import router as access_router
 from app.modules.agent.api import router as agent_router
 from app.modules.auth.api import router as auth_router
@@ -20,7 +24,29 @@ from app.modules.speech.api import router as speech_router
 from app.modules.templates.api import router as templates_router
 from app.shared.errors import ApiError, ApiException, ErrorCode
 
-app = FastAPI(title=get_settings().app_name)
+def _ensure_startup_logging() -> None:
+    """让应用自身的启动日志在 uvicorn 默认日志配置下可见。
+
+    uvicorn 只给 "uvicorn*" logger 挂了 handler，应用 logger 的 INFO 记录会静默
+    消失。这里在启动时给根 logger 补一个 handler；basicConfig 在已经存在 handler
+    （pytest 的 caplog、部署方的日志配置）时是空操作，不会抢走日志捕获。
+    """
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(message)s")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """启动生命周期：先做配置自检，有效配置不齐备就直接中止启动。
+
+    放在 lifespan 而不是模块导入期，是为了让「启动」这件事显式发生，也让
+    TestClient 的上下文管理器与真实 uvicorn 走同一条路径。
+    """
+    _ensure_startup_logging()
+    check_startup_config()
+    yield
+
+
+app = FastAPI(title=get_settings().app_name, lifespan=lifespan)
 
 
 @app.exception_handler(ApiException)

@@ -1,6 +1,11 @@
 import os
 from collections.abc import Iterator
 
+# 测试用 FastAPI 依赖覆盖把真实 SMTP 换成内存 fake mailer，CI 上也没有
+# backend/.env；这里显式打开启动自检的逃生阀，保证「无邮件配置」不判死。
+# 自检本身的行为由 tests/test_startup_config.py 单独覆盖。
+os.environ.setdefault("RESUMATE_ALLOW_MISSING_ENV", "1")
+
 import fakeredis
 import pytest
 from fastapi.testclient import TestClient
