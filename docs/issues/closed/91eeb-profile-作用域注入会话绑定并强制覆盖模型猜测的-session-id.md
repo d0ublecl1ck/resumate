@@ -1,13 +1,14 @@
 ---
 id: 91eeb
-status: in-progress
+status: closed
 created_at: 2026-10-09T16:18:39.653Z
-updated_at: 2026-10-09T16:18:57.894Z
+updated_at: 2026-10-09T16:35:53.599Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-09T16:18:57.894Z
+closed_at: 2026-10-09T16:35:53.599Z
 ---
 
 # profile 作用域注入会话绑定并强制覆盖模型猜测的 session_id
