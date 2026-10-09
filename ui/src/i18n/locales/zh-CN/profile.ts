@@ -134,6 +134,7 @@ export default {
       historyHint: "选择一条历史会话继续聊，或新建对话。",
       currentEmptyTitle: "还没有对话",
       currentEmptyDescription: "在下面输入第一句，助手会先读主档再动手。",
+      loadError: "会话读取失败，请稍后重试。",
     },
   },
 }

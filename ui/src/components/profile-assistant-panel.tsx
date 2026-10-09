@@ -4,11 +4,12 @@
 // 零件复用 session-history.tsx 的 SessionList / SessionDetail / NewConversationEntry，
 // 令牌与类沿用既有规范，不新增页面视觉规则。
 
-import { useState } from "react"
+import { useState, type Ref } from "react"
 import { useTranslation } from "react-i18next"
 import { Bot, Loader2, Send, User } from "lucide-react"
 import { StateBlock } from "@/components/kit/state-block"
 import { PendingActionCard } from "@/components/kit/pending-action"
+import { RunErrorBlock } from "@/components/kit/run-error"
 import {
   NewConversationEntry,
   SessionDetail,
@@ -16,7 +17,7 @@ import {
   type SessionMessage,
   type SessionSummary,
 } from "@/components/session-history"
-import type { PendingAction } from "@/lib/types"
+import type { PendingAction, RunError } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export type ProfileAssistantView = "current" | "history"
@@ -36,6 +37,15 @@ export interface ProfileCurrentRun {
   turnClosed?: boolean
   /** 正在等助手回复：显示思考中气泡。 */
   thinking?: boolean
+  /** 本轮 run 的失败详情；有值时在气泡下方渲染共享的 RunErrorBlock。 */
+  runError?: RunError | null
+  /** 重试最近一次输入；缺省时不渲染「重试」入口。 */
+  onRetry?: () => void
+  /** 待办决策：批准 / 拒绝；缺省时待办按只读渲染。 */
+  onApprove?: (actionId: string) => void
+  onReject?: (actionId: string) => void
+  /** 正在提交的待办 id：禁用重复点击。 */
+  busyActionId?: string | null
 }
 
 export interface ProfileAssistantPanelProps {
@@ -59,6 +69,8 @@ export interface ProfileAssistantPanelProps {
   /** 发送一条消息（当前对话与历史详情共用）；作用域由调用方按 mode 决定。 */
   onContinue?: (text: string) => void
   onModeChange?: (mode: ProfileAssistantView) => void
+  /** 正文滚动容器 ref：调用方用它在新消息到达时滚到底部。 */
+  bodyRef?: Ref<HTMLDivElement>
 }
 
 export function ProfileAssistantPanel({
@@ -74,6 +86,7 @@ export function ProfileAssistantPanel({
   onBack,
   onContinue,
   onModeChange,
+  bodyRef,
 }: ProfileAssistantPanelProps) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState("")
@@ -130,7 +143,7 @@ export function ProfileAssistantPanel({
     )
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="space-y-3 border-b border-border p-3">
         <NewConversationEntry disabled={creating} onCreate={onCreate} />
         <div
@@ -161,7 +174,7 @@ export function ProfileAssistantPanel({
         </div>
       </div>
 
-      <div id={bodyId} role="tabpanel" className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div id={bodyId} ref={bodyRef} role="tabpanel" className="min-h-0 flex-1 overflow-y-auto p-4">
         {mode === "current" ? (
           <CurrentConversation run={currentRun} error={error} />
         ) : activeSessionId ? (
@@ -230,8 +243,17 @@ function CurrentConversation({ run, error }: { run?: ProfileCurrentRun | null; e
       )}
 
       {pendingActions.map((action) => (
-        <PendingActionCard key={action.id} action={action} turnClosed={run?.turnClosed} />
+        <PendingActionCard
+          key={action.id}
+          action={action}
+          turnClosed={run?.turnClosed}
+          onApprove={run?.onApprove}
+          onReject={run?.onReject}
+          busy={run?.busyActionId === action.id}
+        />
       ))}
+
+      {run?.runError ? <RunErrorBlock error={run.runError} onRetry={run.onRetry} /> : null}
 
       {thinking ? (
         <div className="flex gap-2.5">

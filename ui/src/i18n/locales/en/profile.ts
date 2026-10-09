@@ -134,6 +134,7 @@ export default {
       historyHint: "Pick a session to continue, or start a new conversation.",
       currentEmptyTitle: "No conversation yet",
       currentEmptyDescription: "Type the first message below; the assistant reads your profile before acting.",
+      loadError: "Couldn't load the conversations. Please try again.",
     },
   },
 }
