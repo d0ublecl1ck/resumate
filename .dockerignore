@@ -1,4 +1,9 @@
 # 构建上下文只保留镜像真正需要的文件。
+# 密钥文件绝不进构建上下文：backend/.env 含真实 SMTP 凭据，而 docker/Dockerfile.backend
+# 使用 `COPY backend/ ./` 整目录拷贝，漏掉这条会把凭据固化进镜像层。
+.env
+**/.env
+**/.env.*
 .git
 .gitignore
 .DS_Store
