@@ -1,13 +1,14 @@
 ---
 id: b5981
-status: in-progress
+status: closed
 created_at: 2026-10-10T13:38:22.270Z
-updated_at: 2026-10-10T13:38:36.092Z
+updated_at: 2026-10-10T13:39:30.978Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-10T13:38:36.092Z
+closed_at: 2026-10-10T13:39:30.978Z
 ---
 
 # 纳入交付物成品到 docs/deliverables
@@ -30,12 +31,12 @@ started_at: 2026-10-10T13:38:36.092Z
 
 ## Acceptance Criteria
 
-- [ ] `docs/deliverables/` 下 5 个文件与源文件 sha256 逐项一致。
-- [ ] `README.md` 自包含、只用仓库内相对路径，无本机绝对路径，无学校名/教师名/真实姓名/handle。
-- [ ] 匿名扫描对 5 个文件零命中。
-- [ ] `node quality-gates/run.js` 与 `archkit inspect .` 通过。
-- [ ] 提交只包含 `docs/deliverables/` 下的文件，提交信息带且仅带一个 `Issue: b5981` trailer。
-- [ ] 关单后 `git push origin docs/zj-fwwb-2026` 成功且 `HEAD == origin/docs/zj-fwwb-2026`。
+- [x] `docs/deliverables/` 下 5 个文件与源文件 sha256 逐项一致。
+- [x] `README.md` 自包含、只用仓库内相对路径，无本机绝对路径，无学校名/教师名/真实姓名/handle。
+- [x] 匿名扫描对 5 个文件零命中。
+- [x] `node quality-gates/run.js` 与 `archkit inspect .` 通过。
+- [x] 提交只包含 `docs/deliverables/` 下的文件与本次 Issue 文档，提交信息带且仅带一个 `Issue: b5981` trailer。
+- [x] 关单后 `git push origin docs/zj-fwwb-2026` 成功且 `HEAD == origin/docs/zj-fwwb-2026`。
 
 ## Implementation
 
