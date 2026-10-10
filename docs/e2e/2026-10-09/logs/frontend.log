@@ -1849,12 +1849,12 @@ dsh-desktop: pnpm terminated with SIGKILL.
 4:33:08 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
 4:33:08 PM [vite] (client) hmr update /src/index.css, /src/App.tsx, /src/pages/profile.tsx, /src/pages/login.tsx, /src/pages/reset-password.tsx, /src/pages/verify-email.tsx, /src/pages/resumes.tsx, /src/pages/resume-editor.tsx, /src/pages/resume-versions.tsx, /src/pages/jds.tsx, /src/pages/jd-detail.tsx, /src/pages/rbac.tsx, /src/pages/templates.tsx, /src/pages/template-editor.tsx, /src/pages/workbench.tsx, /src/components/app-nav.tsx, /src/components/theme-sync.tsx, /src/components/resume-library.tsx and 22 more
 4:33:13 PM [vite] (client) hmr update /src/index.css
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
 4:33:30 PM [vite] (client) hmr update /src/index.css
 4:33:32 PM [vite] (client) hmr update /src/index.css
 4:33:34 PM [vite] (client) hmr update /src/index.css
@@ -1873,34 +1873,34 @@ The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist
 4:35:33 PM [vite] (client) hmr update /src/index.css
 4:35:33 PM [vite] (client) hmr update /src/index.css
 4:35:47 PM [vite] (client) hmr update /src/index.css
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
 4:36:48 PM [vite] (client) hmr update /src/index.css
 4:37:24 PM [vite] (client) hmr update /src/index.css
 4:37:24 PM [vite] (client) hmr update /src/index.css
 4:37:25 PM [vite] (client) hmr update /src/index.css
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
 4:41:57 PM [vite] (client) hmr update /src/index.css, /src/pages/interview.tsx
 4:44:29 PM [vite] (client) hmr update /src/index.css
 4:44:29 PM [vite] (client) hmr update /src/index.css
@@ -1947,18 +1947,18 @@ The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist
 5:02:23 PM [vite] (client) hmr update /src/index.css
 5:02:23 PM [vite] (client) hmr update /src/index.css
 5:02:23 PM [vite] (client) hmr update /src/index.css
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
 5:02:36 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
 5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
 5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
@@ -1967,36 +1967,36 @@ The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist
 5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
 5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
 5:02:37 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
-The request id "/Users/d0ublecl1ck/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff" is outside of Vite serving allow list.
+The request id "/Users/<user>/resumate/node_modules/.pnpm/@fontsource+geist@5.3.0/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff" is outside of Vite serving allow list.
 5:03:07 PM [vite] (client) hmr update /src/index.css, /src/pages/interview-session.tsx
 5:03:07 PM [vite] (client) hmr update /src/index.css
 5:03:08 PM [vite] (client) hmr update /src/index.css
