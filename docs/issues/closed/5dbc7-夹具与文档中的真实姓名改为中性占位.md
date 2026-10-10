@@ -1,13 +1,14 @@
 ---
 id: 5dbc7
-status: in-progress
+status: closed
 created_at: 2026-10-10T01:50:00.000Z
-updated_at: 2026-10-10T01:47:59.371Z
+updated_at: 2026-10-10T01:48:08.937Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-10T01:47:59.371Z
+closed_at: 2026-10-10T01:48:08.937Z
 ---
 
 # 夹具与文档中的真实姓名改为中性占位
