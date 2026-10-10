@@ -185,7 +185,7 @@ def test_backend_never_receives_a_guessed_profile_session(make_client) -> None:
     provider = ScriptedProvider([create_turn_call(session_id="sess_guessed"), done_response()])
     with make_client(fake.handler) as client:
         runtime = profile_runtime(client, provider)
-        events = list(runtime.run(None, "我叫黄鹏星 20050303", scope="profile"))
+        events = list(runtime.run(None, "我叫示例用户 20050303", scope="profile"))
         session_id = runtime.session_id
 
     assert session_id == REAL_SESSION
@@ -202,7 +202,7 @@ def test_backend_never_receives_a_guessed_profile_session_when_omitted(make_clie
     provider = ScriptedProvider([create_turn_call(), done_response()])
     with make_client(fake.handler) as client:
         runtime = profile_runtime(client, provider)
-        list(runtime.run(None, "我叫黄鹏星 20050303", scope="profile"))
+        list(runtime.run(None, "我叫示例用户 20050303", scope="profile"))
         session_id = runtime.session_id
 
     assert fake.profile_turn_bodies
@@ -217,7 +217,7 @@ def test_unknown_session_is_still_rejected_as_the_original_defect(make_client) -
     with make_client(fake.handler) as client:
         runtime = AgentRuntime(client, provider, scope="profile", auto_finalize=False)
         runtime.session_id = None
-        events = list(runtime.run(None, "我叫黄鹏星 20050303", scope="profile"))
+        events = list(runtime.run(None, "我叫示例用户 20050303", scope="profile"))
 
     assert fake.profile_turn_bodies == []
     assert "sess_default" not in json.dumps(fake.sessions, ensure_ascii=False)

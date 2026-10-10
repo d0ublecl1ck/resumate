@@ -49,7 +49,7 @@ def register(
     client: TestClient,
     email: str = "zhang@example.com",
     password: str = DEFAULT_PASSWORD,
-    name: str = "张沐",
+    name: str = "示例同学",
 ):
     return client.post("/auth/register", json={"email": email, "password": password, "displayName": name})
 
@@ -74,7 +74,7 @@ def register_verified(
     client: TestClient,
     email: str = "zhang@example.com",
     password: str = DEFAULT_PASSWORD,
-    name: str = "张沐",
+    name: str = "示例同学",
 ):
     """Register, consume the mailed token, and return the now-logged-in response."""
     response = register(client, email=email, password=password, name=name)

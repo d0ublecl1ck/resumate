@@ -157,14 +157,14 @@ def test_patch_request_still_sends_every_explicit_basics_field():
         [
             {
                 "op": "setBasics",
-                "basics": {"fullName": "黄鹏星", "headline": "h", "email": "", "phone": "", "location": "", "links": []},
+                "basics": {"fullName": "示例用户", "headline": "h", "email": "", "phone": "", "location": "", "links": []},
             }
         ],
         reason="整块替换",
     )
 
     assert body.to_wire()["ops"][0]["basics"] == {
-        "fullName": "黄鹏星",
+        "fullName": "示例用户",
         "headline": "h",
         "email": "",
         "phone": "",

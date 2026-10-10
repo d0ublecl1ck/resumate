@@ -38,10 +38,10 @@ describe("API 对接", () => {
     expect(prefs.theme).toBe("paper")
     expect(prefs.shortcuts.length).toBeGreaterThan(0)
 
-    const updated = await updatePreferences({ autosave: false, displayName: "张沐" })
+    const updated = await updatePreferences({ autosave: false, displayName: "示例同学" })
 
     expect(updated.autosave).toBe(false)
-    expect(updated.displayName).toBe("张沐")
+    expect(updated.displayName).toBe("示例同学")
   })
 
   it("模型配置不回显明文密钥", async () => {
@@ -70,7 +70,7 @@ describe("API 对接", () => {
   })
 
   it("register 返回 202 中性响应且不含用户资料", async () => {
-    const accepted = await register({ email: "new@resumate.dev", password: "password123", displayName: "张沐" })
+    const accepted = await register({ email: "new@resumate.dev", password: "password123", displayName: "示例同学" })
 
     expect(accepted).toEqual({ status: "verification_sent", email: "new@resumate.dev" })
     expect("permissions" in accepted).toBe(false)

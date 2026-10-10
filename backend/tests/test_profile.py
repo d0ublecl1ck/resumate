@@ -28,9 +28,9 @@ def test_update_basics(client: TestClient) -> None:
     response = client.patch(
         "/profile/basics",
         json={
-            "fullName": "张沐",
+            "fullName": "示例同学",
             "headline": "高级前端工程师",
-            "email": "zhangmu@example.com",
+            "email": "ExampleMate@example.com",
             "location": "上海",
             "links": [{"label": "GitHub", "url": "https://github.com/zhangmu"}],
         },
@@ -38,7 +38,7 @@ def test_update_basics(client: TestClient) -> None:
 
     assert response.status_code == 200
     body = response.json()
-    assert body["basics"]["fullName"] == "张沐"
+    assert body["basics"]["fullName"] == "示例同学"
     assert body["basics"]["links"][0]["label"] == "GitHub"
     assert body["completeness"] == 50
 

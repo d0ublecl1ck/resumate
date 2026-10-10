@@ -31,9 +31,9 @@ def _register(session: TestClient, email: str = "run-token@example.com") -> str:
 def _document() -> dict:
     return {
         "basics": {
-            "fullName": "张沐",
+            "fullName": "示例同学",
             "headline": "高级前端工程师",
-            "email": "zhangmu@example.com",
+            "email": "ExampleMate@example.com",
             "phone": "",
             "location": "上海",
             "links": [],

@@ -80,7 +80,7 @@ def seed_context(db: Session) -> None:
             message="",
             change_count=0,
             affected_sections=[],
-            snapshot={"basics": {"name": "张沐", "title": "高级前端工程师"}, "skills": ["React", "TypeScript"]},
+            snapshot={"basics": {"name": "示例同学", "title": "高级前端工程师"}, "skills": ["React", "TypeScript"]},
             started_at=NOW,
             committed_at=NOW,
         )

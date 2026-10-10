@@ -20,13 +20,13 @@ describe("LoginForm", () => {
     const onSubmit = vi.fn()
     render(<LoginForm mode="register" onModeChange={() => {}} onSubmit={onSubmit} />)
 
-    fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "张沐" } })
+    fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "示例同学" } })
     fireEvent.change(screen.getByLabelText("邮箱"), { target: { value: "a@b.com" } })
     fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: "注册" }))
 
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({ email: "a@b.com", password: "password123", displayName: "张沐" }),
+      expect(onSubmit).toHaveBeenCalledWith({ email: "a@b.com", password: "password123", displayName: "示例同学" }),
     )
   })
 

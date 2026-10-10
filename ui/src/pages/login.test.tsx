@@ -61,7 +61,7 @@ describe("LoginPage", () => {
     renderLogin()
 
     fireEvent.click(await screen.findByRole("button", { name: "去注册" }))
-    fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "张沐" } })
+    fireEvent.change(screen.getByLabelText("昵称"), { target: { value: "示例同学" } })
     fireEvent.change(screen.getByLabelText("邮箱"), { target: { value: "new@resumate.dev" } })
     fireEvent.change(screen.getByLabelText("密码"), { target: { value: "password123" } })
     fireEvent.click(screen.getByRole("button", { name: "注册" }))

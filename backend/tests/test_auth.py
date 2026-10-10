@@ -5,7 +5,7 @@ from app.tasks.seed import seed_admin
 import support
 
 
-def _register(client: TestClient, email: str = "zhang@example.com", password: str = "password123", name: str = "张沐"):
+def _register(client: TestClient, email: str = "zhang@example.com", password: str = "password123", name: str = "示例同学"):
     """Register and complete email verification, leaving the client logged in."""
     return support.register_verified(client, email=email, password=password, name=name)
 
@@ -173,7 +173,7 @@ def test_admin_cannot_ban_self(session_clients, db_session) -> None:
 def test_invalid_email_returns_localized_validation_error(session_clients) -> None:
     client = session_clients()
 
-    response = client.post("/auth/register", json={"email": "abc", "password": "password123", "displayName": "张沐"})
+    response = client.post("/auth/register", json={"email": "abc", "password": "password123", "displayName": "示例同学"})
 
     assert response.status_code == 422
     body = response.json()

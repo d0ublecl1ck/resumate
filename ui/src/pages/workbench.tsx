@@ -12,7 +12,7 @@ import { PageLoading } from "@/pages/states"
 import { ArrowRight, Boxes, CircleCheck, FileText, Plus, ShieldQuestion, UserRound } from "lucide-react"
 
 /** 用户昵称属于用户数据，不参与翻译（US-1.6）；未接入账户昵称前保留演示值。 */
-const USER_DISPLAY_NAME = "张沐" // i18n-allow: 用户数据显示名，不翻译（US-13.4）
+const USER_DISPLAY_NAME = "示例同学" // i18n-allow: 用户数据显示名，不翻译（US-13.4）
 
 /** 按本地时段选择问候语（US-1.6：问候随语言与当地时段变化）。 */
 function greetingPeriod(hour: number): "morning" | "afternoon" | "evening" {

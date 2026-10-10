@@ -40,12 +40,12 @@ describe("简历编辑器：手动保存", () => {
     )
 
     renderEditor()
-    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "张沐沐" } })
+    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "示例同学" } })
     fireEvent.click(screen.getByRole("button", { name: "保存（flush）" }))
 
     await waitFor(() => expect(path).toBe(DIRTY.id))
     expect(body!.baseVersionId).toBe(DIRTY.currentVersionId)
-    expect((body!.document as { basics: { fullName: string } }).basics.fullName).toBe("张沐沐")
+    expect((body!.document as { basics: { fullName: string } }).basics.fullName).toBe("示例同学")
     expect(body!.message).toBe("手动编辑")
     expect(await screen.findByText("已保存版本")).toBeInTheDocument()
   })
@@ -118,7 +118,7 @@ describe("简历编辑器：导出", () => {
       http.get("/api/resumes/:id/export", ({ request }) => {
         const url = new URL(request.url)
         requestUrl = url.pathname + url.search
-        return new HttpResponse("# 张沐", {
+        return new HttpResponse("# 示例同学", {
           headers: { "Content-Type": "text/markdown; charset=utf-8", "Content-Disposition": "attachment; filename=resume.md" },
         })
       }),
@@ -162,10 +162,10 @@ describe("服务端工作副本变化后的同步", () => {
       ...DIRTY,
       saveState: "uncommitted",
       currentVersionId: "v_fe_9",
-      document: { ...DIRTY.document, basics: { ...DIRTY.document.basics, fullName: "黄鹏星" } },
+      document: { ...DIRTY.document, basics: { ...DIRTY.document.basics, fullName: "示例用户" } },
     })
 
-    await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("黄鹏星"))
+    await waitFor(() => expect(screen.getByLabelText("姓名")).toHaveValue("示例用户"))
   })
 
   it("本地有未保存输入时不覆盖，保留用户已输入内容", async () => {

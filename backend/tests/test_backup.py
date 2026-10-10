@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 
 def _seed(client: TestClient) -> tuple[dict, dict]:
     client.get("/profile")
-    client.patch("/profile/basics", json={"fullName": "张沐", "headline": "高级前端工程师"})
+    client.patch("/profile/basics", json={"fullName": "示例同学", "headline": "高级前端工程师"})
     client.post(
         "/profile/facts",
         json={"type": "achievement", "title": "性能优化", "content": "LCP 3.2s 降至 1.4s", "tags": [], "visibility": "private"},

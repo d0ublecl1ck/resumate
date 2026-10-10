@@ -91,7 +91,7 @@ def seed_context(db: Session) -> None:
             message="",
             change_count=0,
             affected_sections=[],
-            snapshot={"basics": {"name": "张沐", "title": "高级前端工程师"}},
+            snapshot={"basics": {"name": "示例同学", "title": "高级前端工程师"}},
             started_at=NOW,
             committed_at=NOW,
         )
@@ -186,7 +186,7 @@ def test_create_session_freezes_context_and_generates_questions(client, db_sessi
 
     row = db_session.get(InterviewSession, body["id"])
     assert row is not None
-    assert row.context_snapshot["resumeSnapshot"]["basics"]["name"] == "张沐"
+    assert row.context_snapshot["resumeSnapshot"]["basics"]["name"] == "示例同学"
 
 
 def test_create_session_requires_model_config(client, db_session: Session) -> None:

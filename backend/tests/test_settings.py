@@ -25,7 +25,7 @@ def test_get_settings_is_idempotent(client: TestClient) -> None:
 def test_patch_settings_persists_partial_update(client: TestClient) -> None:
     response = client.patch(
         "/settings",
-        json={"theme": "dark", "language": "en-US", "autosave": False, "displayName": "张沐"},
+        json={"theme": "dark", "language": "en-US", "autosave": False, "displayName": "示例同学"},
     )
 
     assert response.status_code == 200
@@ -33,7 +33,7 @@ def test_patch_settings_persists_partial_update(client: TestClient) -> None:
     assert body["theme"] == "dark"
     assert body["language"] == "en-US"
     assert body["autosave"] is False
-    assert body["displayName"] == "张沐"
+    assert body["displayName"] == "示例同学"
     assert client.get("/settings").json()["theme"] == "dark"
 
 

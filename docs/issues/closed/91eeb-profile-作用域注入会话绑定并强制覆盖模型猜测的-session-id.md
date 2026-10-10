@@ -15,7 +15,7 @@ closed_at: 2026-10-09T16:35:53.599Z
 
 ## Background
 
-用户在 `/profile` 右侧「个人资料助手」发送「我叫黄鹏星 20050303」，Agent 能列出自己的工具、
+用户在 `/profile` 右侧「个人资料助手」发送「我叫示例用户 20050303」，Agent 能列出自己的工具、
 也能成功调用 `get_profile`，但为了调 `create_turn` 只能自己猜 session id：日志里连续出现
 `default` / `sess_default` / `sess_50a3bf88124d` / `profile_50a3bf88124d` 等 10 个猜测值，
 全部返回 `RESOURCE_NOT_FOUND`，最后反过来问用户要 session_id，这次录入没有写入任何内容。
@@ -59,7 +59,7 @@ closed_at: 2026-10-09T16:35:53.599Z
 - [x] `cd agent-core && uv run pytest -q` 与 `cd backend && .venv/bin/python -m pytest -q` 全通过。
 - [x] `node quality-gates/run.js` 与 `archkit inspect .` 全通过。
 - [x] 真实端到端：临时后端 8006 + 临时前端 5176，用有效模型配置的账号在个人资料助手发送
-      「我叫黄鹏星 20050303」，运行日志不再出现猜 session_id 与 `RESOURCE_NOT_FOUND`，
+      「我叫示例用户 20050303」，运行日志不再出现猜 session_id 与 `RESOURCE_NOT_FOUND`，
       运行体先开好的轮次被复用并走到提案（pending action）等待确认，临时进程用毕全部停止。
 
 ## Implementation

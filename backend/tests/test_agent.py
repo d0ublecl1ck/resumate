@@ -4,9 +4,9 @@ from fastapi.testclient import TestClient
 def _document(section_title: str = "工作经历") -> dict:
     return {
         "basics": {
-            "fullName": "张沐",
+            "fullName": "示例同学",
             "headline": "高级前端工程师",
-            "email": "zhangmu@example.com",
+            "email": "ExampleMate@example.com",
             "phone": "",
             "location": "上海",
             "links": [{"label": "GitHub", "url": "https://github.com/zhangmu"}],

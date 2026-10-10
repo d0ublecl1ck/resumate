@@ -57,7 +57,7 @@ describe("ProfilePage 的查询错误态", () => {
     failing = false
     fireEvent.click(screen.getByRole("button", { name: "重试" }))
 
-    expect(await screen.findByRole("heading", { name: "张沐" })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "示例同学" })).toBeInTheDocument()
     expect(screen.queryByText("个人资料加载失败")).not.toBeInTheDocument()
   })
 })

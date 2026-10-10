@@ -25,7 +25,7 @@ def _write_stub(tmp_path: Path, body: str) -> Path:
 
 def _document() -> dict:
     return {
-        "basics": {"fullName": "张沐", "headline": "", "email": "", "phone": "", "location": "", "links": []},
+        "basics": {"fullName": "示例同学", "headline": "", "email": "", "phone": "", "location": "", "links": []},
         "sections": [],
     }
 

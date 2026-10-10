@@ -21,7 +21,7 @@ UPSTREAM_401 = (
 
 def _document() -> dict:
     return {
-        "basics": {"fullName": "黄鹏星", "headline": "", "email": "", "phone": "", "location": "", "links": []},
+        "basics": {"fullName": "示例用户", "headline": "", "email": "", "phone": "", "location": "", "links": []},
         "sections": [],
     }
 
@@ -67,7 +67,7 @@ def _report(client: TestClient, turn_id: str, **body):
 def test_run_error_is_persisted_classified_and_masked(client: TestClient) -> None:
     resume = _create_resume(client)
     _configure_model(client)
-    turn = _begin(client, resume["id"], message="我叫黄鹏星")
+    turn = _begin(client, resume["id"], message="我叫示例用户")
 
     response = _report(client, turn["id"], code="MODEL_ERROR", message=UPSTREAM_401)
     assert response.status_code == 200, response.text

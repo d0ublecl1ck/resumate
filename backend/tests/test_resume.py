@@ -11,9 +11,9 @@ import support
 def _document(section_title: str = "工作经历") -> dict:
     return {
         "basics": {
-            "fullName": "张沐",
+            "fullName": "示例同学",
             "headline": "高级前端工程师",
-            "email": "zhangmu@example.com",
+            "email": "ExampleMate@example.com",
             "phone": "",
             "location": "上海",
             "links": [{"label": "GitHub", "url": "https://github.com/zhangmu"}],
@@ -326,11 +326,11 @@ def test_export_markdown_returns_attachment_with_sections_and_bullets(client: Te
     assert disposition.startswith("attachment;")
     assert "filename*=UTF-8''" in disposition
     body = response.text
-    assert body.startswith("# 张沐")
+    assert body.startswith("# 示例同学")
     assert "## 工作经历" in body
     assert "### 高级前端工程师" in body
     assert "- 负责核心页面" in body
-    assert "zhangmu@example.com" in body
+    assert "ExampleMate@example.com" in body
 
 
 def test_export_markdown_format_defaults_to_markdown(client: TestClient) -> None:
@@ -346,13 +346,13 @@ def test_export_markdown_format_defaults_to_markdown(client: TestClient) -> None
 def test_export_markdown_encodes_chinese_filename_and_keeps_empty_sections(client: TestClient) -> None:
     document = _document()
     document["sections"].append({"id": "sec_skills", "kind": "skills", "title": "技能", "entries": []})
-    created = _create(client, title="张沐的简历", document=document)
+    created = _create(client, title="示例同学的简历", document=document)
 
     response = client.get(f"/resumes/{created['id']}/export")
 
     assert response.status_code == 200, response.text
     disposition = response.headers["content-disposition"]
-    assert "%E5%BC%A0%E6%B2%90" in disposition  # URL 编码后的「张沐」
+    assert "%E7%A4%BA%E4%BE%8B%E5%90%8C%E5%AD%A6" in disposition  # URL 编码后的「示例同学」
     assert "## 技能" in response.text  # 空 section 也要输出标题
 
 

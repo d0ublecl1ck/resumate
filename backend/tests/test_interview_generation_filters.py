@@ -153,7 +153,7 @@ def seed_context(db: Session) -> None:
             message="",
             change_count=0,
             affected_sections=[],
-            snapshot={"basics": {"name": "张沐"}, "skills": ["Spring", "MySQL"]},
+            snapshot={"basics": {"name": "示例同学"}, "skills": ["Spring", "MySQL"]},
             started_at=NOW,
             committed_at=NOW,
         )

@@ -20,7 +20,7 @@ import type {
   UserPreferences,
 } from "./types"
 
-export const CURRENT_USER = { id: "user_zhang", displayName: "张沐", role: "jobseeker" as const }
+export const CURRENT_USER = { id: "user_zhang", displayName: "示例同学", role: "jobseeker" as const }
 
 // ---------------------------------------------------------------------------
 // Resumes
@@ -42,14 +42,14 @@ export const RESUMES: Resume[] = [
     profileId: "profile_zhang",
     document: {
       basics: {
-        fullName: "张沐",
+        fullName: "示例同学",
         headline: "高级前端工程师 · 8 年 Web 应用经验",
-        email: "zhangmu@example.com",
+        email: "ExampleMate@example.com",
         phone: "+86 138 0000 1234",
         location: "上海",
         links: [
           { label: "GitHub", url: "https://github.com/zhangmu" },
-          { label: "个人站", url: "https://zhangmu.dev" },
+          { label: "个人站", url: "https://ExampleMate.dev" },
         ],
       },
       sections: [
@@ -157,9 +157,9 @@ export const RESUMES: Resume[] = [
     profileId: "profile_zhang",
     document: {
       basics: {
-        fullName: "张沐",
+        fullName: "示例同学",
         headline: "从工程走向产品",
-        email: "zhangmu@example.com",
+        email: "ExampleMate@example.com",
         phone: "+86 138 0000 1234",
         location: "上海",
         links: [],
@@ -197,7 +197,7 @@ export const RESUMES: Resume[] = [
     updatedAt: "2025-11-02T12:00:00+08:00",
     boundByJdIds: [],
     document: {
-      basics: { fullName: "张沐", headline: "前端实习生", email: "zhangmu@example.com", phone: "", location: "上海", links: [] },
+      basics: { fullName: "示例同学", headline: "前端实习生", email: "ExampleMate@example.com", phone: "", location: "上海", links: [] },
       sections: [],
     },
     versions: [
@@ -225,17 +225,17 @@ export const RESUMES: Resume[] = [
 export const PROFILE: Profile = {
   id: "profile_zhang",
   ownerId: "user_zhang",
-  displayName: "张沐的职业事实库",
+  displayName: "示例同学的职业事实库",
   completeness: 72,
   basics: {
-    fullName: "张沐",
+    fullName: "示例同学",
     headline: "高级前端工程师 · 8 年 Web 应用经验",
-    email: "zhangmu@example.com",
+    email: "ExampleMate@example.com",
     phone: "+86 138 0000 1234",
     location: "上海",
     links: [
       { label: "GitHub", url: "https://github.com/zhangmu" },
-      { label: "个人站", url: "https://zhangmu.dev" },
+      { label: "个人站", url: "https://ExampleMate.dev" },
     ],
   },
   facts: [
@@ -442,7 +442,7 @@ export const MODEL_CATALOG: ModelCatalog = {
 export const USER_PREFERENCES: UserPreferences = {
   theme: "paper",
   language: "zh-CN",
-  displayName: "张沐",
+  displayName: "示例同学",
   autosave: true,
   autosaveIntervalSeconds: 10,
   defaultTemplateId: "tpl_classic",
@@ -465,7 +465,7 @@ export const PATS: PersonalAccessToken[] = [
     id: "pat_1",
     name: "本地 MCP 客户端",
     scopes: ["profile:read", "resume:write"],
-    resources: ["高级前端工程师简历", "张沐的职业事实库"],
+    resources: ["高级前端工程师简历", "示例同学的职业事实库"],
     fields: ["不含联系方式"],
     purpose: "在编辑器里生成岗位简历",
     createdAt: "2026-09-01T00:00:00+08:00",
@@ -500,7 +500,7 @@ export const PATS: PersonalAccessToken[] = [
 
 export const ACCESS_LOGS: AccessLogEntry[] = [
   { id: "al_1", at: "2026-09-20T13:00:05+08:00", clientId: "本地 MCP 客户端", scope: "resume:write", resource: "高级前端工程师简历", purpose: "生成岗位简历", result: "allowed" },
-  { id: "al_2", at: "2026-09-20T13:00:04+08:00", clientId: "本地 MCP 客户端", scope: "profile:read", resource: "张沐的职业事实库", purpose: "读取获准事实", result: "allowed" },
+  { id: "al_2", at: "2026-09-20T13:00:04+08:00", clientId: "本地 MCP 客户端", scope: "profile:read", resource: "示例同学的职业事实库", purpose: "读取获准事实", result: "allowed" },
   { id: "al_3", at: "2026-09-19T09:12:00+08:00", clientId: "未知客户端", scope: "resume:read", resource: "产品经理转型简历", purpose: "未声明", result: "denied", errorCode: "SCOPE_INSUFFICIENT" },
   { id: "al_4", at: "2026-09-18T22:00:00+08:00", clientId: "废弃 Token", scope: "resume:write", resource: "高级前端工程师简历", purpose: "写入", result: "frozen", errorCode: "TOKEN_REVOKED" },
 ]
@@ -529,7 +529,7 @@ export const IMPORT_PREVIEW_SAMPLE: ImportPreview = {
   },
   newResources: [
     { type: "Resume", title: "高级前端工程师简历（导入）" },
-    { type: "Profile", title: "张沐的职业事实库（导入）" },
+    { type: "Profile", title: "示例同学的职业事实库（导入）" },
     { type: "JD", title: "美团 · 高级前端工程师（导入）" },
   ],
   idMappings: [

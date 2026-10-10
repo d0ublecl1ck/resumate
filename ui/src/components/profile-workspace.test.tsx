@@ -28,11 +28,11 @@ describe("ProfileWorkspace 直接编辑", () => {
     renderProfile()
     fireEvent.click(screen.getByRole("button", { name: "编辑基本信息" }))
 
-    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "张沐沐" } })
+    fireEvent.change(screen.getByLabelText("姓名"), { target: { value: "示例同学" } })
     fireEvent.change(screen.getByLabelText("城市"), { target: { value: "北京" } })
     fireEvent.click(screen.getByRole("button", { name: "保存基本信息" }))
 
-    expect(await screen.findByRole("heading", { name: "张沐沐" })).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "示例同学" })).toBeInTheDocument()
     expect(screen.getByText("北京")).toBeInTheDocument()
   })
 

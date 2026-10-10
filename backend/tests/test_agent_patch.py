@@ -9,9 +9,9 @@ from app.modules.agent.patch import apply
 from app.modules.agent.schemas import PatchRequest
 
 BASICS = {
-    "fullName": "黄鹏星",
+    "fullName": "示例用户",
     "headline": "",
-    "email": "zhangmu@example.com",
+    "email": "ExampleMate@example.com",
     "phone": "13800000000",
     "location": "上海",
     "links": [{"label": "GitHub", "url": "https://github.com/d0ublecl1ck"}],
