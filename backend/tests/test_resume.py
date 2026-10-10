@@ -352,7 +352,7 @@ def test_export_markdown_encodes_chinese_filename_and_keeps_empty_sections(clien
 
     assert response.status_code == 200, response.text
     disposition = response.headers["content-disposition"]
-    assert "%E5%BC%A0%E6%B2%90" in disposition  # URL 编码后的「示例同学」
+    assert "%E7%A4%BA%E4%BE%8B%E5%90%8C%E5%AD%A6" in disposition  # URL 编码后的「示例同学」
     assert "## 技能" in response.text  # 空 section 也要输出标题
 
 
