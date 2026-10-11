@@ -112,6 +112,8 @@ docker compose down            # 停止；PostgreSQL 数据卷保留
 
 镜像为生产式：nginx 托管 `ui/dist` 并把 `/api` 反代到 backend；backend 容器入口自动执行迁移与 seed，并内置 `resumate-agent`。网络拉不动基础镜像时，先给 Docker 配好镜像加速再执行。
 
+容器同样受后端启动自检约束：**缺 SMTP 配置会拒绝启动**。`compose.yaml` 为此给 backend 显式设了 `RESUMATE_ALLOW_MISSING_ENV=1` 作为本地 / demo 默认——不配 SMTP 也能起来，但邮件功能不可用，日志里有一条放行 WARNING。要在容器里真发信，把 SMTP 变量写进仓库根 `.env` 或先 export 到宿主环境（compose 的变量替换只读这两个来源，**不读 `backend/.env`**），backend 会把它们透传进容器。生产部署必须提供完整 `SMTP_*`，并显式设 `RESUMATE_ALLOW_MISSING_ENV=0`（或删掉该行），让缺配置直接拒绝启动而不是降级放行。
+
 ### 手动分步（等价于上面）
 
 ```bash

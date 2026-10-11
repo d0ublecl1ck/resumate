@@ -127,26 +127,41 @@ def bound_system_prompt(
     resume_id: str | None,
     scope: str,
     turn_id: str | None = None,
+    session_id: str | None = None,
 ) -> str:
-    """Name the bound resume (and open turn) so the model never guesses either.
+    """Name the bound session (profile) or resume (plus open turn) so the model never guesses.
 
-    The run credential only reaches the resume the spawn bound it to, and the
+    The run credential only reaches the resource the spawn bound it to, and the
     runtime already opened a turn before the first model call. Without these
-    lines the model invents a resume id (every call comes back FORBIDDEN) and
-    opens a second, session-less turn (the conversation stops being readable).
+    lines the model invents an id (every call comes back
+    RESOURCE_NOT_FOUND/FORBIDDEN) and opens a second, session-less turn (the
+    conversation stops being readable). A profile run carries no resume, so its
+    session and open turn are what it must be told; a resume run is named by its
+    resume binding instead.
     """
     sections = [system_prompt, LANGUAGE_INSTRUCTION]
-    if scope != "resume" or not resume_id:
+    if scope == "profile":
+        if session_id:
+            sections.append(
+                f"This run belongs to profile session {session_id}. Tools that take a session_id "
+                "are pre-filled with it; never guess or invent a session id."
+            )
+        if turn_id:
+            sections.append(
+                f"A profile turn is already open ({turn_id}). Reuse it: submit profile changes for "
+                "confirmation with propose_profile_change; do not call create_turn."
+            )
         return "\n\n".join(sections)
-    if turn_id:
+    if resume_id:
+        if turn_id:
+            sections.append(
+                f"An editing turn is already open ({turn_id}). Reuse it: stage patches against it "
+                "and close it with finalize_turn; do not call create_turn."
+            )
         sections.append(
-            f"An editing turn is already open ({turn_id}). Reuse it: stage patches against it "
-            "and close it with finalize_turn; do not call create_turn."
+            f"This run is bound to resume {resume_id}. Tools that take a resume_id are pre-filled "
+            "with it; never guess or invent a resume id."
         )
-    sections.append(
-        f"This run is bound to resume {resume_id}. Tools that take a resume_id are pre-filled "
-        "with it; never guess or invent a resume id."
-    )
     return "\n\n".join(sections)
 
 
@@ -157,12 +172,19 @@ def opening_messages(
     resume_id: str | None,
     scope: str,
     turn_id: str | None = None,
+    session_id: str | None = None,
 ) -> list[Message]:
     """The context a fresh run starts from."""
     return [
         Message(
             role="system",
-            content=bound_system_prompt(system_prompt, resume_id=resume_id, scope=scope, turn_id=turn_id),
+            content=bound_system_prompt(
+                system_prompt,
+                resume_id=resume_id,
+                scope=scope,
+                turn_id=turn_id,
+                session_id=session_id,
+            ),
         ),
         Message(role="user", content=prompt),
     ]
@@ -445,11 +467,15 @@ class AgentRuntime:
         required = tool.input_schema.get("required", [])
         if "turn_id" in required and not args.get("turn_id"):
             args["turn_id"] = session.turn_id
-        # The run owns the resume binding: always overwrite whatever the model
-        # supplied, so a guessed id can never reach another resume.
+        # The run owns the resume and session bindings: always overwrite whatever
+        # the model supplied, so a guessed id can never reach another resource.
+        # create_turn declares session_id as required precisely because the run
+        # injects it; letting a guess through means RESOURCE_NOT_FOUND on every
+        # call. self.session_id is None for a run without a journal (a resume run
+        # that predates sessions), and then nothing is injected.
         if session.resume_id and "resume_id" in properties:
             args["resume_id"] = session.resume_id
-        if "session_id" in required and not args.get("session_id"):
+        if self.session_id and "session_id" in properties:
             args["session_id"] = self.session_id
         return tool.invoke(self.client, args)
 
@@ -565,6 +591,11 @@ class AgentRuntime:
         detail: str | None = None,
     ) -> Iterator[ErrorEvent]:
         if session.open:
+            # Record the terminal failure before cancelling it away: a plain
+            # cancel is indistinguishable from a human cancel in the UI (4ff97).
+            # CANCELLED is a deliberate stop, not a failure, so it is skipped.
+            if code != "CANCELLED":
+                session.report_error(code=code, message=message, detail=detail)
             try:
                 session.cancel(reason=f"runtime aborted: {code}")
             except ApiClientError:
@@ -624,6 +655,7 @@ class AgentRuntime:
             resume_id=resume_id,
             scope=scope,
             turn_id=session.turn_id,
+            session_id=self.session_id,
         )
         # The opening context is journalled before the first model call, so the
         # session reflects the run even if that call fails.
@@ -685,6 +717,7 @@ class AgentRuntime:
                     resume_id=turn.resume_id,
                     scope=resume_scope,
                     turn_id=turn.id,
+                    session_id=self.session_id,
                 ),
             )
         ]

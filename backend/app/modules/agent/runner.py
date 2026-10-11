@@ -17,6 +17,7 @@ never logs the key or the upstream body.
 from __future__ import annotations
 
 import ipaddress
+import logging
 import os
 import signal
 import subprocess
@@ -32,6 +33,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.db import SessionLocal
 from app.core.deps import CurrentUser
 from app.modules.resume import service as resume_service
 from app.modules.settings import dao as settings_dao
@@ -49,6 +51,12 @@ _ACTIVE_TOKENS: dict[str, tuple[str, redis.Redis]] = {}
 _ACTIVE_COUNT = 0
 
 _EXECUTION_MODES = ("approval", "full_access")
+
+logger = logging.getLogger(__name__)
+
+# Bound at import so tests can point the supervisor's fallback write at their own
+# database; production keeps the app session factory.
+_SESSION_FACTORY = SessionLocal
 
 
 def _reset_state() -> None:
@@ -227,19 +235,56 @@ def _kill_process_group(proc: subprocess.Popen) -> None:
         proc.kill()
 
 
+def _exit_failure(timed_out: bool, returncode: int | None) -> tuple[str, str] | None:
+    """Map one child exit to a structured failure code, or None when it was clean.
+
+    A run that reported its own failure cancels its turn before exiting, so the
+    fallback below only ever lands on a turn that is still open.
+    """
+    if timed_out:
+        return "RUN_TIMEOUT", "运行超过时间预算被强制终止"
+    if returncode not in (0, None):
+        return "RUNNER_EXIT", f"运行体异常退出（exit code {returncode}）"
+    return None
+
+
+def _mark_run_failed(run_id: str, code: str, message: str) -> None:
+    """Best-effort fallback write; a reporting failure must not mask the reap."""
+    from . import service
+
+    try:
+        with _SESSION_FACTORY() as db:
+            service.record_run_failure(db, run_id, code=code, message=message)
+    except Exception:  # pragma: no cover - defensive: DB blip after a crash
+        logger.warning("运行失败兜底写入失败：run=%s code=%s", run_id, code, exc_info=False)
+
+
+def _settle_child_failure(run_id: str, timed_out: bool, returncode: int | None) -> None:
+    """Make a child that died without settling visible on its still-open turn."""
+    failure = _exit_failure(timed_out, returncode)
+    if failure is None:
+        return
+    code, message = failure
+    _mark_run_failed(run_id, code, message)
+
+
 def _supervise(run_id: str, proc: subprocess.Popen, timeout: float) -> None:
     """Reap the child, hard-killing it when it outlives the timeout."""
+    timed_out = False
+    returncode: int | None = None
     try:
         try:
-            proc.wait(timeout=timeout)
+            returncode = proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            timed_out = True
             _kill_process_group(proc)
             try:
-                proc.wait(timeout=5)
+                returncode = proc.wait(timeout=5)
             except subprocess.TimeoutExpired:  # pragma: no cover - defensive
                 pass
     finally:
         _release_slot(run_id)
+        _settle_child_failure(run_id, timed_out, returncode)
 
 
 def start_run(

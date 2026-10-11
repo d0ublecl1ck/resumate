@@ -393,7 +393,7 @@ export const MODEL_CONFIG: ModelConfig = {
   lastTest: { at: "2026-09-19T20:00:00+08:00", ok: true, message: "连接成功，延迟 420ms" },
 }
 
-// 只读模型目录（契约 §17）：真实数据由后端从 models.dev 快照产出，这里仅作为前端演示 fixture。
+// 只读模型目录（契约 §17）：真实数据由后端从 models.dev 快照产出，这里仅作为前端演示 fixture。fake-allow：MODEL_CATALOG 只被 ui/src/mocks/handlers.ts 的 MSW mock 引用（生产设置页走后端 /models/catalog 快照），不是产品运行路径的伪实现。
 export const MODEL_CATALOG: ModelCatalog = {
   source: "models.dev",
   // 顺序与后端白名单一致（issue 7aa58）：deepseek / openai / anthropic / zhipuai / zhipuai-coding-plan。

@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { MemoryRouter } from "react-router-dom"
 import { http, HttpResponse } from "msw"
 import { StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { RunPanel } from "@/components/run-panel"
+import type { AgentAvailability, AgentAvailabilityAction } from "@/components/agent-onboarding"
 import i18n from "@/i18n"
 import type { AgentRun } from "@/lib/types"
 import { server } from "@/test-server"
@@ -516,6 +518,52 @@ const MARKDOWN_RUN: AgentRun = {
   ],
 }
 
+describe("RunPanel 运行失败可见性", () => {
+  const FAILED_RUN: AgentRun = {
+    ...RUN,
+    state: "turn_closed",
+    pendingActions: [],
+    error: {
+      code: "MODEL_ERROR",
+      category: "auth",
+      message: "model provider returned HTTP 401: Authentication Fails, Your api key: ****be21 is invalid",
+      provider: "deepseek",
+      model: "deepseek-flash",
+      keyHint: "****be21",
+    },
+  }
+
+  // 错误块里的「去设置更新 Key」走 useNavigate，只有渲染错误块时才需要 Router 上下文。
+  function renderFailed() {
+    return render(
+      <MemoryRouter>
+        <QueryClientProvider client={newClient()}>
+          <RunPanel resumeId="res_1" run={FAILED_RUN} mode="approval" />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+  }
+
+  it("轮次带 runError 时显示类别、provider/model、key 尾号与去设置入口", () => {
+    renderFailed()
+
+    const block = screen.getByTestId("run-error")
+    expect(within(block).getByText(/模型鉴权失败/)).toBeInTheDocument()
+    expect(within(block).getByText(/deepseek \/ deepseek-flash/)).toBeInTheDocument()
+    expect(within(block).getByText(/出问题的 Key：\*\*\*\*be21/)).toBeInTheDocument()
+    expect(within(block).getByRole("button", { name: "去设置更新 Key" })).toBeInTheDocument()
+    // 负向断言：完整 key 与 Authorization 头一律不得出现在界面上。
+    expect(block.textContent ?? "").not.toContain("sk-live")
+    expect(block.textContent ?? "").not.toContain("Authorization")
+  })
+
+  it("没有 runError 的已关闭轮次不显示错误块", () => {
+    renderPanel({ ...RUN, state: "turn_closed", pendingActions: [] }, newClient())
+
+    expect(screen.queryByTestId("run-error")).not.toBeInTheDocument()
+  })
+})
+
 describe("RunPanel 发送前拦截", () => {
   it("当前轮次仍有待审批待办时先弹确认框，确认后才发起运行", async () => {
     const bodies: unknown[] = []
@@ -644,3 +692,107 @@ describe("RunPanel 的 Markdown 与折叠推理", () => {
     }
   })
 })
+
+describe("RunPanel AI 可用性引导", () => {
+  const INPUT = i18n.t("workbench.run.inputAria")
+  const SEND = i18n.t("workbench.run.sendAria")
+  const TITLE = (state: AgentAvailability) => i18n.t(`agentOnboarding.state.${state}.title`)
+
+  const FAILED_RUN: AgentRun = {
+    ...RUN,
+    state: "turn_closed",
+    pendingActions: [],
+    error: {
+      code: "MODEL_AUTH",
+      category: "auth",
+      message: "model provider returned HTTP 401: api key ****be21 is invalid",
+      provider: "deepseek",
+      model: "deepseek-flash",
+      keyHint: "****be21",
+    },
+  }
+
+  function renderAvailability(
+    availability: AgentAvailability,
+    options: { credentialHint?: string; run?: AgentRun; onAction?: (action: AgentAvailabilityAction) => void } = {},
+  ) {
+    return render(
+      <MemoryRouter>
+        <QueryClientProvider client={newClient()}>
+          <RunPanel
+            resumeId="res_1"
+            run={options.run}
+            mode="approval"
+            availability={availability}
+            credentialHint={options.credentialHint}
+            onAvailabilityAction={options.onAction}
+          />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    )
+  }
+
+  it("model_missing：渲染引导并拦截输入框与发送", () => {
+    renderAvailability("model_missing")
+
+    expect(screen.getByText(TITLE("model_missing"))).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: i18n.t("agentOnboarding.state.model_missing.action") })).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: INPUT })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: SEND })).not.toBeInTheDocument()
+  })
+
+  it("auth_failed：显示掩码尾号与去更新 Key，阻断发送且不泄露完整 key / Authorization / Traceback", () => {
+    const actions: AgentAvailabilityAction[] = []
+    const { container } = renderAvailability("auth_failed", {
+      credentialHint:
+        "Error code: 401 - api key sk-live-abcdef123456 is invalid; Authorization: Bearer sk-live-abcdef123456; Traceback (most recent call last): ****be21",
+      onAction: (action) => actions.push(action),
+    })
+
+    expect(screen.getByText(TITLE("auth_failed"))).toBeInTheDocument()
+    expect(
+      screen.getByText(i18n.t("agentOnboarding.state.auth_failed.credentialHint", { credential: "****be21" })),
+    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: i18n.t("agentOnboarding.state.auth_failed.action") }))
+    expect(actions).toEqual(["configure_model"])
+    expect(screen.queryByRole("textbox", { name: INPUT })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: SEND })).not.toBeInTheDocument()
+    const text = container.textContent ?? ""
+    expect(text).not.toContain("sk-live-abcdef123456")
+    expect(text).not.toContain("Authorization")
+    expect(text).not.toContain("Traceback")
+  })
+
+  it("runtime_offline：说明运行体不可用并拦截发送", () => {
+    renderAvailability("runtime_offline")
+
+    expect(screen.getByText(TITLE("runtime_offline"))).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: INPUT })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: SEND })).not.toBeInTheDocument()
+  })
+
+  it("available：正常放行，输入框与发送可见且不显示引导", () => {
+    renderAvailability("available")
+
+    expect(screen.getByRole("textbox", { name: INPUT })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: SEND })).toBeInTheDocument()
+    expect(screen.queryByText(TITLE("model_missing"))).not.toBeInTheDocument()
+    expect(screen.queryByText(TITLE("auth_failed"))).not.toBeInTheDocument()
+    expect(screen.queryByText(TITLE("runtime_offline"))).not.toBeInTheDocument()
+  })
+
+  it("不可用时运行失败错误块不渲染，避免与引导叠加", () => {
+    renderAvailability("auth_failed", { run: FAILED_RUN, credentialHint: "****be21" })
+
+    expect(screen.getByText(TITLE("auth_failed"))).toBeInTheDocument()
+    expect(screen.queryByTestId("run-error")).not.toBeInTheDocument()
+  })
+
+  it("可用时运行失败错误块照常可见", () => {
+    renderAvailability("available", { run: FAILED_RUN })
+
+    expect(screen.getByTestId("run-error")).toBeInTheDocument()
+    expect(screen.queryByText(TITLE("auth_failed"))).not.toBeInTheDocument()
+  })
+})
+

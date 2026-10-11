@@ -7,15 +7,17 @@ import { CreateJdDialogView, CreateJdModal, type CreateJdDialogViewProps } from 
 import type { ProposedJd } from "@/lib/types"
 
 const parseJdFromText = vi.fn()
+const parseJdFromImage = vi.fn()
 vi.mock("@/lib/api", () => ({
   parseJdFromText: (text: string) => parseJdFromText(text),
-  parseJdFromImage: vi.fn(),
+  parseJdFromImage: (input: unknown) => parseJdFromImage(input),
   createJd: vi.fn(),
 }))
 
 afterEach(() => {
   cleanup()
   parseJdFromText.mockReset()
+  parseJdFromImage.mockReset()
 })
 
 const DRAFT: ProposedJd = {
@@ -157,6 +159,87 @@ describe("CreateJdModal 容器失败接线", () => {
     renderModal()
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "高级前端工程师" } })
     fireEvent.click(screen.getByRole("button", { name: "AI 整理" }))
+    await waitFor(() => expect(screen.getByText("AI 整理结果（可编辑）")).toBeInTheDocument())
+  })
+})
+
+describe("CreateJdDialogView 图片识别失败态", () => {
+  it("模型不支持看图：说明问题并给「去设置换模型」，不给「重试」", () => {
+    render(<CreateJdDialogView {...viewProps({ mode: "image", imageName: "jd.png", error: "MODEL_NO_VISION", onOpenSettings: () => {} })} />)
+    const alert = screen.getByRole("alert")
+    expect(alert).toHaveTextContent("当前模型不支持看图。请到「设置与 Agent → 模型配置」换成支持图像的模型再试。")
+    expect(screen.getByRole("button", { name: "去设置换模型" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "重试" })).not.toBeInTheDocument()
+    expect(screen.queryByText(/MODEL_NO_VISION/)).not.toBeInTheDocument()
+  })
+
+  it("图片校验失败：提示格式与大小，给可点「重试」", () => {
+    render(<CreateJdDialogView {...viewProps({ mode: "image", imageName: "jd.bmp", error: "VALIDATION_FAILED" })} />)
+    const alert = screen.getByRole("alert")
+    expect(alert).toHaveTextContent("图片格式或大小不符合要求，请换一张 PNG / JPG / WebP（不超过 8 MB）。")
+    expect(screen.getByRole("button", { name: "重试" })).toBeInTheDocument()
+  })
+})
+
+describe("CreateJdModal 图片识别接线", () => {
+  function renderModal() {
+    return render(
+      <MemoryRouter initialEntries={["/jds"]}>
+        <Routes>
+          <Route path="/jds" element={<CreateJdModal open onClose={() => {}} onCreated={() => {}} />} />
+          <Route path="/settings" element={<div>settings-page</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+  }
+
+  function pickImage(container: HTMLElement, name = "jd-shot.png") {
+    fireEvent.click(screen.getByRole("button", { name: "上传截图" }))
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(input, { target: { files: [new File([new Uint8Array([137, 80, 78, 71])], name, { type: "image/png" })] } })
+  }
+
+  it("选图后点「AI 识别」把 File 上传给 parseJdFromImage 并展示草案", async () => {
+    parseJdFromImage.mockResolvedValueOnce(DRAFT)
+    const { container } = renderModal()
+    pickImage(container, "jd-shot.png")
+
+    fireEvent.click(screen.getByRole("button", { name: "AI 识别" }))
+
+    await waitFor(() => expect(parseJdFromImage).toHaveBeenCalledTimes(1))
+    const input = parseJdFromImage.mock.calls[0][0] as { image: File; filename: string; contentType: string }
+    expect(input.filename).toBe("jd-shot.png")
+    expect(input.contentType).toBe("image/png")
+    expect(input.image).toBeInstanceOf(File)
+    await waitFor(() => expect(screen.getByText("AI 整理结果（可编辑）")).toBeInTheDocument())
+  })
+
+  it("识别返回 MODEL_NO_VISION 时映射 i18n，不透出后端原文", async () => {
+    parseJdFromImage.mockRejectedValueOnce(new ApiRequestError("MODEL_NO_VISION", "backend raw vision message", 409))
+    const { container } = renderModal()
+    pickImage(container)
+
+    fireEvent.click(screen.getByRole("button", { name: "AI 识别" }))
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("当前模型不支持看图")
+    expect(alert).not.toHaveTextContent("backend raw vision message")
+    expect(screen.queryByText(/MODEL_NO_VISION/)).not.toBeInTheDocument()
+  })
+
+  it("识别失败后「重试」按当前图片模式重跑，而不是走文本解析", async () => {
+    parseJdFromImage
+      .mockRejectedValueOnce(new ApiRequestError("UPSTREAM_TIMEOUT", "raw", 504))
+      .mockResolvedValueOnce(DRAFT)
+    const { container } = renderModal()
+    pickImage(container)
+    fireEvent.click(screen.getByRole("button", { name: "AI 识别" }))
+    await screen.findByRole("alert")
+
+    fireEvent.click(screen.getByRole("button", { name: "重试" }))
+
+    await waitFor(() => expect(parseJdFromImage).toHaveBeenCalledTimes(2))
+    expect(parseJdFromText).not.toHaveBeenCalled()
     await waitFor(() => expect(screen.getByText("AI 整理结果（可编辑）")).toBeInTheDocument())
   })
 })

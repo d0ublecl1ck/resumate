@@ -74,6 +74,19 @@ def runtime_router():
                 200,
                 json=turn_payload(state="cancelled", result=result_payload(state="cancelled", versionId=None)),
             )
+        if path == "/turns/turn_1/run-errors":
+            reported = body_of(request) or {}
+            return httpx.Response(
+                200,
+                json={
+                    "code": reported.get("code", "RUN_FAILED"),
+                    "category": "quota",
+                    "message": reported.get("message", ""),
+                    "provider": "stub",
+                    "model": "stub-model",
+                    "keyHint": "****be21",
+                },
+            )
         if path == "/.well-known/resume-agent":
             return httpx.Response(200, json=capability_payload())
         raise AssertionError(f"unexpected {request.method} {path}")
@@ -198,7 +211,12 @@ def test_token_budget_exhaustion_aborts_and_cancels(make_client):
     assert isinstance(error, ErrorEvent)
     assert error.code == "BUDGET_EXCEEDED"
     assert error.detail == "max_tokens"
-    assert any(call["path"] == "/turns/turn_1/cancel" for call in calls)
+    # 失败必须先上报再取消：先落结构化错误，再走 cancel（issue 4ff97）。
+    paths = [call["path"] for call in calls]
+    assert "/turns/turn_1/run-errors" in paths
+    assert paths.index("/turns/turn_1/run-errors") < paths.index("/turns/turn_1/cancel")
+    reported = next(call for call in calls if call["path"] == "/turns/turn_1/run-errors")
+    assert reported["body"]["code"] == "BUDGET_EXCEEDED"
 
 
 def test_max_turns_exhaustion_aborts(make_client):
@@ -238,6 +256,36 @@ def test_cancellation_before_first_model_call(make_client):
     assert error.code == "CANCELLED"
     assert provider.calls == []
     assert any(call["path"] == "/turns/turn_1/cancel" for call in calls)
+    # 用户主动取消不是失败：不写 run-error，避免把取消显示成错误（issue 4ff97）。
+    assert not any(call["path"] == "/turns/turn_1/run-errors" for call in calls)
+
+
+class FailingProvider:
+    """A provider whose one call raises, standing in for a 401 from upstream."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def complete(self, messages, tools):
+        raise RuntimeError(self.message)
+
+
+def test_model_failure_is_reported_before_it_cancels(make_client):
+    provider = FailingProvider(
+        "model provider returned HTTP 401: Authentication Fails, Your api key: ****be21 is invalid"
+    )
+    handler, calls = runtime_router()
+    with make_client(handler) as client:
+        events = list(AgentRuntime(client, provider).run("res_1", "go"))
+
+    error = events[-1]
+    assert isinstance(error, ErrorEvent)
+    assert error.code == "MODEL_ERROR"
+    reported = next(call for call in calls if call["path"] == "/turns/turn_1/run-errors")
+    assert reported["body"]["code"] == "MODEL_ERROR"
+    assert "****be21" in reported["body"]["message"]
+    paths = [call["path"] for call in calls]
+    assert paths.index("/turns/turn_1/run-errors") < paths.index("/turns/turn_1/cancel")
 
 
 def test_run_budget_validation_and_snapshot():

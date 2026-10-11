@@ -7,6 +7,8 @@ from app.modules.profile.schemas import ProfileBasicsUpdate, ProfileFactCreate, 
 from app.modules.resume.schemas import ResumeBasics, ResumeDocument, ResumeEntry, ResumeSection
 from app.shared.schemas import ApiModel
 
+from .run_errors import RunErrorInput, RunErrorResponse
+
 ExecutionMode = Literal["approval", "full_access"]
 ModeSource = Literal["session", "agent", "account"]
 TurnSource = Literal["agent", "manual", "client"]
@@ -199,6 +201,9 @@ class UserTurnResponse(ApiModel):
     closed_at: datetime | None = None
     result: TurnResult | None = None
     pending_actions: list[PendingActionResponse] = Field(default_factory=list)
+    # Structured terminal failure; None while running or after a clean close.
+    # Already sanitized: only a masked key tail ever reaches this field.
+    run_error: RunErrorResponse | None = None
 
 
 class WorkingDocumentResponse(ApiModel):
@@ -249,6 +254,13 @@ class SessionResponse(ApiModel):
     created_at: datetime
     updated_at: datetime
     last_active_at: datetime
+    # Derived on read (issue 360b1): the session's first role=user message text,
+    # trimmed and cut to 24 characters with an ellipsis. None means "no user
+    # message / blank", and the list UI falls back to its own untitled label.
+    title: str | None = None
+    # Total messages stored in the session; GET /sessions resolves it with the
+    # same statement as the title, so it never costs a per-session query.
+    message_count: int | None = None
 
 
 class SessionMessageCreateRequest(ApiModel):

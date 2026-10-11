@@ -136,7 +136,13 @@ session `sess_279d28c95bfd` 的轮次是混合的：
 
 ## Verification
 
-<!-- 待验证后补记：命令与真实输出。 -->
+- 2026-10-10 现状核查（只读，**未开工**）：
+  - 后端 `backend/app/modules/agent/api.py` 的 `GET /sessions` 未新增 `scope` 查询参数；`grep -n 'scope' api.py` 的命中项均为 `create_scoped_turn` / `begin_scoped_turn` 等无关符号。
+  - `ui/src/lib/api.ts:352` 仍是 `export function listSessions(): Promise<AgentSession[]>`，不接受 `scope` 参数。
+  - `ui/src/components/profile-assistant.tsx` 仍保留 `["profile-session"]` 的 N+1 遍历（`listSessions()` + 对每个候选 `listSessionTurns()`）。
+  - `git log` 中与本工单绑定的提交只有开单提交 `e3484a0`，无实现提交。
+- 剩余项：本工单 Scope 全部未实现——`api.py` 可选 `scope=profile` 与非法值 422、`service.py`/`dao.py` 按「至少一条轮次且无 resume 轮次」过滤且过滤先于 `limit`、前端单请求替换 N+1、`docs/agent/agent-operation-api.md` §19.2 契约、后端 pytest 与前端 MSW 断言。
+- 阻塞/待决：Background「待决点」的「历史混合会话如何展示 / 是否迁移」仍需用户三选一裁决，未裁决前不应实现。
 
 ## Related ADRs
 

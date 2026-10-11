@@ -17,7 +17,6 @@ export default {
     note: {
       image: "已从截图识别内容，请核对后创建。",
       text: "由 AI 整理，请核对后创建。",
-      imageDemo: "已从截图「{{fileName}}」识别出以下内容（演示为示例数据）。请核对后再创建。",
     },
   },
 }

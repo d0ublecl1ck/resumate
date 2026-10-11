@@ -129,5 +129,12 @@ export default {
     thinking: "Organizing…",
     placeholder: "Change your basics, or add an experience… (⌘↵ to send, Shift+↵ for a new line)",
     send: "Send",
+    panel: {
+      tabsLabel: "Assistant views",
+      historyHint: "Pick a session to continue, or start a new conversation.",
+      currentEmptyTitle: "No conversation yet",
+      currentEmptyDescription: "Type the first message below; the assistant reads your profile before acting.",
+      loadError: "Couldn't load the conversations. Please try again.",
+    },
   },
 }

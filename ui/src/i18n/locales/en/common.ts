@@ -41,7 +41,7 @@ export default {
   },
   pageState: {
     loading: "Loading",
-    loadingDemo: "Reading local demo data…",
+    loadingDemo: "Loading…",
     notFound: "No {{target}} found",
     notFoundDescription: "It may have been deleted or never existed.",
     errorCode: "Error code: {{code}}",

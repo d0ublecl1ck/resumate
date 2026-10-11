@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { delay, http, HttpResponse } from "msw"
+import { MemoryRouter } from "react-router-dom"
 import { RunPanel } from "@/components/run-panel"
 import { worker } from "@/mocks/browser"
 import i18n from "@/i18n"
@@ -74,11 +75,13 @@ function Panel({ run, defaultActivityOpen }: { run?: AgentRun | null; defaultAct
   const [client] = useState(() => new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } }))
   return (
     <QueryClientProvider client={client}>
-      <div className="h-[560px] w-full bg-background p-4">
-        <div className="card-soft mx-auto h-full max-w-2xl overflow-hidden">
-          <RunPanel resumeId="res_fe_lead" run={run} mode="approval" defaultActivityOpen={defaultActivityOpen} />
+      <MemoryRouter>
+        <div className="h-[560px] w-full bg-background p-4">
+          <div className="card-soft mx-auto h-full max-w-2xl overflow-hidden">
+            <RunPanel resumeId="res_fe_lead" run={run} mode="approval" defaultActivityOpen={defaultActivityOpen} />
+          </div>
         </div>
-      </div>
+      </MemoryRouter>
     </QueryClientProvider>
   )
 }
@@ -175,6 +178,79 @@ export const ActionError = {
       <AutoDrive steps={[{ delay: 160, run: (root) => clickButton(root, i18n.t("common.actions.approve")) }]}>
         <Panel run={makeRun({ state: "awaiting_confirm", pendingActions: [PENDING_ACTION], timeline: CONVERSATION })} />
       </AutoDrive>
+    )
+  },
+}
+
+/**
+ * 模型鉴权失败：Key 无效时，错误块必须显示类别、provider/model、出问题那把 key 的
+ * 已掩码尾号与「去设置更新 Key」入口，不能再静默收尾（issue 4ff97）。
+ */
+export const RunErrorAuth = {
+  render: () => {
+    worker.resetHandlers()
+    return (
+      <Panel
+        run={makeRun({
+          state: "turn_closed",
+          timeline: CONVERSATION,
+          error: {
+            code: "MODEL_ERROR",
+            category: "auth",
+            message:
+              "model provider returned HTTP 401: Authentication Fails, Your api key: ****be21 is invalid (request_id: req_01)",
+            provider: "deepseek",
+            model: "deepseek-flash",
+            keyHint: "****be21",
+          },
+        })}
+      />
+    )
+  },
+}
+
+/** 网络超时：模型服务无响应，错误块给出超时类别与重试出口。 */
+export const RunErrorTimeout = {
+  render: () => {
+    worker.resetHandlers()
+    return (
+      <Panel
+        run={makeRun({
+          state: "turn_closed",
+          timeline: CONVERSATION,
+          error: {
+            code: "RUN_TIMEOUT",
+            category: "timeout",
+            message: "model provider did not answer within the 120s run budget",
+            provider: "deepseek",
+            model: "deepseek-flash",
+            keyHint: "****be21",
+          },
+        })}
+      />
+    )
+  },
+}
+
+/** 额度或预算不足：预算耗尽与限流归为同一类，提示用户到设置检查额度。 */
+export const RunErrorBudget = {
+  render: () => {
+    worker.resetHandlers()
+    return (
+      <Panel
+        run={makeRun({
+          state: "turn_closed",
+          timeline: CONVERSATION,
+          error: {
+            code: "BUDGET_EXCEEDED",
+            category: "quota",
+            message: "max_tokens (20000) exhausted",
+            provider: "deepseek",
+            model: "deepseek-flash",
+            keyHint: "****be21",
+          },
+        })}
+      />
     )
   },
 }
