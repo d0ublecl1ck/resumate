@@ -2,6 +2,7 @@
 # 第一轮：docs/deliverables/** 与 docs/e2e/** 迁入 Git LFS（git lfs migrate import --everything）
 # 第二轮：学校名/教师名/真实姓名等身份线索替换为占位（git filter-repo --replace-text/--replace-message）
 # 列：original_sha(改写前)	after_lfs_sha(第一轮后)	final_sha(第二轮后)	subject
+# 第三轮：仅替换 5 个 tip 提交的作者元数据（姓名+邮箱）；anan（27 个旧提交、无邮箱）按决定保留
 # original_sha 为空表示该提交产生于第一轮之后（没有更早的形态）
 765807c67e3997e8dcc8c5c7e278253c2fb6e468	36dafee465957b57941e140fa88d8ed16f9b55da	575dacac6c92c0c2e45a816e33b76dc3e5a252d9	merge: docs/zj-fwwb-2026 合入 main（S4A 源码包排除规则修正）
 87a843578c9a6ae1845ee4ca7351748d24a8f61e	ba724cbd65a92bcf74792cab13e978a10563d7e0	21ddac7d33afc3f25ba9f9aa5ec869099f989275	fix(deliverables): S4A 包同时排除 docs/deliverables
@@ -391,3 +392,11 @@ b8f268b20db654b887671f25ee22600743e61225	ac70786f62a8650f044ed28425954c74d1346db
 6ecf77bcfae9b5cc55b5fc885ed17c308e4a71d5	9abfcd4f46332e2e0233025330e3cec353735291	eff643605d2cdd5e0bed1f80ad669da9c7463394	chore: initialize ArchKit project
 	afe70193f5103fb176a82ae4536ed35628dfc26f	afe70193f5103fb176a82ae4536ed35628dfc26f	docs(issue): 关单 edb51 LFS 历史改写
 	114deda8c15da01afeeeb070ad26fad3d694e492	114deda8c15da01afeeeb070ad26fad3d694e492	chore(lfs): 记录 LFS 历史改写的旧新提交映射
+
+#
+# 第三轮受影响的 5 个提交（旧 SHA	新 SHA	subject）：
+# 32f5c77e0f639125c76d6cef9a3d7b47476be65b	2853e760cc64a734834f8bbc68adb7160e09bee4	chore(history): 三段式提交映射表（LFS 迁移 + 身份线索替换）
+# aec3a59924bdffa140b44cd37c8a8e04352ae7be	6664970911c2369287851ba1a54f89bc39e12a77	docs(issue): 关单 dc926 历史身份线索清除
+# 6fbe2a75870709b74f4a22691aed8c7effc94e2c	c006ec9c0f5e815efbc7b258ea9b4b1377ee29c2	fix(lfs): 收窄 LFS 模式到 docs/**
+# 8f745252d7eec18b79adef2a5abd8ab20d672cc8	417154329853dcaadda640ce485a0d4d9617e42b	docs(issue): 关单 5c238 收窄 LFS 模式
+# 0410ae0d605ea69f9efc79738a1ae2da4a1ac903	79e66c5018334c9973290314e3235add80dac692	merge: docs/zj-fwwb-2026 合入 main（收窄 LFS 模式）
