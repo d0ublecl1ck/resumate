@@ -1,0 +1,317 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  最后做小结。已交付两块：面试闭环含岗位题库、笔试、会话追问、评估报告与成长曲线；平台能力含事实与版本流、改动审批、JD 识别与微调、运行体、AI 引导与错误块。每条可核查：需求与变更挂 Issue 编号，三层测试 583/130/649，五道质量门禁强制运行，含糊实现被拦下。下一步：BM25 + 向量检索（RAG）+ rerank 重排、扩充岗位覆盖、实时语音与数字人表现层。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "16 / 小结"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "小结：每条交付都能逐条核查"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: sl0
+    elementType: shape
+    bounds: [48, 150, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: sl0-n
+    elementType: text
+    bounds: [66, 168, 124, 44]
+    content:
+      text: "交付 · 面试闭环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl0-b0
+    elementType: shape
+    bounds: [198, 178, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t0
+    elementType: text
+    bounds: [206, 186, 120, 18]
+    content:
+      text: "岗位题库与知识库"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b1
+    elementType: shape
+    bounds: [338, 178, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t1
+    elementType: text
+    bounds: [346, 186, 120, 18]
+    content:
+      text: "岗位笔试"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b2
+    elementType: shape
+    bounds: [478, 178, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t2
+    elementType: text
+    bounds: [486, 186, 120, 18]
+    content:
+      text: "面试会话与追问"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b3
+    elementType: shape
+    bounds: [618, 178, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t3
+    elementType: text
+    bounds: [626, 186, 120, 18]
+    content:
+      text: "评分量表与报告"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b4
+    elementType: shape
+    bounds: [758, 178, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t4
+    elementType: text
+    bounds: [766, 186, 120, 18]
+    content:
+      text: "成长曲线与练习"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1
+    elementType: shape
+    bounds: [48, 250, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: sl1-n
+    elementType: text
+    bounds: [66, 268, 124, 44]
+    content:
+      text: "交付 · 平台能力"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl1-b0
+    elementType: shape
+    bounds: [198, 278, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t0
+    elementType: text
+    bounds: [206, 286, 120, 18]
+    content:
+      text: "事实与版本流"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1-b1
+    elementType: shape
+    bounds: [338, 278, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t1
+    elementType: text
+    bounds: [346, 286, 120, 18]
+    content:
+      text: "改动审批闭环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1-b2
+    elementType: shape
+    bounds: [478, 278, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t2
+    elementType: text
+    bounds: [486, 286, 120, 18]
+    content:
+      text: "JD 识别与微调"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1-b3
+    elementType: shape
+    bounds: [618, 278, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t3
+    elementType: text
+    bounds: [626, 286, 120, 18]
+    content:
+      text: "Agent 运行时"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1-b4
+    elementType: shape
+    bounds: [758, 278, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t4
+    elementType: text
+    bounds: [766, 286, 120, 18]
+    content:
+      text: "AI 引导与错误块"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl2
+    elementType: shape
+    bounds: [48, 350, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: sl2-n
+    elementType: text
+    bounds: [66, 368, 124, 44]
+    content:
+      text: "逐条可核查"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl2-b0
+    elementType: shape
+    bounds: [198, 378, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t0
+    elementType: text
+    bounds: [206, 386, 120, 18]
+    content:
+      text: "Issue 编号与提交"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl2-b1
+    elementType: shape
+    bounds: [338, 378, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t1
+    elementType: text
+    bounds: [346, 386, 120, 18]
+    content:
+      text: "测试 583·130·649"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl2-b2
+    elementType: shape
+    bounds: [478, 378, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t2
+    elementType: text
+    bounds: [486, 386, 120, 18]
+    content:
+      text: "五道质量门禁"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl2-b3
+    elementType: shape
+    bounds: [618, 378, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t3
+    elementType: text
+    bounds: [626, 386, 120, 18]
+    content:
+      text: "假实现都会被门禁拦下"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: gate
+    elementType: text
+    bounds: [48, 452, 864, 18]
+    content:
+      text: "下一步：BM25 + 向量检索（RAG）+ rerank 重排、扩充岗位覆盖、更低延迟实时语音、可选数字人表现层；成本模型按试点数据回填。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "16 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

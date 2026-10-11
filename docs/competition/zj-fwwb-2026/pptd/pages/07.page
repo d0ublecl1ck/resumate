@@ -1,0 +1,284 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  这一层是评估。内容维度评四项：技术正确性、知识深度、逻辑严谨性和岗位匹配度。表达维度评三项：语速、清晰度和自信度，只在有录音的语音场次评估。三条硬约束：量表版本冻结并随报告存储；每个维度必须给出具体回答证据，能追到原话；证据不足时标注证据不足，不给分。纯文本场次没有音频信号，语速和清晰度一律标不适用，自信度标为有依据的估计。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "07 / 能力三 · 多维评估"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "每个分数都能追到原话"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: c-l
+    elementType: text
+    bounds: [48, 152, 420, 20]
+    content:
+      text: "内容维度（4 项）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: cbox
+    elementType: shape
+    bounds: [48, 178, 420, 130]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: cc-b0
+    elementType: shape
+    bounds: [68, 200, 176, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: cc-t0
+    elementType: text
+    bounds: [76, 211, 160, 21]
+    content:
+      text: "技术正确性"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: cc-b1
+    elementType: shape
+    bounds: [260, 200, 176, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: cc-t1
+    elementType: text
+    bounds: [268, 211, 160, 21]
+    content:
+      text: "知识深度"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: cd-b0
+    elementType: shape
+    bounds: [68, 252, 176, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: cd-t0
+    elementType: text
+    bounds: [76, 263, 160, 21]
+    content:
+      text: "逻辑严谨性"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: cd-b1
+    elementType: shape
+    bounds: [260, 252, 176, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: cd-t1
+    elementType: text
+    bounds: [268, 263, 160, 21]
+    content:
+      text: "岗位匹配度"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: e-l
+    elementType: text
+    bounds: [48, 326, 420, 20]
+    content:
+      text: "表达维度（3 项 · 仅语音场次）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: ebox
+    elementType: shape
+    bounds: [48, 352, 420, 110]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: ec-b0
+    elementType: shape
+    bounds: [68, 374, 110, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: ec-t0
+    elementType: text
+    bounds: [76, 385, 94, 21]
+    content:
+      text: "语速"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: ec-b1
+    elementType: shape
+    bounds: [195, 374, 110, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: ec-t1
+    elementType: text
+    bounds: [203, 385, 94, 21]
+    content:
+      text: "清晰度"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: ec-b2
+    elementType: shape
+    bounds: [322, 374, 110, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: ec-t2
+    elementType: text
+    bounds: [330, 385, 94, 21]
+    content:
+      text: "自信度"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      align: center
+  - elementId: e-note
+    elementType: text
+    bounds: [68, 420, 380, 42]
+    content:
+      text: |-
+        纯文本场次：语速与清晰度标「不适用」；
+        自信度标「有依据的估计」，非事实诊断。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#6F6D63"
+      lineHeight: 1.4
+  - elementId: rbox
+    elementType: shape
+    bounds: [492, 152, 420, 310]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: r-t
+    elementType: text
+    bounds: [512, 168, 380, 24]
+    content:
+      text: "评分三条硬约束"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: rr0
+    elementType: shape
+    bounds: [512, 206, 2, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: r0-t
+    elementType: text
+    bounds: [530, 206, 360, 22]
+    content:
+      text: "量表版本冻结"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: r0-b
+    elementType: text
+    bounds: [530, 230, 360, 40]
+    content:
+      text: "量表定义与锚点版本化，并随报告一起存储，否则成长曲线不可比。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.4
+  - elementId: rr1
+    elementType: shape
+    bounds: [512, 286, 2, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: r1-t
+    elementType: text
+    bounds: [530, 286, 360, 22]
+    content:
+      text: "逐维度附证据"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: r1-b
+    elementType: text
+    bounds: [530, 310, 360, 40]
+    content:
+      text: "每个维度给出具体回答证据片段，结论可回指到某一轮问答。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.4
+  - elementId: rr2
+    elementType: shape
+    bounds: [512, 366, 2, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: r2-t
+    elementType: text
+    bounds: [530, 366, 360, 22]
+    content:
+      text: "证据不足不给分"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: r2-b
+    elementType: text
+    bounds: [530, 390, 360, 40]
+    content:
+      text: "证据不足的维度明确标注「证据不足」，不生成猜测性分数。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.4
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "07 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

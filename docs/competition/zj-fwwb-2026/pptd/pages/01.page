@@ -1,0 +1,115 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  各位评委好，我们是参赛队 RMD，材料对应赛题 A11。一句话说：让模拟面试从一问一答，变成有据可查的训练。练面试长期缺三样东西：真实的追问、有依据的反馈、岗位针对性的训练。通用工具能生成问题，但题目与简历无关，评分只给一句表达流畅。我们以简历事实加目标岗位为上下文，让每道题有来源、每个分数有原话证据、每个薄弱项有下一步练习。
+elements:
+  - elementId: cover-band
+    elementType: shape
+    bounds: [690, 0, 270, 470]
+    shapeName: rect
+    fill: {type: solid, color: "#E9E8E0"}
+    border: {width: 0, color: "#E9E8E0"}
+  - elementId: cover-accent
+    elementType: shape
+    bounds: [690, 0, 270, 6]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: cover-kicker
+    elementType: text
+    bounds: [714, 48, 222, 20]
+    content:
+      text: "S3 核心内容展示"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+  - elementId: cover-code
+    elementType: text
+    bounds: [714, 74, 222, 70]
+    content:
+      text: "A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 54
+      color: "#111111"
+      bold: true
+  - elementId: cover-name
+    elementType: text
+    bounds: [714, 150, 222, 60]
+    content:
+      text: |-
+        AI 模拟面试
+        与能力提升软件
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+      lineHeight: 1.3
+  - elementId: cover-band-rule
+    elementType: shape
+    bounds: [714, 230, 222, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: cover-meta
+    elementType: text
+    bounds: [714, 246, 222, 80]
+    content:
+      text: |-
+        参赛队：RMD
+        命题企业：锐捷网络
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: cover-org
+    elementType: text
+    bounds: [48, 24, 600, 20]
+    content:
+      text: "2026「数字马力杯」第十三届浙江省大学生服务外包创新应用大赛"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: cover-title
+    elementType: text
+    bounds: [48, 92, 600, 120]
+    content:
+      text: |-
+        让每一次模拟面试
+        都留下可追溯的证据
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 40
+      color: "#111111"
+      bold: true
+      lineHeight: 1.2
+  - elementId: cover-rule
+    elementType: shape
+    bounds: [48, 240, 120, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: cover-sub
+    elementType: text
+    bounds: [48, 268, 590, 80]
+    content:
+      text: "以「简历事实 + 目标岗位」为上下文，把模拟面试做成可追溯、可评估、可提升的闭环：题目有来源、评分有证据、薄弱项有下一步练习。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 16
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: cover-foot
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: cover-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "01 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

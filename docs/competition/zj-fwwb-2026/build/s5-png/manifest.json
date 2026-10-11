@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "backend": "native",
+  "rasterEngine": "pdfium",
+  "source": "saved",
+  "inputPath": "/tmp/s5b10/S5.pdf",
+  "sourceSha256": "82fa770cb7690468cd7697087f4a1be3ac7a500e3c124f756a3ef9fe572c6ee0",
+  "dpi": 144,
+  "pageCount": 9,
+  "images": [
+    {
+      "index": 1,
+      "page": 1,
+      "path": "/tmp/s5p10/page-0001.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 123899
+    },
+    {
+      "index": 2,
+      "page": 2,
+      "path": "/tmp/s5p10/page-0002.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 131032
+    },
+    {
+      "index": 3,
+      "page": 3,
+      "path": "/tmp/s5p10/page-0003.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 158439
+    },
+    {
+      "index": 4,
+      "page": 4,
+      "path": "/tmp/s5p10/page-0004.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 126826
+    },
+    {
+      "index": 5,
+      "page": 5,
+      "path": "/tmp/s5p10/page-0005.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 166573
+    },
+    {
+      "index": 6,
+      "page": 6,
+      "path": "/tmp/s5p10/page-0006.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 162941
+    },
+    {
+      "index": 7,
+      "page": 7,
+      "path": "/tmp/s5p10/page-0007.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 192977
+    },
+    {
+      "index": 8,
+      "page": 8,
+      "path": "/tmp/s5p10/page-0008.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 116979
+    },
+    {
+      "index": 9,
+      "page": 9,
+      "path": "/tmp/s5p10/page-0009.png",
+      "width": 1920,
+      "height": 1080,
+      "rectangle": {
+        "x": 0,
+        "y": 0,
+        "width": 1280,
+        "height": 720
+      },
+      "byteLength": 100195
+    }
+  ],
+  "missingFonts": []
+}

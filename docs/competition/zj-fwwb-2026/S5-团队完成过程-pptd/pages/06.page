@@ -1,0 +1,167 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 46 秒）：第二个困难，模型猜会话编号。让它录一条信息，它反而反问我们要编号。日志里连续报会话不存在，原因是模型自己猜的值把运行体的绑定压掉了。我们加了提示词没用，最后在 profile 作用域里注入绑定并强制覆盖。同样的话再说一遍，录入成功；新版本这类报错 0 次，旧版本是 22 次。
+  画面：五行链路，从「怎么发现」到「确认解决」；底部标出新旧版本报错次数对比。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "06 / 我们啃下的困难 2"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "困难二：让模型别再猜会话编号"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: r0
+    elementType: shape
+    bounds: [48, 148, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r0-k
+    elementType: text
+    bounds: [66, 163, 80, 22]
+    content:
+      text: "怎么发现"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r0-v
+    elementType: text
+    bounds: [158, 161, 742, 30]
+    content:
+      text: "让助手录一条信息，它反而反问我们要会话编号，什么都没写进去。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r1
+    elementType: shape
+    bounds: [48, 206, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r1-k
+    elementType: text
+    bounds: [66, 221, 80, 22]
+    content:
+      text: "找到原因"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r1-v
+    elementType: text
+    bounds: [158, 219, 742, 30]
+    content:
+      text: "日志里连续报「会话不存在」，模型自己猜的编号把运行体的绑定压掉了。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r2
+    elementType: shape
+    bounds: [48, 264, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r2-k
+    elementType: text
+    bounds: [66, 279, 80, 22]
+    content:
+      text: "卡在哪"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r2-v
+    elementType: text
+    bounds: [158, 277, 742, 30]
+    content:
+      text: "一开始以为是模型不听话，加提示词也没用，最后定位到作用域没有注入绑定。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r3
+    elementType: shape
+    bounds: [48, 322, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r3-k
+    elementType: text
+    bounds: [66, 337, 80, 22]
+    content:
+      text: "怎么解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r3-v
+    elementType: text
+    bounds: [158, 335, 742, 30]
+    content:
+      text: "profile 作用域把会话绑定注入进去，运行体强制覆盖模型猜的值。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r4
+    elementType: shape
+    bounds: [48, 380, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r4-k
+    elementType: text
+    bounds: [66, 395, 80, 22]
+    content:
+      text: "确认解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r4-v
+    elementType: text
+    bounds: [158, 393, 742, 30]
+    content:
+      text: "同样的话再说一遍，录入成功；新版本这类报错 0 次，旧版本是 22 次。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "06 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

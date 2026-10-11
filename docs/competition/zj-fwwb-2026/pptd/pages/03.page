@@ -1,0 +1,281 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  这一页讲目标用户和典型场景。面向计算机相关专业、准备技术岗面试的在校学生与应届求职者。一次完整练习分五步：选定目标岗位与简历版本，系统冻结本场快照；完成一轮模拟面试，文字或语音作答都可以；阅读分维度的评估报告，每条结论都能点回具体回答；按报告给出的练习计划补薄弱项；最后复测，用同岗位、同量表的成绩对比成长曲线。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "03 / 目标用户与场景"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "计算机相关专业学生，准备技术岗面试的一天"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: s0-n
+    elementType: text
+    bounds: [48, 160, 60, 20]
+    content:
+      text: "01"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s0-t
+    elementType: text
+    bounds: [48, 182, 163.2, 26]
+    content:
+      text: "选定岗位与简历"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: s0-r
+    elementType: shape
+    bounds: [48, 218, 163.2, 2]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: s0-d
+    elementType: text
+    bounds: [48, 232, 163.2, 70]
+    content:
+      text: |-
+        选择简历版本与目标 JD
+        冻结本场上下文快照
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: s0-m
+    elementType: text
+    bounds: [48, 318, 163.2, 20]
+    content:
+      text: "约 5 分钟"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#1E2BFA"
+  - elementId: s1-n
+    elementType: text
+    bounds: [223.2, 160, 60, 20]
+    content:
+      text: "02"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s1-t
+    elementType: text
+    bounds: [223.2, 182, 163.2, 26]
+    content:
+      text: "完成模拟面试"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: s1-r
+    elementType: shape
+    bounds: [223.2, 218, 163.2, 2]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: s1-d
+    elementType: text
+    bounds: [223.2, 232, 163.2, 70]
+    content:
+      text: |-
+        文字或语音作答
+        面试官按要点追问
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: s1-m
+    elementType: text
+    bounds: [223.2, 318, 163.2, 20]
+    content:
+      text: "20–30 分钟"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#1E2BFA"
+  - elementId: s2-n
+    elementType: text
+    bounds: [398.4, 160, 60, 20]
+    content:
+      text: "03"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s2-t
+    elementType: text
+    bounds: [398.4, 182, 163.2, 26]
+    content:
+      text: "阅读评估报告"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: s2-r
+    elementType: shape
+    bounds: [398.4, 218, 163.2, 2]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: s2-d
+    elementType: text
+    bounds: [398.4, 232, 163.2, 70]
+    content:
+      text: |-
+        分维度得分
+        逐条附回答证据
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: s2-m
+    elementType: text
+    bounds: [398.4, 318, 163.2, 20]
+    content:
+      text: "约 10 分钟"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#1E2BFA"
+  - elementId: s3-n
+    elementType: text
+    bounds: [573.5999999999999, 160, 60, 20]
+    content:
+      text: "04"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s3-t
+    elementType: text
+    bounds: [573.5999999999999, 182, 163.2, 26]
+    content:
+      text: "按计划练习"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: s3-r
+    elementType: shape
+    bounds: [573.5999999999999, 218, 163.2, 2]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: s3-d
+    elementType: text
+    bounds: [573.5999999999999, 232, 163.2, 70]
+    content:
+      text: |-
+        薄弱项对应练习项
+        含目标与复测入口
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: s3-m
+    elementType: text
+    bounds: [573.5999999999999, 318, 163.2, 20]
+    content:
+      text: "按计划"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#1E2BFA"
+  - elementId: s4-n
+    elementType: text
+    bounds: [748.8, 160, 60, 20]
+    content:
+      text: "05"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s4-t
+    elementType: text
+    bounds: [748.8, 182, 163.2, 26]
+    content:
+      text: "复测并对比"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: s4-r
+    elementType: shape
+    bounds: [748.8, 218, 163.2, 2]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: s4-d
+    elementType: text
+    bounds: [748.8, 232, 163.2, 70]
+    content:
+      text: |-
+        同岗位同量表
+        成长曲线对比
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: s4-m
+    elementType: text
+    bounds: [748.8, 318, 163.2, 20]
+    content:
+      text: "下一轮"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#1E2BFA"
+  - elementId: scene-band
+    elementType: shape
+    bounds: [48, 366, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: scene-t
+    elementType: text
+    bounds: [68, 380, 824, 34]
+    content:
+      text: "场景落点：一次练习从选岗到复测形成闭环。中间每一步都留下可回看的记录，用户可以顺着记录找到下一次该练什么。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "03 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

@@ -1,0 +1,226 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 46 秒）：第三个困难，截图识别。上传岗位截图，返回的草案跟图片没关系，还声明了后端不存在的接口。我们发现那段实现只读文件名，注释写着前端演示，两次审计都没注意到。于是接上真实视觉模型，同时让门禁去查含糊实现，前端路由要和后端对得上。现在模型不支持看图时会明确提示换模型。
+  画面：左侧编号轨道配五行链路，从「怎么发现」到「确认解决」；脚注写「不能糊弄」。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "07 / 我们啃下的困难 3"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "困难三：截图识别，我们从假实现换成真模型"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: rail
+    elementType: shape
+    bounds: [120, 148, 2, 300]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: n0
+    elementType: text
+    bounds: [88, 162, 30, 24]
+    content:
+      text: "1"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r0
+    elementType: shape
+    bounds: [144, 148, 768, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r0-k
+    elementType: text
+    bounds: [162, 163, 80, 22]
+    content:
+      text: "怎么发现"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r0-v
+    elementType: text
+    bounds: [254, 161, 642, 30]
+    content:
+      text: "上传岗位截图，返回的草案跟图片没关系，代码里还声明了后端不存在的接口。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: n1
+    elementType: text
+    bounds: [88, 220, 30, 24]
+    content:
+      text: "2"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r1
+    elementType: shape
+    bounds: [144, 206, 768, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r1-k
+    elementType: text
+    bounds: [162, 221, 80, 22]
+    content:
+      text: "找到原因"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r1-v
+    elementType: text
+    bounds: [254, 219, 642, 30]
+    content:
+      text: "那段实现只读了文件名，注释里写着「前端演示」，两次审计都没注意到。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: n2
+    elementType: text
+    bounds: [88, 278, 30, 24]
+    content:
+      text: "3"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r2
+    elementType: shape
+    bounds: [144, 264, 768, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r2-k
+    elementType: text
+    bounds: [162, 279, 80, 22]
+    content:
+      text: "卡在哪"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r2-v
+    elementType: text
+    bounds: [254, 277, 642, 30]
+    content:
+      text: "含糊的注释没法被机器枚举；我们决定不靠人眼，改成让门禁去查。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: n3
+    elementType: text
+    bounds: [88, 336, 30, 24]
+    content:
+      text: "4"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r3
+    elementType: shape
+    bounds: [144, 322, 768, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r3-k
+    elementType: text
+    bounds: [162, 337, 80, 22]
+    content:
+      text: "怎么解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r3-v
+    elementType: text
+    bounds: [254, 335, 642, 30]
+    content:
+      text: "接上真实视觉模型，同时让门禁去查含糊实现，前端路由要和后端对得上。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: n4
+    elementType: text
+    bounds: [88, 394, 30, 24]
+    content:
+      text: "5"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r4
+    elementType: shape
+    bounds: [144, 380, 768, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r4-k
+    elementType: text
+    bounds: [162, 395, 80, 22]
+    content:
+      text: "确认解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r4-v
+    elementType: text
+    bounds: [254, 393, 642, 30]
+    content:
+      text: "模型不支持看图时会明确提示换模型；门禁跑完，没有含糊实现。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: footnote
+    elementType: text
+    bounds: [144, 452, 768, 18]
+    content:
+      text: "从假实现到真模型：我们把「不能糊弄」写成了可以执行的检查。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "07 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

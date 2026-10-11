@@ -1,0 +1,234 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  这一页讲成本：左侧是成本构成：建设一次性投入，运行含模型调用、语音、服务器与存储、人工复核；右侧是成本口径：单场成本等于输入 token 乘以输入单价加输出 token 乘以输出单价，token 量从会话记录统计。语音成本只在语音场次产生，纯文本场次为零；练习和复测共用同一条链路，边际成本很低。基础设施同样由本项目自建，开发投入集中在业务域模块与界面。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "15 / 成本与可行性"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "成本怎么算：口径清楚、可逐场核算"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: cl
+    elementType: text
+    bounds: [48, 152, 420, 20]
+    content:
+      text: "成本构成"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+      bold: true
+  - elementId: co0
+    elementType: text
+    bounds: [64, 186, 404, 20]
+    content:
+      text: "建设　自建系统开发（一次性投入）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: co1
+    elementType: text
+    bounds: [64, 220, 404, 20]
+    content:
+      text: "运行　模型调用（按输入与输出 token 量 × 单价）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: co2
+    elementType: text
+    bounds: [64, 254, 404, 20]
+    content:
+      text: "运行　语音转写与播报（按音频时长，仅语音场次产生）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: co3
+    elementType: text
+    bounds: [64, 288, 404, 20]
+    content:
+      text: "运行　服务器与存储（应用、数据库、缓存与音频文件）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: co4
+    elementType: text
+    bounds: [64, 322, 404, 20]
+    content:
+      text: "运行　人工复核抽检（评分一致性抽检所需人力）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: r1
+    elementType: text
+    bounds: [492, 152, 420, 20]
+    content:
+      text: "成本口径"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+      bold: true
+  - elementId: cc0
+    elementType: shape
+    bounds: [492, 180, 420, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: cc0-t
+    elementType: text
+    bounds: [510, 192, 386, 22]
+    content:
+      text: "单场成本 ＝ 输入 token × 输入单价 ＋ 输出 token × 输出单价。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: cc1
+    elementType: shape
+    bounds: [492, 234, 420, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: cc1-t
+    elementType: text
+    bounds: [510, 246, 386, 22]
+    content:
+      text: "token 量从会话记录统计，成本可逐场核算并离线复现。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: cc2
+    elementType: shape
+    bounds: [492, 288, 420, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: cc2-t
+    elementType: text
+    bounds: [510, 300, 386, 22]
+    content:
+      text: "纯文本场次不产生语音成本；练习与复测共用同一链路。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: cc3
+    elementType: shape
+    bounds: [492, 342, 420, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: cc3-t
+    elementType: text
+    bounds: [510, 354, 386, 22]
+    content:
+      text: "服务器与存储、人工复核抽检按迭代计划单列，不摊入单场。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#111111"
+  - elementId: fl
+    elementType: text
+    bounds: [48, 384, 420, 20]
+    content:
+      text: "可行性四问"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+      bold: true
+  - elementId: fe-b0
+    elementType: shape
+    bounds: [48, 410, 132, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: fe-t0
+    elementType: text
+    bounds: [56, 421, 116, 20]
+    content:
+      text: "技术可行"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      align: center
+  - elementId: fe-b1
+    elementType: shape
+    bounds: [192, 410, 132, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: fe-t1
+    elementType: text
+    bounds: [200, 421, 116, 20]
+    content:
+      text: "工程可行"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      align: center
+  - elementId: fe-b2
+    elementType: shape
+    bounds: [336, 410, 132, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: fe-t2
+    elementType: text
+    bounds: [344, 421, 116, 20]
+    content:
+      text: "成本可控"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      align: center
+  - elementId: fe-b3
+    elementType: shape
+    bounds: [480, 410, 132, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: fe-t3
+    elementType: text
+    bounds: [488, 421, 116, 20]
+    content:
+      text: "合规可信"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      align: center
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "15 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

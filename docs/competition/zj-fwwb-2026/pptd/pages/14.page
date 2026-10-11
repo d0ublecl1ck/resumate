@@ -1,0 +1,335 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  本页讲交付与演进。已交付分两块。底座侧：事实与版本流、改动审批闭环、JD 识别与微调、运行体、AI 引导与错误块、会话历史、权限与密钥托管；面试侧：岗位题库与知识库、面试官、语音与文字双通道、岗位笔试（客观题、开放题、代码题）、评分量表与评估报告、成长曲线与练习计划。下一阶段：BM25 + 向量检索（RAG）+ rerank 重排，扩充岗位、实时语音与数字人表现层。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "14 / 交付与进展"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "系统能力与面试闭环均已交付"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: new3
+    elementType: shape
+    bounds: [782, 82, 130, 24]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: new3-t
+    elementType: text
+    bounds: [790, 86, 114, 18]
+    content:
+      text: "交付状态"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#FDFAE7"
+      align: center
+  - elementId: sl0
+    elementType: shape
+    bounds: [48, 160, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: sl0-n
+    elementType: text
+    bounds: [66, 178, 124, 44]
+    content:
+      text: "平台能力 · 已交付"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl0-b0
+    elementType: shape
+    bounds: [198, 188, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t0
+    elementType: text
+    bounds: [206, 196, 120, 18]
+    content:
+      text: "事实与版本流"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b1
+    elementType: shape
+    bounds: [338, 188, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t1
+    elementType: text
+    bounds: [346, 196, 120, 18]
+    content:
+      text: "改动审批闭环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b2
+    elementType: shape
+    bounds: [478, 188, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t2
+    elementType: text
+    bounds: [486, 196, 120, 18]
+    content:
+      text: "JD 识别与微调"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b3
+    elementType: shape
+    bounds: [618, 188, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t3
+    elementType: text
+    bounds: [626, 196, 120, 18]
+    content:
+      text: "Agent 运行时"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl0-b4
+    elementType: shape
+    bounds: [758, 188, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl0-t4
+    elementType: text
+    bounds: [766, 196, 120, 18]
+    content:
+      text: "权限与密钥托管"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: sl1
+    elementType: shape
+    bounds: [48, 260, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: sl1-n
+    elementType: text
+    bounds: [66, 278, 124, 44]
+    content:
+      text: "面试闭环 · 已交付"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl1-b0
+    elementType: shape
+    bounds: [198, 288, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t0
+    elementType: text
+    bounds: [206, 296, 120, 18]
+    content:
+      text: "岗位题库与知识库"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#111111"
+      align: center
+  - elementId: sl1-b1
+    elementType: shape
+    bounds: [338, 288, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t1
+    elementType: text
+    bounds: [346, 291, 120, 26]
+    content:
+      text: |-
+        岗位笔试
+        客观/开放/代码题
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#111111"
+      align: center
+      lineHeight: 1.2
+  - elementId: sl1-b2
+    elementType: shape
+    bounds: [478, 288, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t2
+    elementType: text
+    bounds: [486, 296, 120, 18]
+    content:
+      text: "面试会话与追问策略"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#111111"
+      align: center
+  - elementId: sl1-b3
+    elementType: shape
+    bounds: [618, 288, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t3
+    elementType: text
+    bounds: [626, 296, 120, 18]
+    content:
+      text: "评分量表与评估报告"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#111111"
+      align: center
+  - elementId: sl1-b4
+    elementType: shape
+    bounds: [758, 288, 136, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl1-t4
+    elementType: text
+    bounds: [766, 296, 120, 18]
+    content:
+      text: "成长曲线与练习计划"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#111111"
+      align: center
+  - elementId: sl2
+    elementType: shape
+    bounds: [48, 360, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: sl2-n
+    elementType: text
+    bounds: [66, 378, 140, 44]
+    content:
+      text: "下一阶段 · 演进"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: sl2-b0
+    elementType: shape
+    bounds: [214, 388, 166, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t0
+    elementType: text
+    bounds: [222, 396, 150, 18]
+    content:
+      text: "BM25 + RAG + rerank 重排"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      align: center
+  - elementId: sl2-b1
+    elementType: shape
+    bounds: [390, 388, 166, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t1
+    elementType: text
+    bounds: [398, 396, 150, 18]
+    content:
+      text: "更低延迟实时语音"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      align: center
+  - elementId: sl2-b2
+    elementType: shape
+    bounds: [566, 388, 166, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t2
+    elementType: text
+    bounds: [574, 396, 150, 18]
+    content:
+      text: "可选数字人表现层"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      align: center
+  - elementId: sl2-b3
+    elementType: shape
+    bounds: [742, 388, 166, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: sl2-t3
+    elementType: text
+    bounds: [750, 396, 150, 18]
+    content:
+      text: "试点数据回填成本模型"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      align: center
+  - elementId: gate
+    elementType: text
+    bounds: [48, 466, 864, 18]
+    content:
+      text: "交付门槛：单岗位完整闭环先验收通过，再扩第二岗位；演进项按试点数据排期。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "14 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

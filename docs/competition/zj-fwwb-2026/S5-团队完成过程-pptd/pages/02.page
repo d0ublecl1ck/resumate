@@ -1,0 +1,190 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 42 秒）：先介绍我们三个人。队长主要定产品做什么、拆需求、画界面，也写核心功能；开发写另一部分功能、对接接口、做模块自测，还算模型和成本；测试设计用例、复现缺陷、盯回归，再做端到端走查。谁卡住了，另外两个人就补上去。
+  画面：三张卡片并列，分别写队长、开发、测试各自在做的事与留下的材料；底部一条横带写着「谁有空谁补位」。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "02 / 我们三个人"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "我们三个人：一起把事做完"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: ro0
+    elementType: shape
+    bounds: [48, 156, 272, 168]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: ro0-n
+    elementType: text
+    bounds: [68, 174, 232, 24]
+    content:
+      text: "队长（产品与开发）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: ro0-r
+    elementType: shape
+    bounds: [68, 208, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: ro0-b
+    elementType: text
+    bounds: [68, 222, 232, 62]
+    content:
+      text: |-
+        定产品做什么、拆需求、画界面
+        也写核心功能，盯进度与验收
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: ro0-d
+    elementType: text
+    bounds: [68, 292, 232, 22]
+    content:
+      text: "PRD 与屏幕流定义 · 核心功能代码"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#1E2BFA"
+      lineHeight: 1.3
+  - elementId: ro1
+    elementType: shape
+    bounds: [344, 156, 272, 168]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: ro1-n
+    elementType: text
+    bounds: [364, 174, 232, 24]
+    content:
+      text: "开发"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: ro1-r
+    elementType: shape
+    bounds: [364, 208, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: ro1-b
+    elementType: text
+    bounds: [364, 222, 232, 62]
+    content:
+      text: |-
+        写另一部分功能、对接接口
+        做模块自测，算模型与成本
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: ro1-d
+    elementType: text
+    bounds: [364, 292, 232, 22]
+    content:
+      text: "接口契约 · 成本模型 · 模块自测"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#1E2BFA"
+      lineHeight: 1.3
+  - elementId: ro2
+    elementType: shape
+    bounds: [640, 156, 272, 168]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: ro2-n
+    elementType: text
+    bounds: [660, 174, 232, 24]
+    content:
+      text: "测试"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: ro2-r
+    elementType: shape
+    bounds: [660, 208, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: ro2-b
+    elementType: text
+    bounds: [660, 222, 232, 62]
+    content:
+      text: |-
+        设计用例、复现缺陷、盯回归
+        做端到端走查与质量门禁
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: ro2-d
+    elementType: text
+    bounds: [660, 292, 232, 22]
+    content:
+      text: "测试用例 · 缺陷记录 · 门禁报告"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#1E2BFA"
+      lineHeight: 1.3
+  - elementId: band
+    elementType: shape
+    bounds: [48, 366, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: band-t
+    elementType: text
+    bounds: [68, 380, 824, 34]
+    content:
+      text: "谁有空谁补位：队长卡住时开发接界面，测试发现的问题当场一起定位。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "02 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right
