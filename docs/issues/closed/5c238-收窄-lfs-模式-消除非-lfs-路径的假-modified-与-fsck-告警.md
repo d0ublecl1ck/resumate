@@ -1,13 +1,14 @@
 ---
 id: 5c238
-status: in-progress
+status: closed
 created_at: 2026-10-11T05:10:00.000Z
-updated_at: 2026-10-11T04:58:08.568Z
+updated_at: 2026-10-11T04:58:29.350Z
 priority: medium
 labels: []
 parent: null
 blocked_by: []
 started_at: 2026-10-11T04:58:08.568Z
+closed_at: 2026-10-11T04:58:29.350Z
 ---
 
 # 收窄 LFS 模式，消除非 LFS 路径的假 modified 与 fsck 告警
@@ -36,11 +37,14 @@ ef128 把 `.gitattributes` 写成全局扩展名匹配（`*.png` 等），但 `u
 
 ## Implementation
 
-<!-- Complete after implementation. -->
+- 把 `.gitattributes` 的扩展名规则从全局（`*.png` 等）收窄为 `docs/**/*.<ext>`，保留原有的 `docs/deliverables/**` 与 `docs/e2e/**` 两条目录级规则；LFS 跟踪的文件集合不变。
 
 ## Verification
 
-<!-- Add commands and results after verification. -->
+- `git lfs fsck` → `Git LFS fsck OK`，退出码 0（收窄前为退出码 1 + 11 条 `unexpectedGitObject`）。
+- `git lfs ls-files | wc -l` = 365；`head -c 4 docs/deliverables/S1-方案概要.pdf` = `%PDF`。
+- 三个工作树 `git status --short` 全为空：主工作区、`zj-fwwb-2026`、临时 `/tmp/lfs-check`（detached，验证后已 remove）。
+- 门禁与三套测试通过。
 
 ## Related ADRs
 
