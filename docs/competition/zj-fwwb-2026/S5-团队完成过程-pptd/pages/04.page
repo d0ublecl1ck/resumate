@@ -1,0 +1,303 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 48 秒）：我们怎么保证东西是好的。仓库有五道门禁，提交前自动跑；三层测试是后端 583、运行体 130、前端 649；界面一定先在 Storybook 里确认，再对接后端。含糊的实现必须写清标记，一条命令就能查出来。
+  画面：三行标签分别是五道门禁、三层测试与我们的习惯；底部写清「先验证，再交付」和一句可复制的查询命令，谁都能自己跑一遍。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "04 / 我们怎么保证东西是好的"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "我们约定：先验证，再交付"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: g0
+    elementType: shape
+    bounds: [48, 150, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: g0-n
+    elementType: text
+    bounds: [66, 168, 130, 44]
+    content:
+      text: "五道门禁"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: g0-b0
+    elementType: shape
+    bounds: [204, 178, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g0-t0
+    elementType: text
+    bounds: [210, 186, 120, 18]
+    content:
+      text: "Issue 文档"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g0-b1
+    elementType: shape
+    bounds: [344, 178, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g0-t1
+    elementType: text
+    bounds: [350, 186, 120, 18]
+    content:
+      text: "界面国际化"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g0-b2
+    elementType: shape
+    bounds: [484, 178, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g0-t2
+    elementType: text
+    bounds: [490, 186, 120, 18]
+    content:
+      text: "表单与错误契约"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g0-b3
+    elementType: shape
+    bounds: [624, 178, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g0-t3
+    elementType: text
+    bounds: [630, 186, 120, 18]
+    content:
+      text: "隐私"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g0-b4
+    elementType: shape
+    bounds: [764, 178, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g0-t4
+    elementType: text
+    bounds: [770, 186, 120, 18]
+    content:
+      text: "含糊实现检查"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g1
+    elementType: shape
+    bounds: [48, 250, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: g1-n
+    elementType: text
+    bounds: [66, 268, 130, 44]
+    content:
+      text: "三层测试（实测）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: g1-b0
+    elementType: shape
+    bounds: [204, 278, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g1-t0
+    elementType: text
+    bounds: [210, 286, 120, 18]
+    content:
+      text: "后端 583"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g1-b1
+    elementType: shape
+    bounds: [344, 278, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g1-t1
+    elementType: text
+    bounds: [350, 286, 120, 18]
+    content:
+      text: "运行体 130"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g1-b2
+    elementType: shape
+    bounds: [484, 278, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g1-t2
+    elementType: text
+    bounds: [490, 286, 120, 18]
+    content:
+      text: "前端 649"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g1-b3
+    elementType: shape
+    bounds: [624, 278, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g1-t3
+    elementType: text
+    bounds: [630, 286, 120, 18]
+    content:
+      text: "含糊实现 0 条"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g2
+    elementType: shape
+    bounds: [48, 350, 864, 88]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: g2-n
+    elementType: text
+    bounds: [66, 368, 130, 44]
+    content:
+      text: "我们的习惯"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      bold: true
+      lineHeight: 1.4
+  - elementId: g2-b0
+    elementType: shape
+    bounds: [204, 378, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g2-t0
+    elementType: text
+    bounds: [210, 386, 120, 18]
+    content:
+      text: "先写 Issue"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g2-b1
+    elementType: shape
+    bounds: [344, 378, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g2-t1
+    elementType: text
+    bounds: [350, 386, 120, 18]
+    content:
+      text: "先做 Storybook"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g2-b2
+    elementType: shape
+    bounds: [484, 378, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g2-t2
+    elementType: text
+    bounds: [490, 386, 120, 18]
+    content:
+      text: "提交前跑门禁"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: g2-b3
+    elementType: shape
+    bounds: [624, 378, 132, 32]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: g2-t3
+    elementType: text
+    bounds: [630, 386, 120, 18]
+    content:
+      text: "改完互相看"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#111111"
+      align: center
+  - elementId: gate
+    elementType: text
+    bounds: [48, 452, 864, 18]
+    content:
+      text: "界面先在 Storybook 里确认，再对接后端；含糊实现必须写清标记，一条命令就能查。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "04 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

@@ -1,0 +1,158 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 42 秒）：我们怎么一起干活。仓库用 Git 管：新功能或 bug 先写成 Issue，再从主干开分支，提交都挂上对应的编号。每天对一次进度，接口和共享文件先商量好再改；合并前互相 review，有冲突就当面一起解决。这样三个人的改动不会互相覆盖，也方便回头看。
+  画面：四条协作习惯纵向排开，每条写一句我们的约定；底部一行强调「不写没人看得懂的代码」。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "03 / 我们怎么一起干活"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "同一个 Git 仓库，一起把事说清楚"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: w0
+    elementType: shape
+    bounds: [48, 150, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: w0-k
+    elementType: text
+    bounds: [68, 170, 150, 22]
+    content:
+      text: "先登记，再开分支"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: w0-v
+    elementType: text
+    bounds: [232, 170, 660, 24]
+    content:
+      text: "仓库用 Git 管：新功能或 bug 先写成 Issue，从主干开分支再动手。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: w1
+    elementType: shape
+    bounds: [48, 220, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: w1-k
+    elementType: text
+    bounds: [68, 240, 150, 22]
+    content:
+      text: "提交都要带编号"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: w1-v
+    elementType: text
+    bounds: [232, 240, 660, 24]
+    content:
+      text: "每次提交挂上对应的 Issue 编号，没编号的改动不合入，方便回头看。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: w2
+    elementType: shape
+    bounds: [48, 290, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: w2-k
+    elementType: text
+    bounds: [68, 310, 150, 22]
+    content:
+      text: "每天对一次进度"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: w2-v
+    elementType: text
+    bounds: [232, 310, 660, 24]
+    content:
+      text: "每天同步各自在做什么、卡在哪；接口和共享文件先商量好再改。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: w3
+    elementType: shape
+    bounds: [48, 360, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: w3-k
+    elementType: text
+    bounds: [68, 380, 150, 22]
+    content:
+      text: "合并前互相 review"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#1E2BFA"
+      bold: true
+  - elementId: w3-v
+    elementType: text
+    bounds: [232, 380, 660, 24]
+    content:
+      text: "改动合并前互相 review，有冲突就当面一起解决。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: band
+    elementType: shape
+    bounds: [48, 442, 864, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: band-t
+    elementType: text
+    bounds: [68, 453, 824, 22]
+    content:
+      text: "我们约好：不写没人看得懂的代码，不把问题留到最后一刻。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "03 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

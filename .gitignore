@@ -12,3 +12,6 @@
 # Planner local working memory
 /task_plan.md
 /notes.md
+
+# 本机匿名清洗配置（含真实身份字面量，不纳入版本管理）
+docs/competition/zj-fwwb-2026/patterns.local

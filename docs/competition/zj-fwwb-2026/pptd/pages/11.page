@@ -1,0 +1,267 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  静态口径：本页列出仓库的静态情况——路由装饰器与去重路径、页面组件与 story 文件、三层测试用例数、质量门禁数量，外加关键技术选型。每项数字都由页脚命令在 2026-10-10 于本机实测得到，可离线复现，不代表性能或吞吐。评分一致性由人工抽检复核，复评样本的平均绝对偏差、单点最大偏差与覆盖率一并公示；判定不通过只源于单点偏差超上限，已按规程复核，不放宽阈值。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "11 / 选型与指标"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "仓库静态指标"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: l1
+    elementType: text
+    bounds: [48, 152, 420, 20]
+    content:
+      text: "关键技术选型"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: s0
+    elementType: shape
+    bounds: [48, 180, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: s0-t
+    elementType: text
+    bounds: [66, 190, 384, 20]
+    content:
+      text: "模型调用"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      bold: true
+  - elementId: s0-b
+    elementType: text
+    bounds: [66, 212, 384, 24]
+    content:
+      text: "统一 OpenAI 兼容 /chat/completions，不引入厂商专有 SDK"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#6F6D63"
+  - elementId: s1
+    elementType: shape
+    bounds: [48, 254, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: s1-t
+    elementType: text
+    bounds: [66, 264, 384, 20]
+    content:
+      text: "模型目录"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      bold: true
+  - elementId: s1-b
+    elementType: text
+    bounds: [66, 286, 384, 24]
+    content:
+      text: "仓库内离线快照：223 家 provider、8170 个模型，运行期只读"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#6F6D63"
+  - elementId: s2
+    elementType: shape
+    bounds: [48, 328, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: s2-t
+    elementType: text
+    bounds: [66, 338, 384, 20]
+    content:
+      text: "知识检索"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      bold: true
+  - elementId: s2-b
+    elementType: text
+    bounds: [66, 360, 384, 24]
+    content:
+      text: "按岗位分片 ＋ 来源标识；无命中即标「依据不足」"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11.5
+      color: "#6F6D63"
+  - elementId: s3
+    elementType: shape
+    bounds: [48, 402, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: s3-t
+    elementType: text
+    bounds: [66, 412, 384, 20]
+    content:
+      text: "评分一致性"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#111111"
+      bold: true
+  - elementId: s3-b
+    elementType: text
+    bounds: [66, 432, 384, 32]
+    content:
+      text: |-
+        复评 5 份：平均绝对偏差 3.45 分，单点最大偏差 14 分；
+        覆盖率 100% 达标，判定不通过，单点越界已人工复核
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: r1
+    elementType: text
+    bounds: [492, 152, 420, 20]
+    content:
+      text: "规模与验证"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: m0
+    elementType: shape
+    bounds: [492, 180, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: m0-n
+    elementType: text
+    bounds: [512, 192, 190, 34]
+    content:
+      text: "128 / 101"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 22
+      color: "#1E2BFA"
+      bold: true
+  - elementId: m0-d
+    elementType: text
+    bounds: [712, 200, 186, 24]
+    content:
+      text: "后端路由装饰器 / 去重路径"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: m1
+    elementType: shape
+    bounds: [492, 254, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: m1-n
+    elementType: text
+    bounds: [512, 266, 190, 34]
+    content:
+      text: "23 / 45"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 22
+      color: "#1E2BFA"
+      bold: true
+  - elementId: m1-d
+    elementType: text
+    bounds: [712, 274, 186, 24]
+    content:
+      text: "前端页面组件 / story 文件"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: m2
+    elementType: shape
+    bounds: [492, 328, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: m2-n
+    elementType: text
+    bounds: [512, 340, 190, 34]
+    content:
+      text: "583 / 130 / 649"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 22
+      color: "#1E2BFA"
+      bold: true
+  - elementId: m2-d
+    elementType: text
+    bounds: [712, 348, 186, 24]
+    content:
+      text: "后端 / 运行体 / 前端测试数"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: m3
+    elementType: shape
+    bounds: [492, 402, 420, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: m3-n
+    elementType: text
+    bounds: [512, 414, 190, 34]
+    content:
+      text: "5"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 22
+      color: "#1E2BFA"
+      bold: true
+  - elementId: m3-d
+    elementType: text
+    bounds: [712, 422, 186, 24]
+    content:
+      text: "仓库质量门禁脚本"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: m3-note
+    elementType: text
+    bounds: [492, 466, 420, 28]
+    content:
+      text: |-
+        测量：grep @router、pytest -q、uv run pytest、pnpm test（2026-10-10）
+        门禁 5 个，提交前强制运行
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 8.5
+      color: "#6F6D63"
+      lineHeight: 1.2
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "11 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

@@ -1,0 +1,135 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  评估之后必须能变成动作。左边是练习计划界面：每个薄弱维度对应一个练习项，含练习目标、材料和复测入口；知识深度也在其中，卡片只给目标、材料与复测入口，不显示当前分数。右边是成长曲线，连线的四个点是 81、78、88、89，同为同岗位同量表口径；最右侧的 74 是另一口径，只并列展示、不连线，图上已标注这条口径约束。复测结果会回写到同一条成长记录，形成闭环。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "09 / 能力四 · 提升闭环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "薄弱项直接变成下一步练习"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: blk0
+    elementType: shape
+    bounds: [48, 150, 330, 96]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: blk0-t
+    elementType: text
+    bounds: [66, 164, 294, 20]
+    content:
+      text: "练习项三件套"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: blk0-b
+    elementType: text
+    bounds: [66, 190, 294, 48]
+    content:
+      text: "每个薄弱维度对应练习目标、练习材料与复测入口，可直接发起复测。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: blk1
+    elementType: shape
+    bounds: [48, 254, 330, 96]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: blk1-t
+    elementType: text
+    bounds: [66, 268, 294, 20]
+    content:
+      text: "口径约束"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: blk1-b
+    elementType: text
+    bounds: [66, 294, 294, 48]
+    content:
+      text: "只有同岗位、同量表的结果才连成趋势；口径不同只并列展示，不连线。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: blk2
+    elementType: shape
+    bounds: [48, 358, 330, 96]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: blk2-t
+    elementType: text
+    bounds: [66, 372, 294, 20]
+    content:
+      text: "结果回写"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      color: "#111111"
+      bold: true
+  - elementId: blk2-b
+    elementType: text
+    bounds: [66, 398, 294, 48]
+    content:
+      text: "复测结果回写到同一条成长记录，形成可对比、可积累的闭环。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: shot
+    elementType: image
+    bounds: [400, 150, 506, 308]
+    src: assets/interview-growth.png
+  - elementId: shot-cap
+    elementType: text
+    bounds: [400, 464, 506, 16]
+    content:
+      text: "练习计划与成长曲线界面（应用真实运行截图）· 同口径连线、另一口径并列不连线"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10.5
+      color: "#6F6D63"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "09 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

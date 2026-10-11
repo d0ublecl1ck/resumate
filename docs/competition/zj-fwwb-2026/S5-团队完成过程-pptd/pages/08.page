@@ -1,0 +1,166 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 46 秒）：这个项目我们收获了什么。技术上，我们从只做单点功能，到能自己排查整条链路；协作上，我们学会了先说清楚再动手，接口先谈、改完互相看；最重要的是信任，最难的那几天谁都没甩锅，卡住就一起坐下来定位。
+  画面：三张卡片分别写技术、协作与信任；底部一条横带写着把踩过的坑写成规则、留在仓库里。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "08 / 我们收获了什么"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "比代码更重要的收获"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: c0
+    elementType: shape
+    bounds: [48, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c0-n
+    elementType: text
+    bounds: [68, 178, 232, 24]
+    content:
+      text: "技术"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c0-r
+    elementType: shape
+    bounds: [68, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c0-b
+    elementType: text
+    bounds: [68, 228, 232, 96]
+    content:
+      text: |-
+        从只做单点功能，到能自己排
+        查整条链路：写测试、跑门禁、
+        把失败说清楚。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: c1
+    elementType: shape
+    bounds: [344, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c1-n
+    elementType: text
+    bounds: [364, 178, 232, 24]
+    content:
+      text: "协作"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c1-r
+    elementType: shape
+    bounds: [364, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c1-b
+    elementType: text
+    bounds: [364, 228, 232, 96]
+    content:
+      text: |-
+        学会了先说清楚再动手：
+        接口先谈、边界先划、
+        改完互相看一遍。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: c2
+    elementType: shape
+    bounds: [640, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c2-n
+    elementType: text
+    bounds: [660, 178, 232, 24]
+    content:
+      text: "信任"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c2-r
+    elementType: shape
+    bounds: [660, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c2-b
+    elementType: text
+    bounds: [660, 228, 232, 96]
+    content:
+      text: |-
+        最难的那几天谁都没甩锅：
+        卡住就一起坐下来定位，
+        改完一起确认。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: band
+    elementType: shape
+    bounds: [48, 360, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: band-t
+    elementType: text
+    bounds: [68, 372, 824, 34]
+    content:
+      text: "把踩过的坑写成规则留在仓库里——以后的开发不用再踩一遍。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "08 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

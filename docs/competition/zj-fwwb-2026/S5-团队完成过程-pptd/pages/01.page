@@ -1,0 +1,116 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 35 秒）：各位评委好，我们是参赛队 RMD。这份材料讲我们三个人在这个比赛周期里，怎么把想法做成能跑的系统。从第一个 Issue 到最后一页报告，开发、踩坑、修复都留在同一个仓库里，可以逐条翻到。
+  画面：封面左侧两行标题「把想法做成能跑的系统」，右上角标出参赛队 RMD 与赛题编号 A11，右侧色块写「一个比赛周期 · 三个人」；底部一行是竞赛名称与页码。
+elements:
+  - elementId: cover-band
+    elementType: shape
+    bounds: [690, 0, 270, 470]
+    shapeName: rect
+    fill: {type: solid, color: "#E9E8E0"}
+    border: {width: 0, color: "#E9E8E0"}
+  - elementId: cover-accent
+    elementType: shape
+    bounds: [690, 0, 270, 6]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: cover-kicker
+    elementType: text
+    bounds: [714, 48, 222, 20]
+    content:
+      text: "S5 团队完成过程"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#1E2BFA"
+  - elementId: cover-code
+    elementType: text
+    bounds: [714, 74, 222, 70]
+    content:
+      text: "A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 54
+      color: "#111111"
+      bold: true
+  - elementId: cover-name
+    elementType: text
+    bounds: [714, 150, 222, 60]
+    content:
+      text: |-
+        一个比赛周期
+        三个人的 RMD
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+      lineHeight: 1.3
+  - elementId: cover-band-rule
+    elementType: shape
+    bounds: [714, 230, 222, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: cover-meta
+    elementType: text
+    bounds: [714, 246, 222, 80]
+    content:
+      text: |-
+        参赛队：RMD
+        命题企业：锐捷网络
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: cover-org
+    elementType: text
+    bounds: [48, 24, 600, 20]
+    content:
+      text: "2026「数字马力杯」第十三届浙江省大学生服务外包创新应用大赛"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: cover-title
+    elementType: text
+    bounds: [48, 92, 600, 120]
+    content:
+      text: |-
+        把想法做成
+        能跑的系统
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 40
+      color: "#111111"
+      bold: true
+      lineHeight: 1.2
+  - elementId: cover-rule
+    elementType: shape
+    bounds: [48, 240, 120, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: cover-sub
+    elementType: text
+    bounds: [48, 268, 590, 80]
+    content:
+      text: "同一仓库、一起改代码、一起把坑填上；这是我们三个人这个比赛周期的过程。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 16
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: cover-foot
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: cover-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "01 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

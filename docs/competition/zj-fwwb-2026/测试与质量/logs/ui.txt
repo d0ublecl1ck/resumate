@@ -1,0 +1,133 @@
+# 命令：cd ui && pnpm test
+# 时间：2026-10-10 09:47
+
+
+> ui@0.0.0 test ~/resumate-worktrees/zj-fwwb-2026/ui
+> vitest run
+
+
+ RUN  v4.1.11 ~/resumate-worktrees/zj-fwwb-2026/ui
+
+ ✓ src/components/resume-editor.test.tsx (11 tests) 832ms
+ ✓ src/pages/resumes.stories.test.tsx (11 tests) 1076ms
+     ✓ Default 渲染真实 ResumesPage  338ms
+ ✓ src/components/settings-form.test.tsx (19 tests) 1540ms
+     ✓ 保存偏好后显示已保存  382ms
+ ✓ src/components/profile-workspace.test.tsx (21 tests) 1857ms
+     ✓ 基本信息可直接编辑并保存  366ms
+stderr | src/App.test.tsx > 路由冒烟 > /jds/jd_bytedance 可渲染且加载完成
+[MSW] Error: intercepted a request without a matching request handler:
+
+  • POST /api/profile/match-job
+
+  • Request body: {"jdId":"jd_bytedance"}
+
+If you still wish to intercept this unhandled request, please create a request handler for it.
+Read more: https://mswjs.io/docs/http/intercepting-requests
+
+ ✓ src/components/resume-library-actions.test.tsx (4 tests) 1030ms
+     ✓ 点「重命名」打开小弹窗，输入后 PATCH 标题并更新卡片  494ms
+ ✓ src/App.test.tsx (22 tests) 1347ms
+ ✓ src/components/create-resume-modal.test.tsx (15 tests) 1503ms
+ ✓ src/components/profile-assistant.test.tsx (39 tests) 2462ms
+ ✓ src/components/resume-library.test.tsx (18 tests) 2135ms
+     ✓ 复制按钮调用 POST /resumes/{id}/duplicate 并进入副本  430ms
+ ✓ src/components/jd-detail-actions.test.tsx (11 tests) 1018ms
+     ✓ 点「编辑」出现表单，保存时 PATCH /jds/{id}  361ms
+ ✓ src/components/settings-form.stories.test.tsx (9 tests) 984ms
+     ✓ Default loads the catalog  490ms
+ ✓ src/components/run-panel.test.tsx (38 tests) 1077ms
+ ✓ src/components/profile-fact-delete.test.tsx (4 tests) 883ms
+     ✓ 删除前弹确认并展示反向引用影响，取消不删  453ms
+ ✓ src/features/interview/interview-screens.test.tsx (8 tests) 874ms
+ ✓ src/components/create-jd-modal.test.tsx (16 tests) 814ms
+ ✓ src/components/backup-panel.test.tsx (9 tests) 863ms
+     ✓ 新增资源显示中文类型，不直出后端枚举  323ms
+ ✓ src/pages/settings-layout.test.tsx (2 tests) 1108ms
+     ✓ 应用内切到另一个分区再切回时保留正在编辑的输入  954ms
+ ✓ src/components/resume-chat-panel.test.tsx (11 tests) 763ms
+     ✓ 历史会话列表来自 GET /sessions，且当前 run 的会话高亮  306ms
+ ✓ src/pages/interview.test.tsx (2 tests) 738ms
+     ✓ 新建会话提交成功后跳转到会话页  506ms
+ ✓ src/components/settings-speech.test.tsx (3 tests) 734ms
+     ✓ 显示脱敏状态，保存时把当前表单值（含新 Key）提交  463ms
+ ✓ src/features/interview/written-screen.test.tsx (2 tests) 551ms
+     ✓ 跑完抽题 → 三种题型作答判分 → 提交看总分的完整路径  531ms
+ ✓ src/components/access-panel.test.tsx (21 tests) 920ms
+ ✓ src/components/password-reset.stories.test.tsx (19 tests) 621ms
+ ✓ src/features/interview/bank-screen.test.tsx (3 tests) 389ms
+ ✓ src/pages/resume-editor.test.tsx (3 tests) 719ms
+     ✓ 窗口聚焦触发的后台 refetch 不回退整页 Loading，RunPanel 输入保留  334ms
+ ✓ src/pages/interview-session.test.tsx (3 tests) 448ms
+     ✓ 活动场次渲染 SessionScreen，文字作答提交到既有作答接口  342ms
+ ✓ src/pages/login.test.tsx (6 tests) 539ms
+     ✓ 登录成功后进入工作台  315ms
+ ✓ src/components/resume-picker-dialog.stories.test.tsx (4 tests) 425ms
+ ✓ src/pages/forgot-password.test.tsx (6 tests) 449ms
+ ✓ src/pages/rbac.test.tsx (4 tests) 658ms
+     ✓ 左树右表展示角色与只读权限目录  339ms
+ ✓ src/components/profile-assistant-panel.test.tsx (10 tests) 523ms
+     ✓ 点击新建对话触发 onCreate  328ms
+ ✓ src/features/interview/report-screen.test.tsx (6 tests) 725ms
+     ✓ 点导出请求报告导出接口并触发下载  315ms
+ ✓ src/pages/users.test.tsx (5 tests) 712ms
+     ✓ 改角色发 POST /auth/users/{id}/role  308ms
+ ✓ src/features/interview/voice-screen.test.tsx (5 tests) 792ms
+     ✓ 云端可用时用云端转写并标注「云端识别」，确认回传时间戳  492ms
+ ✓ src/components/agent-onboarding.stories.test.tsx (9 tests) 424ms
+ ✓ src/pages/profile.test.tsx (2 tests) 378ms
+ ✓ src/components/resume-chat-panel.stories.test.tsx (4 tests) 388ms
+ ✓ src/pages/settings-access.test.tsx (4 tests) 440ms
+ ✓ src/components/profile-assistant-panel.stories.test.tsx (10 tests) 403ms
+ ✓ src/pages/reset-password.test.tsx (6 tests) 597ms
+ ✓ src/components/email-verification.stories.test.tsx (15 tests) 642ms
+ ✓ src/components/resume-picker-dialog.test.tsx (3 tests) 648ms
+     ✓ 打开后焦点进入弹层、Tab/Shift+Tab 不逃逸、背景 inert、Esc 触发关闭  457ms
+ ✓ src/pages/settings.test.tsx (5 tests) 574ms
+     ✓ /api/agent/config 返回 500 时渲染错误块而不是白屏  321ms
+ ✓ src/components/change-password-form.test.tsx (3 tests) 304ms
+ ✓ src/features/interview/session-screen.test.tsx (3 tests) 354ms
+ ✓ src/components/login-form.test.tsx (6 tests) 427ms
+ ✓ src/pages/verify-email.test.tsx (7 tests) 440ms
+ ✓ src/components/version-history.test.tsx (1 test) 325ms
+     ✓ 确认恢复会调用 POST /resumes/{id}/versions/{vid}/restore 并带上文案  315ms
+ ✓ src/components/model-test-result.stories.test.tsx (5 tests) 247ms
+ ✓ src/components/create-resume-modal.stories.test.tsx (4 tests) 420ms
+ ✓ src/components/create-jd-modal.stories.test.tsx (5 tests) 281ms
+ ✓ src/components/session-history.stories.test.tsx (13 tests) 273ms
+ ✓ src/components/agent-onboarding.test.tsx (16 tests) 236ms
+ ✓ src/components/session-history.test.tsx (18 tests) 318ms
+ ✓ src/components/brand/brand-kit.test.tsx (26 tests) 277ms
+ ✓ src/components/kit/run-error.test.tsx (5 tests) 290ms
+ ✓ src/features/interview/bank-screen.knowledge.test.tsx (1 test) 154ms
+ ✓ src/components/kit/state-block.test.tsx (4 tests) 210ms
+ ✓ src/components/kit/markdown.test.tsx (4 tests) 250ms
+ ✓ src/components/kit/pending-action.test.tsx (5 tests) 294ms
+ ✓ src/lib/api.test.ts (19 tests) 196ms
+ ✓ src/components/require-auth.test.tsx (2 tests) 197ms
+ ✓ src/lib/speech-api.test.ts (2 tests) 104ms
+ ✓ src/components/app-nav.test.tsx (2 tests) 207ms
+ ✓ src/components/app-shell.test.tsx (6 tests) 330ms
+ ✓ src/lib/run-api.test.ts (13 tests) 127ms
+ ✓ src/components/theme-sync.test.tsx (1 test) 47ms
+ ✓ src/i18n/i18n.test.ts (4 tests) 18ms
+ ✓ src/lib/session-api.test.ts (5 tests) 37ms
+ ✓ src/lib/turn-events.test.ts (7 tests) 13ms
+ ✓ src/i18n/settings-wording.test.ts (3 tests) 16ms
+ ✓ src/lib/run-conversation.test.ts (5 tests) 11ms
+ ✓ src/i18n/access-purpose.test.ts (2 tests) 11ms
+ ✓ src/index.css.test.ts (3 tests) 7ms
+ ✓ src/i18n/backup-resource-type.test.ts (2 tests) 7ms
+ ✓ src/lib/resume-lifecycle.test.ts (5 tests) 7ms
+ ✓ src/lib/speech-metrics.test.ts (6 tests) 6ms
+ ✓ src/pages/resumes.prototype.test.ts (3 tests) 4ms
+ ✓ src/lib/autosave.test.ts (2 tests) 5ms
+ ✓ src/components/conversation.prototype.test.ts (1 test) 4ms
+ ✓ src/i18n/keys.test.ts (2 tests) 6ms
+
+ Test Files  81 passed (81)
+      Tests  649 passed (649)
+   Start at  09:47:14
+   Duration  18.57s (transform 6.81s, setup 27.79s, import 25.15s, tests 43.06s, environment 48.09s)
+
+# 结果： Test Files  81 passed (81)       Tests  649 passed (649) 

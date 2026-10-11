@@ -1,0 +1,219 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  这是方案总览。一句话定义：用岗位化题库与知识库驱动一场多轮模拟面试，产出有证据的评估报告，再把薄弱项变成下一轮练习。四层能力逐层对应赛题 A11 的一项任务。第一层产出题目、参考答案与知识依据，第二层产出可暂停可回看的会话，第三层产出逐条附证据的报告，第四层产出练习计划、复测入口与成长曲线。四层共用同一套身份、权限与审计。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "04 / 方案总览"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "一句话：让面试练习有据可查、可评估、可提升"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: lead
+    elementType: text
+    bounds: [48, 146, 864, 22]
+    content:
+      text: "四层能力逐层对应赛题 A11 的一项任务，每层都给出用户可见的产出。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#6F6D63"
+  - elementId: l0
+    elementType: shape
+    bounds: [48, 180, 864, 64]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: l0-chip
+    elementType: shape
+    bounds: [66, 200, 74, 24]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: l0-n
+    elementType: text
+    bounds: [66, 204, 74, 18]
+    content:
+      text: "任务 1"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#FDFAE7"
+      align: center
+  - elementId: l0-t
+    elementType: text
+    bounds: [158, 200, 300, 26]
+    content:
+      text: "岗位化题库与知识库"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+  - elementId: l0-d
+    elementType: text
+    bounds: [430, 204, 462, 24]
+    content:
+      text: "按岗位与题型组织的题目、参考答案与知识依据"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#6F6D63"
+  - elementId: l1
+    elementType: shape
+    bounds: [48, 252, 864, 64]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: l1-chip
+    elementType: shape
+    bounds: [66, 272, 74, 24]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: l1-n
+    elementType: text
+    bounds: [66, 276, 74, 18]
+    content:
+      text: "任务 2"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#FDFAE7"
+      align: center
+  - elementId: l1-t
+    elementType: text
+    bounds: [158, 272, 300, 26]
+    content:
+      text: "多模态多轮面试"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+  - elementId: l1-d
+    elementType: text
+    bounds: [430, 276, 462, 24]
+    content:
+      text: "一次可暂停、可回看的模拟面试会话"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#6F6D63"
+  - elementId: l2
+    elementType: shape
+    bounds: [48, 324, 864, 64]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: l2-chip
+    elementType: shape
+    bounds: [66, 344, 74, 24]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: l2-n
+    elementType: text
+    bounds: [66, 348, 74, 18]
+    content:
+      text: "任务 3"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#FDFAE7"
+      align: center
+  - elementId: l2-t
+    elementType: text
+    bounds: [158, 344, 300, 26]
+    content:
+      text: "多维分析"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+  - elementId: l2-d
+    elementType: text
+    bounds: [430, 348, 462, 24]
+    content:
+      text: "分维度评估报告，逐条附回答证据"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#6F6D63"
+  - elementId: l3
+    elementType: shape
+    bounds: [48, 396, 864, 64]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: l3-chip
+    elementType: shape
+    bounds: [66, 416, 74, 24]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: l3-n
+    elementType: text
+    bounds: [66, 420, 74, 18]
+    content:
+      text: "任务 4"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#FDFAE7"
+      align: center
+  - elementId: l3-t
+    elementType: text
+    bounds: [158, 416, 300, 26]
+    content:
+      text: "能力提升反馈"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 18
+      color: "#111111"
+      bold: true
+  - elementId: l3-d
+    elementType: text
+    bounds: [430, 420, 462, 24]
+    content:
+      text: "练习计划、复测入口与成长曲线"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13.5
+      color: "#6F6D63"
+  - elementId: concl
+    elementType: text
+    bounds: [48, 462, 864, 18]
+    content:
+      text: "四层共用同一套身份、权限与审计；评估报告默认仅本人可见。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "04 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

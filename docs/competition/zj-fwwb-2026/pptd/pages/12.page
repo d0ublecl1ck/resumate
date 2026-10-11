@@ -1,0 +1,341 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  本页讲系统构成：系统覆盖数据底座到面试闭环。左边五条是同系统能力在面试链路的共用：权限决定报告可见性，加密托管服务对话，面试官由同一运行体承载，写操作共用待确认与审批，上下文用版本快照冻结。右边是 10-09 之后的工程加固：JD 截图识别与微调走真实模型、失败如实报错；AI 引导四态、运行错误块、会话历史分组；提交前门禁拦截假实现与凭据泄露、启动自检排除 .env。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "12 / 系统构成"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "一套系统从数据底座到面试闭环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: rw0
+    elementType: shape
+    bounds: [48, 150, 340, 58]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: rw0-n
+    elementType: text
+    bounds: [64, 158, 310, 18]
+    content:
+      text: "角色权限与访问控制"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: rw0-b
+    elementType: text
+    bounds: [64, 178, 310, 26]
+    content:
+      text: "会话与报告共用同一判定，报告默认仅本人可见"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: rw1
+    elementType: shape
+    bounds: [48, 218, 340, 58]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: rw1-n
+    elementType: text
+    bounds: [64, 226, 310, 18]
+    content:
+      text: "多模型接口与密钥托管"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: rw1-b
+    elementType: text
+    bounds: [64, 246, 310, 26]
+    content:
+      text: "同一套加密托管与只写不回显，同时服务面试链路"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: rw2
+    elementType: shape
+    bounds: [48, 286, 340, 58]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: rw2-n
+    elementType: text
+    bounds: [64, 294, 310, 18]
+    content:
+      text: "Agent 运行体与执行模式"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: rw2-b
+    elementType: text
+    bounds: [64, 314, 310, 26]
+    content:
+      text: "面试官由同一运行体承载，共用单轮循环与执行模式约束"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: rw3
+    elementType: shape
+    bounds: [48, 354, 340, 58]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: rw3-n
+    elementType: text
+    bounds: [64, 362, 310, 18]
+    content:
+      text: "待确认改动与审批"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: rw3-b
+    elementType: text
+    bounds: [64, 382, 310, 26]
+    content:
+      text: "「生成练习计划」等写操作共用待确认与审批语义"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: rw4
+    elementType: shape
+    bounds: [48, 422, 340, 58]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: rw4-n
+    elementType: text
+    bounds: [64, 430, 310, 18]
+    content:
+      text: "不可变版本、幂等与审计"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: rw4-b
+    elementType: text
+    bounds: [64, 450, 310, 26]
+    content:
+      text: "上下文以版本快照冻结；作答提交共用幂等键"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+      lineHeight: 1.25
+  - elementId: hard-t
+    elementType: text
+    bounds: [492, 150, 420, 20]
+    content:
+      text: "工程加固"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: hard0
+    elementType: shape
+    bounds: [492, 176, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard0-t
+    elementType: text
+    bounds: [506, 180, 392, 16]
+    content:
+      text: "JD 截图识别"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard0-b
+    elementType: text
+    bounds: [506, 197, 392, 16]
+    content:
+      text: "真实视觉模型；不支持看图如实返回 MODEL_NO_VISION，不伪造草案"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard1
+    elementType: shape
+    bounds: [492, 218, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard1-t
+    elementType: text
+    bounds: [506, 222, 392, 16]
+    content:
+      text: "JD 一键微调"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard1-b
+    elementType: text
+    bounds: [506, 239, 392, 16]
+    content:
+      text: "创建绑定该 JD 的真实 Agent run，进入 Run 面板接手"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard2
+    elementType: shape
+    bounds: [492, 260, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard2-t
+    elementType: text
+    bounds: [506, 264, 392, 16]
+    content:
+      text: "AI 使用引导"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard2-b
+    elementType: text
+    bounds: [506, 281, 392, 16]
+    content:
+      text: "三处界面 × 四态；未配置或凭据失效时用引导取代输入框，不放行对话"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard3
+    elementType: shape
+    bounds: [492, 302, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard3-t
+    elementType: text
+    bounds: [506, 306, 392, 16]
+    content:
+      text: "运行失败不静默"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard3-b
+    elementType: text
+    bounds: [506, 323, 392, 16]
+    content:
+      text: "结构化错误：类别 / provider / model / 掩码尾号，附去更新 Key 与重试"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard4
+    elementType: shape
+    bounds: [492, 344, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard4-t
+    elementType: text
+    bounds: [506, 348, 392, 16]
+    content:
+      text: "会话历史与会话绑定"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard4-b
+    elementType: text
+    bounds: [506, 365, 392, 16]
+    content:
+      text: "按话题标题与相对时间分组、行内无会话 ID；运行体不再猜 session_id"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard5
+    elementType: shape
+    bounds: [492, 386, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard5-t
+    elementType: text
+    bounds: [506, 390, 392, 16]
+    content:
+      text: "宽视口工作区"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard5-b
+    elementType: text
+    bounds: [506, 407, 392, 16]
+    content:
+      text: "工作区页面吃满可用宽度；阅读与表单页保留 1152px 上限并居中"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: hard6
+    elementType: shape
+    bounds: [492, 428, 420, 40]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: hard6-t
+    elementType: text
+    bounds: [506, 432, 392, 16]
+    content:
+      text: "质量与安全"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#111111"
+      bold: true
+  - elementId: hard6-b
+    elementType: text
+    bounds: [506, 449, 392, 16]
+    content:
+      text: "门禁拦截假实现与凭据泄露、启动缺配置拒绝启动、构建排除 .env"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9.5
+      color: "#6F6D63"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "12 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

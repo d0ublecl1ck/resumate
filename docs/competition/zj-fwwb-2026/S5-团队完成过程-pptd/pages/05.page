@@ -1,0 +1,167 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 48 秒）：第一个困难，Key 失效。跟助手说话半天没反应，我们先查网络，后来翻日志才看到上游返回 401，错误在路上被吞掉了。根子在后端没有把失败记下来。后来把失败按类别、模型和 Key 尾号记清楚，对话区直接报错，还给更新 Key 和重试；我们故意用错 Key 跑了一遍确认。
+  画面：五行链路，从「怎么发现」到「确认解决」，突出失败要看得见、点得动。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "05 / 我们啃下的困难 1"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "困难一：Key 失效，我们不再假装没事"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: r0
+    elementType: shape
+    bounds: [48, 148, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r0-k
+    elementType: text
+    bounds: [66, 163, 80, 22]
+    content:
+      text: "怎么发现"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r0-v
+    elementType: text
+    bounds: [158, 161, 742, 30]
+    content:
+      text: "跟助手说话半天没反应，界面一直转，我们以为是自己网络的问题。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r1
+    elementType: shape
+    bounds: [48, 206, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r1-k
+    elementType: text
+    bounds: [66, 221, 80, 22]
+    content:
+      text: "找到原因"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r1-v
+    elementType: text
+    bounds: [158, 219, 742, 30]
+    content:
+      text: "翻运行日志才看到上游返回 401；错误在路上被吞掉了，前端什么都拿不到。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r2
+    elementType: shape
+    bounds: [48, 264, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r2-k
+    elementType: text
+    bounds: [66, 279, 80, 22]
+    content:
+      text: "卡在哪"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r2-v
+    elementType: text
+    bounds: [158, 277, 742, 30]
+    content:
+      text: "一开始想在前端加提示，后来发现根子在后端没有把失败记下来。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r3
+    elementType: shape
+    bounds: [48, 322, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r3-k
+    elementType: text
+    bounds: [66, 337, 80, 22]
+    content:
+      text: "怎么解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r3-v
+    elementType: text
+    bounds: [158, 335, 742, 30]
+    content:
+      text: "把失败按类别、模型和 Key 尾号记下来，对话区直接报错，并给更新 Key 与重试。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: r4
+    elementType: shape
+    bounds: [48, 380, 864, 52]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: r4-k
+    elementType: text
+    bounds: [66, 395, 80, 22]
+    content:
+      text: "确认解决"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: r4-v
+    elementType: text
+    bounds: [158, 393, 742, 30]
+    content:
+      text: "错误出口有了测试；我们故意用错的 Key 跑了一遍，界面如实报错。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#111111"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "05 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

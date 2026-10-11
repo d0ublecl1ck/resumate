@@ -1,0 +1,167 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  口播（约 30 秒）：最后做个小结。一个比赛周期结束，三个人把想法做成了能跑的系统：遇到问题一起定位，改完一起确认，过程与证据都留在仓库里。下一步把检索升级为 BM25 + 向量检索（RAG）+ rerank 重排，并继续扩充岗位与题库。
+  画面：三张卡片分别写「一个周期」「一起做」「下一步」；底部一行写「过程与证据都在仓库里，可逐条核查」。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "09 / 小结"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "小结"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: c0
+    elementType: shape
+    bounds: [48, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c0-n
+    elementType: text
+    bounds: [68, 178, 232, 24]
+    content:
+      text: "一个周期"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c0-r
+    elementType: shape
+    bounds: [68, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c0-b
+    elementType: text
+    bounds: [68, 228, 232, 96]
+    content:
+      text: |-
+        一个比赛周期，
+        三个人把想法
+        做成能跑的系统。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: c1
+    elementType: shape
+    bounds: [344, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c1-n
+    elementType: text
+    bounds: [364, 178, 232, 24]
+    content:
+      text: "一起做"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c1-r
+    elementType: shape
+    bounds: [364, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c1-b
+    elementType: text
+    bounds: [364, 228, 232, 96]
+    content:
+      text: |-
+        遇到问题一起定位，
+        改完一起确认，
+        证据都留在仓库里。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: c2
+    elementType: shape
+    bounds: [640, 160, 272, 176]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c2-n
+    elementType: text
+    bounds: [660, 178, 232, 24]
+    content:
+      text: "下一步"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      bold: true
+  - elementId: c2-r
+    elementType: shape
+    bounds: [660, 212, 56, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: c2-b
+    elementType: text
+    bounds: [660, 228, 232, 96]
+    content:
+      text: |-
+        把检索升级为
+        BM25 + 向量检索（RAG）
+        + rerank 重排；
+        继续扩充岗位与题库。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.5
+  - elementId: band
+    elementType: shape
+    bounds: [48, 360, 864, 62]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: band-t
+    elementType: text
+    bounds: [68, 372, 824, 34]
+    content:
+      text: "一个比赛周期结束；过程与证据都在仓库里，可逐条核查。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#111111"
+      lineHeight: 1.5
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "09 / 09"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

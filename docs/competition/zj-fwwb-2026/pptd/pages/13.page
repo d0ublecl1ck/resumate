@@ -1,0 +1,208 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  本页是新主论点：AI 与产品完全自融合。主档、简历、岗位、面试、练习五类实体都有 AI 的读写路径，写操作一律走待确认与审批；补丁预览到审批再到生成新版本全程可回溯，会话、轮次与运行错误记在同一套记录里；模型、密钥、运行体、权限沿用同一套托管，AI 行为受同一套执行模式与审计约束。三条可信性约束保持原文。证据见仓库 tools.py 与 agent/api.py。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "13 / 差异化与创新"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "全链路实体数据打通：AI 直接操作每一类实体"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 30
+      color: "#111111"
+      bold: true
+  - elementId: col0
+    elementType: shape
+    bounds: [48, 160, 272, 152]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: col0-n
+    elementType: text
+    bounds: [68, 174, 232, 44]
+    content:
+      text: |-
+        主档·简历·岗位·面试·练习，
+        五类实体都有 AI 的读写路径
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      lineHeight: 1.3
+      color: "#111111"
+      bold: true
+  - elementId: col0-r
+    elementType: shape
+    bounds: [68, 230, 60, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: col0-b
+    elementType: text
+    bounds: [68, 242, 232, 60]
+    content:
+      text: "写操作一律走待确认与审批，AI 不是外挂聊天框。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: col1
+    elementType: shape
+    bounds: [344, 160, 272, 152]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: col1-n
+    elementType: text
+    bounds: [364, 174, 232, 44]
+    content:
+      text: "每次落库都可回溯"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      lineHeight: 1.3
+      color: "#111111"
+      bold: true
+  - elementId: col1-r
+    elementType: shape
+    bounds: [364, 230, 60, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: col1-b
+    elementType: text
+    bounds: [364, 242, 232, 60]
+    content:
+      text: "补丁预览 → 审批 → 生成新版本；会话、轮次、运行错误在同一套记录里。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: col2
+    elementType: shape
+    bounds: [640, 160, 272, 152]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: col2-n
+    elementType: text
+    bounds: [660, 174, 232, 44]
+    content:
+      text: |-
+        模型、密钥、运行体、权限
+        沿用同一套托管
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 14
+      lineHeight: 1.3
+      color: "#111111"
+      bold: true
+  - elementId: col2-r
+    elementType: shape
+    bounds: [660, 230, 60, 3]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: col2-b
+    elementType: text
+    bounds: [660, 242, 232, 60]
+    content:
+      text: "AI 的行为受同一套执行模式与审计约束，不走旁路。"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12
+      color: "#6F6D63"
+      lineHeight: 1.45
+  - elementId: cl
+    elementType: text
+    bounds: [48, 330, 500, 20]
+    content:
+      text: "三条可信性约束（写进产品要求，不靠自觉）"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 13
+      color: "#1E2BFA"
+      bold: true
+  - elementId: cn0-k
+    elementType: text
+    bounds: [48, 358, 130, 20]
+    content:
+      text: "检索无依据"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: cn0-v
+    elementType: text
+    bounds: [188, 358, 724, 20]
+    content:
+      text: "标「依据不足」，不伪造知识库引用"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+  - elementId: cn1-k
+    elementType: text
+    bounds: [48, 394, 130, 20]
+    content:
+      text: "纯文本场次"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: cn1-v
+    elementType: text
+    bounds: [188, 394, 724, 20]
+    content:
+      text: "语速与清晰度标「不适用」，不虚构音频指标"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+  - elementId: cn2-k
+    elementType: text
+    bounds: [48, 430, 130, 20]
+    content:
+      text: "口径不可比"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+      bold: true
+  - elementId: cn2-v
+    elementType: text
+    bounds: [188, 430, 724, 20]
+    content:
+      text: "不连成同一条成长曲线，只并列展示"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#6F6D63"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "13 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

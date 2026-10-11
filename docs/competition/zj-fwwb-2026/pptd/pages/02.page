@@ -1,0 +1,190 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  先看问题，我们把它拆成四类。第一，缺乏真实练习，多数学生靠同学互问，题目与本人简历脱节。第二，反馈滞后主观，练完只得到一句表达流畅。第三，岗位针对性弱，一套通用题打所有岗位，考点不对齐。第四，综合评估不足，答完不知道下一轮练什么。共同根因是反馈不成链。对策是把岗位题库、简历事实、评分量表与证据链绑在一起，让结论可解释、可复核。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "02 / 问题"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "练面试缺的不是题目，是可追溯的反馈"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: c1
+    elementType: shape
+    bounds: [48, 168, 420, 116]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c1n
+    elementType: text
+    bounds: [68, 182, 40, 22]
+    content:
+      text: "01"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: c1t
+    elementType: text
+    bounds: [68, 206, 380, 28]
+    content:
+      text: "缺乏真实练习"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 20
+      color: "#111111"
+      bold: true
+  - elementId: c1d
+    elementType: text
+    bounds: [68, 242, 380, 30]
+    content:
+      text: "靠同学互问，题目与本人简历脱节"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#6F6D63"
+  - elementId: c2
+    elementType: shape
+    bounds: [492, 168, 420, 116]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c2n
+    elementType: text
+    bounds: [512, 182, 40, 22]
+    content:
+      text: "02"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: c2t
+    elementType: text
+    bounds: [512, 206, 380, 28]
+    content:
+      text: "反馈滞后主观"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 20
+      color: "#111111"
+      bold: true
+  - elementId: c2d
+    elementType: text
+    bounds: [512, 242, 380, 30]
+    content:
+      text: "只得到「表达流畅」这类笼统评价"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#6F6D63"
+  - elementId: c3
+    elementType: shape
+    bounds: [48, 300, 420, 116]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c3n
+    elementType: text
+    bounds: [68, 314, 40, 22]
+    content:
+      text: "03"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: c3t
+    elementType: text
+    bounds: [68, 338, 380, 28]
+    content:
+      text: "岗位针对性弱"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 20
+      color: "#111111"
+      bold: true
+  - elementId: c3d
+    elementType: text
+    bounds: [68, 374, 380, 30]
+    content:
+      text: "一套通用题打所有岗位，考点不对齐"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#6F6D63"
+  - elementId: c4
+    elementType: shape
+    bounds: [492, 300, 420, 116]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: c4n
+    elementType: text
+    bounds: [512, 314, 40, 22]
+    content:
+      text: "04"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#1E2BFA"
+      bold: true
+  - elementId: c4t
+    elementType: text
+    bounds: [512, 338, 380, 28]
+    content:
+      text: "综合评估不足"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 20
+      color: "#111111"
+      bold: true
+  - elementId: c4d
+    elementType: text
+    bounds: [512, 374, 380, 30]
+    content:
+      text: "答完不知道下一轮该练什么"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#6F6D63"
+  - elementId: concl
+    elementType: text
+    bounds: [48, 428, 864, 44]
+    content:
+      text: |-
+        结论：把岗位题库、简历事实、量表与证据链绑在一起，
+        评估结论才可解释、可复核，也才敢被第三方验证。
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 15
+      color: "#111111"
+      lineHeight: 1.4
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "02 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

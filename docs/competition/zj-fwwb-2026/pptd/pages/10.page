@@ -1,0 +1,261 @@
+pageType: content
+background: {type: solid, color: "#FDFAE7"}
+notes: |-
+  本页是端到端架构。前端 React 调 FastAPI，后端按接口、服务、数据访问、模型四层划分，数据库为关系库、会话态用缓存。模型调用不在后端进程内，而由独立的 Agent 运行体承担，它只走公共接口读写业务状态，不直连数据库，这是已冻结的约束。面试官由同一运行体承载，共用单轮循环、工具表与执行模式；模型统一走兼容接口，语音转写与播报同链路、各自独立降级。
+elements:
+  - elementId: eyebrow
+    elementType: text
+    bounds: [48, 26, 700, 20]
+    content:
+      text: "10 / 技术架构"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#1E2BFA"
+  - elementId: head-rule
+    elementType: shape
+    bounds: [48, 56, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: title
+    elementType: text
+    bounds: [48, 74, 864, 64]
+    content:
+      text: "端到端：前端 → API → 运行体 → 模型"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 32
+      color: "#111111"
+      bold: true
+  - elementId: lane0
+    elementType: shape
+    bounds: [48, 164, 864, 84]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: lane0-n
+    elementType: text
+    bounds: [66, 180, 110, 24]
+    content:
+      text: "前端"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 16
+      color: "#1E2BFA"
+      bold: true
+  - elementId: lane0-s
+    elementType: text
+    bounds: [66, 208, 110, 42]
+    content:
+      text: "React 19 + Vite"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#6F6D63"
+      lineHeight: 1.3
+  - elementId: lane0-b0
+    elementType: shape
+    bounds: [196, 184, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane0-t0
+    elementType: text
+    bounds: [208, 196, 200, 22]
+    content:
+      text: "面试会话界面"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane0-b1
+    elementType: shape
+    bounds: [436, 184, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane0-t1
+    elementType: text
+    bounds: [448, 196, 200, 22]
+    content:
+      text: "评估报告界面"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane0-b2
+    elementType: shape
+    bounds: [676, 184, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane0-t2
+    elementType: text
+    bounds: [688, 196, 200, 22]
+    content:
+      text: "练习与曲线界面"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: hand0
+    elementType: shape
+    bounds: [306, 248, 3, 12]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: lane1
+    elementType: shape
+    bounds: [48, 260, 864, 84]
+    shapeName: rect
+    fill: {type: solid, color: "#EDEEFE"}
+    border: {width: 0, color: "#EDEEFE"}
+  - elementId: lane1-n
+    elementType: text
+    bounds: [66, 276, 110, 24]
+    content:
+      text: "后端"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 16
+      color: "#1E2BFA"
+      bold: true
+  - elementId: lane1-s
+    elementType: text
+    bounds: [66, 304, 110, 42]
+    content:
+      text: "FastAPI · api → service → dao → models"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#6F6D63"
+      lineHeight: 1.3
+  - elementId: lane1-b0
+    elementType: shape
+    bounds: [196, 280, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane1-t0
+    elementType: text
+    bounds: [208, 292, 200, 22]
+    content:
+      text: "会话与评分服务"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane1-b1
+    elementType: shape
+    bounds: [436, 280, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane1-t1
+    elementType: text
+    bounds: [448, 292, 200, 22]
+    content:
+      text: "报告与成长记录"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane1-b2
+    elementType: shape
+    bounds: [676, 280, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane1-t2
+    elementType: text
+    bounds: [688, 292, 200, 22]
+    content:
+      text: "权限、审计与幂等"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: hand1
+    elementType: shape
+    bounds: [306, 344, 3, 12]
+    shapeName: rect
+    fill: {type: solid, color: "#1E2BFA"}
+    border: {width: 0, color: "#1E2BFA"}
+  - elementId: lane2
+    elementType: shape
+    bounds: [48, 356, 864, 84]
+    shapeName: rect
+    fill: {type: solid, color: "#F2F0E2"}
+    border: {width: 0, color: "#F2F0E2"}
+  - elementId: lane2-n
+    elementType: text
+    bounds: [66, 372, 110, 24]
+    content:
+      text: "运行体"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 16
+      color: "#1E2BFA"
+      bold: true
+  - elementId: lane2-s
+    elementType: text
+    bounds: [66, 400, 110, 42]
+    content:
+      text: "agent-core · 独立进程"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 10
+      color: "#6F6D63"
+      lineHeight: 1.3
+  - elementId: lane2-b0
+    elementType: shape
+    bounds: [196, 376, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane2-t0
+    elementType: text
+    bounds: [208, 388, 200, 22]
+    content:
+      text: "面试官 Agent 单轮循环"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane2-b1
+    elementType: shape
+    bounds: [436, 376, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane2-t1
+    elementType: text
+    bounds: [448, 388, 200, 22]
+    content:
+      text: "工具表与执行模式"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: lane2-b2
+    elementType: shape
+    bounds: [676, 376, 224, 44]
+    shapeName: rect
+    fill: {type: solid, color: "#FDFAE7"}
+    border: {width: 0, color: "#FDFAE7"}
+  - elementId: lane2-t2
+    elementType: text
+    bounds: [688, 388, 200, 22]
+    content:
+      text: "模型与语音调用"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 12.5
+      color: "#111111"
+  - elementId: foot-rule
+    elementType: shape
+    bounds: [48, 496, 864, 1]
+    shapeName: rect
+    fill: {type: solid, color: "#DCD8C6"}
+    border: {width: 0, color: "#DCD8C6"}
+  - elementId: foot-text
+    elementType: text
+    bounds: [48, 505, 700, 16]
+    content:
+      text: "RMD · 赛题 A11《AI 模拟面试与能力提升软件》"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 9
+      color: "#6F6D63"
+  - elementId: foot-page
+    elementType: text
+    bounds: [830, 503, 82, 20]
+    content:
+      text: "10 / 16"
+      fontFamily: { latin: Inter, ea: Noto Sans CJK SC, mac: PingFang SC, win: Microsoft YaHei }
+      fontSize: 11
+      color: "#6F6D63"
+      align: right

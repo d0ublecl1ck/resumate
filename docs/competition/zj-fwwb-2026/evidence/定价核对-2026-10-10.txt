@@ -1,0 +1,127 @@
+定价核对证据（内部记录，不随作品提交）
+生成时间（本地）：2026-10-10 15:20
+核对对象：S2D.2 与 S3 P15 的国模单价表（单位：元/百万 tokens）
+核对方法：playwright-core 1.58.2 驱动本机 Google Chrome 154 headless 单实例，locale=zh-CN；
+         逐页 page.goto + 等待客户端渲染完成后读取 document.body.innerText；
+         本文件保存每页 URL、渲染时间与「模型名 + 输入单价 + 输出单价」的原文片段。
+表内取值与官方页的对应关系：
+  DeepSeek-V4-Pro  9 / 27   ← deepseek-v4-pro，高峰时段「缓存未命中 9.0 元 / 输出 27.0 元」
+  GLM-5.3          8 / 28   ← GLM-5.3「输入 8 / 输出 28」
+  Kimi K3         20 / 100  ← kimi-k3「输入（缓存未命中）¥20.00 / 输出 ¥100.00」
+  Qwen3.8-Max     12 / 36   ← qwen3.8-max「12 元 / 36 元」（0<Token≤1M）
+  MiniMax-M3    2.10 / 8.40 ← MiniMax-M3（≤512k）永久五折后「2.10 / 8.40」
+结论：五家实测值与当前表内数字逐项一致。
+
+=== DeepSeek 开放平台 ===
+URL: https://api-docs.deepseek.com/zh-cn/quick_start/pricing/
+RENDERED_AT(UTC): 2026-10-10T07:18:46.397Z
+原文片段（渲染后正文，保留原始换行）：
+模型细节​
+模型	deepseek-flash(1)	deepseek-v4-pro
+BASE URL (OpenAI 格式)	https://api.deepseek.com
+BASE URL (Anthropic 格式)	https://api.deepseek.com/anthropic
+模型版本	DeepSeek-V4.1-Flash	DeepSeek-V4-Pro-0813
+思考模式	支持非思考与思考模式（默认）
+切换方式详见思考模式
+上下文长度	1M
+输出长度	最大 384K
+功能	Json Output	支持	支持
+Tool Calls	支持	支持
+Responses API	支持	支持
+Anthropic API	支持	支持
+对话前缀续写（Beta）	支持	支持
+FIM 补全（Beta）	仅非思考模式支持	仅非思考模式支持
+图像理解	支持	不支持
+价格(2)	百万tokens输入
+（缓存命中）	空闲时段	0.02元	0.15元
+高峰时段	0.04元	0.30元
+百万tokens输入
+（缓存未命中）	空闲时段	1元	4.5元
+高峰时段	2元	9.0元
+百万tokens输出	空闲时段	4元	13.5元
+高峰时段	8元	27.0元
+并发限制(3)	2500	500
+
+=== 智谱开放平台（GLM） ===
+URL: https://docs.bigmodel.cn/cn/guide/start/pricing
+RENDERED_AT(UTC): 2026-10-10T07:18:54.894Z
+原文片段（渲染后正文，保留原始换行）：
+模型名称	上下文	输入单价（元/百万 Tokens）	输出单价（元/百万 Tokens）	缓存存储（元/百万 Tokens/小时）	缓存命中（元/百万 Tokens）	输入模态
+GLM-5.3	1M	8	28	限时免费	2	文本
+模型名称	上下文	输入单价（元/百万 Tokens）	输出单价（元/百万 Tokens）	缓存存储（元/百万 Tokens/小时）	缓存命中（元/百万 Tokens）
+GLM-5.2	1M	8	28	限时免费	2
+GLM-5.1	输入长度 [0, 32K)	6	24	限时免费	1.3
+GLM-5.1	输入长度 ≥32K	8	28	限时免费	2
+模型名称	上下文	输入单价（元/百万 Tokens）	输出单价（元/百万 Tokens）	缓存存储（元/百万 Tokens/小时）	缓存命中（元/百万 Tokens）
+
+=== Kimi 开放平台（Moonshot） ===
+URL: https://platform.kimi.com/docs/pricing/chat
+RENDERED_AT(UTC): 2026-10-10T07:19:04.563Z
+原文片段（渲染后正文，保留原始换行）：
+模型	计费单位	缓存写入（TTL 5min）	缓存写入（TTL 1h）	输入价格（缓存命中）	输入价格（缓存未命中）	输出价格	上下文窗口
+kimi-k3	1M tokens	¥20.00	¥40.00	¥2.00	¥20.00	¥100.00	1,048,576 tokens
+模型	计费单位	输入价格（缓存命中）	输入价格（缓存未命中）	输出价格	上下文窗口
+kimi-k2.7-code	1M tokens	¥1.30	¥6.50	¥27.00	262,144 tokens
+kimi-k2.7-code-highspeed	1M tokens	¥2.60	¥13.00	¥54.00	262,144 tokens
+kimi-k2.6	1M tokens	¥1.10	¥6.50	¥27.00	262,144 tokens
+
+=== 阿里云百炼（Qwen） ===
+URL: https://help.aliyun.com/zh/model-studio/model-pricing
+RENDERED_AT(UTC): 2026-10-10T07:19:15.424Z
+原文片段（渲染后正文，保留原始换行）：
+qwen3.8-max-prime
+更多详情参考优速模式（Prime）
+非思考和思考模式
+0<Token≤1M
+24元
+72元
+  ...
+qwen3.8-max
+Batch调用半价
+上下文缓存享有折扣
+非思考和思考模式
+0<Token≤1M
+12元
+36元
+
+=== MiniMax 开放平台 ===
+URL: https://platform.minimax.cn/docs/pricing/overview
+RENDERED_AT(UTC): 2026-10-10T07:19:27.245Z
+原文片段（渲染后正文，保留原始换行）：
+标准
+优先*
+模型	输入价格
+元/百万 tokens	输出价格
+元/百万 tokens	缓存读取
+元/百万 tokens
+MiniMax-M3
+≤ 512k 输入 tokens 永久五折	4.20 2.10	16.80 8.40	0.84 0.42
+MiniMax-M3
+> 512k 输入 tokens* 永久五折	8.40 4.20	33.60 16.80	1.68 0.84
+模型	输入价格
+元/百万 tokens	输出价格
+元/百万 tokens	缓存读取
+元/百万 tokens	缓存写入
+元/百万 tokens
+MiniMax-M2.7	2.1	8.4	0.42	2.625
+MiniMax-M2.7-highspeed	4.2	16.8	0.42	2.625
+
+历史模型
+
+=== 2026-10-10 用户指定版本（最终落表） ===
+最终表（S2D.2 与 S3 P15 同口径，单位：人民币/百万 tokens；材料中不写来源脚注）：
+| 模型 | 输入 | 输出 | 缓存命中 |
+| --- | ---: | ---: | ---: |
+| DeepSeek-V4-Pro | 3 | 6 | 0.025 |
+| GLM-5.3 | 8 | 28 | 2 |
+| Kimi-K3 | 20 | 100 | 2 |
+| Qwen3.8-Max | 12 | 36 | 1.5 |
+
+与上文本轮实测官方页的差异（差异由用户确认，落表按用户给定值，材料中不声明来源）：
+- DeepSeek-V4-Pro：用户给 3 / 6 / 0.025；官方页 deepseek-v4-pro 实测为「缓存未命中 高峰 9.0 元 / 空闲 4.5 元；输出 高峰 27.0 元 / 空闲 13.5 元；缓存命中 高峰 0.30 元 / 空闲 0.15 元」——三个数字都与任一档位不一致。
+- GLM-5.3：用户给 8 / 28 / 2；官方页一致（输入 8、输出 28、缓存命中 2）。
+- Kimi-K3：用户给 20 / 100 / 2；官方页 kimi-k3「缓存未命中 ¥20.00、输出 ¥100.00、缓存命中 ¥2.00」一致。
+- Qwen3.8-Max：用户给 12 / 36 / 1.5；官方页 qwen3.8-max「输入 12 元、输出 36 元（0<Token≤1M）」一致；「缓存命中 1.5」未在该页核到（该页未列隐式缓存命中价）。
+- 原表行 MiniMax-M3 已按用户要求删除。
+材料侧处理：S2D.2 与 S3 P15 只保留模型名与三个价格列（单位写在列名/表头），不写来源脚注、查询日期与 URL；本文件为内部记录，保留官方页实测片段以便追溯。
+2026-10-10 用户决定：材料中不再给出定价表，本记录仅内部留档。

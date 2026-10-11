@@ -1,0 +1,68 @@
+# 质量门禁执行记录（本机实跑原始输出）
+
+## 1) node quality-gates/run.js
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+[no-fake-implementation] ui/src/lib/api.ts:852 声明 GET /workbench/summary 不在后端路由根集合内（可能是前端聚合或文档漂移），无法判定。
+[no-fake-implementation] known stubs: 0
+Quality gates passed.
+
+## 2) archkit inspect .
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+[no-fake-implementation] ui/src/lib/api.ts:852 声明 GET /workbench/summary 不在后端路由根集合内（可能是前端聚合或文档漂移），无法判定。
+[no-fake-implementation] known stubs: 0
+Quality gates passed.
+
+## 3) node quality-gates/gates/no-fake-implementation.js .（未完成实现清单）
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+[no-fake-implementation] ui/src/lib/api.ts:852 声明 GET /workbench/summary 不在后端路由根集合内（可能是前端聚合或文档漂移），无法判定。
+[no-fake-implementation] known stubs: 0（文件:行号 | 摘要 | 影响 | 出处 | 发现日期）
+[no-fake-implementation] no failures.
+
+## 4) 反面自证：node --test quality-gates/tests/no-fake-implementation.test.mjs
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：没有标记的含糊词汇报错，并给出文件:行号与模板 (4.57025ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+[no-fake-implementation] ui/src/lib/stub.ts:2 声明 POST /jds:parse-image 不在后端路由根集合内（可能是前端聚合或文档漂移），无法判定。
+✔ 规则一：合规 TODO(fake) 四字段通过，并进入 known stubs 清单 (3.2305ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：标记缺字段报「标记不合格」并点名缺失字段 (1.104959ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：行内 fake-allow 豁免该行 (1.313625ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：测试 / story / mock 路径豁免 (2.644584ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：反向约束（绝不用假数据）不算伪实现 (1.097917ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则一：普通 TODO 描述假实现给 warning，不失败 (0.850792ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则二：后端无此路由且根段是真实资源时报错 (2.043166ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则二：根段不是后端资源时只给 warning，不制造假阳性 (1.569041ms)
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+✔ 规则二：路径参数两侧归一化，且 APIRouter 前缀参与比对 (1.657084ms)
+✔ normalizePath：花括号 / 模板串 / 冒号整段参数归一，动作后缀不动 (0.048083ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 92.452542
+
+## 5) 反面自证（独立临时 fixture，不动仓库）
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+### A) 未标记的假实现 -> 应报错
+[
+  "[no-fake-implementation] ui/src/lib/fake.ts:1 命中伪实现词汇「前端演示」但没有配套的合规标记 → 临时实现必须写成结构化标记，模板：TODO(fake): <一句话摘要>\n  //   真实实现: <真实现应当做什么>\n  //   影响: <用户会看到什么错误结果>\n  //   出处: <issue id 或文档锚点>；确属 story/test/fixture/mock 请放到对应路径，确需保留请在该行加 fake-allow 注释并写明理由。"
+]
+### B) 合规 TODO(fake) 四字段 -> 应通过并进清单
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+[no-fake-implementation] ui/src/lib/stub.ts:2 声明 POST /jds:parse-image 不在后端路由根集合内（可能是前端聚合或文档漂移），无法判定。
+[no-fake-implementation] known stubs: 1（文件:行号 | 摘要 | 影响 | 出处 | 发现日期）
+  ui/src/lib/stub.ts:1 | JD 截图识别仍是本地 stub | 上传截图后只按文件名返回示例草案 | b6eab | 2026-10-10
+[no-fake-implementation] 路由表来源：静态解析 backend/app/modules/**/api.py（未找到 openapi 快照）
+### C) TODO(fake) 缺字段 -> 应报「标记不合格」
+[
+  "[no-fake-implementation] ui/src/lib/bad.ts:1 TODO(fake) 标记不合格，缺少字段：出处 → 按下面模板补全（四项缺一不可）：TODO(fake): <一句话摘要>\n  //   真实实现: <真实现应当做什么>\n  //   影响: <用户会看到什么错误结果>\n  //   出处: <issue id 或文档锚点>"
+]
