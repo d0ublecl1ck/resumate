@@ -204,7 +204,7 @@ trap cleanup EXIT
 # 3. 生成 S4A 源码包：git archive HEAD -> 包内占位替换 -> 写出最终 zip（放交付目录）
 ZIP="$DELIV/S4A-源码包.zip"
 RAW_ZIP="$TMP_DIR/raw.zip"
-git -C "$REPO_ROOT" archive --format=zip -o "$RAW_ZIP" HEAD
+git -C "$REPO_ROOT" archive --format=zip -o "$RAW_ZIP" HEAD -- . ':(exclude)docs/competition' ':(exclude)docs/deliverables'
 
 python3 - "$RAW_ZIP" "$ZIP" "$EVIDENCE_DIR" "$IDENTITY_RE" "$IDENTITY_REPLACEMENT" <<'PY'
 import os, sys, zipfile
